@@ -27,6 +27,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { RestaurantDetailModal } from '@/components/admin/RestaurantDetailModal';
 
 interface Stats {
   totalUsers: number;
@@ -75,6 +76,8 @@ export default function AdminPanel() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<any>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
 
   useEffect(() => {
     if (isAdmin) {
@@ -290,7 +293,14 @@ export default function AdminPanel() {
                   </TableHeader>
                   <TableBody>
                     {filteredRestaurants.map(restaurant => (
-                      <TableRow key={restaurant.id}>
+                      <TableRow 
+                        key={restaurant.id} 
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => {
+                          setSelectedRestaurant(restaurant);
+                          setDetailModalOpen(true);
+                        }}
+                      >
                         <TableCell className="font-medium">{restaurant.name}</TableCell>
                         <TableCell>{Number(restaurant.rating).toFixed(1)}</TableCell>
                         <TableCell>
@@ -298,7 +308,7 @@ export default function AdminPanel() {
                             {restaurant.is_active ? 'Actief' : 'Inactief'}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           <Button
                             variant={restaurant.is_featured ? 'default' : 'outline'}
                             size="sm"
@@ -307,7 +317,7 @@ export default function AdminPanel() {
                             {restaurant.is_featured ? 'Ja' : 'Nee'}
                           </Button>
                         </TableCell>
-                        <TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           <Button
                             variant={restaurant.is_top_listing ? 'default' : 'outline'}
                             size="sm"
@@ -316,7 +326,7 @@ export default function AdminPanel() {
                             {restaurant.is_top_listing ? 'Ja' : 'Nee'}
                           </Button>
                         </TableCell>
-                        <TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           <div className="flex gap-2">
                             <Button
                               variant="ghost"
@@ -442,6 +452,13 @@ export default function AdminPanel() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Restaurant Detail Modal */}
+        <RestaurantDetailModal
+          restaurant={selectedRestaurant}
+          open={detailModalOpen}
+          onOpenChange={setDetailModalOpen}
+        />
       </div>
     </Layout>
   );
