@@ -1,0 +1,106 @@
+{
+  "nav": {
+    "discover": "Descubrir",
+    "admin": "Panel Admin",
+    "dashboard": "Dashboard Restaurante",
+    "login": "Iniciar sesión",
+    "signup": "Registrarse",
+    "logout": "Cerrar sesión",
+    "profile": "Perfil",
+    "favorites": "Favoritos"
+  },
+  "hero": {
+    "title": "Encuentra restaurantes",
+    "titleAccent": "por plato.",
+    "subtitle": "Deja de buscar por categoría. Busca lo que realmente quieres comer.",
+    "searchPlaceholder": "Busca bistec, sushi, ramen...",
+    "allNetherlands": "Toda Holanda",
+    "searchButton": "Buscar Platos"
+  },
+  "cities": {
+    "amsterdam": "Ámsterdam",
+    "rotterdam": "Róterdam",
+    "all": "Toda Holanda"
+  },
+  "filters": {
+    "title": "Filtros",
+    "priceLevel": "Nivel de precio",
+    "budget": "Económico",
+    "moderate": "Moderado",
+    "upscale": "Elegante",
+    "luxury": "Lujo",
+    "ambience": "Ambiente",
+    "romantic": "Romántico",
+    "familyFriendly": "Familiar",
+    "highEnd": "Alta gama",
+    "cozy": "Acogedor",
+    "business": "Negocios",
+    "dietary": "Dieta",
+    "vegetarian": "Vegetariano",
+    "vegan": "Vegano",
+    "cuisine": "Cocina",
+    "clearAll": "Borrar todo",
+    "apply": "Aplicar"
+  },
+  "sort": {
+    "bestMatch": "Mejor coincidencia",
+    "highestRated": "Mejor valorado",
+    "mostReviews": "Más reseñas",
+    "priceLowHigh": "Precio: bajo-alto",
+    "priceHighLow": "Precio: alto-bajo"
+  },
+  "restaurant": {
+    "featured": "Destacado",
+    "topListing": "Top Listing",
+    "knownFor": "Conocido por",
+    "reviews": "reseñas",
+    "openNow": "Abierto ahora",
+    "closed": "Cerrado",
+    "viewMenu": "Ver menú",
+    "reserve": "Reservar",
+    "directions": "Cómo llegar",
+    "call": "Llamar",
+    "share": "Compartir",
+    "website": "Web",
+    "addToFavorites": "Añadir a favoritos",
+    "removeFromFavorites": "Quitar de favoritos"
+  },
+  "reviews": {
+    "title": "Reseñas",
+    "writeReview": "Escribir reseña",
+    "rating": "Valoración",
+    "verifyTags": "¿Son correctas estas etiquetas?",
+    "suggestTags": "¿Faltan etiquetas?",
+    "dishesEaten": "¿Qué platos comiste?",
+    "photos": "Añadir fotos",
+    "submit": "Enviar"
+  },
+  "trending": {
+    "title": "Platos populares",
+    "subtitle": "Popular en tu ciudad",
+    "inCity": "en {city}"
+  },
+  "search": {
+    "results": "resultados",
+    "noResults": "No se encontraron restaurantes",
+    "tryDifferent": "Prueba otro plato o ajusta tus filtros"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Algo salió mal",
+    "tryAgain": "Intentar de nuevo",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "confirm": "Confirmar"
+  },
+  "footer": {
+    "about": "Sobre Dishloopr",
+    "contact": "Contacto",
+    "terms": "Términos",
+    "privacy": "Privacidad",
+    "forRestaurants": "Para restaurantes",
+    "claimRestaurant": "Reclama tu restaurante"
+  }
+}
