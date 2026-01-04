@@ -1,1 +1,4 @@
 project_id = "uktafmxojymsojqewzuy"
+
+[functions.parse-menu]
+verify_jwt = true
