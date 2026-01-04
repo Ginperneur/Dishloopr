@@ -1,0 +1,106 @@
+{
+  "nav": {
+    "discover": "Entdecken",
+    "admin": "Admin-Panel",
+    "dashboard": "Restaurant Dashboard",
+    "login": "Anmelden",
+    "signup": "Registrieren",
+    "logout": "Abmelden",
+    "profile": "Profil",
+    "favorites": "Favoriten"
+  },
+  "hero": {
+    "title": "Finde Restaurants",
+    "titleAccent": "nach Gericht.",
+    "subtitle": "Hör auf nach Kategorien zu suchen. Suche nach dem, was du wirklich essen möchtest.",
+    "searchPlaceholder": "Suche nach Steak, Sushi, Ramen...",
+    "allNetherlands": "Ganz Niederlande",
+    "searchButton": "Gerichte suchen"
+  },
+  "cities": {
+    "amsterdam": "Amsterdam",
+    "rotterdam": "Rotterdam",
+    "all": "Ganz Niederlande"
+  },
+  "filters": {
+    "title": "Filter",
+    "priceLevel": "Preisniveau",
+    "budget": "Budget",
+    "moderate": "Mittel",
+    "upscale": "Gehoben",
+    "luxury": "Luxus",
+    "ambience": "Ambiente",
+    "romantic": "Romantisch",
+    "familyFriendly": "Familienfreundlich",
+    "highEnd": "High-End",
+    "cozy": "Gemütlich",
+    "business": "Business",
+    "dietary": "Ernährung",
+    "vegetarian": "Vegetarisch",
+    "vegan": "Vegan",
+    "cuisine": "Küche",
+    "clearAll": "Alles löschen",
+    "apply": "Anwenden"
+  },
+  "sort": {
+    "bestMatch": "Beste Übereinstimmung",
+    "highestRated": "Höchste Bewertung",
+    "mostReviews": "Meiste Bewertungen",
+    "priceLowHigh": "Preis: niedrig-hoch",
+    "priceHighLow": "Preis: hoch-niedrig"
+  },
+  "restaurant": {
+    "featured": "Empfohlen",
+    "topListing": "Top Listing",
+    "knownFor": "Bekannt für",
+    "reviews": "Bewertungen",
+    "openNow": "Jetzt geöffnet",
+    "closed": "Geschlossen",
+    "viewMenu": "Menü ansehen",
+    "reserve": "Reservieren",
+    "directions": "Route",
+    "call": "Anrufen",
+    "share": "Teilen",
+    "website": "Website",
+    "addToFavorites": "Zu Favoriten hinzufügen",
+    "removeFromFavorites": "Aus Favoriten entfernen"
+  },
+  "reviews": {
+    "title": "Bewertungen",
+    "writeReview": "Bewertung schreiben",
+    "rating": "Bewertung",
+    "verifyTags": "Stimmen diese Tags?",
+    "suggestTags": "Fehlen Tags?",
+    "dishesEaten": "Welche Gerichte haben Sie gegessen?",
+    "photos": "Fotos hinzufügen",
+    "submit": "Absenden"
+  },
+  "trending": {
+    "title": "Trending Gerichte",
+    "subtitle": "Beliebt in deiner Stadt",
+    "inCity": "in {city}"
+  },
+  "search": {
+    "results": "Ergebnisse",
+    "noResults": "Keine Restaurants gefunden",
+    "tryDifferent": "Probiere ein anderes Gericht oder passe deine Filter an"
+  },
+  "common": {
+    "loading": "Laden...",
+    "error": "Etwas ist schief gelaufen",
+    "tryAgain": "Erneut versuchen",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "confirm": "Bestätigen"
+  },
+  "footer": {
+    "about": "Über Dishloopr",
+    "contact": "Kontakt",
+    "terms": "AGB",
+    "privacy": "Datenschutz",
+    "forRestaurants": "Für Restaurants",
+    "claimRestaurant": "Restaurant beanspruchen"
+  }
+}

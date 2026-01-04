@@ -1,0 +1,106 @@
+{
+  "nav": {
+    "discover": "Discover",
+    "admin": "Admin Panel",
+    "dashboard": "Restaurant Dashboard",
+    "login": "Login",
+    "signup": "Sign up",
+    "logout": "Logout",
+    "profile": "Profile",
+    "favorites": "Favorites"
+  },
+  "hero": {
+    "title": "Find restaurants",
+    "titleAccent": "by dish.",
+    "subtitle": "Stop searching by category. Search for what you actually want to eat.",
+    "searchPlaceholder": "Search for steak, sushi, ramen...",
+    "allNetherlands": "All Netherlands",
+    "searchButton": "Search Dishes"
+  },
+  "cities": {
+    "amsterdam": "Amsterdam",
+    "rotterdam": "Rotterdam",
+    "all": "All Netherlands"
+  },
+  "filters": {
+    "title": "Filters",
+    "priceLevel": "Price level",
+    "budget": "Budget",
+    "moderate": "Moderate",
+    "upscale": "Upscale",
+    "luxury": "Luxury",
+    "ambience": "Ambience",
+    "romantic": "Romantic",
+    "familyFriendly": "Family friendly",
+    "highEnd": "High-end",
+    "cozy": "Cozy",
+    "business": "Business",
+    "dietary": "Dietary",
+    "vegetarian": "Vegetarian",
+    "vegan": "Vegan",
+    "cuisine": "Cuisine",
+    "clearAll": "Clear all",
+    "apply": "Apply"
+  },
+  "sort": {
+    "bestMatch": "Best match",
+    "highestRated": "Highest rated",
+    "mostReviews": "Most reviews",
+    "priceLowHigh": "Price: low-high",
+    "priceHighLow": "Price: high-low"
+  },
+  "restaurant": {
+    "featured": "Featured",
+    "topListing": "Top Listing",
+    "knownFor": "Known for",
+    "reviews": "reviews",
+    "openNow": "Open now",
+    "closed": "Closed",
+    "viewMenu": "View menu",
+    "reserve": "Reserve",
+    "directions": "Directions",
+    "call": "Call",
+    "share": "Share",
+    "website": "Website",
+    "addToFavorites": "Add to favorites",
+    "removeFromFavorites": "Remove from favorites"
+  },
+  "reviews": {
+    "title": "Reviews",
+    "writeReview": "Write a review",
+    "rating": "Rating",
+    "verifyTags": "Are these tags correct?",
+    "suggestTags": "Missing any tags?",
+    "dishesEaten": "What dishes did you eat?",
+    "photos": "Add photos",
+    "submit": "Submit"
+  },
+  "trending": {
+    "title": "Trending dishes",
+    "subtitle": "Popular in your city",
+    "inCity": "in {city}"
+  },
+  "search": {
+    "results": "results",
+    "noResults": "No restaurants found",
+    "tryDifferent": "Try a different dish or adjust your filters"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "tryAgain": "Try again",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirm": "Confirm"
+  },
+  "footer": {
+    "about": "About Dishloopr",
+    "contact": "Contact",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "forRestaurants": "For restaurants",
+    "claimRestaurant": "Claim your restaurant"
+  }
+}

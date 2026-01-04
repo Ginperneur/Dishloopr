@@ -1,0 +1,106 @@
+{
+  "nav": {
+    "discover": "Ontdekken",
+    "admin": "Admin Paneel",
+    "dashboard": "Restaurant Dashboard",
+    "login": "Inloggen",
+    "signup": "Registreren",
+    "logout": "Uitloggen",
+    "profile": "Profiel",
+    "favorites": "Favorieten"
+  },
+  "hero": {
+    "title": "Vind restaurants",
+    "titleAccent": "op gerecht.",
+    "subtitle": "Stop met zoeken naar categorieën. Zoek naar wat je écht wilt eten.",
+    "searchPlaceholder": "Zoek naar biefstuk, sushi, ramen...",
+    "allNetherlands": "Heel Nederland",
+    "searchButton": "Zoek Gerechten"
+  },
+  "cities": {
+    "amsterdam": "Amsterdam",
+    "rotterdam": "Rotterdam",
+    "all": "Heel Nederland"
+  },
+  "filters": {
+    "title": "Filters",
+    "priceLevel": "Prijsniveau",
+    "budget": "Budget",
+    "moderate": "Gemiddeld",
+    "upscale": "Chic",
+    "luxury": "Luxe",
+    "ambience": "Sfeer",
+    "romantic": "Romantisch",
+    "familyFriendly": "Gezinsvriendelijk",
+    "highEnd": "High-end",
+    "cozy": "Gezellig",
+    "business": "Zakelijk",
+    "dietary": "Dieet",
+    "vegetarian": "Vegetarisch",
+    "vegan": "Vegan",
+    "cuisine": "Keuken",
+    "clearAll": "Wis alles",
+    "apply": "Toepassen"
+  },
+  "sort": {
+    "bestMatch": "Beste match",
+    "highestRated": "Hoogst beoordeeld",
+    "mostReviews": "Meeste reviews",
+    "priceLowHigh": "Prijs: laag-hoog",
+    "priceHighLow": "Prijs: hoog-laag"
+  },
+  "restaurant": {
+    "featured": "Uitgelicht",
+    "topListing": "Top Listing",
+    "knownFor": "Bekend om",
+    "reviews": "reviews",
+    "openNow": "Nu open",
+    "closed": "Gesloten",
+    "viewMenu": "Bekijk menu",
+    "reserve": "Reserveren",
+    "directions": "Route",
+    "call": "Bellen",
+    "share": "Delen",
+    "website": "Website",
+    "addToFavorites": "Toevoegen aan favorieten",
+    "removeFromFavorites": "Verwijderen uit favorieten"
+  },
+  "reviews": {
+    "title": "Beoordelingen",
+    "writeReview": "Schrijf een review",
+    "rating": "Beoordeling",
+    "verifyTags": "Kloppen deze tags?",
+    "suggestTags": "Mis je tags?",
+    "dishesEaten": "Welke gerechten heb je gegeten?",
+    "photos": "Foto's toevoegen",
+    "submit": "Versturen"
+  },
+  "trending": {
+    "title": "Trending gerechten",
+    "subtitle": "Populair in jouw stad",
+    "inCity": "in {city}"
+  },
+  "search": {
+    "results": "resultaten",
+    "noResults": "Geen restaurants gevonden",
+    "tryDifferent": "Probeer een ander gerecht of pas je filters aan"
+  },
+  "common": {
+    "loading": "Laden...",
+    "error": "Er ging iets mis",
+    "tryAgain": "Probeer opnieuw",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "edit": "Bewerken",
+    "delete": "Verwijderen",
+    "confirm": "Bevestigen"
+  },
+  "footer": {
+    "about": "Over Dishloopr",
+    "contact": "Contact",
+    "terms": "Voorwaarden",
+    "privacy": "Privacy",
+    "forRestaurants": "Voor restaurants",
+    "claimRestaurant": "Claim je restaurant"
+  }
+}
