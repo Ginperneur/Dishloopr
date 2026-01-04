@@ -2,9 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, ChevronDown } from 'lucide-react';
+import { Search, MapPin, ChevronDown, UtensilsCrossed } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { dishes, cities } from '@/data/mockData';
+import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
+
+type Dish = Database['public']['Tables']['dishes']['Row'];
+type City = Database['public']['Tables']['cities']['Row'];
 
 interface SearchBarProps {
   onSearch?: (query: string, cityId: string) => void;
@@ -23,26 +27,56 @@ export function SearchBar({
   const navigate = useNavigate();
   const [query, setQuery] = useState(initialQuery);
   const [cityId, setCityId] = useState(initialCity);
-  const [suggestions, setSuggestions] = useState<typeof dishes>([]);
+  const [suggestions, setSuggestions] = useState<Dish[]>([]);
+  const [cuisineSuggestions, setCuisineSuggestions] = useState<string[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+  const [allDishes, setAllDishes] = useState<Dish[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
+  // Fetch cities and dishes on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      const [citiesRes, dishesRes] = await Promise.all([
+        supabase.from('cities').select('*').eq('is_active', true).order('name'),
+        supabase.from('dishes').select('*').eq('is_active', true).order('search_count', { ascending: false })
+      ]);
+      setCities(citiesRes.data || []);
+      setAllDishes(dishesRes.data || []);
+    };
+    fetchData();
+  }, []);
+
+  // Get unique cuisines from dishes
+  const allCuisines = [...new Set(allDishes.flatMap(d => d.cuisine_tags || []))];
+
   useEffect(() => {
     if (query.length >= 2) {
-      const filtered = dishes.filter(
+      const queryLower = query.toLowerCase();
+      
+      // Filter dishes by name or synonyms
+      const filteredDishes = allDishes.filter(
         d =>
-          d.name.toLowerCase().includes(query.toLowerCase()) ||
-          d.synonyms.some(s => s.toLowerCase().includes(query.toLowerCase()))
+          d.name.toLowerCase().includes(queryLower) ||
+          d.synonyms?.some(s => s.toLowerCase().includes(queryLower))
       );
-      setSuggestions(filtered.slice(0, 6));
-      setShowSuggestions(true);
+      setSuggestions(filteredDishes.slice(0, 5));
+
+      // Filter cuisines
+      const filteredCuisines = allCuisines.filter(c => 
+        c.toLowerCase().includes(queryLower)
+      );
+      setCuisineSuggestions(filteredCuisines.slice(0, 3));
+
+      setShowSuggestions(filteredDishes.length > 0 || filteredCuisines.length > 0);
     } else {
       setSuggestions([]);
+      setCuisineSuggestions([]);
       setShowSuggestions(false);
     }
-  }, [query]);
+  }, [query, allDishes]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -71,14 +105,14 @@ export function SearchBar({
     setShowSuggestions(false);
   };
 
-  const handleSuggestionClick = (dish: typeof dishes[0]) => {
-    setQuery(dish.name);
+  const handleSuggestionClick = (value: string) => {
+    setQuery(value);
     setShowSuggestions(false);
     if (onSearch) {
-      onSearch(dish.name, cityId);
+      onSearch(value, cityId);
     } else {
       const params = new URLSearchParams();
-      params.set('dish', dish.name);
+      params.set('dish', value);
       if (cityId && cityId !== 'all') params.set('city', cityId);
       navigate(`/search?${params.toString()}`);
     }
@@ -118,7 +152,7 @@ export function SearchBar({
 
           {/* Autocomplete Suggestions */}
           <AnimatePresence>
-            {showSuggestions && suggestions.length > 0 && (
+            {showSuggestions && (suggestions.length > 0 || cuisineSuggestions.length > 0) && (
               <motion.div
                 ref={suggestionsRef}
                 initial={{ opacity: 0, y: 10 }}
@@ -126,23 +160,50 @@ export function SearchBar({
                 exit={{ opacity: 0, y: 10 }}
                 className="absolute top-full left-0 right-0 mt-2 bg-card rounded-xl shadow-lg border border-border z-50 overflow-hidden"
               >
-                {suggestions.map((dish, index) => (
-                  <button
-                    key={dish.id}
-                    onClick={() => handleSuggestionClick(dish)}
-                    className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3"
-                  >
-                    <Search className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <span className="font-medium">{dish.name}</span>
-                      {dish.synonyms.length > 0 && (
-                        <span className="text-sm text-muted-foreground ml-2">
-                          ({dish.synonyms.slice(0, 2).join(', ')})
-                        </span>
-                      )}
+                {/* Dish suggestions */}
+                {suggestions.length > 0 && (
+                  <>
+                    <div className="px-4 py-2 text-xs font-semibold text-muted-foreground bg-muted/50">
+                      Gerechten
                     </div>
-                  </button>
-                ))}
+                    {suggestions.map((dish) => (
+                      <button
+                        key={dish.id}
+                        onClick={() => handleSuggestionClick(dish.name)}
+                        className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3"
+                      >
+                        <Search className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <span className="font-medium">{dish.name}</span>
+                          {dish.synonyms && dish.synonyms.length > 0 && (
+                            <span className="text-sm text-muted-foreground ml-2">
+                              ({dish.synonyms.slice(0, 2).join(', ')})
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </>
+                )}
+
+                {/* Cuisine suggestions */}
+                {cuisineSuggestions.length > 0 && (
+                  <>
+                    <div className="px-4 py-2 text-xs font-semibold text-muted-foreground bg-muted/50">
+                      Keukens
+                    </div>
+                    {cuisineSuggestions.map((cuisine) => (
+                      <button
+                        key={cuisine}
+                        onClick={() => handleSuggestionClick(cuisine)}
+                        className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3 capitalize"
+                      >
+                        <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">{cuisine}</span>
+                      </button>
+                    ))}
+                  </>
+                )}
               </motion.div>
             )}
           </AnimatePresence>

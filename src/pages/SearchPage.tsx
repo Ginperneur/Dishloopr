@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { SlidersHorizontal, X, ChevronDown } from 'lucide-react';
+import { SlidersHorizontal, X } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { SearchBar } from '@/components/search/SearchBar';
 import { RestaurantCard } from '@/components/restaurant/RestaurantCard';
@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { searchRestaurants, cuisineTypes, ambienceTags, cities } from '@/data/mockData';
+import { useSearch } from '@/hooks/useSearch';
 
 type SortOption = 'bestMatch' | 'highestRated' | 'mostReviews' | 'priceLowHigh' | 'priceHighLow';
 
@@ -33,9 +33,12 @@ interface Filters {
   cuisines: string[];
 }
 
+const AMBIENCE_OPTIONS = ['romantic', 'family-friendly', 'high-end', 'cozy', 'business', 'trendy', 'casual', 'lively'];
+
 export default function SearchPage() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { search, results, loading, cities, dishes } = useSearch();
   
   const dishQuery = searchParams.get('dish') || '';
   const cityId = searchParams.get('city') || 'all';
@@ -48,19 +51,25 @@ export default function SearchPage() {
   const [sortBy, setSortBy] = useState<SortOption>('bestMatch');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  const results = searchRestaurants(dishQuery, cityId, filters);
+  // Get unique cuisines from database
+  const availableCuisines = [...new Set(dishes.flatMap(d => d.cuisine_tags || []))];
+
+  // Perform search when query, city, or filters change
+  useEffect(() => {
+    search(dishQuery, cityId, filters);
+  }, [dishQuery, cityId, filters]);
 
   // Apply sorting
   const sortedResults = [...results].sort((a, b) => {
     switch (sortBy) {
       case 'highestRated':
-        return b.rating - a.rating;
+        return Number(b.rating) - Number(a.rating);
       case 'mostReviews':
-        return b.reviewCount - a.reviewCount;
+        return b.review_count - a.review_count;
       case 'priceLowHigh':
-        return a.priceLevel - b.priceLevel;
+        return a.price_level - b.price_level;
       case 'priceHighLow':
-        return b.priceLevel - a.priceLevel;
+        return b.price_level - a.price_level;
       default:
         return 0; // Keep original order (best match from search)
     }
@@ -127,33 +136,35 @@ export default function SearchPage() {
       <div>
         <h4 className="font-semibold mb-3">{t('filters.ambience')}</h4>
         <div className="space-y-2">
-          {['romantic', 'family-friendly', 'high-end', 'cozy', 'business'].map((tag) => (
+          {AMBIENCE_OPTIONS.map((tag) => (
             <label key={tag} className="flex items-center gap-3 cursor-pointer">
               <Checkbox
                 checked={filters.ambienceTags.includes(tag)}
                 onCheckedChange={() => toggleFilter('ambienceTags', tag)}
               />
-              <span className="text-sm">{t(`filters.${tag.replace('-', '')}`)}</span>
+              <span className="text-sm capitalize">{tag.replace('-', ' ')}</span>
             </label>
           ))}
         </div>
       </div>
 
       {/* Cuisine */}
-      <div>
-        <h4 className="font-semibold mb-3">{t('filters.cuisine')}</h4>
-        <div className="space-y-2">
-          {cuisineTypes.slice(0, 8).map((cuisine) => (
-            <label key={cuisine} className="flex items-center gap-3 cursor-pointer capitalize">
-              <Checkbox
-                checked={filters.cuisines.includes(cuisine)}
-                onCheckedChange={() => toggleFilter('cuisines', cuisine)}
-              />
-              <span className="text-sm">{cuisine}</span>
-            </label>
-          ))}
+      {availableCuisines.length > 0 && (
+        <div>
+          <h4 className="font-semibold mb-3">{t('filters.cuisine')}</h4>
+          <div className="space-y-2">
+            {availableCuisines.slice(0, 10).map((cuisine) => (
+              <label key={cuisine} className="flex items-center gap-3 cursor-pointer capitalize">
+                <Checkbox
+                  checked={filters.cuisines.includes(cuisine)}
+                  onCheckedChange={() => toggleFilter('cuisines', cuisine)}
+                />
+                <span className="text-sm">{cuisine}</span>
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Clear Filters */}
       {activeFilterCount > 0 && (
@@ -163,6 +174,34 @@ export default function SearchPage() {
       )}
     </div>
   );
+
+  // Convert search results to format expected by RestaurantCard
+  const restaurantCards = sortedResults.map(r => ({
+    id: r.id,
+    name: r.name,
+    slug: r.slug,
+    cityId: r.city_id,
+    address: r.address,
+    postalCode: r.postal_code || '',
+    geoLat: Number(r.geo_lat) || 0,
+    geoLng: Number(r.geo_lng) || 0,
+    priceLevel: r.price_level as 1 | 2 | 3 | 4,
+    cuisines: r.cuisines || [],
+    ambienceTags: r.ambience_tags || [],
+    dishes: [],
+    phone: r.phone || '',
+    websiteUrl: r.website_url || '',
+    reservationUrl: r.reservation_url,
+    openingHours: typeof r.opening_hours === 'object' ? r.opening_hours as { [key: string]: string } : {},
+    images: r.images || [],
+    rating: Number(r.rating),
+    reviewCount: r.review_count,
+    isFeatured: r.is_featured,
+    featuredUntil: r.featured_until,
+    isTopListing: r.is_top_listing,
+    topUntil: r.top_until,
+    claimedByOwnerId: r.claimed_by_owner_id,
+  }));
 
   return (
     <Layout>
@@ -229,7 +268,7 @@ export default function SearchPage() {
                   )}
                 </h1>
                 <p className="text-muted-foreground mt-1">
-                  {sortedResults.length} {t('search.results')}
+                  {loading ? 'Zoeken...' : `${sortedResults.length} ${t('search.results')}`}
                 </p>
               </div>
 
@@ -266,10 +305,10 @@ export default function SearchPage() {
                   <Badge 
                     key={`tag-${tag}`} 
                     variant="secondary"
-                    className="cursor-pointer"
+                    className="cursor-pointer capitalize"
                     onClick={() => toggleFilter('ambienceTags', tag)}
                   >
-                    {t(`filters.${tag.replace('-', '')}`)}
+                    {tag.replace('-', ' ')}
                     <X className="h-3 w-3 ml-1" />
                   </Badge>
                 ))}
@@ -291,9 +330,15 @@ export default function SearchPage() {
             )}
 
             {/* Results Grid */}
-            {sortedResults.length > 0 ? (
+            {loading ? (
               <div className="grid md:grid-cols-2 gap-6">
-                {sortedResults.map((restaurant, index) => (
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="h-64 bg-muted rounded-xl animate-pulse" />
+                ))}
+              </div>
+            ) : sortedResults.length > 0 ? (
+              <div className="grid md:grid-cols-2 gap-6">
+                {restaurantCards.map((restaurant, index) => (
                   <RestaurantCard
                     key={restaurant.id}
                     restaurant={restaurant}

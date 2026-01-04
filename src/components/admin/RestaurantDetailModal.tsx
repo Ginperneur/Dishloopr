@@ -11,15 +11,14 @@ import {
   ExternalLink,
   TrendingUp,
   Users,
-  X,
-  Plus
+  UtensilsCrossed
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { TagInput } from '@/components/ui/tag-input';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -50,6 +49,13 @@ interface Review {
   created_at: string;
 }
 
+interface Dish {
+  id: string;
+  name: string;
+  slug: string;
+  synonyms: string[];
+}
+
 export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate }: RestaurantDetailModalProps) {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -57,8 +63,9 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
   const [loading, setLoading] = useState(true);
   const [cuisines, setCuisines] = useState<string[]>([]);
   const [ambienceTags, setAmbienceTags] = useState<string[]>([]);
-  const [newCuisine, setNewCuisine] = useState('');
-  const [newAmbience, setNewAmbience] = useState('');
+  const [dishes, setDishes] = useState<Dish[]>([]);
+  const [allDishes, setAllDishes] = useState<Dish[]>([]);
+  const [newDishName, setNewDishName] = useState('');
 
   useEffect(() => {
     if (open && restaurant) {
@@ -82,32 +89,14 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
     }
   };
 
-  const addCuisine = () => {
-    if (!newCuisine.trim()) return;
-    const updated = [...cuisines, newCuisine.trim().toLowerCase()];
-    setCuisines(updated);
-    updateTags('cuisines', updated);
-    setNewCuisine('');
+  const handleCuisinesChange = (newCuisines: string[]) => {
+    setCuisines(newCuisines);
+    updateTags('cuisines', newCuisines);
   };
 
-  const removeCuisine = (cuisine: string) => {
-    const updated = cuisines.filter(c => c !== cuisine);
-    setCuisines(updated);
-    updateTags('cuisines', updated);
-  };
-
-  const addAmbience = () => {
-    if (!newAmbience.trim()) return;
-    const updated = [...ambienceTags, newAmbience.trim().toLowerCase()];
-    setAmbienceTags(updated);
-    updateTags('ambience_tags', updated);
-    setNewAmbience('');
-  };
-
-  const removeAmbience = (tag: string) => {
-    const updated = ambienceTags.filter(t => t !== tag);
-    setAmbienceTags(updated);
-    updateTags('ambience_tags', updated);
+  const handleAmbienceChange = (newAmbience: string[]) => {
+    setAmbienceTags(newAmbience);
+    updateTags('ambience_tags', newAmbience);
   };
 
   const fetchData = async () => {
@@ -130,6 +119,31 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
       .eq('restaurant_id', restaurant.id)
       .order('created_at', { ascending: false });
     setReviews(reviewData || []);
+
+    // Fetch all dishes for selection
+    const { data: allDishesData } = await supabase
+      .from('dishes')
+      .select('id, name, slug, synonyms')
+      .eq('is_active', true)
+      .order('name');
+    setAllDishes(allDishesData || []);
+
+    // Fetch linked dishes
+    const { data: linkedDishes } = await supabase
+      .from('restaurant_dishes')
+      .select('dish_id')
+      .eq('restaurant_id', restaurant.id);
+
+    if (linkedDishes && linkedDishes.length > 0) {
+      const dishIds = linkedDishes.map(ld => ld.dish_id);
+      const { data: dishData } = await supabase
+        .from('dishes')
+        .select('id, name, slug, synonyms')
+        .in('id', dishIds);
+      setDishes(dishData || []);
+    } else {
+      setDishes([]);
+    }
 
     // Fetch analytics (last 30 days)
     const thirtyDaysAgo = new Date();
@@ -194,6 +208,96 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
     }
 
     setLoading(false);
+  };
+
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+  };
+
+  const addDishes = async (dishNames: string[]) => {
+    for (const name of dishNames) {
+      const trimmedName = name.trim();
+      if (!trimmedName) continue;
+
+      // Check if dish already exists
+      let dish = allDishes.find(d => d.name.toLowerCase() === trimmedName.toLowerCase());
+
+      if (!dish) {
+        // Create new dish
+        const { data: newDish, error: dishError } = await supabase
+          .from('dishes')
+          .insert({
+            name: trimmedName,
+            slug: generateSlug(trimmedName),
+            synonyms: [],
+            is_active: true
+          })
+          .select()
+          .single();
+
+        if (dishError) {
+          toast.error(`Gerecht "${trimmedName}" toevoegen mislukt`);
+          continue;
+        }
+        dish = newDish;
+        setAllDishes(prev => [...prev, newDish]);
+      }
+
+      // Check if already linked
+      const alreadyLinked = dishes.some(d => d.id === dish!.id);
+      if (alreadyLinked) continue;
+
+      // Link dish to restaurant
+      const { error: linkError } = await supabase
+        .from('restaurant_dishes')
+        .insert({
+          restaurant_id: restaurant.id,
+          dish_id: dish!.id,
+          confidence_score: 1.0
+        });
+
+      if (linkError) {
+        toast.error(`Koppelen van "${trimmedName}" mislukt`);
+      } else {
+        setDishes(prev => [...prev, dish!]);
+      }
+    }
+    toast.success('Gerechten bijgewerkt');
+    onUpdate?.();
+  };
+
+  const removeDish = async (dishId: string) => {
+    const { error } = await supabase
+      .from('restaurant_dishes')
+      .delete()
+      .eq('restaurant_id', restaurant.id)
+      .eq('dish_id', dishId);
+
+    if (error) {
+      toast.error('Gerecht verwijderen mislukt');
+    } else {
+      setDishes(prev => prev.filter(d => d.id !== dishId));
+      toast.success('Gerecht verwijderd');
+      onUpdate?.();
+    }
+  };
+
+  const updateDishSynonyms = async (dishId: string, synonyms: string[]) => {
+    const { error } = await supabase
+      .from('dishes')
+      .update({ synonyms })
+      .eq('id', dishId);
+
+    if (error) {
+      toast.error('Synoniemen bijwerken mislukt');
+    } else {
+      setDishes(prev => prev.map(d => d.id === dishId ? { ...d, synonyms } : d));
+      setAllDishes(prev => prev.map(d => d.id === dishId ? { ...d, synonyms } : d));
+      toast.success('Synoniemen bijgewerkt');
+    }
   };
 
   if (!restaurant) return null;
@@ -373,6 +477,71 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
 
             <Separator />
 
+            {/* Dishes Management */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <UtensilsCrossed className="h-5 w-5" />
+                  Gerechten ({dishes.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  {dishes.map((dish) => (
+                    <div key={dish.id} className="group relative">
+                      <Badge variant="default" className="pr-6 capitalize">
+                        {dish.name}
+                        <button
+                          onClick={() => removeDish(dish.id)}
+                          className="absolute right-1 top-1/2 -translate-y-1/2 opacity-50 hover:opacity-100 hover:text-destructive"
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                      {dish.synonyms && dish.synonyms.length > 0 && (
+                        <span className="text-xs text-muted-foreground ml-1">
+                          ({dish.synonyms.slice(0, 2).join(', ')})
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Gerechten toevoegen</p>
+                  <TagInput
+                    tags={[]}
+                    onTagsChange={(tags) => {
+                      if (tags.length > 0) {
+                        addDishes(tags);
+                      }
+                    }}
+                    placeholder="ossenhaas, spaghetti, nachos..."
+                    variant="default"
+                  />
+                </div>
+
+                {dishes.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium mb-2">Synoniemen beheren</p>
+                    <div className="space-y-3">
+                      {dishes.map((dish) => (
+                        <div key={dish.id} className="p-3 rounded-lg bg-muted/50">
+                          <p className="text-sm font-medium capitalize mb-2">{dish.name}</p>
+                          <TagInput
+                            tags={dish.synonyms || []}
+                            onTagsChange={(newSynonyms) => updateDishSynonyms(dish.id, newSynonyms)}
+                            placeholder="steak, biefstuk, entrecote..."
+                            variant="secondary"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Reviews Summary */}
             <Card>
               <CardHeader>
@@ -483,62 +652,24 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
               <CardContent className="space-y-4">
                 {/* Cuisines */}
                 <div>
-                  <p className="text-sm text-muted-foreground mb-2">Keukens</p>
-                  <div className="flex flex-wrap gap-1 mb-2">
-                    {cuisines.map((cuisine) => (
-                      <Badge key={cuisine} variant="outline" className="capitalize pr-1">
-                        {cuisine}
-                        <button
-                          onClick={() => removeCuisine(cuisine)}
-                          className="ml-1 hover:text-destructive"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Nieuwe keuken..."
-                      value={newCuisine}
-                      onChange={(e) => setNewCuisine(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && addCuisine()}
-                      className="h-8"
-                    />
-                    <Button size="sm" variant="outline" onClick={addCuisine}>
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <p className="text-sm font-medium mb-2">Keukens</p>
+                  <TagInput
+                    tags={cuisines}
+                    onTagsChange={handleCuisinesChange}
+                    placeholder="italiaans, japans, mexicaans..."
+                    variant="outline"
+                  />
                 </div>
 
                 {/* Ambience Tags */}
                 <div>
-                  <p className="text-sm text-muted-foreground mb-2">Sfeer</p>
-                  <div className="flex flex-wrap gap-1 mb-2">
-                    {ambienceTags.map((tag) => (
-                      <Badge key={tag} variant="secondary" className="capitalize pr-1">
-                        {tag}
-                        <button
-                          onClick={() => removeAmbience(tag)}
-                          className="ml-1 hover:text-destructive"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Nieuwe sfeer tag..."
-                      value={newAmbience}
-                      onChange={(e) => setNewAmbience(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && addAmbience()}
-                      className="h-8"
-                    />
-                    <Button size="sm" variant="outline" onClick={addAmbience}>
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <p className="text-sm font-medium mb-2">Sfeer</p>
+                  <TagInput
+                    tags={ambienceTags}
+                    onTagsChange={handleAmbienceChange}
+                    placeholder="romantisch, gezellig, zakelijk..."
+                    variant="secondary"
+                  />
                 </div>
               </CardContent>
             </Card>
