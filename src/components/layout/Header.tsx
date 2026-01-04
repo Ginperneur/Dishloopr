@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Menu, X, LogOut, User } from 'lucide-react';
+import { Menu, X, LogOut, User, Store } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -95,6 +95,12 @@ export function Header() {
                   </div>
                 </div>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/owner" className="cursor-pointer">
+                    <Store className="mr-2 h-4 w-4" />
+                    Owner Dashboard
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/dashboard" className="cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
