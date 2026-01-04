@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Menu, X, LogOut, User, Store } from 'lucide-react';
-import { useState } from 'react';
+import { Menu, X, LogOut, User, Store, Shield } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import logo from '@/assets/dishloopr-logo.png';
 
 const languages = [
@@ -27,6 +28,16 @@ export function Header() {
   const { t, i18n } = useTranslation();
   const { user, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' })
+        .then(({ data }) => setIsAdmin(data === true));
+    } else {
+      setIsAdmin(false);
+    }
+  }, [user]);
 
   const userInitials = user?.user_metadata?.name
     ? user.user_metadata.name.slice(0, 2).toUpperCase()
@@ -107,6 +118,14 @@ export function Header() {
                     {t('nav.dashboard')}
                   </Link>
                 </DropdownMenuItem>
+                {isAdmin && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin" className="cursor-pointer">
+                      <Shield className="mr-2 h-4 w-4" />
+                      Admin Panel
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
