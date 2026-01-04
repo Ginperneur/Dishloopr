@@ -28,6 +28,7 @@ import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { RestaurantDetailModal } from '@/components/admin/RestaurantDetailModal';
+import { AddRestaurantModal } from '@/components/admin/AddRestaurantModal';
 
 interface Stats {
   totalUsers: number;
@@ -268,14 +269,17 @@ export default function AdminPanel() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>Restaurants beheren</CardTitle>
-                  <div className="relative w-64">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Zoek restaurants..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9"
-                    />
+                  <div className="flex items-center gap-4">
+                    <div className="relative w-64">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Zoek restaurants..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-9"
+                      />
+                    </div>
+                    <AddRestaurantModal onSuccess={fetchData} />
                   </div>
                 </div>
               </CardHeader>
@@ -458,6 +462,7 @@ export default function AdminPanel() {
           restaurant={selectedRestaurant}
           open={detailModalOpen}
           onOpenChange={setDetailModalOpen}
+          onUpdate={fetchData}
         />
       </div>
     </Layout>

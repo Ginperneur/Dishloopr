@@ -10,20 +10,25 @@ import {
   MapPin,
   ExternalLink,
   TrendingUp,
-  Users
+  Users,
+  X,
+  Plus
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface RestaurantDetailModalProps {
   restaurant: any;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onUpdate?: () => void;
 }
 
 interface Analytics {
@@ -45,17 +50,65 @@ interface Review {
   created_at: string;
 }
 
-export function RestaurantDetailModal({ restaurant, open, onOpenChange }: RestaurantDetailModalProps) {
+export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate }: RestaurantDetailModalProps) {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [city, setCity] = useState<{ name: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cuisines, setCuisines] = useState<string[]>([]);
+  const [ambienceTags, setAmbienceTags] = useState<string[]>([]);
+  const [newCuisine, setNewCuisine] = useState('');
+  const [newAmbience, setNewAmbience] = useState('');
 
   useEffect(() => {
     if (open && restaurant) {
       fetchData();
+      setCuisines(restaurant.cuisines || []);
+      setAmbienceTags(restaurant.ambience_tags || []);
     }
   }, [open, restaurant]);
+
+  const updateTags = async (field: 'cuisines' | 'ambience_tags', tags: string[]) => {
+    const { error } = await supabase
+      .from('restaurants')
+      .update({ [field]: tags })
+      .eq('id', restaurant.id);
+
+    if (error) {
+      toast.error('Tags bijwerken mislukt');
+    } else {
+      toast.success('Tags bijgewerkt');
+      onUpdate?.();
+    }
+  };
+
+  const addCuisine = () => {
+    if (!newCuisine.trim()) return;
+    const updated = [...cuisines, newCuisine.trim().toLowerCase()];
+    setCuisines(updated);
+    updateTags('cuisines', updated);
+    setNewCuisine('');
+  };
+
+  const removeCuisine = (cuisine: string) => {
+    const updated = cuisines.filter(c => c !== cuisine);
+    setCuisines(updated);
+    updateTags('cuisines', updated);
+  };
+
+  const addAmbience = () => {
+    if (!newAmbience.trim()) return;
+    const updated = [...ambienceTags, newAmbience.trim().toLowerCase()];
+    setAmbienceTags(updated);
+    updateTags('ambience_tags', updated);
+    setNewAmbience('');
+  };
+
+  const removeAmbience = (tag: string) => {
+    const updated = ambienceTags.filter(t => t !== tag);
+    setAmbienceTags(updated);
+    updateTags('ambience_tags', updated);
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -418,30 +471,74 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange }: Restau
                     <p className="text-muted-foreground">Geclaimd</p>
                     <p className="font-medium">{restaurant.claimed_by_owner_id ? 'Ja' : 'Nee'}</p>
                   </div>
-                  {restaurant.cuisines?.length > 0 && (
-                    <div className="md:col-span-2">
-                      <p className="text-muted-foreground mb-1">Keukens</p>
-                      <div className="flex flex-wrap gap-1">
-                        {restaurant.cuisines.map((cuisine: string) => (
-                          <Badge key={cuisine} variant="outline" className="capitalize">
-                            {cuisine}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {restaurant.ambience_tags?.length > 0 && (
-                    <div className="md:col-span-2">
-                      <p className="text-muted-foreground mb-1">Sfeer</p>
-                      <div className="flex flex-wrap gap-1">
-                        {restaurant.ambience_tags.map((tag: string) => (
-                          <Badge key={tag} variant="secondary" className="capitalize">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Tag Management */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Tags beheren</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Cuisines */}
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Keukens</p>
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {cuisines.map((cuisine) => (
+                      <Badge key={cuisine} variant="outline" className="capitalize pr-1">
+                        {cuisine}
+                        <button
+                          onClick={() => removeCuisine(cuisine)}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Nieuwe keuken..."
+                      value={newCuisine}
+                      onChange={(e) => setNewCuisine(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && addCuisine()}
+                      className="h-8"
+                    />
+                    <Button size="sm" variant="outline" onClick={addCuisine}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Ambience Tags */}
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Sfeer</p>
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {ambienceTags.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="capitalize pr-1">
+                        {tag}
+                        <button
+                          onClick={() => removeAmbience(tag)}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Nieuwe sfeer tag..."
+                      value={newAmbience}
+                      onChange={(e) => setNewAmbience(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && addAmbience()}
+                      className="h-8"
+                    />
+                    <Button size="sm" variant="outline" onClick={addAmbience}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
