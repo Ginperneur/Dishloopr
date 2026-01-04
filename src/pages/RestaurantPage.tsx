@@ -18,9 +18,12 @@ import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { ReviewForm } from '@/components/reviews/ReviewForm';
+import { ReviewList } from '@/components/reviews/ReviewList';
+import { useFavorites } from '@/hooks/useFavorites';
+import { useReviews } from '@/hooks/useReviews';
 import { 
   getRestaurantBySlug, 
-  getReviewsForRestaurant, 
   dishes,
   cities 
 } from '@/data/mockData';
@@ -48,7 +51,8 @@ export default function RestaurantPage() {
   const { t } = useTranslation();
   
   const restaurant = getRestaurantBySlug(slug || '');
-  const reviews = restaurant ? getReviewsForRestaurant(restaurant.id) : [];
+  const { reviews, loading: reviewsLoading, submitting, submitReview } = useReviews(restaurant?.id);
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   if (!restaurant) {
     return (
@@ -138,8 +142,13 @@ export default function RestaurantPage() {
                 </div>
                 
                 <div className="flex gap-2">
-                  <Button variant="outline" size="icon">
-                    <Heart className="h-4 w-4" />
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => toggleFavorite(restaurant.id)}
+                    className={isFavorite(restaurant.id) ? 'text-red-500' : ''}
+                  >
+                    <Heart className={`h-4 w-4 ${isFavorite(restaurant.id) ? 'fill-current' : ''}`} />
                   </Button>
                   <Button variant="outline" size="icon">
                     <Share2 className="h-4 w-4" />
@@ -217,44 +226,11 @@ export default function RestaurantPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold">{t('reviews.title')}</h2>
-                <Button>{t('reviews.writeReview')}</Button>
-              </div>
-
+              <h2 className="text-xl font-bold mb-6">{t('reviews.title')}</h2>
+              
               <div className="space-y-6">
-                {reviews.length > 0 ? (
-                  reviews.map((review) => (
-                    <div key={review.id} className="p-4 rounded-xl bg-muted/50">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <p className="font-semibold">{review.userName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(review.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-4 w-4 ${
-                                i < review.rating 
-                                  ? 'fill-rating text-rating' 
-                                  : 'text-muted-foreground'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <h4 className="font-medium mb-2">{review.title}</h4>
-                      <p className="text-muted-foreground">{review.body}</p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-center text-muted-foreground py-8">
-                    No reviews yet. Be the first to review!
-                  </p>
-                )}
+                <ReviewForm onSubmit={submitReview} submitting={submitting} />
+                <ReviewList reviews={reviews} loading={reviewsLoading} />
               </div>
             </motion.div>
           </div>
