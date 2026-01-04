@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { TagInput } from '@/components/ui/tag-input';
+import { MenuUpload } from '@/components/admin/MenuUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -537,8 +538,16 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
                         </div>
                       ))}
                     </div>
-                  </div>
+                </div>
                 )}
+
+                {/* Menu PDF Upload */}
+                <Separator className="my-4" />
+                <MenuUpload 
+                  restaurantId={restaurant.id} 
+                  restaurantName={restaurant.name}
+                  onSuccess={fetchData}
+                />
               </CardContent>
             </Card>
 
