@@ -18,15 +18,12 @@ import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ReviewForm } from '@/components/reviews/ReviewForm';
 import { ReviewList } from '@/components/reviews/ReviewList';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useReviews } from '@/hooks/useReviews';
-import { 
-  getRestaurantBySlug, 
-  dishes,
-  cities 
-} from '@/data/mockData';
+import { useRestaurant } from '@/hooks/useRestaurant';
 
 const priceLabels: { [key: number]: string } = {
   1: '€ · Budget',
@@ -50,46 +47,65 @@ export default function RestaurantPage() {
   const { slug } = useParams<{ slug: string }>();
   const { t } = useTranslation();
   
-  const restaurant = getRestaurantBySlug(slug || '');
+  const { restaurant, loading: restaurantLoading, error } = useRestaurant(slug);
   const { reviews, loading: reviewsLoading, submitting, submitReview } = useReviews(restaurant?.id);
   const { isFavorite, toggleFavorite } = useFavorites();
 
-  if (!restaurant) {
+  if (restaurantLoading) {
+    return (
+      <Layout>
+        <div className="h-64 md:h-96 bg-muted animate-pulse" />
+        <div className="container py-8">
+          <div className="grid lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-4">
+              <Skeleton className="h-10 w-64" />
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error || !restaurant) {
     return (
       <Layout>
         <div className="container py-16 text-center">
-          <h1 className="text-2xl font-bold mb-4">Restaurant not found</h1>
+          <h1 className="text-2xl font-bold mb-4">{error || 'Restaurant niet gevonden'}</h1>
           <Button asChild>
-            <Link to="/search">Back to search</Link>
+            <Link to="/search">Terug naar zoeken</Link>
           </Button>
         </div>
       </Layout>
     );
   }
 
-  const city = cities.find(c => c.id === restaurant.cityId);
-  const restaurantDishes = restaurant.dishes
-    .map(rd => dishes.find(d => d.id === rd.dishId))
-    .filter(Boolean);
+  const openingHours = (restaurant.opening_hours || {}) as { [key: string]: string };
 
   const isOpen = () => {
     const now = new Date();
     const day = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][now.getDay()];
-    const hours = restaurant.openingHours[day];
+    const hours = openingHours[day];
     if (!hours || hours === 'closed') return false;
-    // Simplified check - in production would parse actual times
     return true;
   };
 
   return (
     <Layout>
       {/* Hero Image */}
-      <div className="relative h-64 md:h-96 overflow-hidden">
-        <img
-          src={restaurant.images[0]}
-          alt={restaurant.name}
-          className="w-full h-full object-cover"
-        />
+      <div className="relative h-64 md:h-96 overflow-hidden bg-muted">
+        {restaurant.images && restaurant.images.length > 0 ? (
+          <img
+            src={restaurant.images[0]}
+            alt={restaurant.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+            Geen afbeelding beschikbaar
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
         
         {/* Back Button */}
@@ -102,13 +118,13 @@ export default function RestaurantPage() {
 
         {/* Badges */}
         <div className="absolute top-4 right-4 flex gap-2">
-          {restaurant.isTopListing && (
+          {restaurant.is_top_listing && (
             <Badge className="featured-badge border-0 gap-1">
               <Trophy className="h-3 w-3" />
               {t('restaurant.topListing')}
             </Badge>
           )}
-          {restaurant.isFeatured && !restaurant.isTopListing && (
+          {restaurant.is_featured && !restaurant.is_top_listing && (
             <Badge className="featured-badge border-0 gap-1">
               <Sparkles className="h-3 w-3" />
               {t('restaurant.featured')}
@@ -134,10 +150,10 @@ export default function RestaurantPage() {
                   <div className="flex items-center gap-4 text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Star className="h-5 w-5 fill-rating text-rating" />
-                      <span className="font-semibold text-foreground">{restaurant.rating.toFixed(1)}</span>
-                      <span>({restaurant.reviewCount} {t('restaurant.reviews')})</span>
+                      <span className="font-semibold text-foreground">{Number(restaurant.rating).toFixed(1)}</span>
+                      <span>({restaurant.review_count} {t('restaurant.reviews')})</span>
                     </div>
-                    <span>{priceLabels[restaurant.priceLevel]}</span>
+                    <span>{priceLabels[restaurant.price_level]}</span>
                   </div>
                 </div>
                 
@@ -159,7 +175,7 @@ export default function RestaurantPage() {
               {/* Location */}
               <div className="flex items-center gap-2 text-muted-foreground mb-4">
                 <MapPin className="h-4 w-4" />
-                <span>{restaurant.address}, {restaurant.postalCode} {city?.name}</span>
+                <span>{restaurant.address}, {restaurant.postal_code} {restaurant.city?.name}</span>
               </div>
 
               {/* Open Status */}
@@ -178,7 +194,7 @@ export default function RestaurantPage() {
 
               {/* Tags */}
               <div className="flex flex-wrap gap-2">
-                {restaurant.ambienceTags.map((tag) => (
+                {restaurant.ambience_tags?.map((tag) => (
                   <span
                     key={tag}
                     className={`px-3 py-1 text-sm font-medium rounded-full ${
@@ -188,7 +204,7 @@ export default function RestaurantPage() {
                     {t(`filters.${tag.replace('-', '')}`) || tag}
                   </span>
                 ))}
-                {restaurant.cuisines.map((cuisine) => (
+                {restaurant.cuisines?.map((cuisine) => (
                   <Badge key={cuisine} variant="outline" className="capitalize">
                     {cuisine}
                   </Badge>
@@ -199,26 +215,30 @@ export default function RestaurantPage() {
             <Separator />
 
             {/* Known For */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              <h2 className="text-xl font-bold mb-4">{t('restaurant.knownFor')}</h2>
-              <div className="flex flex-wrap gap-3">
-                {restaurantDishes.map((dish) => (
-                  <Link
-                    key={dish!.id}
-                    to={`/search?dish=${encodeURIComponent(dish!.name)}`}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent hover:bg-accent/80 transition-colors"
-                  >
-                    <span className="font-medium">{dish!.name}</span>
-                  </Link>
-                ))}
-              </div>
-            </motion.div>
+            {restaurant.dishes && restaurant.dishes.length > 0 && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <h2 className="text-xl font-bold mb-4">{t('restaurant.knownFor')}</h2>
+                  <div className="flex flex-wrap gap-3">
+                    {restaurant.dishes.map((dish) => (
+                      <Link
+                        key={dish.id}
+                        to={`/search?dish=${encodeURIComponent(dish.name)}`}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent hover:bg-accent/80 transition-colors"
+                      >
+                        <span className="font-medium">{dish.name}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </motion.div>
 
-            <Separator />
+                <Separator />
+              </>
+            )}
 
             {/* Reviews */}
             <motion.div
@@ -245,38 +265,44 @@ export default function RestaurantPage() {
               {/* CTA Card */}
               <div className="p-6 rounded-2xl border border-border bg-card">
                 <div className="space-y-3">
-                  {restaurant.reservationUrl && (
+                  {restaurant.reservation_url && (
                     <Button className="w-full" size="lg" asChild>
-                      <a href={restaurant.reservationUrl} target="_blank" rel="noopener noreferrer">
+                      <a href={restaurant.reservation_url} target="_blank" rel="noopener noreferrer">
                         {t('restaurant.reserve')}
                       </a>
                     </Button>
                   )}
                   
-                  <Button variant="outline" className="w-full" size="lg" asChild>
-                    <a href={restaurant.websiteUrl} target="_blank" rel="noopener noreferrer">
-                      <Globe className="h-4 w-4 mr-2" />
-                      {t('restaurant.website')}
-                    </a>
-                  </Button>
+                  {restaurant.website_url && (
+                    <Button variant="outline" className="w-full" size="lg" asChild>
+                      <a href={restaurant.website_url} target="_blank" rel="noopener noreferrer">
+                        <Globe className="h-4 w-4 mr-2" />
+                        {t('restaurant.website')}
+                      </a>
+                    </Button>
+                  )}
 
                   <div className="grid grid-cols-2 gap-3">
-                    <Button variant="outline" asChild>
-                      <a href={`tel:${restaurant.phone}`}>
-                        <Phone className="h-4 w-4 mr-2" />
-                        {t('restaurant.call')}
-                      </a>
-                    </Button>
-                    <Button variant="outline" asChild>
-                      <a 
-                        href={`https://www.google.com/maps/dir/?api=1&destination=${restaurant.geoLat},${restaurant.geoLng}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Navigation className="h-4 w-4 mr-2" />
-                        {t('restaurant.directions')}
-                      </a>
-                    </Button>
+                    {restaurant.phone && (
+                      <Button variant="outline" asChild>
+                        <a href={`tel:${restaurant.phone}`}>
+                          <Phone className="h-4 w-4 mr-2" />
+                          {t('restaurant.call')}
+                        </a>
+                      </Button>
+                    )}
+                    {restaurant.geo_lat && restaurant.geo_lng && (
+                      <Button variant="outline" asChild>
+                        <a 
+                          href={`https://www.google.com/maps/dir/?api=1&destination=${restaurant.geo_lat},${restaurant.geo_lng}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Navigation className="h-4 w-4 mr-2" />
+                          {t('restaurant.directions')}
+                        </a>
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -285,14 +311,14 @@ export default function RestaurantPage() {
               <div className="p-6 rounded-2xl border border-border bg-card">
                 <h3 className="font-semibold mb-4 flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  Opening Hours
+                  Openingstijden
                 </h3>
                 <div className="space-y-2 text-sm">
-                  {Object.entries(restaurant.openingHours).map(([day, hours]) => (
+                  {Object.entries(openingHours).map(([day, hours]) => (
                     <div key={day} className="flex justify-between">
                       <span className="capitalize text-muted-foreground">{day}</span>
                       <span className={hours === 'closed' ? 'text-muted-foreground' : ''}>
-                        {hours === 'closed' ? 'Closed' : hours}
+                        {hours === 'closed' ? 'Gesloten' : hours}
                       </span>
                     </div>
                   ))}
