@@ -65,7 +65,8 @@
     "share": "Share",
     "website": "Website",
     "addToFavorites": "Add to favorites",
-    "removeFromFavorites": "Remove from favorites"
+    "removeFromFavorites": "Remove from favorites",
+    "menu": "Menu"
   },
   "reviews": {
     "title": "Reviews",
@@ -80,7 +81,10 @@
   "trending": {
     "title": "Trending dishes",
     "subtitle": "Popular in your city",
-    "inCity": "in {city}"
+    "inCity": "in {city}",
+    "now": "Trending now",
+    "searches": "searches",
+    "seasonalSubtitle": "Dishes that are perfect right now"
   },
   "search": {
     "results": "results",
@@ -118,5 +122,56 @@
     "exploreNow": "Explore now",
     "becauseYouLiked": "Because you liked {{dish}}",
     "youMightAlsoLike": "You might also like these"
+  },
+  "menu": {
+    "allergens": "Allergens"
+  },
+  "busyLevel": {
+    "quiet": "Quiet",
+    "moderate": "Moderately busy",
+    "busy": "Busy",
+    "very_busy": "Very busy",
+    "waitTime": "wait time"
+  },
+  "sustainability": {
+    "ecoScore": "Eco-score",
+    "excellent": "Excellent",
+    "good": "Good",
+    "average": "Average",
+    "basic": "Basic",
+    "localIngredients": "Local ingredients",
+    "sustainableSeafood": "Sustainable seafood",
+    "wasteReduction": "Waste reduction",
+    "lowEmissions": "Low emissions"
+  },
+  "events": {
+    "title": "Events",
+    "upcoming": "Upcoming events",
+    "spotsLeft": "{{count}} spots left",
+    "soldOut": "Sold out",
+    "book": "Book now",
+    "viewDetails": "View details"
+  },
+  "voice": {
+    "title": "Voice search",
+    "start": "Voice search",
+    "listening": "Listening...",
+    "searching": "Searching for restaurants...",
+    "hint": "Say something like \"Where can I find the best ramen?\"",
+    "notSupported": "Voice recognition is not supported in this browser",
+    "permissionDenied": "Microphone access denied",
+    "noSpeech": "No speech detected",
+    "error": "Something went wrong"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "tryAgain": "Try again",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "minutes": "min"
   }
 }

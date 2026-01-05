@@ -23,6 +23,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ReviewForm } from '@/components/reviews/ReviewForm';
 import { ReviewList } from '@/components/reviews/ReviewList';
 import { SmartSuggestions } from '@/components/ai/SmartSuggestions';
+import { MenuSection } from '@/components/restaurant/MenuSection';
+import { BusyIndicator } from '@/components/restaurant/BusyIndicator';
+import { SustainabilityScore } from '@/components/restaurant/SustainabilityScore';
+import { EventsSection } from '@/components/restaurant/EventsSection';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useReviews } from '@/hooks/useReviews';
 import { useRestaurant } from '@/hooks/useRestaurant';
@@ -210,17 +214,25 @@ export default function RestaurantPage() {
                 <span className="truncate">{restaurant.address}, {restaurant.postal_code} {restaurant.city?.name}</span>
               </div>
 
-              {/* Open Status */}
-              <div className="flex items-center gap-2 mb-3 md:mb-4">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                {isOpen() ? (
-                  <Badge variant="secondary" className="bg-tag-family/10 text-tag-family text-xs">
-                    {t('restaurant.openNow')}
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary" className="bg-destructive/10 text-destructive text-xs">
-                    {t('restaurant.closed')}
-                  </Badge>
+              {/* Open Status & Busy Level */}
+              <div className="flex flex-wrap items-center gap-3 mb-3 md:mb-4">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  {isOpen() ? (
+                    <Badge variant="secondary" className="bg-tag-family/10 text-tag-family text-xs">
+                      {t('restaurant.openNow')}
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="bg-destructive/10 text-destructive text-xs">
+                      {t('restaurant.closed')}
+                    </Badge>
+                  )}
+                </div>
+                {restaurant.current_busy_level && (
+                  <BusyIndicator busyLevel={restaurant.current_busy_level} />
+                )}
+                {restaurant.sustainability_score && (
+                  <SustainabilityScore score={restaurant.sustainability_score} compact />
                 )}
               </div>
 
@@ -300,6 +312,24 @@ export default function RestaurantPage() {
                 <Separator />
               </>
             )}
+
+            {/* Menu Section */}
+            <MenuSection restaurantId={restaurant.id} />
+
+            <Separator />
+
+            {/* Events Section */}
+            <EventsSection restaurantId={restaurant.id} />
+
+            {/* Sustainability Score (full version) */}
+            {restaurant.sustainability_score && (
+              <>
+                <Separator />
+                <SustainabilityScore score={restaurant.sustainability_score} />
+              </>
+            )}
+
+            <Separator />
 
             {/* Reviews */}
             <motion.div
