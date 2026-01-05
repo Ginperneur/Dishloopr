@@ -420,7 +420,13 @@ export default function RestaurantPage() {
               <h2 className="text-lg md:text-xl font-bold mb-4 md:mb-6">{t('reviews.title')}</h2>
               
               <div className="space-y-6">
-                <ReviewForm onSubmit={submitReview} submitting={submitting} />
+                <ReviewForm 
+                  onSubmit={submitReview} 
+                  submitting={submitting}
+                  restaurantId={restaurant.id}
+                  ambienceTags={restaurant.ambience_tags || []}
+                  cuisines={restaurant.cuisines || []}
+                />
                 <ReviewList 
                   reviews={reviews} 
                   loading={reviewsLoading} 
