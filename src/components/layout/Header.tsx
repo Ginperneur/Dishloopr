@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, LogOut, User, Store, Shield, Heart, Search } from 'lucide-react';
+import { Menu, X, LogOut, User, Store, Shield, Heart, Search, BarChart3 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -139,6 +139,12 @@ export function Header() {
                     Favorieten
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/insights" className="cursor-pointer">
+                    <BarChart3 className="mr-2 h-4 w-4" />
+                    Inzichten
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link to="/dashboard" className="cursor-pointer">
@@ -220,6 +226,14 @@ export function Header() {
                   >
                     <User className="h-5 w-5 text-muted-foreground" />
                     <span className="font-medium">Mijn Profiel</span>
+                  </Link>
+                  <Link
+                    to="/insights"
+                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <BarChart3 className="h-5 w-5 text-muted-foreground" />
+                    <span className="font-medium">Inzichten</span>
                   </Link>
                   <Link
                     to="/dashboard"

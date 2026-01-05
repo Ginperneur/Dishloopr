@@ -19,6 +19,7 @@ import PrivacyPage from "./pages/PrivacyPage";
 import ClaimPage from "./pages/ClaimPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import ProfilePage from "./pages/ProfilePage";
+import InsightsPage from "./pages/InsightsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,7 @@ const App = () => (
               <Route path="/claim" element={<ClaimPage />} />
               <Route path="/favorites" element={<FavoritesPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/insights" element={<InsightsPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

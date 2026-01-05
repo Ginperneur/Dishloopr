@@ -623,6 +623,94 @@ export type Database = {
           },
         ]
       }
+      user_badges: {
+        Row: {
+          badge_level: number | null
+          badge_type: string
+          created_at: string
+          earned_at: string | null
+          id: string
+          progress: number | null
+          target: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          badge_level?: number | null
+          badge_type: string
+          created_at?: string
+          earned_at?: string | null
+          id?: string
+          progress?: number | null
+          target: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          badge_level?: number | null
+          badge_type?: string
+          created_at?: string
+          earned_at?: string | null
+          id?: string
+          progress?: number | null
+          target?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_perks: {
+        Row: {
+          created_at: string
+          discount_percent: number | null
+          id: string
+          is_redeemed: boolean | null
+          perk_code: string | null
+          perk_type: string
+          redeemed_at: string | null
+          user_id: string
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string
+          discount_percent?: number | null
+          id?: string
+          is_redeemed?: boolean | null
+          perk_code?: string | null
+          perk_type: string
+          redeemed_at?: string | null
+          user_id: string
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string
+          discount_percent?: number | null
+          id?: string
+          is_redeemed?: boolean | null
+          perk_code?: string | null
+          perk_type?: string
+          redeemed_at?: string | null
+          user_id?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_perks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -644,6 +732,128 @@ export type Database = {
         }
         Relationships: []
       }
+      user_stats: {
+        Row: {
+          cities_visited: string[] | null
+          created_at: string
+          cuisines_tried: string[] | null
+          favorite_cuisine: string | null
+          favorite_price_level: number | null
+          first_review_date: string | null
+          id: string
+          last_activity_date: string | null
+          streak_days: number | null
+          total_restaurants_visited: number | null
+          total_reviews_written: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cities_visited?: string[] | null
+          created_at?: string
+          cuisines_tried?: string[] | null
+          favorite_cuisine?: string | null
+          favorite_price_level?: number | null
+          first_review_date?: string | null
+          id?: string
+          last_activity_date?: string | null
+          streak_days?: number | null
+          total_restaurants_visited?: number | null
+          total_reviews_written?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cities_visited?: string[] | null
+          created_at?: string
+          cuisines_tried?: string[] | null
+          favorite_cuisine?: string | null
+          favorite_price_level?: number | null
+          first_review_date?: string | null
+          id?: string
+          last_activity_date?: string | null
+          streak_days?: number | null
+          total_restaurants_visited?: number | null
+          total_reviews_written?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_stats_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      yearly_wrapped: {
+        Row: {
+          cities_list: string[] | null
+          cuisines_list: string[] | null
+          foodie_personality: string | null
+          generated_at: string
+          id: string
+          top_cuisine: string | null
+          top_dish: string | null
+          top_restaurant_id: string | null
+          total_cuisines: number | null
+          total_photos: number | null
+          total_restaurants: number | null
+          total_reviews: number | null
+          user_id: string
+          year: number
+        }
+        Insert: {
+          cities_list?: string[] | null
+          cuisines_list?: string[] | null
+          foodie_personality?: string | null
+          generated_at?: string
+          id?: string
+          top_cuisine?: string | null
+          top_dish?: string | null
+          top_restaurant_id?: string | null
+          total_cuisines?: number | null
+          total_photos?: number | null
+          total_restaurants?: number | null
+          total_reviews?: number | null
+          user_id: string
+          year: number
+        }
+        Update: {
+          cities_list?: string[] | null
+          cuisines_list?: string[] | null
+          foodie_personality?: string | null
+          generated_at?: string
+          id?: string
+          top_cuisine?: string | null
+          top_dish?: string | null
+          top_restaurant_id?: string | null
+          total_cuisines?: number | null
+          total_photos?: number | null
+          total_restaurants?: number | null
+          total_reviews?: number | null
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "yearly_wrapped_top_restaurant_id_fkey"
+            columns: ["top_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "yearly_wrapped_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -664,6 +874,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      update_user_badges: { Args: { p_user_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "user" | "owner" | "admin"
