@@ -132,6 +132,7 @@ export function SearchBar({
 
   return (
     <div className={`relative w-full ${isHero ? 'max-w-3xl mx-auto' : ''}`}>
+      {/* Main search bar */}
       <motion.div
         initial={isHero ? { y: 20, opacity: 0 } : false}
         animate={{ y: 0, opacity: 1 }}
@@ -216,11 +217,11 @@ export function SearchBar({
           </AnimatePresence>
         </div>
 
-        {/* Divider */}
-        <div className={`h-8 w-px bg-border ${!isHero && 'hidden md:block'}`} />
+        {/* Divider - only on desktop */}
+        <div className={`h-8 w-px bg-border hidden md:block`} />
 
-        {/* City Selector */}
-        <div className={`relative ${!isHero && 'hidden md:block'}`}>
+        {/* City Selector - Desktop only (inside search bar) */}
+        <div className="relative hidden md:block">
           <button
             onClick={() => setShowCityDropdown(!showCityDropdown)}
             className={`flex items-center gap-2 hover:bg-muted rounded-xl transition-colors ${
@@ -267,7 +268,7 @@ export function SearchBar({
                 ))}
               </motion.div>
             )}
-            </AnimatePresence>
+          </AnimatePresence>
         </div>
 
         {/* Voice Search */}
@@ -295,6 +296,62 @@ export function SearchBar({
           <Search className={`${isHero ? 'md:hidden' : ''} h-4 w-4`} />
         </Button>
       </motion.div>
+
+      {/* City Selector - Mobile only (below search bar) */}
+      {isHero && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+          className="md:hidden mt-3 relative"
+        >
+          <button
+            onClick={() => setShowCityDropdown(!showCityDropdown)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-card hover:bg-muted rounded-xl border border-border transition-colors"
+          >
+            <MapPin className="h-5 w-5 text-muted-foreground" />
+            <span className="font-medium">{cityLabel}</span>
+            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${showCityDropdown ? 'rotate-180' : ''}`} />
+          </button>
+
+          <AnimatePresence>
+            {showCityDropdown && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="absolute top-full left-0 right-0 mt-2 bg-card rounded-xl shadow-lg border border-border z-50 overflow-hidden"
+              >
+                <button
+                  onClick={() => {
+                    setCityId('all');
+                    setShowCityDropdown(false);
+                  }}
+                  className={`w-full px-4 py-3 text-left hover:bg-muted transition-colors ${
+                    cityId === 'all' ? 'bg-accent' : ''
+                  }`}
+                >
+                  {t('cities.all')}
+                </button>
+                {cities.map((city) => (
+                  <button
+                    key={city.id}
+                    onClick={() => {
+                      setCityId(city.id);
+                      setShowCityDropdown(false);
+                    }}
+                    className={`w-full px-4 py-3 text-left hover:bg-muted transition-colors ${
+                      cityId === city.id ? 'bg-accent' : ''
+                    }`}
+                  >
+                    {city.name}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      )}
     </div>
   );
 }
