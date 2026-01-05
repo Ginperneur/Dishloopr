@@ -1,6 +1,6 @@
 import { Layout } from '@/components/layout/Layout';
-import { motion } from 'framer-motion';
-import { CheckCircle, TrendingUp, MessageSquare, BarChart3 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CheckCircle, TrendingUp, MessageSquare, BarChart3, Search, MapPin, Clock, Phone, Globe, Star, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,10 +9,31 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+
+interface GooglePlaceResult {
+  place_id: string;
+  name: string;
+  address: string;
+  geo_lat: number | null;
+  geo_lng: number | null;
+  phone: string | null;
+  website: string | null;
+  rating: number | null;
+  review_count: number | null;
+  price_level: number;
+  opening_hours: string[] | null;
+}
 
 export default function ClaimPage() {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchCity, setSearchCity] = useState('');
+  const [searchResults, setSearchResults] = useState<GooglePlaceResult[]>([]);
+  const [selectedPlace, setSelectedPlace] = useState<GooglePlaceResult | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const benefits = [
     {
@@ -37,16 +58,181 @@ export default function ClaimPage() {
     }
   ];
 
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      toast.error('Vul de naam van je restaurant in');
+      return;
+    }
+
+    setIsSearching(true);
+    setHasSearched(true);
+    setSelectedPlace(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('google-places-search', {
+        body: { query: searchQuery, city: searchCity || undefined }
+      });
+
+      if (error) throw error;
+
+      setSearchResults(data.results || []);
+      
+      if (data.results?.length === 0) {
+        toast.info('Geen restaurants gevonden. Probeer een andere zoekopdracht.');
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+      toast.error('Er ging iets mis bij het zoeken. Probeer het opnieuw.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSelectPlace = (place: GooglePlaceResult) => {
+    setSelectedPlace(place);
+    setSearchResults([]);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (!selectedPlace) {
+      toast.error('Selecteer eerst je restaurant uit de zoekresultaten');
+      return;
+    }
+
     setIsSubmitting(true);
     
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast.success('Claim aanvraag ontvangen! We nemen binnen 2 werkdagen contact met je op.');
-    setIsSubmitting(false);
-    (e.target as HTMLFormElement).reset();
+    const formData = new FormData(e.currentTarget);
+    const role = formData.get('role') as string;
+    const notes = formData.get('notes') as string;
+
+    try {
+      // First check if restaurant exists in our database
+      const { data: existingRestaurant } = await supabase
+        .from('restaurants')
+        .select('id, claimed_by_owner_id')
+        .eq('name', selectedPlace.name)
+        .maybeSingle();
+
+      if (existingRestaurant?.claimed_by_owner_id) {
+        toast.error('Dit restaurant is al geclaimd door iemand anders.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      let restaurantId = existingRestaurant?.id;
+
+      // If restaurant doesn't exist, create it
+      if (!restaurantId) {
+        // First get or create the city
+        const cityName = extractCityFromAddress(selectedPlace.address);
+        let cityId: string;
+
+        const { data: existingCity } = await supabase
+          .from('cities')
+          .select('id')
+          .eq('name', cityName)
+          .maybeSingle();
+
+        if (existingCity) {
+          cityId = existingCity.id;
+        } else {
+          const { data: newCity, error: cityError } = await supabase
+            .from('cities')
+            .insert({
+              name: cityName,
+              slug: cityName.toLowerCase().replace(/\s+/g, '-'),
+              country_code: 'NL'
+            })
+            .select('id')
+            .single();
+
+          if (cityError) throw cityError;
+          cityId = newCity.id;
+        }
+
+        // Create the restaurant with Google Places data
+        const { data: newRestaurant, error: restaurantError } = await supabase
+          .from('restaurants')
+          .insert({
+            name: selectedPlace.name,
+            slug: generateSlug(selectedPlace.name),
+            address: selectedPlace.address,
+            city_id: cityId,
+            geo_lat: selectedPlace.geo_lat,
+            geo_lng: selectedPlace.geo_lng,
+            phone: selectedPlace.phone,
+            website_url: selectedPlace.website,
+            rating: selectedPlace.rating || 0,
+            review_count: selectedPlace.review_count || 0,
+            price_level: selectedPlace.price_level || 2,
+            opening_hours: selectedPlace.opening_hours ? { weekday_text: selectedPlace.opening_hours } : null,
+            is_active: true
+          })
+          .select('id')
+          .single();
+
+        if (restaurantError) throw restaurantError;
+        restaurantId = newRestaurant.id;
+      }
+
+      // Create claim request
+      const { error: claimError } = await supabase
+        .from('claim_requests')
+        .insert({
+          restaurant_id: restaurantId,
+          user_id: user!.id,
+          notes: `Rol: ${role}\n\n${notes || ''}`.trim(),
+          status: 'pending'
+        });
+
+      if (claimError) throw claimError;
+
+      toast.success('Claim aanvraag ontvangen! We nemen binnen 2 werkdagen contact met je op.');
+      
+      // Reset form
+      setSelectedPlace(null);
+      setSearchQuery('');
+      setSearchCity('');
+      setSearchResults([]);
+      setHasSearched(false);
+      (e.target as HTMLFormElement).reset();
+
+    } catch (error) {
+      console.error('Submit error:', error);
+      toast.error('Er ging iets mis. Probeer het opnieuw.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  const extractCityFromAddress = (address: string): string => {
+    // Dutch addresses typically have city before postal code or at end
+    const parts = address.split(',').map(p => p.trim());
+    // Usually the second-to-last or last part contains city
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const part = parts[i];
+      // Skip parts that look like postal codes or country
+      if (/^\d{4}\s?[A-Z]{2}/.test(part) || part === 'Nederland' || part === 'Netherlands') {
+        continue;
+      }
+      // This is likely the city
+      return part.replace(/^\d{4}\s?[A-Z]{2}\s*/, '').trim() || 'Amsterdam';
+    }
+    return 'Amsterdam';
+  };
+
+  const generateSlug = (name: string): string => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+  };
+
+  const priceLabels = ['€', '€€', '€€€', '€€€€'];
 
   return (
     <Layout>
@@ -99,62 +285,242 @@ export default function ClaimPage() {
               </Link>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="bg-card border border-border rounded-xl p-8 space-y-6">
-              <h2 className="text-2xl font-bold text-center mb-2">Claim aanvragen</h2>
-              <p className="text-muted-foreground text-center text-sm mb-6">
-                Vul onderstaand formulier in. We verifiëren je aanvraag binnen 2 werkdagen.
-              </p>
+            <div className="space-y-6">
+              {/* Search Section */}
+              <div className="bg-card border border-border rounded-xl p-8">
+                <h2 className="text-2xl font-bold text-center mb-2">Zoek je restaurant</h2>
+                <p className="text-muted-foreground text-center text-sm mb-6">
+                  We gebruiken Google om je restaurant te vinden en de gegevens automatisch in te vullen.
+                </p>
 
-              <div className="space-y-2">
-                <Label htmlFor="restaurantName">Restaurantnaam</Label>
-                <Input 
-                  id="restaurantName" 
-                  name="restaurantName" 
-                  required 
-                  placeholder="De naam van je restaurant" 
-                />
-              </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="searchQuery">Restaurantnaam</Label>
+                    <Input
+                      id="searchQuery"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Bijv. De Kas, Restaurant Blauw..."
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    />
+                  </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="city">Stad</Label>
-                  <Input id="city" name="city" required placeholder="Amsterdam" />
+                  <div className="space-y-2">
+                    <Label htmlFor="searchCity">Stad (optioneel)</Label>
+                    <Input
+                      id="searchCity"
+                      value={searchCity}
+                      onChange={(e) => setSearchCity(e.target.value)}
+                      placeholder="Amsterdam, Rotterdam, Utrecht..."
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    />
+                  </div>
+
+                  <Button 
+                    onClick={handleSearch} 
+                    className="w-full" 
+                    disabled={isSearching}
+                  >
+                    {isSearching ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Zoeken...
+                      </>
+                    ) : (
+                      <>
+                        <Search className="w-4 h-4 mr-2" />
+                        Zoek restaurant
+                      </>
+                    )}
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Telefoonnummer</Label>
-                  <Input id="phone" name="phone" type="tel" required placeholder="+31 20 123 4567" />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="role">Jouw rol</Label>
-                <Input 
-                  id="role" 
-                  name="role" 
-                  required 
-                  placeholder="Bijv. Eigenaar, Manager, Marketing" 
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="notes">Extra informatie (optioneel)</Label>
-                <Textarea 
-                  id="notes" 
-                  name="notes" 
-                  placeholder="Vertel ons meer over je restaurant of hoe we je kunnen verifiëren..."
-                  rows={4}
-                />
+
+                {/* Search Results */}
+                <AnimatePresence>
+                  {searchResults.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mt-6 space-y-3"
+                    >
+                      <p className="text-sm font-medium text-muted-foreground">
+                        {searchResults.length} resultaten gevonden - selecteer je restaurant:
+                      </p>
+                      {searchResults.map((place) => (
+                        <motion.button
+                          key={place.place_id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          onClick={() => handleSelectPlace(place)}
+                          className="w-full text-left p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-colors"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-semibold truncate">{place.name}</h4>
+                              <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                                <MapPin className="w-3 h-3 flex-shrink-0" />
+                                <span className="truncate">{place.address}</span>
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {place.rating && (
+                                <span className="flex items-center gap-1 text-sm">
+                                  <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                                  {place.rating}
+                                </span>
+                              )}
+                              <span className="text-sm text-muted-foreground">
+                                {priceLabels[place.price_level - 1] || '€€'}
+                              </span>
+                            </div>
+                          </div>
+                        </motion.button>
+                      ))}
+                    </motion.div>
+                  )}
+
+                  {hasSearched && searchResults.length === 0 && !isSearching && !selectedPlace && (
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="mt-6 text-center text-muted-foreground"
+                    >
+                      Geen restaurants gevonden. Probeer een andere zoekopdracht.
+                    </motion.p>
+                  )}
+                </AnimatePresence>
               </div>
 
-              <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
-                {isSubmitting ? 'Verzenden...' : 'Claim aanvragen'}
-              </Button>
+              {/* Selected Place & Claim Form */}
+              <AnimatePresence>
+                {selectedPlace && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                  >
+                    <form onSubmit={handleSubmit} className="bg-card border border-border rounded-xl p-8 space-y-6">
+                      <div className="text-center">
+                        <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
+                        <h2 className="text-2xl font-bold mb-1">Restaurant gevonden!</h2>
+                        <p className="text-muted-foreground text-sm">
+                          Controleer de gegevens en vul het formulier aan om te claimen.
+                        </p>
+                      </div>
 
-              <p className="text-xs text-muted-foreground text-center">
-                Door te claimen ga je akkoord met onze{' '}
-                <Link to="/terms" className="text-primary hover:underline">voorwaarden</Link>.
-              </p>
-            </form>
+                      {/* Restaurant Preview */}
+                      <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                        <h3 className="font-bold text-lg">{selectedPlace.name}</h3>
+                        
+                        <div className="grid gap-2 text-sm">
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <MapPin className="w-4 h-4 flex-shrink-0" />
+                            <span>{selectedPlace.address}</span>
+                          </div>
+                          
+                          {selectedPlace.phone && (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Phone className="w-4 h-4 flex-shrink-0" />
+                              <span>{selectedPlace.phone}</span>
+                            </div>
+                          )}
+                          
+                          {selectedPlace.website && (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Globe className="w-4 h-4 flex-shrink-0" />
+                              <a 
+                                href={selectedPlace.website} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline truncate"
+                              >
+                                {selectedPlace.website}
+                              </a>
+                            </div>
+                          )}
+                          
+                          {selectedPlace.opening_hours && selectedPlace.opening_hours.length > 0 && (
+                            <div className="flex items-start gap-2 text-muted-foreground">
+                              <Clock className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                              <div className="text-xs space-y-0.5">
+                                {selectedPlace.opening_hours.slice(0, 3).map((hours, i) => (
+                                  <div key={i}>{hours}</div>
+                                ))}
+                                {selectedPlace.opening_hours.length > 3 && (
+                                  <div className="text-muted-foreground/60">...</div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-4 pt-2 border-t border-border">
+                          {selectedPlace.rating && (
+                            <span className="flex items-center gap-1 text-sm">
+                              <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                              {selectedPlace.rating} ({selectedPlace.review_count} reviews)
+                            </span>
+                          )}
+                          <span className="text-sm">
+                            {priceLabels[selectedPlace.price_level - 1] || '€€'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="role">Jouw rol *</Label>
+                        <Input 
+                          id="role" 
+                          name="role" 
+                          required 
+                          placeholder="Bijv. Eigenaar, Manager, Marketing" 
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="notes">Extra informatie (optioneel)</Label>
+                        <Textarea 
+                          id="notes" 
+                          name="notes" 
+                          placeholder="Vertel ons hoe we kunnen verifiëren dat je bij dit restaurant hoort..."
+                          rows={3}
+                        />
+                      </div>
+
+                      <div className="flex gap-3">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          className="flex-1"
+                          onClick={() => {
+                            setSelectedPlace(null);
+                            setSearchResults([]);
+                          }}
+                        >
+                          Andere zoeken
+                        </Button>
+                        <Button type="submit" className="flex-1" disabled={isSubmitting}>
+                          {isSubmitting ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Verzenden...
+                            </>
+                          ) : (
+                            'Claim aanvragen'
+                          )}
+                        </Button>
+                      </div>
+
+                      <p className="text-xs text-muted-foreground text-center">
+                        Door te claimen ga je akkoord met onze{' '}
+                        <Link to="/terms" className="text-primary hover:underline">voorwaarden</Link>.
+                      </p>
+                    </form>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           )}
         </motion.div>
       </div>
