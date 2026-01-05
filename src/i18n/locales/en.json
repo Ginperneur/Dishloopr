@@ -164,6 +164,18 @@
     "noSpeech": "No speech detected",
     "error": "Something went wrong"
   },
+  "sponsored": {
+    "badge": "Sponsored",
+    "marketplace": "Sponsoring Marketplace",
+    "availableSlots": "Available slots",
+    "purchaseSlot": "Purchase slot",
+    "activeSponsorings": "Active Sponsorings",
+    "disclaimer": "Sponsored listings never influence reviews or popularity scores.",
+    "whatYouGet": "What you get",
+    "prominentLabel": "\"Sponsored\" label in search results",
+    "higherPosition": "Higher position in relevant searches",
+    "exclusiveSlot": "Exclusive slot"
+  },
   "common": {
     "loading": "Loading...",
     "error": "Something went wrong",

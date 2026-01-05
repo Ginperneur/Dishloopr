@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { SlidersHorizontal, X, Map, LayoutGrid, Navigation, Loader2 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { SearchBar } from '@/components/search/SearchBar';
-import { RestaurantCard } from '@/components/restaurant/RestaurantCard';
+import { DatabaseRestaurantCard } from '@/components/restaurant/DatabaseRestaurantCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -237,34 +237,6 @@ export default function SearchPage() {
     </div>
   );
 
-  // Convert search results to format expected by RestaurantCard
-  const restaurantCards = sortedResults.map(r => ({
-    id: r.id,
-    name: r.name,
-    slug: r.slug,
-    cityId: r.city_id,
-    address: r.address,
-    postalCode: r.postal_code || '',
-    geoLat: Number(r.geo_lat) || 0,
-    geoLng: Number(r.geo_lng) || 0,
-    priceLevel: r.price_level as 1 | 2 | 3 | 4,
-    cuisines: r.cuisines || [],
-    ambienceTags: r.ambience_tags || [],
-    dishes: [],
-    phone: r.phone || '',
-    websiteUrl: r.website_url || '',
-    reservationUrl: r.reservation_url,
-    openingHours: typeof r.opening_hours === 'object' ? r.opening_hours as { [key: string]: string } : {},
-    images: r.images || [],
-    rating: Number(r.rating),
-    reviewCount: r.review_count,
-    isFeatured: r.is_featured,
-    featuredUntil: r.featured_until,
-    isTopListing: r.is_top_listing,
-    topUntil: r.top_until,
-    claimedByOwnerId: r.claimed_by_owner_id,
-  }));
-
   return (
     <Layout>
       {/* Search Header */}
@@ -480,18 +452,13 @@ export default function SearchPage() {
               </div>
             ) : sortedResults.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                {restaurantCards.map((restaurant, index) => (
-                  <motion.div
+                {sortedResults.map((restaurant, index) => (
+                  <DatabaseRestaurantCard
                     key={restaurant.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05, duration: 0.3 }}
-                  >
-                    <RestaurantCard
-                      restaurant={restaurant}
-                      index={index}
-                    />
-                  </motion.div>
+                    restaurant={restaurant}
+                    index={index}
+                    isSponsored={restaurant.isSponsored}
+                  />
                 ))}
               </div>
             ) : (

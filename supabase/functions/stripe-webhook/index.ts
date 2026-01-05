@@ -50,41 +50,69 @@ serve(async (req) => {
       const session = event.data.object as Stripe.Checkout.Session;
       logStep("Checkout session completed", { sessionId: session.id });
 
-      const { restaurantId, listingType, userId } = session.metadata || {};
+      const { restaurantId, listingType, userId, productId, durationDays, type } = session.metadata || {};
       
-      if (!restaurantId || !listingType) {
-        logStep("Missing metadata", { metadata: session.metadata });
-        return new Response(JSON.stringify({ error: "Missing metadata" }), { status: 400 });
+      // Handle sponsored dish purchase
+      if (type === "sponsored_dish" && productId && restaurantId) {
+        const duration = parseInt(durationDays || "30");
+        const startsAt = new Date();
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + duration);
+
+        const { error: purchaseError } = await supabaseAdmin
+          .from("sponsored_purchases")
+          .insert({
+            product_id: productId,
+            restaurant_id: restaurantId,
+            purchased_by: userId,
+            price_paid: (session.amount_total || 0) / 100,
+            duration_days: duration,
+            starts_at: startsAt.toISOString(),
+            expires_at: expiresAt.toISOString(),
+            is_active: true,
+            stripe_payment_id: session.payment_intent as string,
+          });
+
+        if (purchaseError) {
+          logStep("Sponsored purchase insert error", { error: purchaseError.message });
+          return new Response(JSON.stringify({ error: purchaseError.message }), { status: 500 });
+        }
+
+        logStep("Sponsored purchase created successfully", { productId, restaurantId, duration });
       }
+      // Handle featured/top listing purchase
+      else if (restaurantId && listingType) {
+        // Calculate expiration date (30 days from now)
+        const expirationDate = new Date();
+        expirationDate.setDate(expirationDate.getDate() + 30);
 
-      // Calculate expiration date (30 days from now)
-      const expirationDate = new Date();
-      expirationDate.setDate(expirationDate.getDate() + 30);
+        // Update restaurant based on listing type
+        const updateData: Record<string, any> = {};
+        
+        if (listingType === "featured") {
+          updateData.is_featured = true;
+          updateData.featured_until = expirationDate.toISOString();
+          logStep("Setting featured listing", { restaurantId, until: expirationDate.toISOString() });
+        } else if (listingType === "top") {
+          updateData.is_top_listing = true;
+          updateData.top_until = expirationDate.toISOString();
+          logStep("Setting top listing", { restaurantId, until: expirationDate.toISOString() });
+        }
 
-      // Update restaurant based on listing type
-      const updateData: Record<string, any> = {};
-      
-      if (listingType === "featured") {
-        updateData.is_featured = true;
-        updateData.featured_until = expirationDate.toISOString();
-        logStep("Setting featured listing", { restaurantId, until: expirationDate.toISOString() });
-      } else if (listingType === "top") {
-        updateData.is_top_listing = true;
-        updateData.top_until = expirationDate.toISOString();
-        logStep("Setting top listing", { restaurantId, until: expirationDate.toISOString() });
+        const { error: updateError } = await supabaseAdmin
+          .from("restaurants")
+          .update(updateData)
+          .eq("id", restaurantId);
+
+        if (updateError) {
+          logStep("Database update error", { error: updateError.message });
+          return new Response(JSON.stringify({ error: updateError.message }), { status: 500 });
+        }
+
+        logStep("Restaurant updated successfully", { restaurantId, listingType });
+      } else {
+        logStep("Missing metadata for purchase", { metadata: session.metadata });
       }
-
-      const { error: updateError } = await supabaseAdmin
-        .from("restaurants")
-        .update(updateData)
-        .eq("id", restaurantId);
-
-      if (updateError) {
-        logStep("Database update error", { error: updateError.message });
-        return new Response(JSON.stringify({ error: updateError.message }), { status: 500 });
-      }
-
-      logStep("Restaurant updated successfully", { restaurantId, listingType });
     }
 
     return new Response(JSON.stringify({ received: true }), {
