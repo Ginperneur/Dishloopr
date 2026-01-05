@@ -31,9 +31,11 @@ interface Filters {
   priceLevel: number[];
   ambienceTags: string[];
   cuisines: string[];
+  concepts: string[];
 }
 
 const AMBIENCE_OPTIONS = ['romantic', 'family-friendly', 'high-end', 'cozy', 'business', 'trendy', 'casual', 'lively'];
+const CONCEPT_OPTIONS = ['shared dining', 'all you can eat', 'tasting menu', 'à la carte', 'buffet', 'omakase', 'prix fixe', 'pop-up'];
 
 export default function SearchPage() {
   const { t } = useTranslation();
@@ -47,6 +49,7 @@ export default function SearchPage() {
     priceLevel: [],
     ambienceTags: [],
     cuisines: [],
+    concepts: [],
   });
   const [sortBy, setSortBy] = useState<SortOption>('bestMatch');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -97,13 +100,15 @@ export default function SearchPage() {
       priceLevel: [],
       ambienceTags: [],
       cuisines: [],
+      concepts: [],
     });
   };
 
   const activeFilterCount = 
     filters.priceLevel.length + 
     filters.ambienceTags.length + 
-    filters.cuisines.length;
+    filters.cuisines.length +
+    filters.concepts.length;
 
   const cityName = cityId === 'all' 
     ? t('cities.all') 
@@ -165,6 +170,22 @@ export default function SearchPage() {
           </div>
         </div>
       )}
+
+      {/* Concept */}
+      <div>
+        <h4 className="font-semibold mb-3">{t('filters.concept')}</h4>
+        <div className="space-y-2">
+          {CONCEPT_OPTIONS.map((concept) => (
+            <label key={concept} className="flex items-center gap-3 cursor-pointer capitalize">
+              <Checkbox
+                checked={filters.concepts.includes(concept)}
+                onCheckedChange={() => toggleFilter('concepts', concept)}
+              />
+              <span className="text-sm">{concept}</span>
+            </label>
+          ))}
+        </div>
+      </div>
 
       {/* Clear Filters */}
       {activeFilterCount > 0 && (
@@ -318,6 +339,17 @@ export default function SearchPage() {
                     variant="secondary"
                     className="cursor-pointer capitalize"
                     onClick={() => toggleFilter('cuisines', c)}
+                  >
+                    {c}
+                    <X className="h-3 w-3 ml-1" />
+                  </Badge>
+                ))}
+                {filters.concepts.map(c => (
+                  <Badge 
+                    key={`concept-${c}`} 
+                    variant="secondary"
+                    className="cursor-pointer capitalize"
+                    onClick={() => toggleFilter('concepts', c)}
                   >
                     {c}
                     <X className="h-3 w-3 ml-1" />
