@@ -14,7 +14,9 @@ import {
   Check,
   X,
   Search,
-  Sparkles
+  Sparkles,
+  FileText,
+  Upload
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,6 +33,8 @@ import { toast } from 'sonner';
 import { RestaurantDetailModal } from '@/components/admin/RestaurantDetailModal';
 import { AddRestaurantModal } from '@/components/admin/AddRestaurantModal';
 import { SponsoredProductsManager } from '@/components/admin/SponsoredProductsManager';
+import { BulkRestaurantUpload } from '@/components/admin/BulkRestaurantUpload';
+import { ClaimRequestsQueue } from '@/components/admin/ClaimRequestsQueue';
 
 interface Stats {
   totalUsers: number;
@@ -260,11 +264,19 @@ export default function AdminPanel() {
 
         {/* Tabs */}
         <Tabs defaultValue="restaurants" className="space-y-6">
-          <TabsList>
+          <TabsList className="flex-wrap h-auto gap-1">
             <TabsTrigger value="restaurants">Restaurants</TabsTrigger>
+            <TabsTrigger value="bulk-import">
+              <Upload className="h-4 w-4 mr-1" />
+              Bulk Import
+            </TabsTrigger>
+            <TabsTrigger value="claims">
+              <FileText className="h-4 w-4 mr-1" />
+              Claims
+            </TabsTrigger>
             <TabsTrigger value="sponsored">
               <Sparkles className="h-4 w-4 mr-1" />
-              Sponsored Products
+              Sponsored
             </TabsTrigger>
             <TabsTrigger value="reviews">Reviews</TabsTrigger>
             <TabsTrigger value="users">Gebruikers</TabsTrigger>
@@ -361,6 +373,14 @@ export default function AdminPanel() {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="bulk-import">
+            <BulkRestaurantUpload onSuccess={fetchData} />
+          </TabsContent>
+
+          <TabsContent value="claims">
+            <ClaimRequestsQueue onUpdate={fetchData} />
           </TabsContent>
 
           <TabsContent value="sponsored">
