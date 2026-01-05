@@ -65,7 +65,7 @@ export function Header() {
       <div className="container flex h-14 md:h-16 items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <img src={logo} alt="Dishloopr" className="h-8 md:h-10 w-auto" />
+          <img src={logo} alt="Dishloopr" className="h-8 md:h-10 w-auto dark:invert" />
         </Link>
 
         {/* Desktop Navigation */}
