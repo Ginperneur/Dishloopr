@@ -14,7 +14,7 @@ const Index = () => {
   return (
     <Layout>
       {/* Hero Section */}
-      <section className="relative py-20 md:py-32 overflow-hidden">
+      <section className="relative py-12 md:py-32 overflow-hidden">
         {/* Background gradient */}
         <div 
           className="absolute inset-0 -z-10"
@@ -23,19 +23,19 @@ const Index = () => {
           }}
         />
         
-        <div className="container relative">
+        <div className="container relative px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-10 md:mb-14"
+            className="text-center mb-8 md:mb-14"
           >
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold mb-4 leading-tight">
+            <h1 className="text-3xl md:text-6xl lg:text-7xl font-extrabold mb-3 md:mb-4 leading-tight">
               {t('hero.title')}
               <br />
               <span className="text-gradient">{t('hero.titleAccent')}</span>
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto px-2">
               {t('hero.subtitle')}
             </p>
           </motion.div>
@@ -48,20 +48,20 @@ const Index = () => {
       <TrendingDishes dishes={trendingDishes} />
 
       {/* Featured Restaurants */}
-      <section className="py-16 bg-muted/30">
-        <div className="container">
+      <section className="py-10 md:py-16 bg-muted/30">
+        <div className="container px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-10"
+            className="text-center mb-6 md:mb-10"
           >
-            <h2 className="text-3xl md:text-4xl font-bold">
+            <h2 className="text-2xl md:text-4xl font-bold">
               {t('restaurant.featured')} restaurants
             </h2>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {featuredRestaurants.map((restaurant, index) => (
               <RestaurantCard
                 key={restaurant.id}

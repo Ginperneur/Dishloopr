@@ -137,38 +137,38 @@ export default function LoginPage() {
 
   return (
     <Layout showFooter={false}>
-      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">
+      <div className="min-h-[calc(100vh-3.5rem)] md:min-h-[calc(100vh-4rem)] flex items-center justify-center py-8 md:py-12 px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-md"
         >
-          <div className="text-center mb-8">
-            <Link to="/" className="inline-block mb-6">
-              <img src={logo} alt="Dishloopr" className="h-16 w-auto mx-auto" />
+          <div className="text-center mb-6 md:mb-8">
+            <Link to="/" className="inline-block mb-4 md:mb-6">
+              <img src={logo} alt="Dishloopr" className="h-12 md:h-16 w-auto mx-auto" />
             </Link>
-            <h1 className="text-2xl font-bold">{t('hero.title')}</h1>
-            <p className="text-muted-foreground mt-2">{t('hero.subtitle')}</p>
+            <h1 className="text-xl md:text-2xl font-bold">{t('hero.title')}</h1>
+            <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2 px-4">{t('hero.subtitle')}</p>
           </div>
 
-          <div className="bg-card rounded-2xl border border-border p-6 md:p-8">
+          <div className="bg-card rounded-2xl border border-border p-5 md:p-8">
             <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="login">{t('nav.login')}</TabsTrigger>
-                <TabsTrigger value="signup">{t('nav.signup')}</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-5 md:mb-6">
+                <TabsTrigger value="login" className="text-sm md:text-base">{t('nav.login')}</TabsTrigger>
+                <TabsTrigger value="signup" className="text-sm md:text-base">{t('nav.signup')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email" className="text-sm">Email</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="email"
                         type="email"
                         placeholder="naam@voorbeeld.nl"
-                        className="pl-10"
+                        className="pl-10 h-11 text-base"
                         value={loginEmail}
                         onChange={(e) => setLoginEmail(e.target.value)}
                         required
@@ -177,14 +177,14 @@ export default function LoginPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="password">Wachtwoord</Label>
+                    <Label htmlFor="password" className="text-sm">Wachtwoord</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="password"
                         type={showPassword ? 'text' : 'password'}
                         placeholder="••••••••"
-                        className="pl-10 pr-10"
+                        className="pl-10 pr-10 h-11 text-base"
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
                         required
@@ -192,7 +192,7 @@ export default function LoginPage() {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
                       >
                         {showPassword ? (
                           <EyeOff className="h-4 w-4" />
@@ -203,7 +203,7 @@ export default function LoginPage() {
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+                  <Button type="submit" className="w-full h-11" size="lg" disabled={isLoading}>
                     {isLoading ? t('common.loading') : t('nav.login')}
                   </Button>
                 </form>
@@ -212,14 +212,14 @@ export default function LoginPage() {
               <TabsContent value="signup">
                 <form onSubmit={handleSignup} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-name">Naam</Label>
+                    <Label htmlFor="signup-name" className="text-sm">Naam</Label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="signup-name"
                         type="text"
                         placeholder="Je naam"
-                        className="pl-10"
+                        className="pl-10 h-11 text-base"
                         value={signupName}
                         onChange={(e) => setSignupName(e.target.value)}
                         required
@@ -228,14 +228,14 @@ export default function LoginPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-email" className="text-sm">Email</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="signup-email"
                         type="email"
                         placeholder="naam@voorbeeld.nl"
-                        className="pl-10"
+                        className="pl-10 h-11 text-base"
                         value={signupEmail}
                         onChange={(e) => setSignupEmail(e.target.value)}
                         required
@@ -244,14 +244,14 @@ export default function LoginPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Wachtwoord</Label>
+                    <Label htmlFor="signup-password" className="text-sm">Wachtwoord</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="signup-password"
                         type={showPassword ? 'text' : 'password'}
                         placeholder="••••••••"
-                        className="pl-10 pr-10"
+                        className="pl-10 pr-10 h-11 text-base"
                         value={signupPassword}
                         onChange={(e) => setSignupPassword(e.target.value)}
                         required
@@ -259,7 +259,7 @@ export default function LoginPage() {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
                       >
                         {showPassword ? (
                           <EyeOff className="h-4 w-4" />
@@ -270,7 +270,7 @@ export default function LoginPage() {
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+                  <Button type="submit" className="w-full h-11" size="lg" disabled={isLoading}>
                     {isLoading ? t('common.loading') : t('nav.signup')}
                   </Button>
                 </form>

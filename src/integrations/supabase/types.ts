@@ -220,8 +220,10 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           created_at: string
           email: string | null
+          food_photos: string[] | null
           id: string
           name: string | null
           preferred_language: string | null
@@ -229,8 +231,10 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           email?: string | null
+          food_photos?: string[] | null
           id: string
           name?: string | null
           preferred_language?: string | null
@@ -238,8 +242,10 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           email?: string | null
+          food_photos?: string[] | null
           id?: string
           name?: string | null
           preferred_language?: string | null
