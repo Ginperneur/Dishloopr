@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 import { SearchBar } from '@/components/search/SearchBar';
 import { Layout } from '@/components/layout/Layout';
 import { TrendingDishes } from '@/components/home/TrendingDishes';
@@ -8,7 +10,9 @@ import { UpcomingEvents } from '@/components/home/UpcomingEvents';
 import { RestaurantCard } from '@/components/restaurant/RestaurantCard';
 import { SurpriseMe } from '@/components/ai/SurpriseMe';
 import { PersonalizedRecommendations } from '@/components/ai/PersonalizedRecommendations';
+import { FeaturedCollections } from '@/components/collections/CollectionsGrid';
 import { SEOHead, createWebsiteSchema } from '@/components/seo/SEOHead';
+import { Button } from '@/components/ui/button';
 import { getTrendingDishes, restaurants } from '@/data/mockData';
 
 const Index = () => {
@@ -70,6 +74,28 @@ const Index = () => {
 
       {/* Trending Now - Live trending dishes */}
       <TrendingNow />
+
+      {/* Curated Collections */}
+      <section className="py-10 md:py-16">
+        <div className="container px-4 md:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="flex items-center justify-between mb-6"
+          >
+            <h2 className="text-2xl md:text-3xl font-bold">Onze Collecties</h2>
+            <Button variant="ghost" asChild>
+              <Link to="/collections" className="flex items-center gap-2">
+                Bekijk alle
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          </motion.div>
+          
+          <FeaturedCollections />
+        </div>
+      </section>
 
       {/* Upcoming Events */}
       <UpcomingEvents />
