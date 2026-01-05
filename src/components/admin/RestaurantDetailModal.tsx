@@ -11,7 +11,10 @@ import {
   ExternalLink,
   TrendingUp,
   Users,
-  UtensilsCrossed
+  UtensilsCrossed,
+  Link2,
+  Check,
+  X
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -68,6 +71,8 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [allDishes, setAllDishes] = useState<Dish[]>([]);
   const [newDishName, setNewDishName] = useState('');
+  const [zenchefId, setZenchefId] = useState<string>('');
+  const [zenchefSaving, setZenchefSaving] = useState(false);
 
   useEffect(() => {
     if (open && restaurant) {
@@ -75,6 +80,7 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
       setCuisines(restaurant.cuisines || []);
       setAmbienceTags(restaurant.ambience_tags || []);
       setConcepts(restaurant.concepts || []);
+      setZenchefId(restaurant.zenchef_id || '');
     }
   }, [open, restaurant]);
 
@@ -105,6 +111,39 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
   const handleConceptsChange = (newConcepts: string[]) => {
     setConcepts(newConcepts);
     updateTags('concepts', newConcepts);
+  };
+
+  const saveZenchefId = async () => {
+    setZenchefSaving(true);
+    const { error } = await supabase
+      .from('restaurants')
+      .update({ zenchef_id: zenchefId || null })
+      .eq('id', restaurant.id);
+
+    if (error) {
+      toast.error('Zenchef ID opslaan mislukt');
+    } else {
+      toast.success('Zenchef ID opgeslagen');
+      onUpdate?.();
+    }
+    setZenchefSaving(false);
+  };
+
+  const clearZenchefId = async () => {
+    setZenchefSaving(true);
+    const { error } = await supabase
+      .from('restaurants')
+      .update({ zenchef_id: null })
+      .eq('id', restaurant.id);
+
+    if (error) {
+      toast.error('Zenchef ID verwijderen mislukt');
+    } else {
+      setZenchefId('');
+      toast.success('Zenchef ID verwijderd');
+      onUpdate?.();
+    }
+    setZenchefSaving(false);
   };
 
   const fetchData = async () => {
@@ -656,6 +695,105 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
                     <p className="text-muted-foreground">Geclaimd</p>
                     <p className="font-medium">{restaurant.claimed_by_owner_id ? 'Ja' : 'Nee'}</p>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Booking Integration */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Reservering Integratie
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Zenchef Integration */}
+                <div className="p-4 rounded-lg border border-border bg-muted/30">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Link2 className="h-4 w-4 text-primary" />
+                      <span className="font-medium">Zenchef Widget</span>
+                    </div>
+                    {restaurant.zenchef_id ? (
+                      <Badge className="bg-green-500/10 text-green-600">
+                        <Check className="h-3 w-3 mr-1" />
+                        Gekoppeld
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-muted-foreground">
+                        Niet gekoppeld
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={zenchefId}
+                      onChange={(e) => setZenchefId(e.target.value)}
+                      placeholder="Zenchef Restaurant ID (bijv. 375166)"
+                      className="flex-1 px-3 py-2 text-sm rounded-md border border-input bg-background"
+                    />
+                    <Button 
+                      size="sm" 
+                      onClick={saveZenchefId}
+                      disabled={zenchefSaving}
+                    >
+                      {zenchefSaving ? 'Opslaan...' : 'Opslaan'}
+                    </Button>
+                    {restaurant.zenchef_id && (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={clearZenchefId}
+                        disabled={zenchefSaving}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Vind je Zenchef ID op{' '}
+                    <a 
+                      href="https://sdk.zenchef.com/configure.html" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      sdk.zenchef.com
+                    </a>
+                  </p>
+
+                  {restaurant.zenchef_id && (
+                    <div className="mt-3 pt-3 border-t border-border">
+                      <Button variant="outline" size="sm" asChild>
+                        <a 
+                          href={`https://widget.zenchef.com/reservation/${restaurant.zenchef_id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <ExternalLink className="h-3 w-3 mr-2" />
+                          Test Widget
+                        </a>
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Fallback URL */}
+                <div className="p-4 rounded-lg border border-border">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium text-sm">Fallback Reserverings URL</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Wordt gebruikt als Zenchef niet gekoppeld is (bijv. TheFork, OpenTable)
+                  </p>
+                  <code className="text-xs bg-muted px-2 py-1 rounded block truncate">
+                    {restaurant.reservation_url || 'Niet ingesteld'}
+                  </code>
                 </div>
               </CardContent>
             </Card>
