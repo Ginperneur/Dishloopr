@@ -330,6 +330,45 @@ export type Database = {
           },
         ]
       }
+      dish_ratings: {
+        Row: {
+          created_at: string
+          dish_id: string
+          id: string
+          rating: number
+          review_id: string
+        }
+        Insert: {
+          created_at?: string
+          dish_id: string
+          id?: string
+          rating: number
+          review_id: string
+        }
+        Update: {
+          created_at?: string
+          dish_id?: string
+          id?: string
+          rating?: number
+          review_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dish_ratings_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dish_ratings_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dishes: {
         Row: {
           created_at: string
@@ -962,6 +1001,44 @@ export type Database = {
           },
         ]
       }
+      tag_confirmations: {
+        Row: {
+          created_at: string
+          id: string
+          is_confirmed: boolean
+          restaurant_id: string
+          tag: string
+          tag_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_confirmed?: boolean
+          restaurant_id: string
+          tag: string
+          tag_type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_confirmed?: boolean
+          restaurant_id?: string
+          tag?: string
+          tag_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tag_confirmations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_badges: {
         Row: {
           badge_level: number | null
@@ -1279,6 +1356,52 @@ export type Database = {
           total_reviews?: number | null
         }
         Relationships: []
+      }
+      restaurant_dish_scores: {
+        Row: {
+          dish_id: string | null
+          dish_name: string | null
+          restaurant_id: string | null
+          review_count: number | null
+          simple_rating: number | null
+          weighted_rating: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_dishes_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_dishes_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurant_tag_scores: {
+        Row: {
+          confidence_score: number | null
+          confirmations: number | null
+          disputes: number | null
+          restaurant_id: string | null
+          tag: string | null
+          tag_type: string | null
+          total_votes: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tag_confirmations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
