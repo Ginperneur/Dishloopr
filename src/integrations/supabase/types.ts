@@ -623,6 +623,123 @@ export type Database = {
           },
         ]
       }
+      sponsored_products: {
+        Row: {
+          base_price: number
+          city_id: string
+          created_at: string
+          default_duration_days: number
+          dish_id: string
+          id: string
+          is_active: boolean
+          max_duration_days: number
+          max_slots: number
+          min_duration_days: number
+          updated_at: string
+        }
+        Insert: {
+          base_price?: number
+          city_id: string
+          created_at?: string
+          default_duration_days?: number
+          dish_id: string
+          id?: string
+          is_active?: boolean
+          max_duration_days?: number
+          max_slots?: number
+          min_duration_days?: number
+          updated_at?: string
+        }
+        Update: {
+          base_price?: number
+          city_id?: string
+          created_at?: string
+          default_duration_days?: number
+          dish_id?: string
+          id?: string
+          is_active?: boolean
+          max_duration_days?: number
+          max_slots?: number
+          min_duration_days?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sponsored_products_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_products_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sponsored_purchases: {
+        Row: {
+          created_at: string
+          duration_days: number
+          expires_at: string
+          id: string
+          is_active: boolean
+          price_paid: number
+          product_id: string
+          purchased_by: string
+          restaurant_id: string
+          starts_at: string
+          stripe_payment_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration_days?: number
+          expires_at: string
+          id?: string
+          is_active?: boolean
+          price_paid: number
+          product_id: string
+          purchased_by: string
+          restaurant_id: string
+          starts_at?: string
+          stripe_payment_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration_days?: number
+          expires_at?: string
+          id?: string
+          is_active?: boolean
+          price_paid?: number
+          product_id?: string
+          purchased_by?: string
+          restaurant_id?: string
+          starts_at?: string
+          stripe_payment_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sponsored_purchases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "sponsored_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_purchases_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_badges: {
         Row: {
           badge_level: number | null
@@ -863,6 +980,11 @@ export type Database = {
         Args: { helpful_count: number; review_count: number }
         Returns: string
       }
+      calculate_sponsored_price: {
+        Args: { p_city_id: string; p_dish_id: string; p_duration_days?: number }
+        Returns: number
+      }
+      get_available_slots: { Args: { p_product_id: string }; Returns: number }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
