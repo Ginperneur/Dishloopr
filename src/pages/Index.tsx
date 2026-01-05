@@ -53,12 +53,12 @@ const Index = () => {
 
           <SearchBar variant="hero" />
           
-          {/* AI Surprise Button */}
+          {/* AI Surprise Button - visible on both mobile and desktop */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            className="flex justify-center mt-6"
+            transition={{ delay: 0.5, duration: 0.5 }}
+            className="flex justify-center mt-6 md:mt-8"
           >
             <SurpriseMe />
           </motion.div>
