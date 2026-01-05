@@ -5,6 +5,7 @@ import { Star, MapPin, Heart, Sparkles, Trophy, ImageOff } from 'lucide-react';
 import { Restaurant, dishes } from '@/data/mockData';
 import { Badge } from '@/components/ui/badge';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useState } from 'react';
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
@@ -33,6 +34,7 @@ const ambienceTagStyles: { [key: string]: string } = {
 export function RestaurantCard({ restaurant, index = 0, variant = 'default' }: RestaurantCardProps) {
   const { t } = useTranslation();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const [isLikeAnimating, setIsLikeAnimating] = useState(false);
   
   const restaurantDishes = restaurant.dishes
     .map(rd => dishes.find(d => d.id === rd.dishId))
@@ -45,7 +47,9 @@ export function RestaurantCard({ restaurant, index = 0, variant = 'default' }: R
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    setIsLikeAnimating(true);
     toggleFavorite(restaurant.id);
+    setTimeout(() => setIsLikeAnimating(false), 300);
   };
 
   return (
@@ -93,17 +97,20 @@ export function RestaurantCard({ restaurant, index = 0, variant = 'default' }: R
             )}
           </div>
 
-          {/* Favorite Button */}
-          <button
+          {/* Favorite Button with Animation */}
+          <motion.button
             onClick={handleFavoriteClick}
+            whileTap={{ scale: 0.9 }}
             className={`absolute top-2 md:top-3 right-2 md:right-3 p-2 rounded-full backdrop-blur transition-colors ${
               isFavorite(restaurant.id)
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-background/80 hover:bg-background'
             }`}
           >
-            <Heart className={`h-4 w-4 ${isFavorite(restaurant.id) ? 'fill-current' : ''}`} />
-          </button>
+            <Heart 
+              className={`h-4 w-4 ${isFavorite(restaurant.id) ? 'fill-current' : ''} ${isLikeAnimating ? 'like-pop' : ''}`} 
+            />
+          </motion.button>
 
           {/* Price Badge */}
           <div className="absolute bottom-2 md:bottom-3 right-2 md:right-3">

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Star, MapPin, Heart, Sparkles, Trophy, ImageOff } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useState } from 'react';
 import type { Database } from '@/integrations/supabase/types';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
@@ -34,6 +35,7 @@ const ambienceTagStyles: { [key: string]: string } = {
 export function DatabaseRestaurantCard({ restaurant, index = 0 }: DatabaseRestaurantCardProps) {
   const { t } = useTranslation();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const [isLikeAnimating, setIsLikeAnimating] = useState(false);
   
   const isFeatured = restaurant.is_featured || restaurant.is_top_listing;
   const hasImage = restaurant.images && restaurant.images.length > 0 && restaurant.images[0];
@@ -41,7 +43,9 @@ export function DatabaseRestaurantCard({ restaurant, index = 0 }: DatabaseRestau
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    setIsLikeAnimating(true);
     toggleFavorite(restaurant.id);
+    setTimeout(() => setIsLikeAnimating(false), 300);
   };
 
   return (
@@ -89,17 +93,20 @@ export function DatabaseRestaurantCard({ restaurant, index = 0 }: DatabaseRestau
             )}
           </div>
 
-          {/* Favorite Button */}
-          <button
+          {/* Favorite Button with Animation */}
+          <motion.button
             onClick={handleFavoriteClick}
+            whileTap={{ scale: 0.9 }}
             className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur transition-colors ${
               isFavorite(restaurant.id)
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-background/80 hover:bg-background'
             }`}
           >
-            <Heart className={`h-4 w-4 ${isFavorite(restaurant.id) ? 'fill-current' : ''}`} />
-          </button>
+            <Heart 
+              className={`h-4 w-4 ${isFavorite(restaurant.id) ? 'fill-current' : ''} ${isLikeAnimating ? 'like-pop' : ''}`} 
+            />
+          </motion.button>
 
           {/* Price Badge */}
           <div className="absolute bottom-3 right-3">

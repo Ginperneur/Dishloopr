@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { SlidersHorizontal, X } from 'lucide-react';
+import { SlidersHorizontal, X, Map, LayoutGrid, Navigation, Loader2 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { SearchBar } from '@/components/search/SearchBar';
 import { RestaurantCard } from '@/components/restaurant/RestaurantCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { SkeletonCard } from '@/components/ui/skeleton-card';
 import {
   Sheet,
   SheetContent,
@@ -24,8 +25,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useSearch } from '@/hooks/useSearch';
+import { useGeolocation, calculateDistance } from '@/hooks/useGeolocation';
+import { toast } from 'sonner';
 
-type SortOption = 'bestMatch' | 'highestRated' | 'mostReviews' | 'priceLowHigh' | 'priceHighLow';
+// Lazy load the map component
+const RestaurantMap = lazy(() => import('@/components/map/RestaurantMap').then(m => ({ default: m.RestaurantMap })));
+
+type SortOption = 'bestMatch' | 'highestRated' | 'mostReviews' | 'priceLowHigh' | 'priceHighLow' | 'nearest';
+type ViewMode = 'grid' | 'map';
 
 interface Filters {
   priceLevel: number[];
@@ -52,7 +59,12 @@ export default function SearchPage() {
     concepts: [],
   });
   const [sortBy, setSortBy] = useState<SortOption>('bestMatch');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  
+  // Geolocation for "near me" feature
+  const { latitude, longitude, loading: locationLoading, requestLocation } = useGeolocation();
+  const userLocation = latitude && longitude ? { lat: latitude, lng: longitude } : null;
 
   // Get unique cuisines from database
   const availableCuisines = [...new Set(dishes.flatMap(d => d.cuisine_tags || []))];
@@ -62,7 +74,7 @@ export default function SearchPage() {
     search(dishQuery, cityId, filters);
   }, [dishQuery, cityId, filters]);
 
-  // Apply sorting
+  // Apply sorting (including distance-based)
   const sortedResults = [...results].sort((a, b) => {
     switch (sortBy) {
       case 'highestRated':
@@ -73,10 +85,39 @@ export default function SearchPage() {
         return a.price_level - b.price_level;
       case 'priceHighLow':
         return b.price_level - a.price_level;
+      case 'nearest':
+        if (!userLocation) return 0;
+        const distA = a.geo_lat && a.geo_lng 
+          ? calculateDistance(userLocation.lat, userLocation.lng, a.geo_lat, a.geo_lng)
+          : Infinity;
+        const distB = b.geo_lat && b.geo_lng
+          ? calculateDistance(userLocation.lat, userLocation.lng, b.geo_lat, b.geo_lng)
+          : Infinity;
+        return distA - distB;
       default:
         return 0; // Keep original order (best match from search)
     }
   });
+
+  // Handle near me click
+  const handleNearMe = () => {
+    if (locationLoading) return;
+    
+    if (!userLocation) {
+      requestLocation();
+      toast.info('Locatie wordt opgehaald...');
+    } else {
+      setSortBy('nearest');
+      toast.success('Gesorteerd op afstand');
+    }
+  };
+
+  // Auto-sort by nearest when location becomes available
+  useEffect(() => {
+    if (userLocation && sortBy === 'nearest') {
+      // Location is now available, results will re-sort
+    }
+  }, [userLocation, sortBy]);
 
   const handleSearch = (query: string, newCityId: string) => {
     const params = new URLSearchParams();
@@ -277,35 +318,77 @@ export default function SearchPage() {
           {/* Results */}
           <div className="flex-1 min-w-0">
             {/* Results Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 md:mb-6">
-              <div className="min-w-0">
-                <h1 className="text-xl md:text-2xl font-bold truncate">
-                  {dishQuery ? (
-                    <>
-                      {dishQuery} {cityName && `in ${cityName}`}
-                    </>
-                  ) : (
-                    <>Restaurants {cityName && `in ${cityName}`}</>
-                  )}
-                </h1>
-                <p className="text-muted-foreground text-sm mt-0.5">
-                  {loading ? 'Zoeken...' : `${sortedResults.length} ${t('search.results')}`}
-                </p>
-              </div>
+            <div className="flex flex-col gap-3 mb-4 md:mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <h1 className="text-xl md:text-2xl font-bold truncate">
+                    {dishQuery ? (
+                      <>
+                        {dishQuery} {cityName && `in ${cityName}`}
+                      </>
+                    ) : (
+                      <>Restaurants {cityName && `in ${cityName}`}</>
+                    )}
+                  </h1>
+                  <p className="text-muted-foreground text-sm mt-0.5">
+                    {loading ? 'Zoeken...' : `${sortedResults.length} ${t('search.results')}`}
+                  </p>
+                </div>
 
-              {/* Sort */}
-              <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bestMatch">{t('sort.bestMatch')}</SelectItem>
-                  <SelectItem value="highestRated">{t('sort.highestRated')}</SelectItem>
-                  <SelectItem value="mostReviews">{t('sort.mostReviews')}</SelectItem>
-                  <SelectItem value="priceLowHigh">{t('sort.priceLowHigh')}</SelectItem>
-                  <SelectItem value="priceHighLow">{t('sort.priceHighLow')}</SelectItem>
-                </SelectContent>
-              </Select>
+                {/* View Mode Toggle + Sort */}
+                <div className="flex items-center gap-2">
+                  {/* Near Me Button */}
+                  <Button
+                    variant={sortBy === 'nearest' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={handleNearMe}
+                    disabled={locationLoading}
+                    className="shrink-0"
+                  >
+                    {locationLoading ? (
+                      <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                    ) : (
+                      <Navigation className="h-4 w-4 mr-1.5" />
+                    )}
+                    <span className="hidden sm:inline">Bij mij</span>
+                  </Button>
+
+                  {/* View Mode Toggle */}
+                  <div className="flex items-center border border-border rounded-lg p-0.5">
+                    <Button
+                      variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="h-7 px-2"
+                      onClick={() => setViewMode('grid')}
+                    >
+                      <LayoutGrid className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === 'map' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="h-7 px-2"
+                      onClick={() => setViewMode('map')}
+                    >
+                      <Map className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {/* Sort */}
+                  <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+                    <SelectTrigger className="w-full sm:w-44">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="bestMatch">{t('sort.bestMatch')}</SelectItem>
+                      <SelectItem value="highestRated">{t('sort.highestRated')}</SelectItem>
+                      <SelectItem value="mostReviews">{t('sort.mostReviews')}</SelectItem>
+                      <SelectItem value="priceLowHigh">{t('sort.priceLowHigh')}</SelectItem>
+                      <SelectItem value="priceHighLow">{t('sort.priceHighLow')}</SelectItem>
+                      {userLocation && <SelectItem value="nearest">Dichtstbij</SelectItem>}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
 
             {/* Active Filters */}
@@ -361,21 +444,54 @@ export default function SearchPage() {
               </div>
             )}
 
-            {/* Results Grid */}
-            {loading ? (
+            {/* Results - Grid or Map View */}
+            {viewMode === 'map' ? (
+              <Suspense fallback={
+                <div className="h-[60vh] bg-muted rounded-xl animate-pulse flex items-center justify-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              }>
+                <div className="h-[60vh] rounded-xl overflow-hidden">
+                  <RestaurantMap
+                    restaurants={sortedResults.map(r => ({
+                      id: r.id,
+                      name: r.name,
+                      slug: r.slug,
+                      address: r.address,
+                      rating: Number(r.rating),
+                      review_count: r.review_count,
+                      geo_lat: r.geo_lat,
+                      geo_lng: r.geo_lng,
+                      is_featured: r.is_featured,
+                      is_top_listing: r.is_top_listing,
+                      images: r.images,
+                      price_level: r.price_level,
+                    }))}
+                    userLocation={userLocation}
+                    className="h-full"
+                  />
+                </div>
+              </Suspense>
+            ) : loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="h-56 md:h-64 bg-muted rounded-xl animate-pulse" />
+                  <SkeletonCard key={i} />
                 ))}
               </div>
             ) : sortedResults.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {restaurantCards.map((restaurant, index) => (
-                  <RestaurantCard
+                  <motion.div
                     key={restaurant.id}
-                    restaurant={restaurant}
-                    index={index}
-                  />
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05, duration: 0.3 }}
+                  >
+                    <RestaurantCard
+                      restaurant={restaurant}
+                      index={index}
+                    />
+                  </motion.div>
                 ))}
               </div>
             ) : (
