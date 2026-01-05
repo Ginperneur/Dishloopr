@@ -580,6 +580,7 @@ export type Database = {
           top_until: string | null
           updated_at: string
           website_url: string | null
+          zenchef_id: string | null
         }
         Insert: {
           accepts_routed_demand?: boolean | null
@@ -613,6 +614,7 @@ export type Database = {
           top_until?: string | null
           updated_at?: string
           website_url?: string | null
+          zenchef_id?: string | null
         }
         Update: {
           accepts_routed_demand?: boolean | null
@@ -646,6 +648,7 @@ export type Database = {
           top_until?: string | null
           updated_at?: string
           website_url?: string | null
+          zenchef_id?: string | null
         }
         Relationships: [
           {

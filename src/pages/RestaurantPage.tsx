@@ -26,6 +26,7 @@ import { MenuSection } from '@/components/restaurant/MenuSection';
 import { BusyIndicator } from '@/components/restaurant/BusyIndicator';
 import { SustainabilityScore } from '@/components/restaurant/SustainabilityScore';
 import { EventsSection } from '@/components/restaurant/EventsSection';
+import { ReservationWidget } from '@/components/restaurant/ReservationWidget';
 import { AlternativeRestaurants } from '@/components/routing/AlternativeRestaurants';
 import { SocialShare } from '@/components/social/SocialShare';
 import { SEOHead, createRestaurantSchema, createBreadcrumbSchema } from '@/components/seo/SEOHead';
@@ -327,13 +328,12 @@ export default function RestaurantPage() {
 
             {/* Mobile CTA Buttons */}
             <div className="lg:hidden flex gap-2">
-              {restaurant.reservation_url && (
-                <Button className="flex-1" size="default" asChild>
-                  <a href={restaurant.reservation_url} target="_blank" rel="noopener noreferrer">
-                    {t('restaurant.reserve')}
-                  </a>
-                </Button>
-              )}
+              <ReservationWidget 
+                zenchefId={restaurant.zenchef_id}
+                reservationUrl={restaurant.reservation_url}
+                restaurantName={restaurant.name}
+                variant="button"
+              />
               {restaurant.phone && (
                 <Button variant="outline" size="icon" asChild className="shrink-0">
                   <a href={`tel:${restaurant.phone}`}>
@@ -438,17 +438,17 @@ export default function RestaurantPage() {
               animate={{ opacity: 1, x: 0 }}
               className="sticky top-24 space-y-4"
             >
-              {/* CTA Card */}
+              {/* Reservation Widget */}
+              <ReservationWidget 
+                zenchefId={restaurant.zenchef_id}
+                reservationUrl={restaurant.reservation_url}
+                restaurantName={restaurant.name}
+                variant="full"
+              />
+
+              {/* Website & Contact Card */}
               <div className="p-6 rounded-2xl border border-border bg-card">
                 <div className="space-y-3">
-                  {restaurant.reservation_url && (
-                    <Button className="w-full" size="lg" asChild>
-                      <a href={restaurant.reservation_url} target="_blank" rel="noopener noreferrer">
-                        {t('restaurant.reserve')}
-                      </a>
-                    </Button>
-                  )}
-                  
                   {restaurant.website_url && (
                     <Button variant="outline" className="w-full" size="lg" asChild>
                       <a href={restaurant.website_url} target="_blank" rel="noopener noreferrer">
