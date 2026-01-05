@@ -104,5 +104,19 @@
     "privacy": "Privacy",
     "forRestaurants": "Voor restaurants",
     "claimRestaurant": "Claim je restaurant"
+  },
+  "ai": {
+    "surpriseMe": "Verras me!",
+    "surpriseTitle": "AI Dish Discovery",
+    "surpriseSubtitle": "Laat je verrassen",
+    "moodQuestion": "Waar heb je zin in vandaag?",
+    "thinking": "Even denken...",
+    "generateSurprise": "Verras mij!",
+    "tryAnother": "Probeer opnieuw",
+    "searchDish": "Zoek restaurants",
+    "forYou": "Voor jou geselecteerd",
+    "exploreNow": "Ontdek nu",
+    "becauseYouLiked": "Omdat je {{dish}} lekker vond",
+    "youMightAlsoLike": "Misschien vind je dit ook lekker"
   }
 }

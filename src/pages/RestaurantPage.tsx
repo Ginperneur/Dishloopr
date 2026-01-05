@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
+import { useEffect } from 'react';
 import { 
   Star, 
   MapPin, 
@@ -21,9 +22,11 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ReviewForm } from '@/components/reviews/ReviewForm';
 import { ReviewList } from '@/components/reviews/ReviewList';
+import { SmartSuggestions } from '@/components/ai/SmartSuggestions';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useReviews } from '@/hooks/useReviews';
 import { useRestaurant } from '@/hooks/useRestaurant';
+import { useAIRecommendations } from '@/hooks/useAIRecommendations';
 
 const priceLabels: { [key: number]: string } = {
   1: '€ · Budget',
@@ -50,6 +53,15 @@ export default function RestaurantPage() {
   const { restaurant, loading: restaurantLoading, error } = useRestaurant(slug);
   const { reviews, loading: reviewsLoading, submitting, submitReview } = useReviews(restaurant?.id);
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { smartSuggestions, getSmartSuggestions } = useAIRecommendations();
+
+  // Get smart suggestions when we have dishes
+  useEffect(() => {
+    if (restaurant?.dishes && restaurant.dishes.length > 0) {
+      const primaryDish = restaurant.dishes[0].name;
+      getSmartSuggestions(primaryDish);
+    }
+  }, [restaurant?.dishes, getSmartSuggestions]);
 
   if (restaurantLoading) {
     return (
@@ -371,6 +383,14 @@ export default function RestaurantPage() {
                   ))}
                 </div>
               </div>
+
+              {/* Smart AI Suggestions */}
+              {restaurant.dishes && restaurant.dishes.length > 0 && smartSuggestions.length > 0 && (
+                <SmartSuggestions 
+                  currentDish={restaurant.dishes[0].name} 
+                  suggestions={smartSuggestions} 
+                />
+              )}
             </motion.div>
           </div>
         </div>

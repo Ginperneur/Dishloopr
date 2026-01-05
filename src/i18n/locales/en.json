@@ -104,5 +104,19 @@
     "privacy": "Privacy",
     "forRestaurants": "For restaurants",
     "claimRestaurant": "Claim your restaurant"
+  },
+  "ai": {
+    "surpriseMe": "Surprise me!",
+    "surpriseTitle": "AI Dish Discovery",
+    "surpriseSubtitle": "Let us surprise you",
+    "moodQuestion": "What are you in the mood for today?",
+    "thinking": "Thinking...",
+    "generateSurprise": "Surprise me!",
+    "tryAnother": "Try another",
+    "searchDish": "Find restaurants",
+    "forYou": "Picked for you",
+    "exploreNow": "Explore now",
+    "becauseYouLiked": "Because you liked {{dish}}",
+    "youMightAlsoLike": "You might also like these"
   }
 }
