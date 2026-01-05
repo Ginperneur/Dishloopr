@@ -160,6 +160,7 @@ export type Database = {
           is_active: boolean
           name: string
           search_count: number
+          seasonal_tags: string[] | null
           slug: string
           synonyms: string[] | null
           updated_at: string
@@ -171,6 +172,7 @@ export type Database = {
           is_active?: boolean
           name: string
           search_count?: number
+          seasonal_tags?: string[] | null
           slug: string
           synonyms?: string[] | null
           updated_at?: string
@@ -182,6 +184,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           search_count?: number
+          seasonal_tags?: string[] | null
           slug?: string
           synonyms?: string[] | null
           updated_at?: string
@@ -242,6 +245,65 @@ export type Database = {
             columns: ["review_id"]
             isOneToOne: false
             referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_items: {
+        Row: {
+          allergens: string[] | null
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_available: boolean | null
+          is_gluten_free: boolean | null
+          is_vegan: boolean | null
+          is_vegetarian: boolean | null
+          name: string
+          price: number
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          allergens?: string[] | null
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean | null
+          is_gluten_free?: boolean | null
+          is_vegan?: boolean | null
+          is_vegetarian?: boolean | null
+          name: string
+          price: number
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          allergens?: string[] | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean | null
+          is_gluten_free?: boolean | null
+          is_vegan?: boolean | null
+          is_vegetarian?: boolean | null
+          name?: string
+          price?: number
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
         ]
@@ -333,6 +395,65 @@ export type Database = {
           },
         ]
       }
+      restaurant_events: {
+        Row: {
+          created_at: string
+          current_participants: number | null
+          description: string | null
+          end_date: string | null
+          event_date: string
+          event_type: string
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          max_participants: number | null
+          price: number | null
+          restaurant_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_participants?: number | null
+          description?: string | null
+          end_date?: string | null
+          event_date: string
+          event_type: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          max_participants?: number | null
+          price?: number | null
+          restaurant_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_participants?: number | null
+          description?: string | null
+          end_date?: string | null
+          event_date?: string
+          event_type?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          max_participants?: number | null
+          price?: number | null
+          restaurant_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_events_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurants: {
         Row: {
           address: string
@@ -342,6 +463,7 @@ export type Database = {
           concepts: string[] | null
           created_at: string
           cuisines: string[] | null
+          current_busy_level: string | null
           featured_until: string | null
           geo_lat: number | null
           geo_lng: number | null
@@ -359,6 +481,7 @@ export type Database = {
           reservation_url: string | null
           review_count: number
           slug: string
+          sustainability_score: number | null
           top_until: string | null
           updated_at: string
           website_url: string | null
@@ -371,6 +494,7 @@ export type Database = {
           concepts?: string[] | null
           created_at?: string
           cuisines?: string[] | null
+          current_busy_level?: string | null
           featured_until?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
@@ -388,6 +512,7 @@ export type Database = {
           reservation_url?: string | null
           review_count?: number
           slug: string
+          sustainability_score?: number | null
           top_until?: string | null
           updated_at?: string
           website_url?: string | null
@@ -400,6 +525,7 @@ export type Database = {
           concepts?: string[] | null
           created_at?: string
           cuisines?: string[] | null
+          current_busy_level?: string | null
           featured_until?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
@@ -417,6 +543,7 @@ export type Database = {
           reservation_url?: string | null
           review_count?: number
           slug?: string
+          sustainability_score?: number | null
           top_until?: string | null
           updated_at?: string
           website_url?: string | null

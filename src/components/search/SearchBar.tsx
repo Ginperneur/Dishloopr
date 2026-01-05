@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, MapPin, ChevronDown, UtensilsCrossed } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { VoiceSearch } from '@/components/search/VoiceSearch';
 import { supabase } from '@/integrations/supabase/client';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import type { Database } from '@/integrations/supabase/types';
@@ -266,8 +267,19 @@ export function SearchBar({
                 ))}
               </motion.div>
             )}
-          </AnimatePresence>
+            </AnimatePresence>
         </div>
+
+        {/* Voice Search */}
+        {isHero && (
+          <VoiceSearch 
+            onResult={setQuery}
+            onSearch={(text) => {
+              setQuery(text);
+              handleSuggestionClick(text);
+            }}
+          />
+        )}
 
         {/* Search Button */}
         <Button

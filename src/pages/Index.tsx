@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { SearchBar } from '@/components/search/SearchBar';
 import { Layout } from '@/components/layout/Layout';
 import { TrendingDishes } from '@/components/home/TrendingDishes';
+import { TrendingNow } from '@/components/home/TrendingNow';
+import { UpcomingEvents } from '@/components/home/UpcomingEvents';
 import { RestaurantCard } from '@/components/restaurant/RestaurantCard';
 import { SurpriseMe } from '@/components/ai/SurpriseMe';
 import { PersonalizedRecommendations } from '@/components/ai/PersonalizedRecommendations';
@@ -59,7 +61,13 @@ const Index = () => {
       {/* Personalized Recommendations for logged-in users */}
       <PersonalizedRecommendations />
 
-      {/* Trending Dishes */}
+      {/* Trending Now - Live trending dishes */}
+      <TrendingNow />
+
+      {/* Upcoming Events */}
+      <UpcomingEvents />
+
+      {/* Trending Dishes (legacy) */}
       <TrendingDishes dishes={trendingDishes} />
 
       {/* Featured Restaurants */}

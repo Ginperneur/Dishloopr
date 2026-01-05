@@ -65,7 +65,8 @@
     "share": "Delen",
     "website": "Website",
     "addToFavorites": "Toevoegen aan favorieten",
-    "removeFromFavorites": "Verwijderen uit favorieten"
+    "removeFromFavorites": "Verwijderen uit favorieten",
+    "menu": "Menukaart"
   },
   "reviews": {
     "title": "Beoordelingen",
@@ -80,7 +81,10 @@
   "trending": {
     "title": "Trending gerechten",
     "subtitle": "Populair in jouw stad",
-    "inCity": "in {city}"
+    "inCity": "in {city}",
+    "now": "Trending nu",
+    "searches": "zoekopdrachten",
+    "seasonalSubtitle": "Gerechten die nu perfect passen"
   },
   "search": {
     "results": "resultaten",
@@ -118,5 +122,56 @@
     "exploreNow": "Ontdek nu",
     "becauseYouLiked": "Omdat je {{dish}} lekker vond",
     "youMightAlsoLike": "Misschien vind je dit ook lekker"
+  },
+  "menu": {
+    "allergens": "Allergenen"
+  },
+  "busyLevel": {
+    "quiet": "Rustig",
+    "moderate": "Gemiddeld druk",
+    "busy": "Druk",
+    "very_busy": "Zeer druk",
+    "waitTime": "wachttijd"
+  },
+  "sustainability": {
+    "ecoScore": "Eco-score",
+    "excellent": "Uitstekend",
+    "good": "Goed",
+    "average": "Gemiddeld",
+    "basic": "Basis",
+    "localIngredients": "Lokale ingrediënten",
+    "sustainableSeafood": "Duurzame vis",
+    "wasteReduction": "Afvalreductie",
+    "lowEmissions": "Lage emissies"
+  },
+  "events": {
+    "title": "Evenementen",
+    "upcoming": "Aankomende evenementen",
+    "spotsLeft": "{{count}} plekken vrij",
+    "soldOut": "Uitverkocht",
+    "book": "Reserveren",
+    "viewDetails": "Bekijk details"
+  },
+  "voice": {
+    "title": "Spraak zoeken",
+    "start": "Spraak zoeken",
+    "listening": "Luisteren...",
+    "searching": "Zoeken naar restaurants...",
+    "hint": "Zeg iets als \"Waar kan ik de beste ramen eten?\"",
+    "notSupported": "Spraakherkenning wordt niet ondersteund in deze browser",
+    "permissionDenied": "Microfoon toegang geweigerd",
+    "noSpeech": "Geen spraak gedetecteerd",
+    "error": "Er ging iets mis"
+  },
+  "common": {
+    "loading": "Laden...",
+    "error": "Er ging iets mis",
+    "tryAgain": "Probeer opnieuw",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "edit": "Bewerken",
+    "delete": "Verwijderen",
+    "confirm": "Bevestigen",
+    "minutes": "min"
   }
 }
