@@ -152,6 +152,64 @@ export type Database = {
           },
         ]
       }
+      demand_routing_events: {
+        Row: {
+          created_at: string
+          dish_id: string | null
+          id: string
+          match_score: number | null
+          routing_reason: string
+          source_restaurant_id: string
+          target_restaurant_id: string
+          was_clicked: boolean | null
+          was_converted: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          dish_id?: string | null
+          id?: string
+          match_score?: number | null
+          routing_reason: string
+          source_restaurant_id: string
+          target_restaurant_id: string
+          was_clicked?: boolean | null
+          was_converted?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          dish_id?: string | null
+          id?: string
+          match_score?: number | null
+          routing_reason?: string
+          source_restaurant_id?: string
+          target_restaurant_id?: string
+          was_clicked?: boolean | null
+          was_converted?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demand_routing_events_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demand_routing_events_source_restaurant_id_fkey"
+            columns: ["source_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demand_routing_events_target_restaurant_id_fkey"
+            columns: ["target_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dishes: {
         Row: {
           created_at: string
@@ -456,6 +514,7 @@ export type Database = {
       }
       restaurants: {
         Row: {
+          accepts_routed_demand: boolean | null
           address: string
           ambience_tags: string[] | null
           city_id: string
@@ -480,6 +539,7 @@ export type Database = {
           rating: number
           reservation_url: string | null
           review_count: number
+          routed_demand_dishes: string[] | null
           slug: string
           sustainability_score: number | null
           top_until: string | null
@@ -487,6 +547,7 @@ export type Database = {
           website_url: string | null
         }
         Insert: {
+          accepts_routed_demand?: boolean | null
           address: string
           ambience_tags?: string[] | null
           city_id: string
@@ -511,6 +572,7 @@ export type Database = {
           rating?: number
           reservation_url?: string | null
           review_count?: number
+          routed_demand_dishes?: string[] | null
           slug: string
           sustainability_score?: number | null
           top_until?: string | null
@@ -518,6 +580,7 @@ export type Database = {
           website_url?: string | null
         }
         Update: {
+          accepts_routed_demand?: boolean | null
           address?: string
           ambience_tags?: string[] | null
           city_id?: string
@@ -542,6 +605,7 @@ export type Database = {
           rating?: number
           reservation_url?: string | null
           review_count?: number
+          routed_demand_dishes?: string[] | null
           slug?: string
           sustainability_score?: number | null
           top_until?: string | null
