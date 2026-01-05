@@ -12,7 +12,7 @@
   "hero": {
     "title": "Find restaurants",
     "titleAccent": "by dish.",
-    "subtitle": "Stop searching by category. Search for what you actually want to eat.",
+    "subtitle": "Dishloopr is the fastest way to find restaurants based on the dish you're craving, filtered by city, ambience, and price.",
     "searchPlaceholder": "Search for steak, sushi, ramen...",
     "allNetherlands": "All Netherlands",
     "searchButton": "Search Dishes"
