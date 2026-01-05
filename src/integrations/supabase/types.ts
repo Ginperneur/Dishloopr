@@ -217,6 +217,35 @@ export type Database = {
           },
         ]
       }
+      helpful_votes: {
+        Row: {
+          created_at: string
+          id: string
+          review_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          review_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          review_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "helpful_votes_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -224,9 +253,12 @@ export type Database = {
           created_at: string
           email: string | null
           food_photos: string[] | null
+          helpful_votes: number | null
           id: string
           name: string | null
           preferred_language: string | null
+          reviewer_level: string | null
+          total_reviews: number | null
           updated_at: string
         }
         Insert: {
@@ -235,9 +267,12 @@ export type Database = {
           created_at?: string
           email?: string | null
           food_photos?: string[] | null
+          helpful_votes?: number | null
           id: string
           name?: string | null
           preferred_language?: string | null
+          reviewer_level?: string | null
+          total_reviews?: number | null
           updated_at?: string
         }
         Update: {
@@ -246,9 +281,12 @@ export type Database = {
           created_at?: string
           email?: string | null
           food_photos?: string[] | null
+          helpful_votes?: number | null
           id?: string
           name?: string | null
           preferred_language?: string | null
+          reviewer_level?: string | null
+          total_reviews?: number | null
           updated_at?: string
         }
         Relationships: []
@@ -399,6 +437,7 @@ export type Database = {
           created_at: string
           dishes_eaten: string[] | null
           id: string
+          is_verified: boolean | null
           owner_response: string | null
           owner_response_at: string | null
           photos: string[] | null
@@ -416,6 +455,7 @@ export type Database = {
           created_at?: string
           dishes_eaten?: string[] | null
           id?: string
+          is_verified?: boolean | null
           owner_response?: string | null
           owner_response_at?: string | null
           photos?: string[] | null
@@ -433,6 +473,7 @@ export type Database = {
           created_at?: string
           dishes_eaten?: string[] | null
           id?: string
+          is_verified?: boolean | null
           owner_response?: string | null
           owner_response_at?: string | null
           photos?: string[] | null
@@ -481,6 +522,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_reviewer_level: {
+        Args: { helpful_count: number; review_count: number }
+        Returns: string
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]

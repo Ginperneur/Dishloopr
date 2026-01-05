@@ -27,6 +27,7 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { useReviews } from '@/hooks/useReviews';
 import { useRestaurant } from '@/hooks/useRestaurant';
 import { useAIRecommendations } from '@/hooks/useAIRecommendations';
+import { useAuth } from '@/contexts/AuthContext';
 
 const priceLabels: { [key: number]: string } = {
   1: '€ · Budget',
@@ -51,9 +52,10 @@ export default function RestaurantPage() {
   const { t } = useTranslation();
   
   const { restaurant, loading: restaurantLoading, error } = useRestaurant(slug);
-  const { reviews, loading: reviewsLoading, submitting, submitReview } = useReviews(restaurant?.id);
+  const { reviews, loading: reviewsLoading, submitting, submitReview, refetch } = useReviews(restaurant?.id);
   const { isFavorite, toggleFavorite } = useFavorites();
   const { smartSuggestions, getSmartSuggestions } = useAIRecommendations();
+  const { user } = useAuth();
 
   // Get smart suggestions when we have dishes
   useEffect(() => {
@@ -309,7 +311,12 @@ export default function RestaurantPage() {
               
               <div className="space-y-6">
                 <ReviewForm onSubmit={submitReview} submitting={submitting} />
-                <ReviewList reviews={reviews} loading={reviewsLoading} />
+                <ReviewList 
+                  reviews={reviews} 
+                  loading={reviewsLoading} 
+                  isOwner={user?.id === restaurant?.claimed_by_owner_id}
+                  onRefetch={refetch}
+                />
               </div>
             </motion.div>
           </div>

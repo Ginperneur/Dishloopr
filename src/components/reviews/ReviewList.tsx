@@ -1,13 +1,19 @@
-import { Star } from 'lucide-react';
+import { Star, Image as ImageIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ReviewerBadge, VerifiedBadge } from './ReviewerBadge';
+import { HelpfulButton } from './HelpfulButton';
+import { OwnerResponse } from './OwnerResponse';
 import type { ReviewWithProfile } from '@/hooks/useReviews';
 
 interface ReviewListProps {
   reviews: ReviewWithProfile[];
   loading: boolean;
+  isOwner?: boolean;
+  onRefetch?: () => void;
 }
 
-export function ReviewList({ reviews, loading }: ReviewListProps) {
+export function ReviewList({ reviews, loading, isOwner = false, onRefetch }: ReviewListProps) {
   if (loading) {
     return (
       <div className="space-y-4">
@@ -33,8 +39,15 @@ export function ReviewList({ reviews, loading }: ReviewListProps) {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      {reviews.map((review) => (
-        <div key={review.id} className="p-3 md:p-4 rounded-xl bg-muted/50">
+      {reviews.map((review, index) => (
+        <motion.div
+          key={review.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.05 }}
+          className="p-3 md:p-4 rounded-xl bg-muted/50"
+        >
+          {/* Header */}
           <div className="flex items-start justify-between gap-3 mb-2 md:mb-3">
             <div className="flex items-center gap-2 md:gap-3 min-w-0">
               <Avatar className="h-8 w-8 md:h-10 md:w-10 shrink-0">
@@ -44,14 +57,29 @@ export function ReviewList({ reviews, loading }: ReviewListProps) {
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0">
-                <p className="font-semibold text-sm md:text-base truncate">{review.profile?.name || 'Anoniem'}</p>
-                <p className="text-xs md:text-sm text-muted-foreground">
-                  {new Date(review.created_at).toLocaleDateString('nl-NL', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                  })}
-                </p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="font-semibold text-sm md:text-base truncate">
+                    {review.profile?.name || 'Anoniem'}
+                  </p>
+                  {review.profile?.reviewer_level && (
+                    <ReviewerBadge 
+                      level={review.profile.reviewer_level as 'bronze' | 'silver' | 'gold' | 'platinum'} 
+                      reviewCount={review.profile.total_reviews || 0}
+                      size="sm"
+                      showLabel={false}
+                    />
+                  )}
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-xs md:text-sm text-muted-foreground">
+                    {new Date(review.created_at).toLocaleDateString('nl-NL', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </p>
+                  {review.is_verified && <VerifiedBadge size="sm" />}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-0.5 shrink-0">
@@ -67,17 +95,55 @@ export function ReviewList({ reviews, loading }: ReviewListProps) {
               ))}
             </div>
           </div>
-          {review.title && <h4 className="font-medium text-sm md:text-base mb-1 md:mb-2">{review.title}</h4>}
-          {review.body && <p className="text-muted-foreground text-sm md:text-base">{review.body}</p>}
-          
-          {/* Owner Response */}
-          {review.owner_response && (
-            <div className="mt-3 md:mt-4 p-2 md:p-3 rounded-lg bg-background border-l-2 border-primary">
-              <p className="text-xs md:text-sm font-medium mb-1">Reactie van eigenaar</p>
-              <p className="text-xs md:text-sm text-muted-foreground">{review.owner_response}</p>
+
+          {/* Content */}
+          {review.title && (
+            <h4 className="font-medium text-sm md:text-base mb-1 md:mb-2">{review.title}</h4>
+          )}
+          {review.body && (
+            <p className="text-muted-foreground text-sm md:text-base">{review.body}</p>
+          )}
+
+          {/* Photos */}
+          {review.photos && review.photos.length > 0 && (
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
+              {review.photos.map((photo, photoIndex) => (
+                <motion.div
+                  key={photoIndex}
+                  whileHover={{ scale: 1.02 }}
+                  className="relative shrink-0 w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden cursor-pointer"
+                >
+                  <img
+                    src={photo}
+                    alt={`Review foto ${photoIndex + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute bottom-1 right-1 bg-black/50 rounded px-1 py-0.5">
+                    <ImageIcon className="h-3 w-3 text-white" />
+                  </div>
+                </motion.div>
+              ))}
             </div>
           )}
-        </div>
+
+          {/* Actions */}
+          <div className="mt-3 flex items-center gap-2">
+            <HelpfulButton
+              reviewId={review.id}
+              initialCount={review.helpful_count || 0}
+              hasVoted={review.user_has_voted}
+            />
+          </div>
+          
+          {/* Owner Response */}
+          <OwnerResponse
+            reviewId={review.id}
+            existingResponse={review.owner_response}
+            responseDate={review.owner_response_at}
+            canRespond={isOwner && !review.owner_response}
+            onResponseAdded={onRefetch}
+          />
+        </motion.div>
       ))}
     </div>
   );

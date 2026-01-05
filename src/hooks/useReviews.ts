@@ -11,7 +11,11 @@ export interface ReviewWithProfile extends Review {
   profile?: {
     name: string | null;
     avatar_url: string | null;
+    reviewer_level: string | null;
+    total_reviews: number | null;
   };
+  helpful_count?: number;
+  user_has_voted?: boolean;
 }
 
 export function useReviews(restaurantId: string | undefined) {
@@ -24,7 +28,7 @@ export function useReviews(restaurantId: string | undefined) {
     if (restaurantId) {
       fetchReviews();
     }
-  }, [restaurantId]);
+  }, [restaurantId, user]);
 
   const fetchReviews = async () => {
     if (!restaurantId) return;
@@ -39,25 +43,61 @@ export function useReviews(restaurantId: string | undefined) {
 
     if (error) {
       console.error('Error fetching reviews:', error);
-    } else if (data) {
+      setLoading(false);
+      return;
+    }
+
+    if (data) {
       // Fetch profiles separately
       const userIds = [...new Set(data.map(r => r.user_id))];
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, name, avatar_url')
+        .select('id, name, avatar_url, reviewer_level, total_reviews')
         .in('id', userIds);
       
       const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
+      // Fetch helpful vote counts
+      const reviewIds = data.map(r => r.id);
+      const { data: voteCounts } = await supabase
+        .from('helpful_votes')
+        .select('review_id')
+        .in('review_id', reviewIds);
+
+      // Count votes per review
+      const voteCountMap = new Map<string, number>();
+      voteCounts?.forEach(vote => {
+        voteCountMap.set(vote.review_id, (voteCountMap.get(vote.review_id) || 0) + 1);
+      });
+
+      // Check if current user has voted
+      let userVotes = new Set<string>();
+      if (user) {
+        const { data: userVoteData } = await supabase
+          .from('helpful_votes')
+          .select('review_id')
+          .eq('user_id', user.id)
+          .in('review_id', reviewIds);
+        
+        userVotes = new Set(userVoteData?.map(v => v.review_id) || []);
+      }
       
       setReviews(data.map(review => ({
         ...review,
-        profile: profileMap.get(review.user_id) as { name: string | null; avatar_url: string | null } | undefined
+        profile: profileMap.get(review.user_id) as ReviewWithProfile['profile'],
+        helpful_count: voteCountMap.get(review.id) || 0,
+        user_has_voted: userVotes.has(review.id),
       })));
     }
     setLoading(false);
   };
 
-  const submitReview = async (data: { rating: number; title: string; body: string }) => {
+  const submitReview = async (data: { 
+    rating: number; 
+    title: string; 
+    body: string;
+    photos?: string[];
+  }) => {
     if (!user) {
       toast.error('Log in om een review te schrijven');
       return false;
@@ -73,7 +113,8 @@ export function useReviews(restaurantId: string | undefined) {
       rating: data.rating,
       title: data.title,
       body: data.body,
-      status: 'published', // Auto-publish for now
+      photos: data.photos || [],
+      status: 'published',
     };
 
     const { error } = await supabase.from('reviews').insert(review);
