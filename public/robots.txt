@@ -1,8 +1,13 @@
+# Dishloopr Robots.txt
+# https://dishloopr.com
+
 User-agent: Googlebot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Bingbot
 Allow: /
+Crawl-delay: 2
 
 User-agent: Twitterbot
 Allow: /
@@ -12,3 +17,12 @@ Allow: /
 
 User-agent: *
 Allow: /
+Crawl-delay: 2
+
+# Sitemap location
+Sitemap: https://uktafmxojymsojqewzuy.supabase.co/functions/v1/generate-sitemap
+
+# Disallow admin pages
+Disallow: /admin
+Disallow: /owner-dashboard
+Disallow: /login
