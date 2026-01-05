@@ -7,7 +7,8 @@
     "signup": "Sign up",
     "logout": "Logout",
     "profile": "Profile",
-    "favorites": "Favorites"
+    "favorites": "Favorites",
+    "insights": "Insights"
   },
   "hero": {
     "title": "Find restaurants",
