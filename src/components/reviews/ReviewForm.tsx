@@ -42,11 +42,11 @@ export function ReviewForm({ onSubmit, submitting }: ReviewFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 rounded-xl bg-muted/50 space-y-4">
-      <h3 className="font-semibold">Schrijf een review</h3>
+    <form onSubmit={handleSubmit} className="p-4 md:p-6 rounded-xl bg-muted/50 space-y-4">
+      <h3 className="font-semibold text-sm md:text-base">Schrijf een review</h3>
       
       {/* Star Rating */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5 md:gap-1">
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
@@ -54,10 +54,10 @@ export function ReviewForm({ onSubmit, submitting }: ReviewFormProps) {
             onClick={() => setRating(star)}
             onMouseEnter={() => setHoverRating(star)}
             onMouseLeave={() => setHoverRating(0)}
-            className="p-1 transition-transform hover:scale-110"
+            className="p-0.5 md:p-1 transition-transform hover:scale-110"
           >
             <Star
-              className={`h-6 w-6 transition-colors ${
+              className={`h-7 w-7 md:h-6 md:w-6 transition-colors ${
                 star <= (hoverRating || rating)
                   ? 'fill-rating text-rating'
                   : 'text-muted-foreground'
@@ -65,7 +65,7 @@ export function ReviewForm({ onSubmit, submitting }: ReviewFormProps) {
             />
           </button>
         ))}
-        <span className="ml-2 text-sm text-muted-foreground">
+        <span className="ml-2 text-xs md:text-sm text-muted-foreground">
           {rating > 0 ? `${rating}/5` : 'Selecteer rating'}
         </span>
       </div>
@@ -75,17 +75,19 @@ export function ReviewForm({ onSubmit, submitting }: ReviewFormProps) {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         required
+        className="text-base"
       />
 
       <Textarea
         placeholder="Deel je ervaring..."
         value={body}
         onChange={(e) => setBody(e.target.value)}
-        rows={4}
+        rows={3}
         required
+        className="text-base"
       />
 
-      <Button type="submit" disabled={rating === 0 || submitting}>
+      <Button type="submit" disabled={rating === 0 || submitting} className="w-full md:w-auto">
         {submitting ? 'Plaatsen...' : 'Review plaatsen'}
       </Button>
     </form>

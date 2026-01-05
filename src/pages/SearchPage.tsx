@@ -227,9 +227,9 @@ export default function SearchPage() {
   return (
     <Layout>
       {/* Search Header */}
-      <div className="sticky top-16 z-40 bg-background border-b border-border py-4">
-        <div className="container">
-          <div className="flex items-center gap-4">
+      <div className="sticky top-14 md:top-16 z-40 bg-background border-b border-border py-3 md:py-4">
+        <div className="container px-4 md:px-6">
+          <div className="flex items-center gap-3">
             <div className="flex-1">
               <SearchBar 
                 variant="compact" 
@@ -242,7 +242,7 @@ export default function SearchPage() {
             {/* Mobile Filter Button */}
             <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="lg:hidden relative">
+                <Button variant="outline" size="icon" className="lg:hidden relative shrink-0">
                   <SlidersHorizontal className="h-4 w-4" />
                   {activeFilterCount > 0 && (
                     <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
@@ -251,11 +251,11 @@ export default function SearchPage() {
                   )}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-80">
+              <SheetContent side="left" className="w-[85vw] max-w-sm">
                 <SheetHeader>
                   <SheetTitle>{t('filters.title')}</SheetTitle>
                 </SheetHeader>
-                <div className="mt-6">
+                <div className="mt-6 overflow-y-auto max-h-[calc(100vh-120px)]">
                   <FilterContent />
                 </div>
               </SheetContent>
@@ -264,7 +264,7 @@ export default function SearchPage() {
         </div>
       </div>
 
-      <div className="container py-8">
+      <div className="container px-4 md:px-6 py-4 md:py-8">
         <div className="flex gap-8">
           {/* Desktop Sidebar Filters */}
           <aside className="hidden lg:block w-64 shrink-0">
@@ -275,11 +275,11 @@ export default function SearchPage() {
           </aside>
 
           {/* Results */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             {/* Results Header */}
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-2xl font-bold">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 md:mb-6">
+              <div className="min-w-0">
+                <h1 className="text-xl md:text-2xl font-bold truncate">
                   {dishQuery ? (
                     <>
                       {dishQuery} {cityName && `in ${cityName}`}
@@ -288,14 +288,14 @@ export default function SearchPage() {
                     <>Restaurants {cityName && `in ${cityName}`}</>
                   )}
                 </h1>
-                <p className="text-muted-foreground mt-1">
+                <p className="text-muted-foreground text-sm mt-0.5">
                   {loading ? 'Zoeken...' : `${sortedResults.length} ${t('search.results')}`}
                 </p>
               </div>
 
               {/* Sort */}
               <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full sm:w-48">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -310,12 +310,12 @@ export default function SearchPage() {
 
             {/* Active Filters */}
             {activeFilterCount > 0 && (
-              <div className="flex flex-wrap gap-2 mb-6">
+              <div className="flex flex-wrap gap-2 mb-4 md:mb-6">
                 {filters.priceLevel.map(p => (
                   <Badge 
                     key={`price-${p}`} 
                     variant="secondary"
-                    className="cursor-pointer"
+                    className="cursor-pointer text-xs"
                     onClick={() => toggleFilter('priceLevel', p)}
                   >
                     {'€'.repeat(p)}
@@ -326,7 +326,7 @@ export default function SearchPage() {
                   <Badge 
                     key={`tag-${tag}`} 
                     variant="secondary"
-                    className="cursor-pointer capitalize"
+                    className="cursor-pointer capitalize text-xs"
                     onClick={() => toggleFilter('ambienceTags', tag)}
                   >
                     {tag.replace('-', ' ')}
@@ -337,7 +337,7 @@ export default function SearchPage() {
                   <Badge 
                     key={`cuisine-${c}`} 
                     variant="secondary"
-                    className="cursor-pointer capitalize"
+                    className="cursor-pointer capitalize text-xs"
                     onClick={() => toggleFilter('cuisines', c)}
                   >
                     {c}
@@ -348,14 +348,14 @@ export default function SearchPage() {
                   <Badge 
                     key={`concept-${c}`} 
                     variant="secondary"
-                    className="cursor-pointer capitalize"
+                    className="cursor-pointer capitalize text-xs"
                     onClick={() => toggleFilter('concepts', c)}
                   >
                     {c}
                     <X className="h-3 w-3 ml-1" />
                   </Badge>
                 ))}
-                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="h-6 text-xs px-2">
                   {t('filters.clearAll')}
                 </Button>
               </div>
@@ -363,13 +363,13 @@ export default function SearchPage() {
 
             {/* Results Grid */}
             {loading ? (
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="h-64 bg-muted rounded-xl animate-pulse" />
+                  <div key={i} className="h-56 md:h-64 bg-muted rounded-xl animate-pulse" />
                 ))}
               </div>
             ) : sortedResults.length > 0 ? (
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {restaurantCards.map((restaurant, index) => (
                   <RestaurantCard
                     key={restaurant.id}
@@ -382,10 +382,10 @@ export default function SearchPage() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-center py-16"
+                className="text-center py-12 md:py-16"
               >
-                <p className="text-xl font-semibold mb-2">{t('search.noResults')}</p>
-                <p className="text-muted-foreground">{t('search.tryDifferent')}</p>
+                <p className="text-lg md:text-xl font-semibold mb-2">{t('search.noResults')}</p>
+                <p className="text-muted-foreground text-sm md:text-base">{t('search.tryDifferent')}</p>
               </motion.div>
             )}
           </div>

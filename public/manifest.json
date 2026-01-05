@@ -1,0 +1,43 @@
+{
+  "name": "Dishloopr",
+  "short_name": "Dishloopr",
+  "description": "Vind restaurants op basis van het gerecht waar je zin in hebt",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFBF5",
+  "theme_color": "#F26522",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "nl",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["food", "lifestyle"],
+  "shortcuts": [
+    {
+      "name": "Zoeken",
+      "short_name": "Zoek",
+      "description": "Zoek naar restaurants",
+      "url": "/search",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Favorieten",
+      "short_name": "Favorieten",
+      "description": "Bekijk je favoriete restaurants",
+      "url": "/favorites",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
