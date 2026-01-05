@@ -20,6 +20,8 @@ import ClaimPage from "./pages/ClaimPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import ProfilePage from "./pages/ProfilePage";
 import InsightsPage from "./pages/InsightsPage";
+import CollectionsPage from "./pages/CollectionsPage";
+import CollectionPage from "./pages/CollectionPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +50,8 @@ const App = () => (
               <Route path="/favorites" element={<FavoritesPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/insights" element={<InsightsPage />} />
+              <Route path="/collections" element={<CollectionsPage />} />
+              <Route path="/collection/:slug" element={<CollectionPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

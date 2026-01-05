@@ -152,6 +152,126 @@ export type Database = {
           },
         ]
       }
+      collection_restaurants: {
+        Row: {
+          collection_id: string
+          created_at: string
+          featured_reason: string | null
+          id: string
+          restaurant_id: string
+          sort_order: number | null
+        }
+        Insert: {
+          collection_id: string
+          created_at?: string
+          featured_reason?: string | null
+          id?: string
+          restaurant_id: string
+          sort_order?: number | null
+        }
+        Update: {
+          collection_id?: string
+          created_at?: string
+          featured_reason?: string | null
+          id?: string
+          restaurant_id?: string
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collection_restaurants_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collection_restaurants_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collections: {
+        Row: {
+          ambience_tag: string | null
+          city_id: string | null
+          cover_image: string | null
+          created_at: string
+          created_by: string | null
+          cuisine: string | null
+          description: string | null
+          dish_id: string | null
+          id: string
+          is_active: boolean | null
+          is_featured: boolean | null
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          sort_order: number | null
+          subtitle: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          ambience_tag?: string | null
+          city_id?: string | null
+          cover_image?: string | null
+          created_at?: string
+          created_by?: string | null
+          cuisine?: string | null
+          description?: string | null
+          dish_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug: string
+          sort_order?: number | null
+          subtitle?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          ambience_tag?: string | null
+          city_id?: string | null
+          cover_image?: string | null
+          created_at?: string
+          created_by?: string | null
+          cuisine?: string | null
+          description?: string | null
+          dish_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string
+          sort_order?: number | null
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collections_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collections_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demand_routing_events: {
         Row: {
           created_at: string

@@ -1,0 +1,166 @@
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { ArrowRight, MapPin, Utensils } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useCollections, Collection } from '@/hooks/useCollections';
+
+interface CollectionCardProps {
+  collection: Collection;
+  index: number;
+}
+
+function CollectionCard({ collection, index }: CollectionCardProps) {
+  const placeholderImages = [
+    'https://images.unsplash.com/photo-1555126634-323283e090fa?w=600&q=80',
+    'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80',
+    'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600&q=80',
+    'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&q=80',
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1 }}
+    >
+      <Link to={`/collection/${collection.slug}`}>
+        <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300">
+          <div className="relative h-48 overflow-hidden">
+            <img
+              src={collection.cover_image || placeholderImages[index % placeholderImages.length]}
+              alt={collection.title}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            
+            {/* Tags */}
+            <div className="absolute top-3 left-3 flex flex-wrap gap-2">
+              {collection.city?.name && (
+                <Badge variant="secondary" className="bg-white/90 text-foreground">
+                  <MapPin className="h-3 w-3 mr-1" />
+                  {collection.city.name}
+                </Badge>
+              )}
+              {collection.dish?.name && (
+                <Badge variant="secondary" className="bg-white/90 text-foreground">
+                  <Utensils className="h-3 w-3 mr-1" />
+                  {collection.dish.name}
+                </Badge>
+              )}
+              {collection.cuisine && (
+                <Badge variant="secondary" className="bg-white/90 text-foreground capitalize">
+                  {collection.cuisine}
+                </Badge>
+              )}
+            </div>
+
+            {/* Title Overlay */}
+            <div className="absolute bottom-0 left-0 right-0 p-4">
+              <h3 className="text-xl font-bold text-white mb-1">{collection.title}</h3>
+              {collection.subtitle && (
+                <p className="text-white/80 text-sm">{collection.subtitle}</p>
+              )}
+            </div>
+          </div>
+          
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground line-clamp-2">
+                {collection.description?.slice(0, 100) || 'Ontdek onze handgeselecteerde restaurants'}
+              </p>
+              <ArrowRight className="h-5 w-5 text-primary flex-shrink-0 ml-3 transition-transform group-hover:translate-x-1" />
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
+    </motion.div>
+  );
+}
+
+export function CollectionsGrid() {
+  const { collections, loading } = useCollections();
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[1, 2, 3, 4, 5, 6].map(i => (
+          <Card key={i} className="overflow-hidden">
+            <Skeleton className="h-48" />
+            <CardContent className="p-4">
+              <Skeleton className="h-4 w-3/4 mb-2" />
+              <Skeleton className="h-4 w-1/2" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (collections.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <Utensils className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+        <p className="text-muted-foreground">Nog geen collecties beschikbaar</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {collections.map((collection, index) => (
+        <CollectionCard key={collection.id} collection={collection} index={index} />
+      ))}
+    </div>
+  );
+}
+
+export function FeaturedCollections() {
+  const { collections, loading } = useCollections();
+  const featured = collections.filter(c => c.is_featured).slice(0, 4);
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map(i => (
+          <Skeleton key={i} className="h-40 rounded-xl" />
+        ))}
+      </div>
+    );
+  }
+
+  if (featured.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {featured.map((collection, index) => (
+        <motion.div
+          key={collection.id}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: index * 0.1 }}
+        >
+          <Link to={`/collection/${collection.slug}`}>
+            <div className="group relative h-40 rounded-xl overflow-hidden">
+              <img
+                src={collection.cover_image || `https://images.unsplash.com/photo-155512663${index}?w=400&q=80`}
+                alt={collection.title}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <h3 className="font-bold text-white text-lg">{collection.title}</h3>
+                {collection.subtitle && (
+                  <p className="text-white/70 text-sm">{collection.subtitle}</p>
+                )}
+              </div>
+            </div>
+          </Link>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
