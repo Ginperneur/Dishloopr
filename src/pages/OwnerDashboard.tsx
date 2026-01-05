@@ -17,7 +17,8 @@ import {
   Crown,
   Loader2,
   Zap,
-  Gauge
+  Gauge,
+  UtensilsCrossed
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,6 +34,7 @@ import { toast } from 'sonner';
 import { SponsoredMarketplace } from '@/components/sponsored/SponsoredMarketplace';
 import { DemandRoutingSettings } from '@/components/routing/DemandRoutingSettings';
 import { OptimizationDashboard } from '@/components/optimization/OptimizationDashboard';
+import { DishAnalytics } from '@/components/owner/DishAnalytics';
 
 function StatCard({ title, value, icon: Icon, trend }: { 
   title: string; 
@@ -480,8 +482,12 @@ export default function OwnerDashboard() {
         </motion.div>
 
         {/* Tabs */}
-        <Tabs defaultValue="reviews" className="space-y-6">
-          <TabsList>
+        <Tabs defaultValue="dish-analytics" className="space-y-6">
+          <TabsList className="flex-wrap h-auto gap-1">
+            <TabsTrigger value="dish-analytics">
+              <UtensilsCrossed className="h-4 w-4 mr-1" />
+              Gerechten
+            </TabsTrigger>
             <TabsTrigger value="reviews">
               Reviews ({reviews.length})
             </TabsTrigger>
@@ -504,6 +510,15 @@ export default function OwnerDashboard() {
               Instellingen
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="dish-analytics">
+            {selectedRestaurant && (
+              <DishAnalytics 
+                restaurantId={selectedRestaurant.id}
+                restaurantName={selectedRestaurant.name}
+              />
+            )}
+          </TabsContent>
 
           <TabsContent value="reviews" className="space-y-4">
             {reviews.length > 0 ? (
