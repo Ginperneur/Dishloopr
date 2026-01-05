@@ -1,13 +1,16 @@
-import { useState } from 'react';
-import { Star } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Star, Camera, X, Image as ImageIcon } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface ReviewFormProps {
-  onSubmit: (data: { rating: number; title: string; body: string }) => Promise<boolean>;
+  onSubmit: (data: { rating: number; title: string; body: string; photos?: string[] }) => Promise<boolean>;
   submitting: boolean;
 }
 
@@ -17,6 +20,9 @@ export function ReviewForm({ onSubmit, submitting }: ReviewFormProps) {
   const [hoverRating, setHoverRating] = useState(0);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!user) {
     return (
@@ -29,21 +35,83 @@ export function ReviewForm({ onSubmit, submitting }: ReviewFormProps) {
     );
   }
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    const newPhotos: string[] = [];
+
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Alleen afbeeldingen zijn toegestaan');
+        continue;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Afbeelding mag max 5MB zijn');
+        continue;
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('review-photos')
+        .upload(fileName, file);
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast.error('Kon foto niet uploaden');
+        continue;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('review-photos')
+        .getPublicUrl(data.path);
+
+      newPhotos.push(urlData.publicUrl);
+    }
+
+    setPhotos((prev) => [...prev, ...newPhotos]);
+    setUploading(false);
+    
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const removePhoto = (index: number) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (rating === 0) return;
     
-    const success = await onSubmit({ rating, title, body });
+    const success = await onSubmit({ rating, title, body, photos });
     if (success) {
       setRating(0);
       setTitle('');
       setBody('');
+      setPhotos([]);
     }
   };
 
+  const hasPhotos = photos.length > 0;
+
   return (
     <form onSubmit={handleSubmit} className="p-4 md:p-6 rounded-xl bg-muted/50 space-y-4">
-      <h3 className="font-semibold text-sm md:text-base">Schrijf een review</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold text-sm md:text-base">Schrijf een review</h3>
+        {hasPhotos && (
+          <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-full">
+            <Camera className="h-3 w-3" />
+            <span>+Foto bonus</span>
+          </div>
+        )}
+      </div>
       
       {/* Star Rating */}
       <div className="flex items-center gap-0.5 md:gap-1">
@@ -86,6 +154,82 @@ export function ReviewForm({ onSubmit, submitting }: ReviewFormProps) {
         required
         className="text-base"
       />
+
+      {/* Photo Upload Section */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium flex items-center gap-2">
+            <Camera className="h-4 w-4" />
+            Foto's toevoegen
+            <span className="text-xs text-muted-foreground font-normal">(aanbevolen)</span>
+          </label>
+        </div>
+
+        {/* Photo Preview Grid */}
+        <AnimatePresence>
+          {photos.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="grid grid-cols-3 gap-2"
+            >
+              {photos.map((photo, index) => (
+                <motion.div
+                  key={photo}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="relative aspect-square rounded-lg overflow-hidden group"
+                >
+                  <img
+                    src={photo}
+                    alt={`Review foto ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(index)}
+                    className="absolute top-1 right-1 p-1 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="h-3 w-3 text-white" />
+                  </button>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Upload Button */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handlePhotoUpload}
+          className="hidden"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="w-full border-dashed"
+        >
+          {uploading ? (
+            'Uploaden...'
+          ) : (
+            <>
+              <ImageIcon className="h-4 w-4 mr-2" />
+              {photos.length > 0 ? 'Meer foto\'s toevoegen' : 'Voeg foto\'s toe'}
+            </>
+          )}
+        </Button>
+        <p className="text-xs text-muted-foreground text-center">
+          Reviews met foto's krijgen extra zichtbaarheid
+        </p>
+      </div>
 
       <Button type="submit" disabled={rating === 0 || submitting} className="w-full md:w-auto">
         {submitting ? 'Plaatsen...' : 'Review plaatsen'}
