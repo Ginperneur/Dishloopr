@@ -169,12 +169,25 @@ Houd de gerechtnamen in het Nederlands waar mogelijk, maar gebruik de originele 
       
       if (!dishName || dishName.length < 2) continue;
 
-      // Check if dish already exists
-      const { data: existingDish } = await supabase
+      // SECURITY FIX: Use separate queries instead of string interpolation to prevent SQL injection
+      // First, try to find by slug (exact match)
+      const { data: bySlug } = await supabase
         .from('dishes')
         .select('id, synonyms')
-        .or(`slug.eq.${dishSlug},name.ilike.${dishName}`)
+        .eq('slug', dishSlug)
         .maybeSingle();
+
+      let existingDish = bySlug;
+
+      // If not found by slug, try by name (case-insensitive)
+      if (!existingDish) {
+        const { data: byName } = await supabase
+          .from('dishes')
+          .select('id, synonyms')
+          .ilike('name', dishName)
+          .maybeSingle();
+        existingDish = byName;
+      }
 
       let dishId: string;
 
