@@ -176,6 +176,25 @@
     "higherPosition": "Hogere positie in relevante zoekopdrachten",
     "exclusiveSlot": "Exclusieve slot"
   },
+  "routing": {
+    "settingsTitle": "Vraag Routing",
+    "settingsDescription": "Ontvang extra klanten wanneer andere restaurants onbeschikbaar zijn",
+    "acceptRoutedDemand": "Ontvang doorgestuurde vraag",
+    "howItWorks": "Hoe werkt het?",
+    "feature1": "Wanneer een restaurant gesloten of volgeboekt is, suggereren we alternatieven",
+    "feature2": "We matchen op gerecht, prijsklasse, keuken en locatie",
+    "feature3": "Volledig transparant voor gebruikers",
+    "performanceTitle": "Prestaties (laatste 30 dagen)",
+    "statImpressions": "Vertoningen",
+    "statClicks": "Kliks",
+    "statConversions": "Conversies",
+    "noStatsYet": "Nog geen data beschikbaar",
+    "statusActive": "Actief",
+    "statusInactive": "Inactief",
+    "enabledSuccess": "Je ontvangt nu doorgestuurde vraag",
+    "disabledSuccess": "Doorgestuurde vraag uitgeschakeld",
+    "transparencyNote": "Suggesties gebaseerd op vergelijkbare kenmerken, niet op betaling"
+  },
   "common": {
     "loading": "Laden...",
     "error": "Er ging iets mis",

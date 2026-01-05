@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { 
   Star, 
   MapPin, 
@@ -27,11 +27,14 @@ import { MenuSection } from '@/components/restaurant/MenuSection';
 import { BusyIndicator } from '@/components/restaurant/BusyIndicator';
 import { SustainabilityScore } from '@/components/restaurant/SustainabilityScore';
 import { EventsSection } from '@/components/restaurant/EventsSection';
+import { AlternativeRestaurants } from '@/components/routing/AlternativeRestaurants';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useReviews } from '@/hooks/useReviews';
 import { useRestaurant } from '@/hooks/useRestaurant';
 import { useAIRecommendations } from '@/hooks/useAIRecommendations';
+import { useAlternativeRestaurants, type RoutingReason } from '@/hooks/useAlternativeRestaurants';
 import { useAuth } from '@/contexts/AuthContext';
+import { useGeolocation } from '@/hooks/useGeolocation';
 
 const priceLabels: { [key: number]: string } = {
   1: '€ · Budget',
@@ -59,7 +62,24 @@ export default function RestaurantPage() {
   const { reviews, loading: reviewsLoading, submitting, submitReview, refetch } = useReviews(restaurant?.id);
   const { isFavorite, toggleFavorite } = useFavorites();
   const { smartSuggestions, getSmartSuggestions } = useAIRecommendations();
+  const { alternatives, loading: alternativesLoading, findAlternatives, trackClick } = useAlternativeRestaurants();
+  const { latitude, longitude } = useGeolocation();
   const { user } = useAuth();
+
+  // Determine if restaurant is unavailable
+  const getUnavailabilityReason = useMemo((): RoutingReason | null => {
+    if (!restaurant) return null;
+    
+    const openingHours = (restaurant.opening_hours || {}) as { [key: string]: string };
+    const now = new Date();
+    const day = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][now.getDay()];
+    const hours = openingHours[day];
+    
+    if (!hours || hours === 'closed') return 'closed';
+    if (restaurant.current_busy_level === 'very_busy') return 'busy';
+    
+    return null;
+  }, [restaurant]);
 
   // Get smart suggestions when we have dishes
   useEffect(() => {
@@ -68,6 +88,29 @@ export default function RestaurantPage() {
       getSmartSuggestions(primaryDish);
     }
   }, [restaurant?.dishes, getSmartSuggestions]);
+
+  // Find alternatives when restaurant is unavailable
+  useEffect(() => {
+    if (restaurant && getUnavailabilityReason) {
+      findAlternatives({
+        sourceRestaurantId: restaurant.id,
+        reason: getUnavailabilityReason,
+        dishIds: restaurant.dishes?.map(d => d.id) || [],
+        priceLevel: restaurant.price_level,
+        cuisines: restaurant.cuisines || [],
+        ambienceTags: restaurant.ambience_tags || [],
+        userLat: latitude || undefined,
+        userLng: longitude || undefined,
+      });
+    }
+  }, [restaurant, getUnavailabilityReason, latitude, longitude, findAlternatives]);
+
+  const handleAlternativeClick = (targetId: string) => {
+    if (restaurant && getUnavailabilityReason) {
+      const dishId = restaurant.dishes?.[0]?.id;
+      trackClick(restaurant.id, targetId, dishId, getUnavailabilityReason);
+    }
+  };
 
   if (restaurantLoading) {
     return (
@@ -284,6 +327,17 @@ export default function RestaurantPage() {
                 </Button>
               )}
             </div>
+
+            {/* Alternative Restaurants (when unavailable) */}
+            {getUnavailabilityReason && (
+              <AlternativeRestaurants
+                alternatives={alternatives}
+                loading={alternativesLoading}
+                reason={getUnavailabilityReason}
+                sourceRestaurantName={restaurant.name}
+                onAlternativeClick={handleAlternativeClick}
+              />
+            )}
 
             <Separator />
 

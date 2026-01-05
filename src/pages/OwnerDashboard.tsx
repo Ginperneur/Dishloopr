@@ -15,7 +15,8 @@ import {
   ExternalLink,
   Sparkles,
   Crown,
-  Loader2
+  Loader2,
+  Zap
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +30,7 @@ import { useOwnerDashboard } from '@/hooks/useOwnerDashboard';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { SponsoredMarketplace } from '@/components/sponsored/SponsoredMarketplace';
+import { DemandRoutingSettings } from '@/components/routing/DemandRoutingSettings';
 
 function StatCard({ title, value, icon: Icon, trend }: { 
   title: string; 
@@ -488,6 +490,10 @@ export default function OwnerDashboard() {
               <Sparkles className="h-4 w-4 mr-1" />
               Sponsoring
             </TabsTrigger>
+            <TabsTrigger value="routing">
+              <Zap className="h-4 w-4 mr-1" />
+              Vraag Routing
+            </TabsTrigger>
             <TabsTrigger value="settings">
               Instellingen
             </TabsTrigger>
@@ -598,6 +604,12 @@ export default function OwnerDashboard() {
                 restaurantId={selectedRestaurant.id} 
                 restaurantName={selectedRestaurant.name}
               />
+            )}
+          </TabsContent>
+
+          <TabsContent value="routing">
+            {selectedRestaurant && (
+              <DemandRoutingSettings restaurant={selectedRestaurant} />
             )}
           </TabsContent>
 

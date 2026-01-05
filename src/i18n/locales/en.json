@@ -176,6 +176,25 @@
     "higherPosition": "Higher position in relevant searches",
     "exclusiveSlot": "Exclusive slot"
   },
+  "routing": {
+    "settingsTitle": "Demand Routing",
+    "settingsDescription": "Receive extra customers when other restaurants are unavailable",
+    "acceptRoutedDemand": "Receive routed demand",
+    "howItWorks": "How does it work?",
+    "feature1": "When a restaurant is closed or fully booked, we suggest alternatives",
+    "feature2": "We match on dish, price range, cuisine and location",
+    "feature3": "Fully transparent to users",
+    "performanceTitle": "Performance (last 30 days)",
+    "statImpressions": "Impressions",
+    "statClicks": "Clicks",
+    "statConversions": "Conversions",
+    "noStatsYet": "No data available yet",
+    "statusActive": "Active",
+    "statusInactive": "Inactive",
+    "enabledSuccess": "You will now receive routed demand",
+    "disabledSuccess": "Routed demand disabled",
+    "transparencyNote": "Suggestions based on similar characteristics, not payment"
+  },
   "common": {
     "loading": "Loading...",
     "error": "Something went wrong",
