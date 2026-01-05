@@ -28,6 +28,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useOwnerDashboard } from '@/hooks/useOwnerDashboard';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { SponsoredMarketplace } from '@/components/sponsored/SponsoredMarketplace';
 
 function StatCard({ title, value, icon: Icon, trend }: { 
   title: string; 
@@ -483,6 +484,10 @@ export default function OwnerDashboard() {
             <TabsTrigger value="analytics">
               Analytics
             </TabsTrigger>
+            <TabsTrigger value="sponsored">
+              <Sparkles className="h-4 w-4 mr-1" />
+              Sponsoring
+            </TabsTrigger>
             <TabsTrigger value="settings">
               Instellingen
             </TabsTrigger>
@@ -585,6 +590,15 @@ export default function OwnerDashboard() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="sponsored">
+            {selectedRestaurant && (
+              <SponsoredMarketplace 
+                restaurantId={selectedRestaurant.id} 
+                restaurantName={selectedRestaurant.name}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="settings">

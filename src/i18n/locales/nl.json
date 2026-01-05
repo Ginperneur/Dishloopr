@@ -164,6 +164,18 @@
     "noSpeech": "Geen spraak gedetecteerd",
     "error": "Er ging iets mis"
   },
+  "sponsored": {
+    "badge": "Uitgelicht",
+    "marketplace": "Sponsoring Marketplace",
+    "availableSlots": "Beschikbare slots",
+    "purchaseSlot": "Koop slot",
+    "activeSponsorings": "Actieve Sponsorings",
+    "disclaimer": "Sponsored listings beïnvloeden nooit reviews of populariteitsscores.",
+    "whatYouGet": "Wat krijg je",
+    "prominentLabel": "\"Uitgelicht\" label bij zoekresultaten",
+    "higherPosition": "Hogere positie in relevante zoekopdrachten",
+    "exclusiveSlot": "Exclusieve slot"
+  },
   "common": {
     "loading": "Laden...",
     "error": "Er ging iets mis",

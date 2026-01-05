@@ -6,12 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useState } from 'react';
 import type { Database } from '@/integrations/supabase/types';
+import { SponsoredBadge } from '@/components/sponsored/SponsoredBadge';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 
 interface DatabaseRestaurantCardProps {
   restaurant: Restaurant;
   index?: number;
+  isSponsored?: boolean;
 }
 
 const priceLabels: { [key: number]: string } = {
@@ -32,7 +34,7 @@ const ambienceTagStyles: { [key: string]: string } = {
   'lively': 'tag-romantic',
 };
 
-export function DatabaseRestaurantCard({ restaurant, index = 0 }: DatabaseRestaurantCardProps) {
+export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = false }: DatabaseRestaurantCardProps) {
   const { t } = useTranslation();
   const { isFavorite, toggleFavorite } = useFavorites();
   const [isLikeAnimating, setIsLikeAnimating] = useState(false);
@@ -78,14 +80,17 @@ export function DatabaseRestaurantCard({ restaurant, index = 0 }: DatabaseRestau
           </div>
           
           {/* Badges */}
-          <div className="absolute top-3 left-3 flex gap-2">
+          <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
+            {isSponsored && (
+              <SponsoredBadge />
+            )}
             {restaurant.is_top_listing && (
               <Badge className="featured-badge border-0 gap-1">
                 <Trophy className="h-3 w-3" />
                 {t('restaurant.topListing')}
               </Badge>
             )}
-            {restaurant.is_featured && !restaurant.is_top_listing && (
+            {restaurant.is_featured && !restaurant.is_top_listing && !isSponsored && (
               <Badge className="featured-badge border-0 gap-1">
                 <Sparkles className="h-3 w-3" />
                 {t('restaurant.featured')}

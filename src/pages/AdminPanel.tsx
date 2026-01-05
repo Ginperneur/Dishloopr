@@ -13,7 +13,8 @@ import {
   Trash2,
   Check,
   X,
-  Search
+  Search,
+  Sparkles
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +30,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { RestaurantDetailModal } from '@/components/admin/RestaurantDetailModal';
 import { AddRestaurantModal } from '@/components/admin/AddRestaurantModal';
+import { SponsoredProductsManager } from '@/components/admin/SponsoredProductsManager';
 
 interface Stats {
   totalUsers: number;
@@ -260,6 +262,10 @@ export default function AdminPanel() {
         <Tabs defaultValue="restaurants" className="space-y-6">
           <TabsList>
             <TabsTrigger value="restaurants">Restaurants</TabsTrigger>
+            <TabsTrigger value="sponsored">
+              <Sparkles className="h-4 w-4 mr-1" />
+              Sponsored Products
+            </TabsTrigger>
             <TabsTrigger value="reviews">Reviews</TabsTrigger>
             <TabsTrigger value="users">Gebruikers</TabsTrigger>
           </TabsList>
@@ -355,6 +361,10 @@ export default function AdminPanel() {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="sponsored">
+            <SponsoredProductsManager />
           </TabsContent>
 
           <TabsContent value="reviews">

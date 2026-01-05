@@ -10,6 +10,7 @@ export interface SearchResult extends Restaurant {
   cityName?: string;
   matchedDishes?: string[];
   matchScore: number;
+  isSponsored?: boolean;
 }
 
 interface SearchFilters {
@@ -140,6 +141,29 @@ export function useSearch() {
       }
     }
 
+    // Get active sponsored purchases for relevant dishes/cities
+    const sponsoredRestaurants = new Set<string>();
+    if (matchingDishes.length > 0 && cityId && cityId !== 'all') {
+      const dishIds = matchingDishes.map(d => d.id);
+      const { data: sponsoredData } = await supabase
+        .from('sponsored_purchases')
+        .select(`
+          restaurant_id,
+          sponsored_products!inner(dish_id, city_id)
+        `)
+        .eq('is_active', true)
+        .gt('expires_at', new Date().toISOString());
+
+      if (sponsoredData) {
+        sponsoredData.forEach((sp: any) => {
+          const product = sp.sponsored_products;
+          if (dishIds.includes(product.dish_id) && product.city_id === cityId) {
+            sponsoredRestaurants.add(sp.restaurant_id);
+          }
+        });
+      }
+    }
+
     // Score and filter restaurants
     const cityMap = new Map(cities.map(c => [c.id, c.name]));
     const scoredResults: SearchResult[] = [];
@@ -147,6 +171,7 @@ export function useSearch() {
     for (const restaurant of restaurants) {
       let matchScore = 0;
       const matchedDishes: string[] = [];
+      const isSponsored = sponsoredRestaurants.has(restaurant.id);
 
       // Check dish matches
       const linkedDishes = restaurantDishMap.get(restaurant.id);
@@ -165,9 +190,14 @@ export function useSearch() {
         matchScore += 3;
       }
 
-      // Boost for featured/top listing
+      // Boost for featured/top listing (smaller boost to not dominate)
       if (restaurant.is_featured) matchScore += 2;
       if (restaurant.is_top_listing) matchScore += 1;
+      
+      // Sponsored boost (contextually relevant only - must have dish match)
+      if (isSponsored && linkedDishes && linkedDishes.length > 0) {
+        matchScore += 8; // Significant but not overwhelming boost
+      }
 
       // Only include if there's some match
       if (matchScore > 0 || queryLower === '') {
@@ -175,18 +205,23 @@ export function useSearch() {
           ...restaurant,
           cityName: cityMap.get(restaurant.city_id),
           matchedDishes,
-          matchScore
+          matchScore,
+          isSponsored
         });
       }
     }
 
     // Sort by match score, then rating
+    // Ensure sponsored never fully dominate: max 2 sponsored in top 5
     scoredResults.sort((a, b) => {
       if (b.matchScore !== a.matchScore) return b.matchScore - a.matchScore;
       return Number(b.rating) - Number(a.rating);
     });
 
-    setResults(scoredResults);
+    // Rebalance to prevent sponsored domination
+    const rebalanced = rebalanceSponsoredResults(scoredResults);
+
+    setResults(rebalanced);
     setLoading(false);
   };
 
@@ -197,4 +232,53 @@ export function useSearch() {
     dishes, 
     cities 
   };
+}
+
+// Helper function to ensure sponsored listings don't dominate top results
+function rebalanceSponsoredResults(results: SearchResult[]): SearchResult[] {
+  if (results.length <= 5) return results;
+
+  const sponsored = results.filter(r => r.isSponsored);
+  const organic = results.filter(r => !r.isSponsored);
+
+  // Allow max 2 sponsored in top 5 positions
+  const maxSponsoredInTop5 = 2;
+  const finalResults: SearchResult[] = [];
+  let sponsoredCount = 0;
+  let organicIndex = 0;
+  let sponsoredIndex = 0;
+
+  for (let i = 0; i < results.length; i++) {
+    if (i < 5) {
+      // Within top 5: limit sponsored
+      if (sponsoredCount < maxSponsoredInTop5 && sponsoredIndex < sponsored.length) {
+        // Check if next sponsored has higher score than next organic
+        const nextSponsored = sponsored[sponsoredIndex];
+        const nextOrganic = organic[organicIndex];
+        
+        if (!nextOrganic || (nextSponsored && nextSponsored.matchScore >= nextOrganic.matchScore)) {
+          finalResults.push(nextSponsored);
+          sponsoredIndex++;
+          sponsoredCount++;
+          continue;
+        }
+      }
+      
+      if (organicIndex < organic.length) {
+        finalResults.push(organic[organicIndex]);
+        organicIndex++;
+      } else if (sponsoredIndex < sponsored.length) {
+        finalResults.push(sponsored[sponsoredIndex]);
+        sponsoredIndex++;
+      }
+    } else {
+      // After top 5: normal ordering
+      const remaining = [...sponsored.slice(sponsoredIndex), ...organic.slice(organicIndex)];
+      remaining.sort((a, b) => b.matchScore - a.matchScore);
+      finalResults.push(...remaining);
+      break;
+    }
+  }
+
+  return finalResults;
 }
