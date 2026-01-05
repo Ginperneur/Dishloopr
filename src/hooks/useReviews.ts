@@ -97,6 +97,7 @@ export function useReviews(restaurantId: string | undefined) {
     title: string; 
     body: string;
     photos?: string[];
+    dishRatings?: { dishId: string; rating: number }[];
   }) => {
     if (!user) {
       toast.error('Log in om een review te schrijven');
@@ -117,13 +118,35 @@ export function useReviews(restaurantId: string | undefined) {
       status: 'published',
     };
 
-    const { error } = await supabase.from('reviews').insert(review);
+    const { data: insertedReview, error } = await supabase
+      .from('reviews')
+      .insert(review)
+      .select('id')
+      .single();
 
-    if (error) {
+    if (error || !insertedReview) {
       console.error('Error submitting review:', error);
       toast.error('Kon review niet plaatsen');
       setSubmitting(false);
       return false;
+    }
+
+    // Submit dish ratings if provided
+    if (data.dishRatings && data.dishRatings.length > 0) {
+      const dishRatingInserts = data.dishRatings.map(dr => ({
+        review_id: insertedReview.id,
+        dish_id: dr.dishId,
+        rating: dr.rating
+      }));
+
+      const { error: drError } = await supabase
+        .from('dish_ratings')
+        .insert(dishRatingInserts);
+
+      if (drError) {
+        console.error('Error submitting dish ratings:', drError);
+        // Don't fail the whole review for this
+      }
     }
 
     toast.success('Review geplaatst!');

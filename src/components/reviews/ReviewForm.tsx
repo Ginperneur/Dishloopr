@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Star, Camera, X, Image as ImageIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -8,13 +8,37 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { DishRatingSelector } from './DishRatingSelector';
+import { TagValidator } from './TagValidator';
+import { useDishRatings } from '@/hooks/useDishRatings';
 
-interface ReviewFormProps {
-  onSubmit: (data: { rating: number; title: string; body: string; photos?: string[] }) => Promise<boolean>;
-  submitting: boolean;
+interface DishRating {
+  dishId: string;
+  dishName: string;
+  rating: number;
 }
 
-export function ReviewForm({ onSubmit, submitting }: ReviewFormProps) {
+interface ReviewFormProps {
+  onSubmit: (data: { 
+    rating: number; 
+    title: string; 
+    body: string; 
+    photos?: string[];
+    dishRatings?: { dishId: string; rating: number }[];
+  }) => Promise<boolean>;
+  submitting: boolean;
+  restaurantId?: string;
+  ambienceTags?: string[];
+  cuisines?: string[];
+}
+
+export function ReviewForm({ 
+  onSubmit, 
+  submitting, 
+  restaurantId,
+  ambienceTags = [],
+  cuisines = []
+}: ReviewFormProps) {
   const { user } = useAuth();
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -22,7 +46,14 @@ export function ReviewForm({ onSubmit, submitting }: ReviewFormProps) {
   const [body, setBody] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [dishRatings, setDishRatings] = useState<DishRating[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { 
+    availableDishes, 
+    userTagConfirmations, 
+    confirmTag 
+  } = useDishRatings(restaurantId || '');
 
   if (!user) {
     return (
@@ -90,12 +121,19 @@ export function ReviewForm({ onSubmit, submitting }: ReviewFormProps) {
     e.preventDefault();
     if (rating === 0) return;
     
-    const success = await onSubmit({ rating, title, body, photos });
+    const success = await onSubmit({ 
+      rating, 
+      title, 
+      body, 
+      photos,
+      dishRatings: dishRatings.map(dr => ({ dishId: dr.dishId, rating: dr.rating }))
+    });
     if (success) {
       setRating(0);
       setTitle('');
       setBody('');
       setPhotos([]);
+      setDishRatings([]);
     }
   };
 
@@ -154,6 +192,37 @@ export function ReviewForm({ onSubmit, submitting }: ReviewFormProps) {
         required
         className="text-base"
       />
+
+      {/* Dish Rating Section */}
+      {restaurantId && availableDishes.length > 0 && (
+        <DishRatingSelector
+          availableDishes={availableDishes}
+          selectedRatings={dishRatings}
+          onChange={setDishRatings}
+        />
+      )}
+
+      {/* Tag Validation Section */}
+      {restaurantId && user && (ambienceTags.length > 0 || cuisines.length > 0) && (
+        <div className="space-y-2">
+          {ambienceTags.length > 0 && (
+            <TagValidator
+              tags={ambienceTags}
+              tagType="ambience"
+              userConfirmations={userTagConfirmations}
+              onConfirm={(tag, isConfirmed) => confirmTag(tag, 'ambience', isConfirmed)}
+            />
+          )}
+          {cuisines.length > 0 && (
+            <TagValidator
+              tags={cuisines}
+              tagType="cuisine"
+              userConfirmations={userTagConfirmations}
+              onConfirm={(tag, isConfirmed) => confirmTag(tag, 'cuisine', isConfirmed)}
+            />
+          )}
+        </div>
+      )}
 
       {/* Photo Upload Section */}
       <div className="space-y-3">
