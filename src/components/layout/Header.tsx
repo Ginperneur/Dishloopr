@@ -14,6 +14,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import logo from '@/assets/dishloopr-logo.png';
 
 const languages = [
@@ -102,6 +103,9 @@ export function Header() {
               </button>
             ))}
           </div>
+
+          {/* Theme Toggle */}
+          <ThemeToggle />
 
           {user ? (
             <DropdownMenu>

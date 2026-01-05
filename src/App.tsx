@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import '@/i18n';
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import Index from "./pages/Index";
 import SearchPage from "./pages/SearchPage";
 import RestaurantPage from "./pages/RestaurantPage";
@@ -23,33 +24,35 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/restaurant/:slug" element={<RestaurantPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/owner" element={<OwnerDashboard />} />
-            <Route path="/dashboard" element={<OwnerDashboard />} />
-            <Route path="/admin" element={<AdminPanel />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/terms" element={<TermsPage />} />
-            <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/claim" element={<ClaimPage />} />
-            <Route path="/favorites" element={<FavoritesPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+  <ThemeProvider defaultTheme="system" storageKey="dishloopr-theme">
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/restaurant/:slug" element={<RestaurantPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/owner" element={<OwnerDashboard />} />
+              <Route path="/dashboard" element={<OwnerDashboard />} />
+              <Route path="/admin" element={<AdminPanel />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/terms" element={<TermsPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/claim" element={<ClaimPage />} />
+              <Route path="/favorites" element={<FavoritesPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;

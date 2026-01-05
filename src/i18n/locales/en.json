@@ -48,7 +48,8 @@
     "highestRated": "Highest rated",
     "mostReviews": "Most reviews",
     "priceLowHigh": "Price: low-high",
-    "priceHighLow": "Price: high-low"
+    "priceHighLow": "Price: high-low",
+    "nearest": "Nearest"
   },
   "restaurant": {
     "featured": "Featured",
