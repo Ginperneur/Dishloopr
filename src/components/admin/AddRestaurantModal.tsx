@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { restaurantSchema, validateWithErrors } from '@/lib/validations';
 
 interface City {
   id: string;
@@ -59,22 +60,34 @@ export function AddRestaurantModal({ onSuccess }: AddRestaurantModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.address || !formData.city_id) {
-      toast.error('Vul alle verplichte velden in');
+    // Prepare data with slug
+    const dataToValidate = {
+      ...formData,
+      slug: formData.slug || generateSlug(formData.name),
+      price_level: formData.price_level
+    };
+
+    // Validate input
+    const validation = validateWithErrors(restaurantSchema, dataToValidate);
+    if (!validation.success) {
+      for (const err of validation.errors) {
+        toast.error(err);
+      }
       return;
     }
 
     setLoading(true);
+    const validatedData = validation.data;
 
     const { error } = await supabase.from('restaurants').insert({
-      name: formData.name,
-      slug: formData.slug || generateSlug(formData.name),
-      address: formData.address,
-      postal_code: formData.postal_code || null,
-      city_id: formData.city_id,
-      phone: formData.phone || null,
-      website_url: formData.website_url || null,
-      price_level: parseInt(formData.price_level),
+      name: validatedData.name,
+      slug: validatedData.slug,
+      address: validatedData.address,
+      postal_code: validatedData.postal_code || null,
+      city_id: validatedData.city_id,
+      phone: validatedData.phone || null,
+      website_url: validatedData.website_url || null,
+      price_level: validatedData.price_level,
       is_active: true
     });
 

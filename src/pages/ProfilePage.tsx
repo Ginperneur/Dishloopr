@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { Link, useNavigate } from 'react-router-dom';
 import { TagPreferences } from '@/components/profile/TagPreferences';
 import { SEOHead } from '@/components/seo/SEOHead';
+import { profileSchema, validateWithErrors } from '@/lib/validations';
 
 const languages = [
   { code: 'nl', label: 'Nederlands' },
@@ -172,13 +173,22 @@ export default function ProfilePage() {
   const handleSave = async () => {
     if (!user) return;
 
+    // Validate input
+    const validation = validateWithErrors(profileSchema, formData);
+    if (!validation.success) {
+      for (const err of validation.errors) {
+        toast.error(err);
+      }
+      return;
+    }
+
     setSaving(true);
     const { error } = await supabase
       .from('profiles')
       .update({
-        name: formData.name,
-        bio: formData.bio,
-        preferred_language: formData.preferred_language,
+        name: validation.data.name || null,
+        bio: validation.data.bio || null,
+        preferred_language: validation.data.preferred_language || 'nl',
       })
       .eq('id', user.id);
 

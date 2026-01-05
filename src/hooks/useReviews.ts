@@ -3,10 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
+import { reviewSchema, validateWithErrors } from '@/lib/validations';
 
 type Review = Database['public']['Tables']['reviews']['Row'];
 type ReviewInsert = Database['public']['Tables']['reviews']['Insert'];
-
 export interface ReviewWithProfile extends Review {
   profile?: {
     name: string | null;
@@ -106,15 +106,25 @@ export function useReviews(restaurantId: string | undefined) {
 
     if (!restaurantId) return false;
 
+    // Validate input
+    const validation = validateWithErrors(reviewSchema, data);
+    if (!validation.success) {
+      for (const err of validation.errors) {
+        toast.error(err);
+      }
+      return false;
+    }
+
     setSubmitting(true);
+    const validatedData = validation.data;
 
     const review: ReviewInsert = {
       restaurant_id: restaurantId,
       user_id: user.id,
-      rating: data.rating,
-      title: data.title,
-      body: data.body,
-      photos: data.photos || [],
+      rating: validatedData.rating,
+      title: validatedData.title,
+      body: validatedData.body,
+      photos: validatedData.photos || [],
       status: 'published',
     };
 

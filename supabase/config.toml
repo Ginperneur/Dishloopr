@@ -10,19 +10,19 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.ai-recommendations]
-verify_jwt = false
+verify_jwt = true
 
 [functions.create-sponsored-checkout]
 verify_jwt = true
 
 [functions.calculate-sponsored-price]
-verify_jwt = false
+verify_jwt = true
 
 [functions.google-places-search]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-new-restaurant-notifications]
-verify_jwt = false
+verify_jwt = true
 
 [functions.generate-sitemap]
 verify_jwt = false
