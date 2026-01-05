@@ -2,27 +2,36 @@
 <html lang="nl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
     
-    <title>Dishloopr - Vind restaurants op gerecht</title>
-    <meta name="description" content="Dishloopr is de snelste manier om restaurants te vinden op basis van het gerecht waar je zin in hebt, gefilterd op stad, sfeer en prijs." />
+    <title>Dishloopr - Vind restaurants op basis van gerechten | Nederland</title>
+    <meta name="description" content="Ontdek de beste restaurants in Nederland op basis van het gerecht waar je zin in hebt. Zoek, filter op stad en sfeer, lees reviews en reserveer direct." />
     <meta name="author" content="Dishloopr" />
     <meta name="theme-color" content="#F26522" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow" />
+    <meta name="keywords" content="restaurants, gerechten, uit eten, Nederland, reviews, reserveren, culinair, eten bestellen" />
+    <link rel="canonical" href="https://dishloopr.com" />
     
     <!-- Open Graph / Facebook -->
-    <meta property="og:title" content="Dishloopr - Vind restaurants op gerecht" />
-    <meta property="og:description" content="Dishloopr is de snelste manier om restaurants te vinden op basis van het gerecht waar je zin in hebt." />
+    <meta property="og:title" content="Dishloopr - Vind restaurants op basis van gerechten" />
+    <meta property="og:description" content="Ontdek de beste restaurants in Nederland op basis van het gerecht waar je zin in hebt. Zoek, filter en reserveer direct." />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://dishloopr.nl" />
-    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:url" content="https://dishloopr.com" />
+    <meta property="og:image" content="https://dishloopr.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Dishloopr - Vind restaurants op basis van gerechten" />
     <meta property="og:locale" content="nl_NL" />
     <meta property="og:site_name" content="Dishloopr" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Dishloopr - Vind restaurants op gerecht" />
-    <meta name="twitter:description" content="Dishloopr is de snelste manier om restaurants te vinden op basis van het gerecht waar je zin in hebt." />
-    <meta name="twitter:image" content="/og-image.png" />
+    <meta name="twitter:site" content="@dishloopr" />
+    <meta name="twitter:title" content="Dishloopr - Vind restaurants op basis van gerechten" />
+    <meta name="twitter:description" content="Ontdek de beste restaurants in Nederland op basis van het gerecht waar je zin in hebt." />
+    <meta name="twitter:image" content="https://dishloopr.com/og-image.png" />
+    <meta name="twitter:image:alt" content="Dishloopr - Vind restaurants op basis van gerechten" />
     
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json" />
@@ -34,6 +43,26 @@
     <!-- Preconnect to important origins -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://uktafmxojymsojqewzuy.supabase.co" />
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Dishloopr",
+      "url": "https://dishloopr.com",
+      "description": "Ontdek de beste restaurants in Nederland op basis van het gerecht waar je zin in hebt",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://dishloopr.com/search?dish={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
   </head>
 
   <body>

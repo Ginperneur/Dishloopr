@@ -1,6 +1,6 @@
 import { Layout } from '@/components/layout/Layout';
 import { motion } from 'framer-motion';
-import { Camera, User, Mail, Globe, Trash2, Plus, X } from 'lucide-react';
+import { Camera, User, Mail, Globe, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,6 +12,8 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Link, useNavigate } from 'react-router-dom';
+import { TagPreferences } from '@/components/profile/TagPreferences';
+import { SEOHead } from '@/components/seo/SEOHead';
 
 const languages = [
   { code: 'nl', label: 'Nederlands' },
@@ -241,13 +243,18 @@ export default function ProfilePage() {
 
   return (
     <Layout>
+      <SEOHead
+        title="Mijn Profiel | Dishloopr"
+        description="Beheer je profiel, voorkeuren en meldingen op Dishloopr."
+        noindex={true}
+      />
       <div className="container py-8 md:py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-2xl mx-auto"
+          className="max-w-2xl mx-auto space-y-6"
         >
-          <h1 className="text-3xl font-bold mb-8">Mijn Profiel</h1>
+          <h1 className="text-3xl font-bold">Mijn Profiel</h1>
 
           {/* Avatar Section */}
           <div className="bg-card border border-border rounded-xl p-6 mb-6">
@@ -350,6 +357,9 @@ export default function ProfilePage() {
               {saving ? 'Opslaan...' : 'Wijzigingen opslaan'}
             </Button>
           </div>
+
+          {/* Tag Preferences for Email Notifications */}
+          <TagPreferences />
 
           {/* Food Photos */}
           <div className="bg-card border border-border rounded-xl p-6 mb-6">

@@ -2,6 +2,7 @@ import { Layout } from '@/components/layout/Layout';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Search, MapPin, Star, Users } from 'lucide-react';
+import { SEOHead, createFAQSchema } from '@/components/seo/SEOHead';
 
 export default function AboutPage() {
   const { t } = useTranslation();
@@ -29,8 +30,20 @@ export default function AboutPage() {
     }
   ];
 
+  const faqs = [
+    { question: 'Wat is Dishloopr?', answer: 'Dishloopr is een platform om restaurants te vinden op basis van het gerecht waar je zin in hebt, gefilterd op stad, sfeer en prijs.' },
+    { question: 'Hoe werkt Dishloopr?', answer: 'Zoek simpelweg op het gerecht dat je wilt eten, filter op locatie en voorkeuren, en ontdek de beste restaurants in jouw buurt.' },
+    { question: 'Is Dishloopr gratis?', answer: 'Ja, Dishloopr is volledig gratis te gebruiken voor consumenten.' }
+  ];
+
   return (
     <Layout>
+      <SEOHead
+        title="Over Dishloopr - Ontdek restaurants op basis van gerechten"
+        description="Leer meer over Dishloopr, de snelste manier om restaurants te vinden op basis van het gerecht waar je zin in hebt. Gefilterd op stad, sfeer en prijs."
+        keywords={['over dishloopr', 'restaurant zoeken', 'gerechten vinden', 'uit eten', 'Nederland']}
+        structuredData={createFAQSchema(faqs)}
+      />
       <div className="container py-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
