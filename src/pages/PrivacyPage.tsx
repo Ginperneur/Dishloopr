@@ -1,9 +1,15 @@
 import { Layout } from '@/components/layout/Layout';
 import { motion } from 'framer-motion';
+import { SEOHead } from '@/components/seo/SEOHead';
 
 export default function PrivacyPage() {
   return (
     <Layout>
+      <SEOHead
+        title="Privacybeleid | Dishloopr"
+        description="Lees ons privacybeleid en ontdek hoe Dishloopr omgaat met je persoonsgegevens. Wij respecteren je privacy en voldoen aan de AVG."
+        keywords={['privacy', 'privacybeleid', 'AVG', 'GDPR', 'persoonsgegevens']}
+      />
       <div className="container py-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

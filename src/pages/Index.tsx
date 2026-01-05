@@ -8,6 +8,7 @@ import { UpcomingEvents } from '@/components/home/UpcomingEvents';
 import { RestaurantCard } from '@/components/restaurant/RestaurantCard';
 import { SurpriseMe } from '@/components/ai/SurpriseMe';
 import { PersonalizedRecommendations } from '@/components/ai/PersonalizedRecommendations';
+import { SEOHead, createWebsiteSchema } from '@/components/seo/SEOHead';
 import { getTrendingDishes, restaurants } from '@/data/mockData';
 
 const Index = () => {
@@ -17,6 +18,12 @@ const Index = () => {
 
   return (
     <Layout>
+      <SEOHead
+        title="Dishloopr - Ontdek de beste restaurants en gerechten in Nederland"
+        description="Vind de lekkerste gerechten en restaurants bij jou in de buurt. Zoek op gerecht, bekijk reviews en ontdek nieuwe culinaire ervaringen."
+        keywords={['restaurants', 'gerechten', 'eten', 'Nederland', 'reviews', 'culinair', 'uit eten']}
+        structuredData={createWebsiteSchema()}
+      />
       {/* Hero Section */}
       <section className="relative py-12 md:py-32 overflow-hidden">
         {/* Background gradient */}

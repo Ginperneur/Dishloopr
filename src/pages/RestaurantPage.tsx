@@ -9,7 +9,6 @@ import {
   Globe, 
   Clock, 
   Heart, 
-  Share2, 
   Navigation,
   Sparkles,
   Trophy,
@@ -28,6 +27,8 @@ import { BusyIndicator } from '@/components/restaurant/BusyIndicator';
 import { SustainabilityScore } from '@/components/restaurant/SustainabilityScore';
 import { EventsSection } from '@/components/restaurant/EventsSection';
 import { AlternativeRestaurants } from '@/components/routing/AlternativeRestaurants';
+import { SocialShare } from '@/components/social/SocialShare';
+import { SEOHead, createRestaurantSchema, createBreadcrumbSchema } from '@/components/seo/SEOHead';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useReviews } from '@/hooks/useReviews';
 import { useRestaurant } from '@/hooks/useRestaurant';
@@ -152,25 +153,46 @@ export default function RestaurantPage() {
     return true;
   };
 
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: restaurant.name,
-          text: `Bekijk ${restaurant.name} op Dishloopr`,
-          url: window.location.href,
-        });
-      } catch (err) {
-        // User cancelled or error
-      }
-    } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(window.location.href);
-    }
-  };
+  // Generate SEO structured data
+  const restaurantSchema = createRestaurantSchema({
+    name: restaurant.name,
+    description: `${restaurant.name} - ${restaurant.cuisines?.join(', ') || 'Restaurant'} in ${restaurant.city?.name || 'Nederland'}`,
+    image: restaurant.images?.[0],
+    address: restaurant.address,
+    city: restaurant.city?.name || '',
+    postalCode: restaurant.postal_code || '',
+    phone: restaurant.phone || undefined,
+    website: restaurant.website_url || undefined,
+    cuisines: restaurant.cuisines || [],
+    priceRange: '€'.repeat(restaurant.price_level),
+    rating: Number(restaurant.rating),
+    reviewCount: restaurant.review_count,
+    geo: restaurant.geo_lat && restaurant.geo_lng ? {
+      lat: Number(restaurant.geo_lat),
+      lng: Number(restaurant.geo_lng)
+    } : undefined
+  });
+
+  const breadcrumbSchema = createBreadcrumbSchema([
+    { name: 'Home', url: 'https://dishloopr.com' },
+    { name: 'Zoeken', url: 'https://dishloopr.com/search' },
+    { name: restaurant.name, url: `https://dishloopr.com/restaurant/${restaurant.slug}` }
+  ]);
 
   return (
     <Layout>
+      <SEOHead
+        title={`${restaurant.name} - ${restaurant.cuisines?.slice(0, 2).join(' & ') || 'Restaurant'} | Dishloopr`}
+        description={`Bekijk ${restaurant.name} in ${restaurant.city?.name || 'Nederland'}. ${restaurant.cuisines?.join(', ') || 'Heerlijk eten'} met ${restaurant.review_count} reviews en een ${Number(restaurant.rating).toFixed(1)} rating.`}
+        ogType="restaurant"
+        ogImage={restaurant.images?.[0]}
+        ogImageAlt={`${restaurant.name} restaurant`}
+        keywords={[restaurant.name, ...(restaurant.cuisines || []), restaurant.city?.name || '', 'restaurant', 'reviews']}
+        structuredData={{
+          '@context': 'https://schema.org',
+          '@graph': [restaurantSchema, breadcrumbSchema]
+        }}
+      />
       {/* Hero Image */}
       <div className="relative h-56 md:h-96 overflow-hidden bg-muted">
         {restaurant.images && restaurant.images.length > 0 ? (
@@ -245,9 +267,13 @@ export default function RestaurantPage() {
                   >
                     <Heart className={`h-4 w-4 ${isFavorite(restaurant.id) ? 'fill-current' : ''}`} />
                   </Button>
-                  <Button variant="outline" size="icon" onClick={handleShare} className="h-9 w-9 md:h-10 md:w-10">
-                    <Share2 className="h-4 w-4" />
-                  </Button>
+                  <SocialShare 
+                    title={restaurant.name} 
+                    description={`Bekijk ${restaurant.name} op Dishloopr`}
+                    hashtags={['dishloopr', ...(restaurant.cuisines || [])]}
+                    variant="icon"
+                    className="h-9 w-9 md:h-10 md:w-10"
+                  />
                 </div>
               </div>
 

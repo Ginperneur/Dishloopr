@@ -366,6 +366,41 @@ export type Database = {
           },
         ]
       }
+      notification_queue: {
+        Row: {
+          created_at: string
+          id: string
+          notification_type: string
+          restaurant_id: string
+          sent_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notification_type?: string
+          restaurant_id: string
+          sent_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notification_type?: string
+          restaurant_id?: string
+          sent_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_queue_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -968,6 +1003,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_tag_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          tag: string
+          tag_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          tag: string
+          tag_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          tag?: string
+          tag_type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       yearly_wrapped: {
         Row: {

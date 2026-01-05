@@ -1,9 +1,15 @@
 import { Layout } from '@/components/layout/Layout';
 import { motion } from 'framer-motion';
+import { SEOHead } from '@/components/seo/SEOHead';
 
 export default function TermsPage() {
   return (
     <Layout>
+      <SEOHead
+        title="Algemene Voorwaarden | Dishloopr"
+        description="Lees de algemene voorwaarden van Dishloopr. Deze voorwaarden zijn van toepassing op het gebruik van onze website en diensten."
+        keywords={['algemene voorwaarden', 'terms', 'gebruiksvoorwaarden', 'dishloopr']}
+      />
       <div className="container py-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

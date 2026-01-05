@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SkeletonCard } from '@/components/ui/skeleton-card';
+import { SEOHead } from '@/components/seo/SEOHead';
 import {
   Sheet,
   SheetContent,
@@ -237,8 +238,17 @@ export default function SearchPage() {
     </div>
   );
 
+  const pageTitle = dishQuery 
+    ? `${dishQuery} restaurants${cityId && cityId !== 'all' ? ` in ${cities.find(c => c.id === cityId)?.name || ''}` : ''}`
+    : 'Zoek restaurants';
+
   return (
     <Layout>
+      <SEOHead
+        title={`${pageTitle} | Dishloopr`}
+        description={`Vind de beste ${dishQuery || 'restaurants'}${cityId && cityId !== 'all' ? ` in ${cities.find(c => c.id === cityId)?.name || 'Nederland'}` : ' in Nederland'}. Bekijk reviews, menu's en reserveer direct.`}
+        keywords={[dishQuery || 'restaurants', 'eten', 'uit eten', 'Nederland', 'reviews'].filter(Boolean) as string[]}
+      />
       {/* Search Header */}
       <div className="sticky top-14 md:top-16 z-40 bg-background border-b border-border py-3 md:py-4">
         <div className="container px-4 md:px-6">
