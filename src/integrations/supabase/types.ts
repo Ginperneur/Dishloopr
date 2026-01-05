@@ -295,6 +295,7 @@ export type Database = {
           ambience_tags: string[] | null
           city_id: string
           claimed_by_owner_id: string | null
+          concepts: string[] | null
           created_at: string
           cuisines: string[] | null
           featured_until: string | null
@@ -323,6 +324,7 @@ export type Database = {
           ambience_tags?: string[] | null
           city_id: string
           claimed_by_owner_id?: string | null
+          concepts?: string[] | null
           created_at?: string
           cuisines?: string[] | null
           featured_until?: string | null
@@ -351,6 +353,7 @@ export type Database = {
           ambience_tags?: string[] | null
           city_id?: string
           claimed_by_owner_id?: string | null
+          concepts?: string[] | null
           created_at?: string
           cuisines?: string[] | null
           featured_until?: string | null

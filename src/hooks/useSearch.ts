@@ -16,6 +16,7 @@ interface SearchFilters {
   priceLevel?: number[];
   ambienceTags?: string[];
   cuisines?: string[];
+  concepts?: string[];
 }
 
 export function useSearch() {
@@ -76,6 +77,11 @@ export function useSearch() {
     // Apply cuisine filter
     if (filters?.cuisines && filters.cuisines.length > 0) {
       restaurantQuery = restaurantQuery.overlaps('cuisines', filters.cuisines);
+    }
+
+    // Apply concept filter
+    if (filters?.concepts && filters.concepts.length > 0) {
+      restaurantQuery = restaurantQuery.overlaps('concepts', filters.concepts);
     }
 
     const { data: restaurants, error } = await restaurantQuery;
