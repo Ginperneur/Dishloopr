@@ -4,6 +4,8 @@ import { SearchBar } from '@/components/search/SearchBar';
 import { Layout } from '@/components/layout/Layout';
 import { TrendingDishes } from '@/components/home/TrendingDishes';
 import { RestaurantCard } from '@/components/restaurant/RestaurantCard';
+import { SurpriseMe } from '@/components/ai/SurpriseMe';
+import { PersonalizedRecommendations } from '@/components/ai/PersonalizedRecommendations';
 import { getTrendingDishes, restaurants } from '@/data/mockData';
 
 const Index = () => {
@@ -41,8 +43,21 @@ const Index = () => {
           </motion.div>
 
           <SearchBar variant="hero" />
+          
+          {/* AI Surprise Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="flex justify-center mt-6"
+          >
+            <SurpriseMe />
+          </motion.div>
         </div>
       </section>
+      
+      {/* Personalized Recommendations for logged-in users */}
+      <PersonalizedRecommendations />
 
       {/* Trending Dishes */}
       <TrendingDishes dishes={trendingDishes} />

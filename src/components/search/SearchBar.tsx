@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, MapPin, ChevronDown, UtensilsCrossed } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { useSearchHistory } from '@/hooks/useSearchHistory';
 import type { Database } from '@/integrations/supabase/types';
 
 type Dish = Database['public']['Tables']['dishes']['Row'];
@@ -25,6 +26,7 @@ export function SearchBar({
 }: SearchBarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { addSearch } = useSearchHistory();
   const [query, setQuery] = useState(initialQuery);
   const [cityId, setCityId] = useState(initialCity);
   const [suggestions, setSuggestions] = useState<Dish[]>([]);
@@ -94,6 +96,9 @@ export function SearchBar({
   }, []);
 
   const handleSearch = () => {
+    if (query.trim()) {
+      addSearch(query.trim());
+    }
     if (onSearch) {
       onSearch(query, cityId);
     } else {
@@ -107,6 +112,7 @@ export function SearchBar({
 
   const handleSuggestionClick = (value: string) => {
     setQuery(value);
+    addSearch(value);
     setShowSuggestions(false);
     if (onSearch) {
       onSearch(value, cityId);
