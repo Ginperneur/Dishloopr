@@ -23,6 +23,7 @@ import PrivacyPage from "./pages/PrivacyPage";
 import ClaimPage from "./pages/ClaimPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import ProfilePage from "./pages/ProfilePage";
+import AccountPage from "./pages/AccountPage";
 import InsightsPage from "./pages/InsightsPage";
 import CollectionsPage from "./pages/CollectionsPage";
 import CollectionPage from "./pages/CollectionPage";
@@ -57,6 +58,7 @@ const App = () => (
                 <Route path="/claim" element={<ClaimPage />} />
                 <Route path="/favorites" element={<FavoritesPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/account" element={<AccountPage />} />
                 <Route path="/insights" element={<InsightsPage />} />
                 <Route path="/collections" element={<CollectionsPage />} />
                 <Route path="/collection/:slug" element={<CollectionPage />} />
