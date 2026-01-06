@@ -23,8 +23,9 @@
     "rotterdam": "Róterdam",
     "all": "Toda Holanda"
   },
-  "filters": {
+"filters": {
     "title": "Filtros",
+    "price": "Precio",
     "priceLevel": "Nivel de precio",
     "budget": "Económico",
     "moderate": "Moderado",
