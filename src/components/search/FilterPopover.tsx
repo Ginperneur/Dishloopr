@@ -17,6 +17,8 @@ interface Filters {
   ambienceTags: string[];
   cuisines: string[];
   concepts: string[];
+  mealTypes: string[];
+  experiences: string[];
 }
 
 interface FilterPopoverProps {
@@ -34,6 +36,8 @@ const AMBIENCE_OPTIONS = [
   { value: 'trendy', key: 'filters.trendy' },
   { value: 'casual', key: 'filters.casual' },
   { value: 'lively', key: 'filters.lively' },
+  { value: 'intimate', key: 'filters.intimate' },
+  { value: 'relaxed', key: 'filters.relaxed' },
 ];
 
 const CONCEPT_OPTIONS = [
@@ -45,6 +49,21 @@ const CONCEPT_OPTIONS = [
   { value: 'omakase', key: 'filters.omakase' },
   { value: 'prix fixe', key: 'filters.prixFixe' },
   { value: 'pop-up', key: 'filters.popUp' },
+];
+
+const MEAL_TYPE_OPTIONS = [
+  { value: 'breakfast', key: 'filters.breakfast' },
+  { value: 'brunch', key: 'filters.brunch' },
+  { value: 'lunch', key: 'filters.lunch' },
+  { value: 'dinner', key: 'filters.dinner' },
+];
+
+const EXPERIENCE_OPTIONS = [
+  { value: 'quick-bite', key: 'filters.quickBite' },
+  { value: 'comfort-food', key: 'filters.comfortFood' },
+  { value: 'culinary-experience', key: 'filters.culinaryExperience' },
+  { value: 'late-night', key: 'filters.lateNight' },
+  { value: 'celebration', key: 'filters.celebration' },
 ];
 
 const PRICE_OPTIONS = [
@@ -62,7 +81,9 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
     filters.priceLevel.length + 
     filters.ambienceTags.length + 
     filters.cuisines.length +
-    filters.concepts.length;
+    filters.concepts.length +
+    filters.mealTypes.length +
+    filters.experiences.length;
 
   const toggleFilter = (type: keyof Filters, value: string | number) => {
     const current = filters[type] as (string | number)[];
@@ -78,6 +99,8 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
       ambienceTags: [],
       cuisines: [],
       concepts: [],
+      mealTypes: [],
+      experiences: [],
     });
   };
 
@@ -107,10 +130,10 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
         </div>
         
         <Tabs defaultValue="price" className="w-full">
-          <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0 h-auto">
+          <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0 h-auto flex-wrap">
             <TabsTrigger 
               value="price" 
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-3 py-2 text-sm"
             >
               {t('filters.price')}
               {filters.priceLevel.length > 0 && (
@@ -118,8 +141,26 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
               )}
             </TabsTrigger>
             <TabsTrigger 
+              value="mealType"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-3 py-2 text-sm"
+            >
+              {t('filters.mealType')}
+              {filters.mealTypes.length > 0 && (
+                <span className="ml-1 text-xs text-primary">({filters.mealTypes.length})</span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger 
+              value="experience"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-3 py-2 text-sm"
+            >
+              {t('filters.experience')}
+              {filters.experiences.length > 0 && (
+                <span className="ml-1 text-xs text-primary">({filters.experiences.length})</span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger 
               value="ambience"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-3 py-2 text-sm"
             >
               {t('filters.ambience')}
               {filters.ambienceTags.length > 0 && (
@@ -128,7 +169,7 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
             </TabsTrigger>
             <TabsTrigger 
               value="concept"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-3 py-2 text-sm"
             >
               {t('filters.concept')}
               {filters.concepts.length > 0 && (
@@ -138,7 +179,7 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
             {availableCuisines.length > 0 && (
               <TabsTrigger 
                 value="cuisine"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-3 py-2 text-sm"
               >
                 {t('filters.cuisine')}
                 {filters.cuisines.length > 0 && (
@@ -161,6 +202,36 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
                   />
                   <span className="font-medium w-12">{price.label}</span>
                   <span className="text-sm text-muted-foreground">{t(price.description)}</span>
+                </label>
+              ))}
+            </TabsContent>
+
+            <TabsContent value="mealType" className="p-4 mt-0 space-y-2">
+              {MEAL_TYPE_OPTIONS.map((option) => (
+                <label 
+                  key={option.value} 
+                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted cursor-pointer transition-colors"
+                >
+                  <Checkbox
+                    checked={filters.mealTypes.includes(option.value)}
+                    onCheckedChange={() => toggleFilter('mealTypes', option.value)}
+                  />
+                  <span className="text-sm">{t(option.key)}</span>
+                </label>
+              ))}
+            </TabsContent>
+
+            <TabsContent value="experience" className="p-4 mt-0 space-y-2">
+              {EXPERIENCE_OPTIONS.map((option) => (
+                <label 
+                  key={option.value} 
+                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted cursor-pointer transition-colors"
+                >
+                  <Checkbox
+                    checked={filters.experiences.includes(option.value)}
+                    onCheckedChange={() => toggleFilter('experiences', option.value)}
+                  />
+                  <span className="text-sm">{t(option.key)}</span>
                 </label>
               ))}
             </TabsContent>
