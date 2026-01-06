@@ -1,28 +1,28 @@
 project_id = "uktafmxojymsojqewzuy"
 
 [functions.parse-menu]
-verify_jwt = true
+verify_jwt = false
 
 [functions.create-listing-checkout]
-verify_jwt = true
+verify_jwt = false
 
 [functions.stripe-webhook]
 verify_jwt = false
 
 [functions.ai-recommendations]
-verify_jwt = true
+verify_jwt = false
 
 [functions.create-sponsored-checkout]
-verify_jwt = true
+verify_jwt = false
 
 [functions.calculate-sponsored-price]
-verify_jwt = true
+verify_jwt = false
 
 [functions.google-places-search]
-verify_jwt = true
+verify_jwt = false
 
 [functions.send-new-restaurant-notifications]
-verify_jwt = true
+verify_jwt = false
 
 [functions.generate-sitemap]
 verify_jwt = false

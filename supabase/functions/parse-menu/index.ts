@@ -13,6 +13,45 @@ serve(async (req) => {
   }
 
   try {
+    // Verify authentication - admin only
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claims, error: authError } = await authClient.auth.getUser(token);
+    
+    if (authError || !claims?.user) {
+      console.error("Auth error:", authError?.message);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check for admin role
+    const { data: hasAdminRole } = await authClient.rpc('has_role', {
+      _user_id: claims.user.id,
+      _role: 'admin'
+    });
+
+    if (!hasAdminRole) {
+      return new Response(
+        JSON.stringify({ error: 'Admin access required' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { menuText, restaurantId } = await req.json();
     
     if (!menuText || !restaurantId) {
@@ -155,8 +194,7 @@ Houd de gerechtnamen in het Nederlands waar mogelijk, maar gebruik de originele 
 
     console.log(`Extracted ${extractedDishes.length} dishes`);
 
-    // Now save dishes to database
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    // Now save dishes to database using service role for full access
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
