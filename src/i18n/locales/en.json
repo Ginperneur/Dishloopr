@@ -23,8 +23,9 @@
     "rotterdam": "Rotterdam",
     "all": "All Netherlands"
   },
-  "filters": {
+"filters": {
     "title": "Filters",
+    "price": "Price",
     "priceLevel": "Price level",
     "budget": "Budget",
     "moderate": "Moderate",
