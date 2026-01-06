@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -41,7 +41,7 @@ export function useSearch() {
     setCities(citiesRes.data || []);
   };
 
-  const search = async (query: string, cityId?: string, filters?: SearchFilters) => {
+  const search = useCallback(async (query: string, cityId?: string, filters?: SearchFilters) => {
     setLoading(true);
     
     const queryLower = query.toLowerCase().trim();
@@ -235,7 +235,7 @@ export function useSearch() {
 
     setResults(rebalanced);
     setLoading(false);
-  };
+  }, [dishes, cities]);
 
   return { 
     search, 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -8,15 +8,7 @@ export function useFavorites() {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      fetchFavorites();
-    } else {
-      setFavorites([]);
-    }
-  }, [user]);
-
-  const fetchFavorites = async () => {
+  const fetchFavorites = useCallback(async () => {
     if (!user) return;
     
     setLoading(true);
@@ -31,18 +23,25 @@ export function useFavorites() {
       setFavorites(data.map(f => f.restaurant_id));
     }
     setLoading(false);
-  };
+  }, [user]);
 
-  const toggleFavorite = async (restaurantId: string) => {
+  useEffect(() => {
+    if (user) {
+      fetchFavorites();
+    } else {
+      setFavorites([]);
+    }
+  }, [user, fetchFavorites]);
+
+  const toggleFavorite = useCallback(async (restaurantId: string) => {
     if (!user) {
       toast.error('Log in om favorieten op te slaan');
       return;
     }
 
-    const isFavorite = favorites.includes(restaurantId);
+    const isFav = favorites.includes(restaurantId);
 
-    if (isFavorite) {
-      // Remove favorite
+    if (isFav) {
       const { error } = await supabase
         .from('favorites')
         .delete()
@@ -56,7 +55,6 @@ export function useFavorites() {
         toast.success('Verwijderd uit favorieten');
       }
     } else {
-      // Add favorite
       const { error } = await supabase
         .from('favorites')
         .insert({ user_id: user.id, restaurant_id: restaurantId });
@@ -68,7 +66,8 @@ export function useFavorites() {
         toast.success('Toegevoegd aan favorieten');
       }
     }
-  };
+  }, [user, favorites]);
+
 
   const isFavorite = (restaurantId: string) => favorites.includes(restaurantId);
 

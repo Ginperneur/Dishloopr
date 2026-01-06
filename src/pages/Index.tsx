@@ -7,18 +7,20 @@ import { Layout } from '@/components/layout/Layout';
 import { TrendingDishes } from '@/components/home/TrendingDishes';
 import { TrendingNow } from '@/components/home/TrendingNow';
 import { UpcomingEvents } from '@/components/home/UpcomingEvents';
-import { RestaurantCard } from '@/components/restaurant/RestaurantCard';
+import { DatabaseRestaurantCard } from '@/components/restaurant/DatabaseRestaurantCard';
 import { SurpriseMe } from '@/components/ai/SurpriseMe';
 import { PersonalizedRecommendations } from '@/components/ai/PersonalizedRecommendations';
 import { FeaturedCollections } from '@/components/collections/CollectionsGrid';
 import { SEOHead, createWebsiteSchema } from '@/components/seo/SEOHead';
 import { Button } from '@/components/ui/button';
-import { getTrendingDishes, restaurants } from '@/data/mockData';
+import { SkeletonCard } from '@/components/ui/skeleton-card';
+import { useFeaturedRestaurants } from '@/hooks/useFeaturedRestaurants';
+import { getTrendingDishes } from '@/data/mockData';
 
 const Index = () => {
   const { t } = useTranslation();
   const trendingDishes = getTrendingDishes();
-  const featuredRestaurants = restaurants.filter(r => r.isFeatured || r.isTopListing).slice(0, 3);
+  const { restaurants: featuredRestaurants, loading: featuredLoading } = useFeaturedRestaurants(3);
 
   return (
     <Layout>
@@ -118,13 +120,21 @@ const Index = () => {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {featuredRestaurants.map((restaurant, index) => (
-              <RestaurantCard
-                key={restaurant.id}
-                restaurant={restaurant}
-                index={index}
-              />
-            ))}
+            {featuredLoading ? (
+              <>
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+              </>
+            ) : (
+              featuredRestaurants.map((restaurant, index) => (
+                <DatabaseRestaurantCard
+                  key={restaurant.id}
+                  restaurant={restaurant}
+                  index={index}
+                />
+              ))
+            )}
           </div>
         </div>
       </section>

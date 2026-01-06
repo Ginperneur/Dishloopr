@@ -37,24 +37,7 @@ import { useAIRecommendations } from '@/hooks/useAIRecommendations';
 import { useAlternativeRestaurants, type RoutingReason } from '@/hooks/useAlternativeRestaurants';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGeolocation } from '@/hooks/useGeolocation';
-
-const priceLabels: { [key: number]: string } = {
-  1: '€ · Budget',
-  2: '€€ · Moderate',
-  3: '€€€ · Upscale',
-  4: '€€€€ · Luxury',
-};
-
-const ambienceTagStyles: { [key: string]: string } = {
-  'romantic': 'tag-romantic',
-  'family-friendly': 'tag-family',
-  'high-end': 'tag-highend',
-  'cozy': 'tag-cozy',
-  'business': 'tag-business',
-  'trendy': 'tag-cozy',
-  'casual': 'tag-family',
-  'lively': 'tag-romantic',
-};
+import { PRICE_LABELS_FULL, AMBIENCE_TAG_STYLES, WEEK_DAYS } from '@/lib/constants';
 
 export default function RestaurantPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -254,7 +237,7 @@ export default function RestaurantPage() {
                       <span className="font-semibold text-foreground">{Number(restaurant.rating).toFixed(1)}</span>
                       <span>({restaurant.review_count} {t('restaurant.reviews')})</span>
                     </div>
-                    <span className="hidden md:inline">{priceLabels[restaurant.price_level]}</span>
+                    <span className="hidden md:inline">{PRICE_LABELS_FULL[restaurant.price_level]}</span>
                     <span className="md:hidden">{'€'.repeat(restaurant.price_level)}</span>
                   </div>
                 </div>
@@ -312,7 +295,7 @@ export default function RestaurantPage() {
                   <span
                     key={tag}
                     className={`px-2 md:px-3 py-0.5 md:py-1 text-xs md:text-sm font-medium rounded-full ${
-                      ambienceTagStyles[tag] || 'bg-muted text-muted-foreground'
+                      AMBIENCE_TAG_STYLES[tag] || 'bg-muted text-muted-foreground'
                     }`}
                   >
                     {t(`filters.${tag.replace('-', '')}`) || tag}
