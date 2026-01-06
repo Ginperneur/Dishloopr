@@ -13,6 +13,7 @@ import RestaurantPage from "./pages/RestaurantPage";
 import LoginPage from "./pages/LoginPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import EmailConfirmPage from "./pages/EmailConfirmPage";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import AdminPanel from "./pages/AdminPanel";
 import AboutPage from "./pages/AboutPage";
@@ -45,6 +46,7 @@ const App = () => (
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/email-confirm" element={<EmailConfirmPage />} />
                 <Route path="/owner" element={<OwnerDashboard />} />
                 <Route path="/dashboard" element={<OwnerDashboard />} />
                 <Route path="/admin" element={<AdminPanel />} />
