@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -16,6 +17,26 @@ interface ClaimNotificationRequest {
   userEmail: string;
   role: string;
   notes: string;
+}
+
+async function getAdminEmail(): Promise<string> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  
+  const { data, error } = await supabase
+    .from("app_settings")
+    .select("value")
+    .eq("key", "admin_email")
+    .single();
+  
+  if (error || !data) {
+    console.warn("Could not fetch admin email, using default:", error?.message);
+    return "admin@dishloopr.com";
+  }
+  
+  return data.value;
 }
 
 serve(async (req: Request): Promise<Response> => {
@@ -37,10 +58,14 @@ serve(async (req: Request): Promise<Response> => {
 
     console.log("Sending claim notification for:", restaurantName);
 
+    // Get admin email from database
+    const adminEmail = await getAdminEmail();
+    console.log("Using admin email:", adminEmail);
+
     // Send notification to admin
     const adminEmailResponse = await resend.emails.send({
       from: "Dishloopr <noreply@resend.dev>",
-      to: ["admin@dishloopr.com"], // Change this to your admin email
+      to: [adminEmail],
       subject: `Nieuwe claim aanvraag: ${restaurantName}`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
