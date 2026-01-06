@@ -33,6 +33,8 @@ interface Filters {
   ambienceTags: string[];
   cuisines: string[];
   concepts: string[];
+  mealTypes: string[];
+  experiences: string[];
 }
 
 export default function SearchPage() {
@@ -48,6 +50,8 @@ export default function SearchPage() {
     ambienceTags: [],
     cuisines: [],
     concepts: [],
+    mealTypes: [],
+    experiences: [],
   });
   const [sortBy, setSortBy] = useState<SortOption>('bestMatch');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -132,6 +136,8 @@ export default function SearchPage() {
       ambienceTags: [],
       cuisines: [],
       concepts: [],
+      mealTypes: [],
+      experiences: [],
     });
   };
 
@@ -139,7 +145,9 @@ export default function SearchPage() {
     filters.priceLevel.length + 
     filters.ambienceTags.length + 
     filters.cuisines.length +
-    filters.concepts.length;
+    filters.concepts.length +
+    filters.mealTypes.length +
+    filters.experiences.length;
 
   const cityName = cityId === 'all' 
     ? t('cities.all') 
