@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useActivityLog } from '@/hooks/useActivityLog';
 
 interface City {
   id: string;
@@ -48,6 +49,7 @@ export function CitiesManager({ onUpdate }: CitiesManagerProps) {
   const [editingCity, setEditingCity] = useState<City | null>(null);
   const [newCityName, setNewCityName] = useState('');
   const [newCityCountry, setNewCityCountry] = useState('NL');
+  const { logActivity } = useActivityLog();
 
   useEffect(() => {
     fetchCities();
@@ -92,18 +94,26 @@ export function CitiesManager({ onUpdate }: CitiesManagerProps) {
       return;
     }
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('cities')
       .insert({
         name: newCityName.trim(),
         slug: generateSlug(newCityName),
         country_code: newCityCountry,
         is_active: true
-      });
+      })
+      .select()
+      .single();
 
     if (error) {
       toast.error('Toevoegen mislukt: ' + error.message);
     } else {
+      await logActivity({
+        actionType: 'create',
+        entityType: 'city',
+        entityId: data?.id,
+        entityName: newCityName.trim()
+      });
       toast.success('Stad toegevoegd');
       setNewCityName('');
       setNewCityCountry('NL');
@@ -129,6 +139,12 @@ export function CitiesManager({ onUpdate }: CitiesManagerProps) {
     if (error) {
       toast.error('Bijwerken mislukt');
     } else {
+      await logActivity({
+        actionType: 'update',
+        entityType: 'city',
+        entityId: editingCity.id,
+        entityName: editingCity.name
+      });
       toast.success('Stad bijgewerkt');
       setEditingCity(null);
       fetchCities();
@@ -136,7 +152,7 @@ export function CitiesManager({ onUpdate }: CitiesManagerProps) {
     }
   };
 
-  const toggleCityActive = async (id: string, isActive: boolean) => {
+  const toggleCityActive = async (id: string, name: string, isActive: boolean) => {
     const { error } = await supabase
       .from('cities')
       .update({ is_active: !isActive })
@@ -145,12 +161,18 @@ export function CitiesManager({ onUpdate }: CitiesManagerProps) {
     if (error) {
       toast.error('Status bijwerken mislukt');
     } else {
+      await logActivity({
+        actionType: isActive ? 'deactivate' : 'activate',
+        entityType: 'city',
+        entityId: id,
+        entityName: name
+      });
       toast.success(isActive ? 'Stad gedeactiveerd' : 'Stad geactiveerd');
       setCities(prev => prev.map(c => c.id === id ? { ...c, is_active: !isActive } : c));
     }
   };
 
-  const deleteCity = async (id: string) => {
+  const deleteCity = async (id: string, name: string) => {
     if (restaurantCounts[id] > 0) {
       toast.error('Kan stad niet verwijderen: er zijn nog restaurants gekoppeld');
       return;
@@ -166,6 +188,12 @@ export function CitiesManager({ onUpdate }: CitiesManagerProps) {
     if (error) {
       toast.error('Verwijderen mislukt: ' + error.message);
     } else {
+      await logActivity({
+        actionType: 'delete',
+        entityType: 'city',
+        entityId: id,
+        entityName: name
+      });
       toast.success('Stad verwijderd');
       setCities(prev => prev.filter(c => c.id !== id));
       onUpdate?.();
@@ -298,7 +326,7 @@ export function CitiesManager({ onUpdate }: CitiesManagerProps) {
                       <Badge 
                         variant={city.is_active ? 'default' : 'secondary'}
                         className="cursor-pointer"
-                        onClick={() => toggleCityActive(city.id, city.is_active)}
+                        onClick={() => toggleCityActive(city.id, city.name, city.is_active)}
                       >
                         {city.is_active ? 'Actief' : 'Inactief'}
                       </Badge>
@@ -360,7 +388,7 @@ export function CitiesManager({ onUpdate }: CitiesManagerProps) {
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 text-destructive hover:text-destructive"
-                          onClick={() => deleteCity(city.id)}
+                          onClick={() => deleteCity(city.id, city.name)}
                           disabled={restaurantCounts[city.id] > 0}
                         >
                           <Trash2 className="h-4 w-4" />

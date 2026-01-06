@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useActivityLog } from '@/hooks/useActivityLog';
 
 interface ClaimRequest {
   id: string;
@@ -45,6 +46,7 @@ export function ClaimRequestsQueue({ onUpdate }: ClaimRequestsQueueProps) {
   const [selectedRequest, setSelectedRequest] = useState<ClaimRequest | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
   const [processing, setProcessing] = useState(false);
+  const { logActivity } = useActivityLog();
 
   useEffect(() => {
     fetchRequests();
@@ -129,6 +131,14 @@ export function ClaimRequestsQueue({ onUpdate }: ClaimRequestsQueueProps) {
           });
       }
 
+      await logActivity({
+        actionType: 'approve',
+        entityType: 'claim',
+        entityId: request.id,
+        entityName: request.restaurant?.name,
+        details: { user: request.profile?.email }
+      });
+
       toast.success('Claim goedgekeurd! De eigenaar heeft nu toegang.');
       setSelectedRequest(null);
       setAdminNotes('');
@@ -157,6 +167,14 @@ export function ClaimRequestsQueue({ onUpdate }: ClaimRequestsQueueProps) {
         .eq('id', request.id);
 
       if (error) throw error;
+
+      await logActivity({
+        actionType: 'reject',
+        entityType: 'claim',
+        entityId: request.id,
+        entityName: request.restaurant?.name,
+        details: { user: request.profile?.email, reason: adminNotes }
+      });
 
       toast.success('Claim afgewezen');
       setSelectedRequest(null);
