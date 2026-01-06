@@ -18,6 +18,8 @@ interface SearchFilters {
   ambienceTags?: string[];
   cuisines?: string[];
   concepts?: string[];
+  mealTypes?: string[];
+  experiences?: string[];
 }
 
 export function useSearch() {
@@ -83,6 +85,16 @@ export function useSearch() {
     // Apply concept filter
     if (filters?.concepts && filters.concepts.length > 0) {
       restaurantQuery = restaurantQuery.overlaps('concepts', filters.concepts);
+    }
+
+    // Apply meal type filter
+    if (filters?.mealTypes && filters.mealTypes.length > 0) {
+      restaurantQuery = restaurantQuery.overlaps('meal_types', filters.mealTypes);
+    }
+
+    // Apply experience filter
+    if (filters?.experiences && filters.experiences.length > 0) {
+      restaurantQuery = restaurantQuery.overlaps('experiences', filters.experiences);
     }
 
     const { data: restaurants, error } = await restaurantQuery;
