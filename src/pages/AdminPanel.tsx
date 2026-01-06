@@ -44,6 +44,8 @@ import { ClaimRequestsQueue } from '@/components/admin/ClaimRequestsQueue';
 import { DishesManager } from '@/components/admin/DishesManager';
 import { CitiesManager } from '@/components/admin/CitiesManager';
 import { UserRolesManager } from '@/components/admin/UserRolesManager';
+import { ActivityLog } from '@/components/admin/ActivityLog';
+import { useActivityLog } from '@/hooks/useActivityLog';
 
 interface Stats {
   totalUsers: number;
@@ -443,6 +445,10 @@ export default function AdminPanel() {
               <Crown className="h-4 w-4" />
               <span className="hidden sm:inline">Rollen</span>
             </TabsTrigger>
+            <TabsTrigger value="activity" className="gap-1.5">
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Activiteit</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="restaurants">
@@ -815,6 +821,21 @@ export default function AdminPanel() {
 
           <TabsContent value="roles">
             <UserRolesManager users={users} onUpdate={fetchData} />
+          </TabsContent>
+
+          <TabsContent value="activity">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Activity Log
+                </CardTitle>
+                <CardDescription>Alle admin acties worden hier bijgehouden</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ActivityLog />
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
 

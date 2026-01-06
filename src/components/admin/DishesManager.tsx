@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label';
 import { TagInput } from '@/components/ui/tag-input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useActivityLog } from '@/hooks/useActivityLog';
 
 interface Dish {
   id: string;
@@ -45,6 +46,7 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
   const [newDishName, setNewDishName] = useState('');
   const [newDishSynonyms, setNewDishSynonyms] = useState<string[]>([]);
   const [newDishCuisines, setNewDishCuisines] = useState<string[]>([]);
+  const { logActivity } = useActivityLog();
 
   useEffect(() => {
     fetchDishes();
@@ -78,7 +80,7 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
       return;
     }
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('dishes')
       .insert({
         name: newDishName.trim(),
@@ -86,11 +88,19 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
         synonyms: newDishSynonyms,
         cuisine_tags: newDishCuisines,
         is_active: true
-      });
+      })
+      .select()
+      .single();
 
     if (error) {
       toast.error('Toevoegen mislukt: ' + error.message);
     } else {
+      await logActivity({
+        actionType: 'create',
+        entityType: 'dish',
+        entityId: data?.id,
+        entityName: newDishName.trim()
+      });
       toast.success('Gerecht toegevoegd');
       setNewDishName('');
       setNewDishSynonyms([]);
@@ -116,6 +126,12 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
     if (error) {
       toast.error('Bijwerken mislukt');
     } else {
+      await logActivity({
+        actionType: 'update',
+        entityType: 'dish',
+        entityId: dish.id,
+        entityName: dish.name
+      });
       toast.success('Gerecht bijgewerkt');
       setEditingDish(null);
       fetchDishes();
@@ -123,7 +139,7 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
     }
   };
 
-  const toggleDishActive = async (id: string, isActive: boolean) => {
+  const toggleDishActive = async (id: string, name: string, isActive: boolean) => {
     const { error } = await supabase
       .from('dishes')
       .update({ is_active: !isActive })
@@ -132,12 +148,18 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
     if (error) {
       toast.error('Status bijwerken mislukt');
     } else {
+      await logActivity({
+        actionType: isActive ? 'deactivate' : 'activate',
+        entityType: 'dish',
+        entityId: id,
+        entityName: name
+      });
       toast.success(isActive ? 'Gerecht gedeactiveerd' : 'Gerecht geactiveerd');
       setDishes(prev => prev.map(d => d.id === id ? { ...d, is_active: !isActive } : d));
     }
   };
 
-  const deleteDish = async (id: string) => {
+  const deleteDish = async (id: string, name: string) => {
     if (!confirm('Weet je zeker dat je dit gerecht wilt verwijderen?')) return;
 
     const { error } = await supabase
@@ -148,6 +170,12 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
     if (error) {
       toast.error('Verwijderen mislukt: ' + error.message);
     } else {
+      await logActivity({
+        actionType: 'delete',
+        entityType: 'dish',
+        entityId: id,
+        entityName: name
+      });
       toast.success('Gerecht verwijderd');
       setDishes(prev => prev.filter(d => d.id !== id));
       onUpdate?.();
@@ -294,7 +322,7 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
                       <Badge 
                         variant={dish.is_active ? 'default' : 'secondary'}
                         className="cursor-pointer"
-                        onClick={() => toggleDishActive(dish.id, dish.is_active)}
+                        onClick={() => toggleDishActive(dish.id, dish.name, dish.is_active)}
                       >
                         {dish.is_active ? 'Actief' : 'Inactief'}
                       </Badge>
@@ -318,7 +346,7 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 text-destructive hover:text-destructive"
-                          onClick={() => deleteDish(dish.id)}
+                          onClick={() => deleteDish(dish.id, dish.name)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

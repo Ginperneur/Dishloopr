@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useActivityLog } from '@/hooks/useActivityLog';
 
 interface UserRole {
   id: string;
@@ -48,6 +49,7 @@ export function UserRolesManager({ users, onUpdate }: UserRolesManagerProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState('');
   const [selectedRole, setSelectedRole] = useState<'user' | 'owner' | 'admin'>('owner');
+  const { logActivity } = useActivityLog();
 
   useEffect(() => {
     fetchRoles();
@@ -99,6 +101,14 @@ export function UserRolesManager({ users, onUpdate }: UserRolesManagerProps) {
     if (error) {
       toast.error('Toevoegen mislukt: ' + error.message);
     } else {
+      const userProfile = users.find(u => u.id === selectedUserId);
+      await logActivity({
+        actionType: 'assign',
+        entityType: 'role',
+        entityId: selectedUserId,
+        entityName: userProfile?.name || userProfile?.email,
+        details: { role: selectedRole }
+      });
       toast.success('Rol toegevoegd');
       setSelectedUserId('');
       setSelectedRole('owner');
@@ -108,7 +118,7 @@ export function UserRolesManager({ users, onUpdate }: UserRolesManagerProps) {
     }
   };
 
-  const removeRole = async (id: string, role: string) => {
+  const removeRole = async (id: string, role: string, userName?: string) => {
     if (role === 'admin') {
       // Count remaining admins
       const adminCount = roles.filter(r => r.role === 'admin').length;
@@ -128,6 +138,13 @@ export function UserRolesManager({ users, onUpdate }: UserRolesManagerProps) {
     if (error) {
       toast.error('Verwijderen mislukt: ' + error.message);
     } else {
+      await logActivity({
+        actionType: 'remove',
+        entityType: 'role',
+        entityId: id,
+        entityName: userName,
+        details: { role }
+      });
       toast.success('Rol verwijderd');
       setRoles(prev => prev.filter(r => r.id !== id));
       onUpdate?.();
@@ -287,7 +304,7 @@ export function UserRolesManager({ users, onUpdate }: UserRolesManagerProps) {
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 text-destructive hover:text-destructive"
-                          onClick={() => removeRole(role.id, role.role)}
+                          onClick={() => removeRole(role.id, role.role, role.profiles?.name || role.profiles?.email || undefined)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
