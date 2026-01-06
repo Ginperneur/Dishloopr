@@ -7,7 +7,8 @@
     "signup": "Registrieren",
     "logout": "Abmelden",
     "profile": "Profil",
-    "favorites": "Favoriten"
+    "favorites": "Favoriten",
+    "insights": "Einblicke"
   },
   "hero": {
     "title": "Finde Restaurants",
@@ -35,19 +36,32 @@
     "highEnd": "High-End",
     "cozy": "Gemütlich",
     "business": "Business",
+    "trendy": "Trendy",
+    "casual": "Locker",
+    "lively": "Lebhaft",
     "dietary": "Ernährung",
     "vegetarian": "Vegetarisch",
     "vegan": "Vegan",
     "cuisine": "Küche",
+    "concept": "Konzept",
     "clearAll": "Alles löschen",
-    "apply": "Anwenden"
+    "apply": "Anwenden",
+    "sharedDining": "Gemeinsames Essen",
+    "allYouCanEat": "All you can eat",
+    "tastingMenu": "Degustationsmenü",
+    "aLaCarte": "À la carte",
+    "buffet": "Buffet",
+    "omakase": "Omakase",
+    "prixFixe": "Prix fixe",
+    "popUp": "Pop-up"
   },
   "sort": {
     "bestMatch": "Beste Übereinstimmung",
     "highestRated": "Höchste Bewertung",
     "mostReviews": "Meiste Bewertungen",
     "priceLowHigh": "Preis: niedrig-hoch",
-    "priceHighLow": "Preis: hoch-niedrig"
+    "priceHighLow": "Preis: hoch-niedrig",
+    "nearest": "Nächste"
   },
   "restaurant": {
     "featured": "Empfohlen",
@@ -63,7 +77,8 @@
     "share": "Teilen",
     "website": "Website",
     "addToFavorites": "Zu Favoriten hinzufügen",
-    "removeFromFavorites": "Aus Favoriten entfernen"
+    "removeFromFavorites": "Aus Favoriten entfernen",
+    "menu": "Speisekarte"
   },
   "reviews": {
     "title": "Bewertungen",
@@ -78,7 +93,10 @@
   "trending": {
     "title": "Trending Gerichte",
     "subtitle": "Beliebt in deiner Stadt",
-    "inCity": "in {city}"
+    "inCity": "in {city}",
+    "now": "Trending jetzt",
+    "searches": "Suchanfragen",
+    "seasonalSubtitle": "Gerichte, die jetzt perfekt passen"
   },
   "search": {
     "results": "Ergebnisse",
@@ -93,7 +111,8 @@
     "cancel": "Abbrechen",
     "edit": "Bearbeiten",
     "delete": "Löschen",
-    "confirm": "Bestätigen"
+    "confirm": "Bestätigen",
+    "minutes": "Min"
   },
   "footer": {
     "about": "Über Dishloopr",
@@ -102,5 +121,114 @@
     "privacy": "Datenschutz",
     "forRestaurants": "Für Restaurants",
     "claimRestaurant": "Restaurant beanspruchen"
+  },
+  "ai": {
+    "surpriseMe": "Überrasche mich!",
+    "surpriseTitle": "AI Gericht-Entdeckung",
+    "surpriseSubtitle": "Lass dich überraschen",
+    "moodQuestion": "Worauf hast du heute Lust?",
+    "thinking": "Denke nach...",
+    "generateSurprise": "Überrasche mich!",
+    "tryAnother": "Nochmal versuchen",
+    "searchDish": "Restaurants finden",
+    "forYou": "Für dich ausgewählt",
+    "exploreNow": "Jetzt entdecken",
+    "becauseYouLiked": "Weil dir {{dish}} gefallen hat",
+    "youMightAlsoLike": "Das könnte dir auch gefallen"
+  },
+  "menu": {
+    "allergens": "Allergene"
+  },
+  "busyLevel": {
+    "quiet": "Ruhig",
+    "moderate": "Mäßig beschäftigt",
+    "busy": "Beschäftigt",
+    "very_busy": "Sehr beschäftigt",
+    "waitTime": "Wartezeit"
+  },
+  "sustainability": {
+    "ecoScore": "Öko-Score",
+    "excellent": "Ausgezeichnet",
+    "good": "Gut",
+    "average": "Durchschnittlich",
+    "basic": "Basis",
+    "localIngredients": "Lokale Zutaten",
+    "sustainableSeafood": "Nachhaltiger Fisch",
+    "wasteReduction": "Abfallreduzierung",
+    "lowEmissions": "Niedrige Emissionen"
+  },
+  "events": {
+    "title": "Veranstaltungen",
+    "upcoming": "Kommende Veranstaltungen",
+    "spotsLeft": "{{count}} Plätze frei",
+    "soldOut": "Ausverkauft",
+    "book": "Jetzt buchen",
+    "viewDetails": "Details ansehen"
+  },
+  "voice": {
+    "title": "Sprachsuche",
+    "start": "Sprachsuche",
+    "listening": "Höre zu...",
+    "searching": "Suche nach Restaurants...",
+    "hint": "Sag etwas wie \"Wo finde ich das beste Ramen?\"",
+    "notSupported": "Spracherkennung wird in diesem Browser nicht unterstützt",
+    "permissionDenied": "Mikrofonzugriff verweigert",
+    "noSpeech": "Keine Sprache erkannt",
+    "error": "Etwas ist schief gelaufen"
+  },
+  "sponsored": {
+    "badge": "Gesponsert",
+    "marketplace": "Sponsoring Marktplatz",
+    "availableSlots": "Verfügbare Slots",
+    "purchaseSlot": "Slot kaufen",
+    "activeSponsorings": "Aktive Sponsorings",
+    "disclaimer": "Gesponserte Listings beeinflussen niemals Bewertungen oder Beliebtheitswerte.",
+    "whatYouGet": "Was du bekommst",
+    "prominentLabel": "\"Gesponsert\" Label in Suchergebnissen",
+    "higherPosition": "Höhere Position in relevanten Suchen",
+    "exclusiveSlot": "Exklusiver Slot"
+  },
+  "routing": {
+    "settingsTitle": "Nachfrage-Routing",
+    "settingsDescription": "Erhalte zusätzliche Kunden, wenn andere Restaurants nicht verfügbar sind",
+    "acceptRoutedDemand": "Weitergeleitete Nachfrage empfangen",
+    "howItWorks": "Wie funktioniert es?",
+    "feature1": "Wenn ein Restaurant geschlossen oder ausgebucht ist, schlagen wir Alternativen vor",
+    "feature2": "Wir matchen nach Gericht, Preisklasse, Küche und Standort",
+    "feature3": "Vollständig transparent für Benutzer",
+    "performanceTitle": "Leistung (letzte 30 Tage)",
+    "statImpressions": "Impressionen",
+    "statClicks": "Klicks",
+    "statConversions": "Konversionen",
+    "noStatsYet": "Noch keine Daten verfügbar",
+    "statusActive": "Aktiv",
+    "statusInactive": "Inaktiv",
+    "enabledSuccess": "Du erhältst jetzt weitergeleitete Nachfrage",
+    "disabledSuccess": "Weitergeleitete Nachfrage deaktiviert",
+    "transparencyNote": "Vorschläge basieren auf ähnlichen Merkmalen, nicht auf Zahlung"
+  },
+  "optimization": {
+    "title": "Optimierungs-Toolkit",
+    "score": "Optimierungswert",
+    "dishVisibility": "Gericht-Sichtbarkeit",
+    "tagAnalysis": "Tag-Analyse",
+    "suggestions": "Vorschläge",
+    "simulation": "Simulationsmodus",
+    "noDishes": "Noch keine Gerichte verknüpft",
+    "noTags": "Noch keine Tags konfiguriert",
+    "allGood": "Alles sieht gut aus!",
+    "confirmed": "Bestätigt",
+    "disputed": "Bestritten",
+    "neutral": "Neutral",
+    "highPriority": "Hohe Priorität",
+    "mediumPriority": "Mittlere Priorität",
+    "lowPriority": "Niedrige Priorität",
+    "upgradePremium": "Auf Premium upgraden",
+    "premiumFeature": "Premium-Funktion",
+    "simulationsLeft": "Simulationen übrig",
+    "projectedPosition": "Erwartete Position",
+    "visibilityChange": "Sichtbarkeitsänderung",
+    "confidence": "Vertrauen",
+    "disclaimer": "Alle Einblicke basieren auf echten Plattformdaten. Keine Manipulation möglich."
   }
 }

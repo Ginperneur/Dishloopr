@@ -36,13 +36,24 @@
     "highEnd": "High-end",
     "cozy": "Gezellig",
     "business": "Zakelijk",
+    "trendy": "Trendy",
+    "casual": "Casual",
+    "lively": "Levendig",
     "dietary": "Dieet",
     "vegetarian": "Vegetarisch",
     "vegan": "Vegan",
     "cuisine": "Keuken",
     "concept": "Concept",
     "clearAll": "Wis alles",
-    "apply": "Toepassen"
+    "apply": "Toepassen",
+    "sharedDining": "Shared dining",
+    "allYouCanEat": "All you can eat",
+    "tastingMenu": "Proefmenu",
+    "aLaCarte": "À la carte",
+    "buffet": "Buffet",
+    "omakase": "Omakase",
+    "prixFixe": "Prix fixe",
+    "popUp": "Pop-up"
   },
   "sort": {
     "bestMatch": "Beste match",
@@ -100,7 +111,8 @@
     "cancel": "Annuleren",
     "edit": "Bewerken",
     "delete": "Verwijderen",
-    "confirm": "Bevestigen"
+    "confirm": "Bevestigen",
+    "minutes": "min"
   },
   "footer": {
     "about": "Over Dishloopr",
@@ -218,16 +230,5 @@
     "visibilityChange": "Zichtbaarheidsverandering",
     "confidence": "Betrouwbaarheid",
     "disclaimer": "Alle inzichten zijn gebaseerd op echte platformdata. Geen manipulatie mogelijk."
-  },
-  "common": {
-    "loading": "Laden...",
-    "error": "Er ging iets mis",
-    "tryAgain": "Probeer opnieuw",
-    "save": "Opslaan",
-    "cancel": "Annuleren",
-    "edit": "Bewerken",
-    "delete": "Verwijderen",
-    "confirm": "Bevestigen",
-    "minutes": "min"
   }
 }
