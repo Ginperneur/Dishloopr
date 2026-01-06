@@ -717,6 +717,7 @@ export type Database = {
           created_at: string
           cuisines: string[] | null
           current_busy_level: string | null
+          experiences: string[] | null
           featured_until: string | null
           geo_lat: number | null
           geo_lng: number | null
@@ -725,6 +726,7 @@ export type Database = {
           is_active: boolean
           is_featured: boolean
           is_top_listing: boolean
+          meal_types: string[] | null
           name: string
           opening_hours: Json | null
           phone: string | null
@@ -751,6 +753,7 @@ export type Database = {
           created_at?: string
           cuisines?: string[] | null
           current_busy_level?: string | null
+          experiences?: string[] | null
           featured_until?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
@@ -759,6 +762,7 @@ export type Database = {
           is_active?: boolean
           is_featured?: boolean
           is_top_listing?: boolean
+          meal_types?: string[] | null
           name: string
           opening_hours?: Json | null
           phone?: string | null
@@ -785,6 +789,7 @@ export type Database = {
           created_at?: string
           cuisines?: string[] | null
           current_busy_level?: string | null
+          experiences?: string[] | null
           featured_until?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
@@ -793,6 +798,7 @@ export type Database = {
           is_active?: boolean
           is_featured?: boolean
           is_top_listing?: boolean
+          meal_types?: string[] | null
           name?: string
           opening_hours?: Json | null
           phone?: string | null
