@@ -178,16 +178,36 @@ export default function ClaimPage() {
       }
 
       // Create claim request
-      const { error: claimError } = await supabase
+      const { data: claimData, error: claimError } = await supabase
         .from('claim_requests')
         .insert({
           restaurant_id: restaurantId,
           user_id: user!.id,
           notes: `Rol: ${role}\n\n${notes || ''}`.trim(),
           status: 'pending'
-        });
+        })
+        .select('id')
+        .single();
 
       if (claimError) throw claimError;
+
+      // Send email notification
+      try {
+        await supabase.functions.invoke('send-claim-notification', {
+          body: {
+            claimId: claimData.id,
+            restaurantName: selectedPlace.name,
+            restaurantAddress: selectedPlace.address,
+            userName: user?.user_metadata?.name || user?.email?.split('@')[0] || 'Gebruiker',
+            userEmail: user?.email || '',
+            role: role,
+            notes: notes || ''
+          }
+        });
+      } catch (emailError) {
+        console.error('Failed to send notification email:', emailError);
+        // Don't fail the whole request if email fails
+      }
 
       toast.success('Claim aanvraag ontvangen! We nemen binnen 2 werkdagen contact met je op.');
       
