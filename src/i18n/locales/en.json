@@ -36,13 +36,24 @@
     "highEnd": "High-end",
     "cozy": "Cozy",
     "business": "Business",
+    "trendy": "Trendy",
+    "casual": "Casual",
+    "lively": "Lively",
     "dietary": "Dietary",
     "vegetarian": "Vegetarian",
     "vegan": "Vegan",
     "cuisine": "Cuisine",
     "concept": "Concept",
     "clearAll": "Clear all",
-    "apply": "Apply"
+    "apply": "Apply",
+    "sharedDining": "Shared dining",
+    "allYouCanEat": "All you can eat",
+    "tastingMenu": "Tasting menu",
+    "aLaCarte": "À la carte",
+    "buffet": "Buffet",
+    "omakase": "Omakase",
+    "prixFixe": "Prix fixe",
+    "popUp": "Pop-up"
   },
   "sort": {
     "bestMatch": "Best match",
@@ -100,7 +111,8 @@
     "cancel": "Cancel",
     "edit": "Edit",
     "delete": "Delete",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "minutes": "min"
   },
   "footer": {
     "about": "About Dishloopr",
@@ -218,16 +230,5 @@
     "visibilityChange": "Visibility change",
     "confidence": "Confidence",
     "disclaimer": "All insights are based on real platform data. No manipulation possible."
-  },
-  "common": {
-    "loading": "Loading...",
-    "error": "Something went wrong",
-    "tryAgain": "Try again",
-    "save": "Save",
-    "cancel": "Cancel",
-    "edit": "Edit",
-    "delete": "Delete",
-    "confirm": "Confirm",
-    "minutes": "min"
   }
 }

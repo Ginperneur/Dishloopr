@@ -42,8 +42,27 @@ interface Filters {
   concepts: string[];
 }
 
-const AMBIENCE_OPTIONS = ['romantic', 'family-friendly', 'high-end', 'cozy', 'business', 'trendy', 'casual', 'lively'];
-const CONCEPT_OPTIONS = ['shared dining', 'all you can eat', 'tasting menu', 'à la carte', 'buffet', 'omakase', 'prix fixe', 'pop-up'];
+// Map English values to translation keys
+const AMBIENCE_OPTIONS = [
+  { value: 'romantic', key: 'filters.romantic' },
+  { value: 'family-friendly', key: 'filters.familyFriendly' },
+  { value: 'high-end', key: 'filters.highEnd' },
+  { value: 'cozy', key: 'filters.cozy' },
+  { value: 'business', key: 'filters.business' },
+  { value: 'trendy', key: 'filters.trendy' },
+  { value: 'casual', key: 'filters.casual' },
+  { value: 'lively', key: 'filters.lively' },
+];
+const CONCEPT_OPTIONS = [
+  { value: 'shared dining', key: 'filters.sharedDining' },
+  { value: 'all you can eat', key: 'filters.allYouCanEat' },
+  { value: 'tasting menu', key: 'filters.tastingMenu' },
+  { value: 'à la carte', key: 'filters.aLaCarte' },
+  { value: 'buffet', key: 'filters.buffet' },
+  { value: 'omakase', key: 'filters.omakase' },
+  { value: 'prix fixe', key: 'filters.prixFixe' },
+  { value: 'pop-up', key: 'filters.popUp' },
+];
 
 export default function SearchPage() {
   const { t } = useTranslation();
@@ -183,13 +202,13 @@ export default function SearchPage() {
       <div>
         <h4 className="font-semibold mb-3">{t('filters.ambience')}</h4>
         <div className="space-y-2">
-          {AMBIENCE_OPTIONS.map((tag) => (
-            <label key={tag} className="flex items-center gap-3 cursor-pointer">
+          {AMBIENCE_OPTIONS.map((option) => (
+            <label key={option.value} className="flex items-center gap-3 cursor-pointer">
               <Checkbox
-                checked={filters.ambienceTags.includes(tag)}
-                onCheckedChange={() => toggleFilter('ambienceTags', tag)}
+                checked={filters.ambienceTags.includes(option.value)}
+                onCheckedChange={() => toggleFilter('ambienceTags', option.value)}
               />
-              <span className="text-sm capitalize">{tag.replace('-', ' ')}</span>
+              <span className="text-sm">{t(option.key)}</span>
             </label>
           ))}
         </div>
@@ -217,13 +236,13 @@ export default function SearchPage() {
       <div>
         <h4 className="font-semibold mb-3">{t('filters.concept')}</h4>
         <div className="space-y-2">
-          {CONCEPT_OPTIONS.map((concept) => (
-            <label key={concept} className="flex items-center gap-3 cursor-pointer capitalize">
+          {CONCEPT_OPTIONS.map((option) => (
+            <label key={option.value} className="flex items-center gap-3 cursor-pointer">
               <Checkbox
-                checked={filters.concepts.includes(concept)}
-                onCheckedChange={() => toggleFilter('concepts', concept)}
+                checked={filters.concepts.includes(option.value)}
+                onCheckedChange={() => toggleFilter('concepts', option.value)}
               />
-              <span className="text-sm">{concept}</span>
+              <span className="text-sm">{t(option.key)}</span>
             </label>
           ))}
         </div>
