@@ -413,15 +413,20 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Danger Zone */}
-          <div className="bg-card border border-destructive/20 rounded-xl p-6">
-            <h2 className="text-lg font-semibold mb-4 text-destructive">Account</h2>
+          {/* Account Section */}
+          <div className="bg-card border border-border rounded-xl p-6">
+            <h2 className="text-lg font-semibold mb-4">Account</h2>
             <p className="text-sm text-muted-foreground mb-4">
-              Log uit van je account of neem contact op om je account te verwijderen.
+              Beheer je wachtwoord en account instellingen.
             </p>
-            <Button variant="destructive" onClick={handleSignOut}>
-              Uitloggen
-            </Button>
+            <div className="flex flex-wrap gap-3">
+              <Button variant="outline" asChild>
+                <Link to="/account">Account instellingen</Link>
+              </Button>
+              <Button variant="destructive" onClick={handleSignOut}>
+                Uitloggen
+              </Button>
+            </div>
           </div>
         </motion.div>
       </div>
