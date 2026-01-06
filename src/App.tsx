@@ -11,6 +11,8 @@ import Index from "./pages/Index";
 import SearchPage from "./pages/SearchPage";
 import RestaurantPage from "./pages/RestaurantPage";
 import LoginPage from "./pages/LoginPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import AdminPanel from "./pages/AdminPanel";
 import AboutPage from "./pages/AboutPage";
@@ -41,6 +43,8 @@ const App = () => (
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/restaurant/:slug" element={<RestaurantPage />} />
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/owner" element={<OwnerDashboard />} />
                 <Route path="/dashboard" element={<OwnerDashboard />} />
                 <Route path="/admin" element={<AdminPanel />} />
