@@ -45,6 +45,7 @@ import { DishesManager } from '@/components/admin/DishesManager';
 import { CitiesManager } from '@/components/admin/CitiesManager';
 import { UserRolesManager } from '@/components/admin/UserRolesManager';
 import { ActivityLog } from '@/components/admin/ActivityLog';
+import { SettingsManager } from '@/components/admin/SettingsManager';
 import { useActivityLog } from '@/hooks/useActivityLog';
 
 interface Stats {
@@ -449,6 +450,10 @@ export default function AdminPanel() {
               <Settings className="h-4 w-4" />
               <span className="hidden sm:inline">Activiteit</span>
             </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-1.5">
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Instellingen</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="restaurants">
@@ -834,6 +839,21 @@ export default function AdminPanel() {
               </CardHeader>
               <CardContent>
                 <ActivityLog />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Platform Instellingen
+                </CardTitle>
+                <CardDescription>Configureer platform-brede instellingen</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SettingsManager />
               </CardContent>
             </Card>
           </TabsContent>
