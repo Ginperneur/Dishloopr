@@ -68,6 +68,8 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
   const [cuisines, setCuisines] = useState<string[]>([]);
   const [ambienceTags, setAmbienceTags] = useState<string[]>([]);
   const [concepts, setConcepts] = useState<string[]>([]);
+  const [mealTypes, setMealTypes] = useState<string[]>([]);
+  const [experiences, setExperiences] = useState<string[]>([]);
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [allDishes, setAllDishes] = useState<Dish[]>([]);
   const [newDishName, setNewDishName] = useState('');
@@ -80,11 +82,13 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
       setCuisines(restaurant.cuisines || []);
       setAmbienceTags(restaurant.ambience_tags || []);
       setConcepts(restaurant.concepts || []);
+      setMealTypes(restaurant.meal_types || []);
+      setExperiences(restaurant.experiences || []);
       setZenchefId(restaurant.zenchef_id || '');
     }
   }, [open, restaurant]);
 
-  const updateTags = async (field: 'cuisines' | 'ambience_tags' | 'concepts', tags: string[]) => {
+  const updateTags = async (field: 'cuisines' | 'ambience_tags' | 'concepts' | 'meal_types' | 'experiences', tags: string[]) => {
     const { error } = await supabase
       .from('restaurants')
       .update({ [field]: tags })
@@ -96,6 +100,16 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
       toast.success('Tags bijgewerkt');
       onUpdate?.();
     }
+  };
+
+  const handleMealTypesChange = (newMealTypes: string[]) => {
+    setMealTypes(newMealTypes);
+    updateTags('meal_types', newMealTypes);
+  };
+
+  const handleExperiencesChange = (newExperiences: string[]) => {
+    setExperiences(newExperiences);
+    updateTags('experiences', newExperiences);
   };
 
   const handleCuisinesChange = (newCuisines: string[]) => {
@@ -833,6 +847,28 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
                     tags={concepts}
                     onTagsChange={handleConceptsChange}
                     placeholder="shared dining, all you can eat, tasting menu..."
+                    variant="outline"
+                  />
+                </div>
+
+                {/* Meal Types */}
+                <div>
+                  <p className="text-sm font-medium mb-2">Maaltijdtypes</p>
+                  <TagInput
+                    tags={mealTypes}
+                    onTagsChange={handleMealTypesChange}
+                    placeholder="breakfast, brunch, lunch, dinner..."
+                    variant="secondary"
+                  />
+                </div>
+
+                {/* Experiences */}
+                <div>
+                  <p className="text-sm font-medium mb-2">Ervaringen</p>
+                  <TagInput
+                    tags={experiences}
+                    onTagsChange={handleExperiencesChange}
+                    placeholder="quick-bite, comfort-food, culinary-experience..."
                     variant="outline"
                   />
                 </div>
