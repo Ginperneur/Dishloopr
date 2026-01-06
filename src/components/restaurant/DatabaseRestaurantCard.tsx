@@ -16,23 +16,8 @@ interface DatabaseRestaurantCardProps {
   isSponsored?: boolean;
 }
 
-const priceLabels: { [key: number]: string } = {
-  1: '€',
-  2: '€€',
-  3: '€€€',
-  4: '€€€€',
-};
+import { PRICE_LABELS, AMBIENCE_TAG_STYLES } from '@/lib/constants';
 
-const ambienceTagStyles: { [key: string]: string } = {
-  'romantic': 'tag-romantic',
-  'family-friendly': 'tag-family',
-  'high-end': 'tag-highend',
-  'cozy': 'tag-cozy',
-  'business': 'tag-business',
-  'trendy': 'tag-cozy',
-  'casual': 'tag-family',
-  'lively': 'tag-romantic',
-};
 
 export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = false }: DatabaseRestaurantCardProps) {
   const { t } = useTranslation();
@@ -116,7 +101,7 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
           {/* Price Badge */}
           <div className="absolute bottom-3 right-3">
             <span className="px-2 py-1 text-sm font-semibold bg-background/90 backdrop-blur rounded-lg">
-              {priceLabels[restaurant.price_level]}
+              {PRICE_LABELS[restaurant.price_level]}
             </span>
           </div>
         </div>
@@ -161,7 +146,7 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
                 <span
                   key={tag}
                   className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                    ambienceTagStyles[tag] || 'bg-muted text-muted-foreground'
+                    AMBIENCE_TAG_STYLES[tag] || 'bg-muted text-muted-foreground'
                   }`}
                 >
                   {t(`filters.${tag.replace('-', '')}`) || tag}

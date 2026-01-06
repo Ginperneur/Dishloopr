@@ -16,14 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import logo from '@/assets/dishloopr-logo.png';
-
-const languages = [
-  { code: 'nl', label: 'NL' },
-  { code: 'en', label: 'EN' },
-  { code: 'de', label: 'DE' },
-  { code: 'es', label: 'ES' },
-  { code: 'fr', label: 'FR' },
-];
+import { LANGUAGES } from '@/lib/constants';
 
 export function Header() {
   const { t, i18n } = useTranslation();
@@ -89,7 +82,7 @@ export function Header() {
 
           {/* Language Switcher */}
           <div className="flex items-center gap-1 border border-border rounded-lg px-1 py-1">
-            {languages.map((lang) => (
+            {LANGUAGES.map((lang) => (
               <button
                 key={lang.code}
                 onClick={() => i18n.changeLanguage(lang.code)}
@@ -260,7 +253,7 @@ export function Header() {
               <div className="px-3 py-3">
                 <p className="text-xs text-muted-foreground mb-2">Taal</p>
                 <div className="flex items-center gap-2 flex-wrap">
-                  {languages.map((lang) => (
+                  {LANGUAGES.map((lang) => (
                     <button
                       key={lang.code}
                       onClick={() => {
