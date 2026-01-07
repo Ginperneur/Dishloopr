@@ -18,7 +18,10 @@ import {
   Loader2,
   Zap,
   Gauge,
-  UtensilsCrossed
+  UtensilsCrossed,
+  Lock,
+  Shield,
+  AlertTriangle
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,27 +32,33 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOwnerDashboard } from '@/hooks/useOwnerDashboard';
+import { useRestaurantClaims } from '@/hooks/useRestaurantClaims';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { SponsoredMarketplace } from '@/components/sponsored/SponsoredMarketplace';
 import { DemandRoutingSettings } from '@/components/routing/DemandRoutingSettings';
 import { OptimizationDashboard } from '@/components/optimization/OptimizationDashboard';
 import { DishAnalytics } from '@/components/owner/DishAnalytics';
+import { ClaimStatusBadge } from '@/components/claims/ClaimStatusBadge';
+import { LockedFeatureOverlay } from '@/components/claims/LockedFeatureOverlay';
+import { VerificationRequiredDialog } from '@/components/claims/VerificationRequiredDialog';
+import { getClaimPermissions, type ClaimPermissions } from '@/types/claims';
 
-function StatCard({ title, value, icon: Icon, trend }: { 
+function StatCard({ title, value, icon: Icon, trend, locked }: { 
   title: string; 
   value: string | number; 
   icon: React.ElementType;
   trend?: string;
+  locked?: boolean;
 }) {
   return (
-    <Card>
+    <Card className={locked ? 'opacity-60' : ''}>
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-muted-foreground">{title}</p>
-            <p className="text-3xl font-bold">{value}</p>
-            {trend && (
+            <p className="text-3xl font-bold">{locked ? '—' : value}</p>
+            {trend && !locked && (
               <p className="text-sm text-green-600 flex items-center gap-1 mt-1">
                 <TrendingUp className="h-3 w-3" />
                 {trend}
@@ -57,7 +66,11 @@ function StatCard({ title, value, icon: Icon, trend }: {
             )}
           </div>
           <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-            <Icon className="h-6 w-6 text-primary" />
+            {locked ? (
+              <Lock className="h-6 w-6 text-muted-foreground" />
+            ) : (
+              <Icon className="h-6 w-6 text-primary" />
+            )}
           </div>
         </div>
       </CardContent>
@@ -65,9 +78,10 @@ function StatCard({ title, value, icon: Icon, trend }: {
   );
 }
 
-function ReviewCard({ review, onRespond }: { 
+function ReviewCard({ review, onRespond, canRespond }: { 
   review: any; 
   onRespond: (reviewId: string, response: string) => Promise<boolean>;
+  canRespond: boolean;
 }) {
   const [showResponseForm, setShowResponseForm] = useState(false);
   const [response, setResponse] = useState(review.owner_response || '');
@@ -119,7 +133,7 @@ function ReviewCard({ review, onRespond }: {
             <p className="text-sm font-medium mb-1">Jouw reactie</p>
             <p className="text-sm text-muted-foreground">{review.owner_response}</p>
           </div>
-        ) : (
+        ) : canRespond ? (
           <div className="mt-4">
             {showResponseForm ? (
               <div className="space-y-3">
@@ -145,27 +159,33 @@ function ReviewCard({ review, onRespond }: {
               </Button>
             )}
           </div>
+        ) : (
+          <div className="mt-4 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+            <p className="text-sm text-yellow-600 flex items-center gap-2">
+              <Lock className="h-4 w-4" />
+              Verificatie vereist om te reageren
+            </p>
+          </div>
         )}
       </CardContent>
     </Card>
   );
 }
 
-function PromotionsSection({ restaurant, onRefresh }: { 
+function PromotionsSection({ restaurant, onRefresh, canPurchase }: { 
   restaurant: any; 
   onRefresh: () => void;
+  canPurchase: boolean;
 }) {
   const [searchParams] = useSearchParams();
   const [loadingType, setLoadingType] = useState<string | null>(null);
 
-  // Handle payment success/cancel from URL params
   useEffect(() => {
     const paymentStatus = searchParams.get('payment');
     const type = searchParams.get('type');
     
     if (paymentStatus === 'success') {
       toast.success(`${type === 'featured' ? 'Featured' : 'Top'} Listing succesvol geactiveerd!`);
-      // Clean URL
       window.history.replaceState({}, '', '/owner-dashboard');
       onRefresh();
     } else if (paymentStatus === 'cancelled') {
@@ -175,7 +195,10 @@ function PromotionsSection({ restaurant, onRefresh }: {
   }, [searchParams, onRefresh]);
 
   const handlePurchase = async (listingType: 'featured' | 'top') => {
-    if (!restaurant) return;
+    if (!restaurant || !canPurchase) {
+      toast.error('Verificatie vereist voor aankopen');
+      return;
+    }
     
     setLoadingType(listingType);
     try {
@@ -210,6 +233,18 @@ function PromotionsSection({ restaurant, onRefresh }: {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {!canPurchase && (
+            <div className="mb-6 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+              <div className="flex items-center gap-2 text-yellow-600">
+                <Lock className="h-4 w-4" />
+                <span className="font-medium">Verificatie vereist</span>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Voltooi verificatie om promoties te kunnen kopen.
+              </p>
+            </div>
+          )}
+
           <p className="text-muted-foreground mb-6">
             Vergroot je zichtbaarheid en trek meer klanten aan met onze promotie-opties.
           </p>
@@ -254,7 +289,7 @@ function PromotionsSection({ restaurant, onRefresh }: {
                 ) : (
                   <Button 
                     onClick={() => handlePurchase('featured')}
-                    disabled={loadingType !== null}
+                    disabled={loadingType !== null || !canPurchase}
                   >
                     {loadingType === 'featured' ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -304,7 +339,7 @@ function PromotionsSection({ restaurant, onRefresh }: {
                 ) : (
                   <Button 
                     onClick={() => handlePurchase('top')}
-                    disabled={loadingType !== null}
+                    disabled={loadingType !== null || !canPurchase}
                   >
                     {loadingType === 'top' ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -361,6 +396,32 @@ export default function OwnerDashboard() {
     respondToReview
   } = useOwnerDashboard();
 
+  const { getPermissions } = useRestaurantClaims();
+  const [permissions, setPermissions] = useState<ClaimPermissions | null>(null);
+  const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (selectedRestaurant) {
+      loadPermissions();
+    }
+  }, [selectedRestaurant]);
+
+  const loadPermissions = async () => {
+    if (!selectedRestaurant) return;
+    const perms = await getPermissions(selectedRestaurant.id);
+    setPermissions(perms);
+  };
+
+  const handleProtectedAction = (action: string) => {
+    if (!permissions?.isVerifiedOwner) {
+      setPendingAction(action);
+      setVerificationDialogOpen(true);
+      return false;
+    }
+    return true;
+  };
+
   if (authLoading || loading) {
     return (
       <Layout>
@@ -392,12 +453,14 @@ export default function OwnerDashboard() {
             Je hebt nog geen restaurants geclaimd. Claim je restaurant om toegang te krijgen tot het dashboard.
           </p>
           <Button asChild>
-            <Link to="/search">Zoek je restaurant</Link>
+            <Link to="/claim">Claim je restaurant</Link>
           </Button>
         </div>
       </Layout>
     );
   }
+
+  const isVerified = permissions?.isVerifiedOwner ?? false;
 
   return (
     <Layout>
@@ -437,10 +500,14 @@ export default function OwnerDashboard() {
           </div>
 
           {selectedRestaurant && (
-            <div className="mt-4 flex items-center gap-4">
+            <div className="mt-4 flex flex-wrap items-center gap-3">
               <Badge variant="outline" className="text-sm">
                 {selectedRestaurant.name}
               </Badge>
+              <ClaimStatusBadge 
+                status={selectedRestaurant.claim_status || 'unclaimed'} 
+                size="sm" 
+              />
               <Button variant="ghost" size="sm" asChild>
                 <Link to={`/restaurant/${selectedRestaurant.slug}`}>
                   <ExternalLink className="h-4 w-4 mr-2" />
@@ -450,6 +517,37 @@ export default function OwnerDashboard() {
             </div>
           )}
         </motion.div>
+
+        {/* Verification Banner */}
+        {!isVerified && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <Card className="border-yellow-500/30 bg-yellow-500/5">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="font-medium text-yellow-700">Beperkte toegang</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Je claim is nog niet geverifieerd. Sommige functies zijn vergrendeld tot je eigendom bewijst.
+                    </p>
+                    <Button 
+                      size="sm" 
+                      className="mt-3"
+                      onClick={() => setVerificationDialogOpen(true)}
+                    >
+                      <Shield className="h-4 w-4 mr-2" />
+                      Start verificatie
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Stats Grid */}
         <motion.div
@@ -471,54 +569,51 @@ export default function OwnerDashboard() {
           />
           <StatCard
             title="Website clicks"
-            value={analytics?.websiteClicks || 0}
+            value={isVerified ? (analytics?.websiteClicks || 0) : 0}
             icon={Globe}
+            locked={!isVerified}
           />
           <StatCard
             title="Telefoon clicks"
-            value={analytics?.phoneClicks || 0}
+            value={isVerified ? (analytics?.phoneClicks || 0) : 0}
             icon={Phone}
+            locked={!isVerified}
           />
         </motion.div>
 
         {/* Tabs */}
-        <Tabs defaultValue="dish-analytics" className="space-y-6">
+        <Tabs defaultValue={isVerified ? "dish-analytics" : "reviews"} className="space-y-6">
           <TabsList className="flex-wrap h-auto gap-1">
-            <TabsTrigger value="dish-analytics">
-              <UtensilsCrossed className="h-4 w-4 mr-1" />
-              Gerechten
-            </TabsTrigger>
             <TabsTrigger value="reviews">
               Reviews ({reviews.length})
             </TabsTrigger>
-            <TabsTrigger value="analytics">
+            <TabsTrigger value="dish-analytics" disabled={!isVerified}>
+              <UtensilsCrossed className="h-4 w-4 mr-1" />
+              Gerechten
+              {!isVerified && <Lock className="h-3 w-3 ml-1" />}
+            </TabsTrigger>
+            <TabsTrigger value="analytics" disabled={!isVerified}>
               Analytics
+              {!isVerified && <Lock className="h-3 w-3 ml-1" />}
             </TabsTrigger>
             <TabsTrigger value="sponsored">
               <Sparkles className="h-4 w-4 mr-1" />
               Sponsoring
             </TabsTrigger>
-            <TabsTrigger value="routing">
+            <TabsTrigger value="routing" disabled={!isVerified}>
               <Zap className="h-4 w-4 mr-1" />
               Vraag Routing
+              {!isVerified && <Lock className="h-3 w-3 ml-1" />}
             </TabsTrigger>
-            <TabsTrigger value="optimization">
+            <TabsTrigger value="optimization" disabled={!isVerified}>
               <Gauge className="h-4 w-4 mr-1" />
               Optimalisatie
+              {!isVerified && <Lock className="h-3 w-3 ml-1" />}
             </TabsTrigger>
             <TabsTrigger value="settings">
               Instellingen
             </TabsTrigger>
           </TabsList>
-
-          <TabsContent value="dish-analytics">
-            {selectedRestaurant && (
-              <DishAnalytics 
-                restaurantId={selectedRestaurant.id}
-                restaurantName={selectedRestaurant.name}
-              />
-            )}
-          </TabsContent>
 
           <TabsContent value="reviews" className="space-y-4">
             {reviews.length > 0 ? (
@@ -527,6 +622,7 @@ export default function OwnerDashboard() {
                   key={review.id}
                   review={review}
                   onRespond={respondToReview}
+                  canRespond={isVerified}
                 />
               ))
             ) : (
@@ -539,84 +635,109 @@ export default function OwnerDashboard() {
             )}
           </TabsContent>
 
+          <TabsContent value="dish-analytics">
+            {isVerified && selectedRestaurant ? (
+              <DishAnalytics 
+                restaurantId={selectedRestaurant.id}
+                restaurantName={selectedRestaurant.name}
+              />
+            ) : (
+              <LockedFeatureOverlay 
+                featureName="Gerechten Analytics"
+                description="Bekijk welke gerechten het populairst zijn en hoe ze presteren."
+                onRequestVerification={() => setVerificationDialogOpen(true)}
+              />
+            )}
+          </TabsContent>
+
           <TabsContent value="analytics">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  Weergaven per dag (laatste 30 dagen)
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {analytics?.viewsByDay && analytics.viewsByDay.length > 0 ? (
-                  <div className="h-64 flex items-end gap-1">
-                    {analytics.viewsByDay.map((day, i) => {
-                      const maxCount = Math.max(...analytics.viewsByDay.map(d => d.count));
-                      const height = maxCount > 0 ? (day.count / maxCount) * 100 : 0;
-                      return (
-                        <div
-                          key={day.date}
-                          className="flex-1 bg-primary/80 hover:bg-primary transition-colors rounded-t"
-                          style={{ height: `${Math.max(height, 5)}%` }}
-                          title={`${day.date}: ${day.count} weergaven`}
-                        />
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-center text-muted-foreground py-12">
-                    Nog geen analytics data beschikbaar
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+            {isVerified ? (
+              <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5" />
+                      Weergaven per dag (laatste 30 dagen)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {analytics?.viewsByDay && analytics.viewsByDay.length > 0 ? (
+                      <div className="h-64 flex items-end gap-1">
+                        {analytics.viewsByDay.map((day, i) => {
+                          const maxCount = Math.max(...analytics.viewsByDay.map(d => d.count));
+                          const height = maxCount > 0 ? (day.count / maxCount) * 100 : 0;
+                          return (
+                            <div
+                              key={day.date}
+                              className="flex-1 bg-primary/80 hover:bg-primary transition-colors rounded-t"
+                              style={{ height: `${Math.max(height, 5)}%` }}
+                              title={`${day.date}: ${day.count} weergaven`}
+                            />
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-center text-muted-foreground py-12">
+                        Nog geen analytics data beschikbaar
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
 
-            <div className="grid md:grid-cols-2 gap-4 mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">CTA Conversies</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Reserveringen</span>
-                    <span className="font-semibold">{analytics?.reservationClicks || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Website bezoeken</span>
-                    <span className="font-semibold">{analytics?.websiteClicks || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Telefoongesprekken</span>
-                    <span className="font-semibold">{analytics?.phoneClicks || 0}</span>
-                  </div>
-                </CardContent>
-              </Card>
+                <div className="grid md:grid-cols-2 gap-4 mt-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">CTA Conversies</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Reserveringen</span>
+                        <span className="font-semibold">{analytics?.reservationClicks || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Website bezoeken</span>
+                        <span className="font-semibold">{analytics?.websiteClicks || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Telefoongesprekken</span>
+                        <span className="font-semibold">{analytics?.phoneClicks || 0}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Review Statistieken</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Totaal reviews</span>
-                    <span className="font-semibold">{selectedRestaurant?.review_count || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Gemiddelde rating</span>
-                    <span className="font-semibold flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-rating text-rating" />
-                      {Number(selectedRestaurant?.rating || 0).toFixed(1)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Beantwoord</span>
-                    <span className="font-semibold">
-                      {reviews.filter(r => r.owner_response).length} / {reviews.length}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Review Statistieken</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Totaal reviews</span>
+                        <span className="font-semibold">{selectedRestaurant?.review_count || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Gemiddelde rating</span>
+                        <span className="font-semibold flex items-center gap-1">
+                          <Star className="h-4 w-4 fill-rating text-rating" />
+                          {Number(selectedRestaurant?.rating || 0).toFixed(1)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Beantwoord</span>
+                        <span className="font-semibold">
+                          {reviews.filter(r => r.owner_response).length} / {reviews.length}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </>
+            ) : (
+              <LockedFeatureOverlay 
+                featureName="Gedetailleerde Analytics"
+                description="Bekijk uitgebreide statistieken over je restaurant prestaties."
+                onRequestVerification={() => setVerificationDialogOpen(true)}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="sponsored">
@@ -629,16 +750,28 @@ export default function OwnerDashboard() {
           </TabsContent>
 
           <TabsContent value="routing">
-            {selectedRestaurant && (
+            {isVerified && selectedRestaurant ? (
               <DemandRoutingSettings restaurant={selectedRestaurant} />
+            ) : (
+              <LockedFeatureOverlay 
+                featureName="Vraag Routing"
+                description="Ontvang klanten die op zoek zijn naar gerechten die jij aanbiedt."
+                onRequestVerification={() => setVerificationDialogOpen(true)}
+              />
             )}
           </TabsContent>
 
           <TabsContent value="optimization">
-            {selectedRestaurant && (
+            {isVerified && selectedRestaurant ? (
               <OptimizationDashboard 
                 restaurantId={selectedRestaurant.id}
                 restaurantName={selectedRestaurant.name}
+              />
+            ) : (
+              <LockedFeatureOverlay 
+                featureName="Optimalisatie Dashboard"
+                description="Krijg inzichten en tips om je zichtbaarheid te verbeteren."
+                onRequestVerification={() => setVerificationDialogOpen(true)}
               />
             )}
           </TabsContent>
@@ -647,10 +780,25 @@ export default function OwnerDashboard() {
             <PromotionsSection 
               restaurant={selectedRestaurant} 
               onRefresh={() => window.location.reload()}
+              canPurchase={isVerified}
             />
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Verification Dialog */}
+      {selectedRestaurant && (
+        <VerificationRequiredDialog
+          open={verificationDialogOpen}
+          onOpenChange={setVerificationDialogOpen}
+          restaurantId={selectedRestaurant.id}
+          restaurantName={selectedRestaurant.name}
+          onVerificationComplete={() => {
+            loadPermissions();
+            setVerificationDialogOpen(false);
+          }}
+        />
+      )}
     </Layout>
   );
 }

@@ -1,15 +1,21 @@
 import { Layout } from '@/components/layout/Layout';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, TrendingUp, MessageSquare, BarChart3, Search, MapPin, Clock, Phone, Globe, Star, Loader2 } from 'lucide-react';
+import { CheckCircle, TrendingUp, MessageSquare, BarChart3, Search, MapPin, Clock, Phone, Globe, Star, Loader2, Shield, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { ClaimStatusBadge } from '@/components/claims/ClaimStatusBadge';
+import { VerificationRequiredDialog } from '@/components/claims/VerificationRequiredDialog';
+import { useRestaurantClaims } from '@/hooks/useRestaurantClaims';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import InputOTP from '@/components/ui/input-otp';
 
 interface GooglePlaceResult {
   place_id: string;
@@ -27,6 +33,14 @@ interface GooglePlaceResult {
 
 export default function ClaimPage() {
   const { user } = useAuth();
+  const { 
+    userClaims, 
+    canCreateClaim, 
+    createClaim, 
+    loading: claimsLoading,
+    refetch: refetchClaims
+  } = useRestaurantClaims();
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -34,6 +48,15 @@ export default function ClaimPage() {
   const [searchResults, setSearchResults] = useState<GooglePlaceResult[]>([]);
   const [selectedPlace, setSelectedPlace] = useState<GooglePlaceResult | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  
+  // Phone verification state
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
+  const [verifyingCode, setVerifyingCode] = useState(false);
+  const [currentClaimId, setCurrentClaimId] = useState<string | null>(null);
 
   const benefits = [
     {
@@ -101,6 +124,11 @@ export default function ClaimPage() {
       return;
     }
 
+    if (!canCreateClaim) {
+      toast.error('Je hebt het maximum aantal claims bereikt. Verifieer eerst een bestaande claim.');
+      return;
+    }
+
     setIsSubmitting(true);
     
     const formData = new FormData(e.currentTarget);
@@ -111,12 +139,12 @@ export default function ClaimPage() {
       // First check if restaurant exists in our database
       const { data: existingRestaurant } = await supabase
         .from('restaurants')
-        .select('id, claimed_by_owner_id')
+        .select('id, claimed_by_owner_id, claim_status')
         .eq('name', selectedPlace.name)
         .maybeSingle();
 
-      if (existingRestaurant?.claimed_by_owner_id) {
-        toast.error('Dit restaurant is al geclaimd door iemand anders.');
+      if (existingRestaurant?.claim_status === 'verified_owner') {
+        toast.error('Dit restaurant is al geclaimd en geverifieerd. Neem contact op als je denkt dat dit onjuist is.');
         setIsSubmitting(false);
         return;
       }
@@ -125,7 +153,6 @@ export default function ClaimPage() {
 
       // If restaurant doesn't exist, create it
       if (!restaurantId) {
-        // First get or create the city
         const cityName = extractCityFromAddress(selectedPlace.address);
         let cityId: string;
 
@@ -152,7 +179,6 @@ export default function ClaimPage() {
           cityId = newCity.id;
         }
 
-        // Create the restaurant with Google Places data
         const { data: newRestaurant, error: restaurantError } = await supabase
           .from('restaurants')
           .insert({
@@ -168,56 +194,30 @@ export default function ClaimPage() {
             review_count: selectedPlace.review_count || 0,
             price_level: selectedPlace.price_level || 2,
             opening_hours: selectedPlace.opening_hours ? { weekday_text: selectedPlace.opening_hours } : null,
-            is_active: true
+            is_active: true,
+            claim_status: 'claimed_unverified'
           })
           .select('id')
           .single();
 
         if (restaurantError) throw restaurantError;
         restaurantId = newRestaurant.id;
+      } else {
+        // Update existing restaurant claim status
+        await supabase
+          .from('restaurants')
+          .update({ claim_status: 'claimed_unverified' })
+          .eq('id', restaurantId);
       }
 
-      // Create claim request
-      const { data: claimData, error: claimError } = await supabase
-        .from('claim_requests')
-        .insert({
-          restaurant_id: restaurantId,
-          user_id: user!.id,
-          notes: `Rol: ${role}\n\n${notes || ''}`.trim(),
-          status: 'pending'
-        })
-        .select('id')
-        .single();
-
-      if (claimError) throw claimError;
-
-      // Send email notification
-      try {
-        await supabase.functions.invoke('send-claim-notification', {
-          body: {
-            claimId: claimData.id,
-            restaurantName: selectedPlace.name,
-            restaurantAddress: selectedPlace.address,
-            userName: user?.user_metadata?.name || user?.email?.split('@')[0] || 'Gebruiker',
-            userEmail: user?.email || '',
-            role: role,
-            notes: notes || ''
-          }
-        });
-      } catch (emailError) {
-        console.error('Failed to send notification email:', emailError);
-        // Don't fail the whole request if email fails
-      }
-
-      toast.success('Claim aanvraag ontvangen! We nemen binnen 2 werkdagen contact met je op.');
+      // Create claim using the new system
+      const claimId = await createClaim(restaurantId, `Rol: ${role}\n${notes || ''}`);
       
-      // Reset form
-      setSelectedPlace(null);
-      setSearchQuery('');
-      setSearchCity('');
-      setSearchResults([]);
-      setHasSearched(false);
-      (e.target as HTMLFormElement).reset();
+      if (claimId) {
+        setCurrentClaimId(claimId);
+        setShowPhoneVerification(true);
+        toast.success('Claim aangemaakt! Verifieer nu je telefoonnummer.');
+      }
 
     } catch (error) {
       console.error('Submit error:', error);
@@ -227,17 +227,77 @@ export default function ClaimPage() {
     }
   };
 
+  const handleSendCode = async () => {
+    if (!phoneNumber.trim() || !currentClaimId) {
+      toast.error('Vul een geldig telefoonnummer in');
+      return;
+    }
+
+    setSendingCode(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-sms-verification', {
+        body: { 
+          claimId: currentClaimId, 
+          phoneNumber: phoneNumber.startsWith('+') ? phoneNumber : `+31${phoneNumber.replace(/^0/, '')}`,
+          action: 'send'
+        }
+      });
+
+      if (error) throw error;
+      
+      setCodeSent(true);
+      toast.success('Verificatiecode verzonden naar je telefoon!');
+    } catch (error: any) {
+      console.error('Send code error:', error);
+      toast.error(error.message || 'Kon code niet verzenden. Controleer het nummer.');
+    } finally {
+      setSendingCode(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!verificationCode || verificationCode.length !== 6 || !currentClaimId) {
+      toast.error('Voer de 6-cijferige code in');
+      return;
+    }
+
+    setVerifyingCode(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-sms-verification', {
+        body: { 
+          claimId: currentClaimId, 
+          phoneNumber,
+          action: 'verify',
+          code: verificationCode
+        }
+      });
+
+      if (error) throw error;
+      
+      toast.success('Telefoon geverifieerd! Je claim is nu actief.');
+      setShowPhoneVerification(false);
+      setSelectedPlace(null);
+      setSearchQuery('');
+      setSearchCity('');
+      setCodeSent(false);
+      setVerificationCode('');
+      setPhoneNumber('');
+      refetchClaims();
+    } catch (error: any) {
+      console.error('Verify code error:', error);
+      toast.error(error.message || 'Ongeldige code. Probeer opnieuw.');
+    } finally {
+      setVerifyingCode(false);
+    }
+  };
+
   const extractCityFromAddress = (address: string): string => {
-    // Dutch addresses typically have city before postal code or at end
     const parts = address.split(',').map(p => p.trim());
-    // Usually the second-to-last or last part contains city
     for (let i = parts.length - 1; i >= 0; i--) {
       const part = parts[i];
-      // Skip parts that look like postal codes or country
       if (/^\d{4}\s?[A-Z]{2}/.test(part) || part === 'Nederland' || part === 'Netherlands') {
         continue;
       }
-      // This is likely the city
       return part.replace(/^\d{4}\s?[A-Z]{2}\s*/, '').trim() || 'Amsterdam';
     }
     return 'Amsterdam';
@@ -270,6 +330,29 @@ export default function ClaimPage() {
           </p>
         </motion.div>
 
+        {/* Info Banner */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="max-w-xl mx-auto mb-8"
+        >
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <Shield className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                <div className="text-sm">
+                  <p className="font-medium mb-1">Hoe werkt het?</p>
+                  <p className="text-muted-foreground">
+                    Claimen geeft je geen directe controle. Na telefoonverificatie krijg je beperkte toegang. 
+                    Volledige controle (profiel bewerken, reviews beantwoorden, analytics) vereist extra verificatie.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           {benefits.map((benefit, index) => (
             <motion.div
@@ -288,6 +371,42 @@ export default function ClaimPage() {
           ))}
         </div>
 
+        {/* Existing Claims */}
+        {userClaims.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-xl mx-auto mb-8"
+          >
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="font-semibold mb-4">Jouw claims</h3>
+                <div className="space-y-3">
+                  {userClaims.map((claim) => (
+                    <div key={claim.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                      <div>
+                        <p className="font-medium">{claim.restaurant?.name || 'Restaurant'}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(claim.created_at).toLocaleDateString('nl-NL')}
+                        </p>
+                      </div>
+                      <ClaimStatusBadge status={claim.status} size="sm" />
+                    </div>
+                  ))}
+                </div>
+                {!canCreateClaim && (
+                  <div className="mt-4 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                    <div className="flex items-center gap-2 text-yellow-600 text-sm">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>Je hebt het maximum aantal onverifieerde claims bereikt.</span>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -303,6 +422,89 @@ export default function ClaimPage() {
               <Link to="/login">
                 <Button size="lg">Inloggen of registreren</Button>
               </Link>
+            </div>
+          ) : showPhoneVerification ? (
+            <div className="bg-card border border-border rounded-xl p-8 space-y-6">
+              <div className="text-center">
+                <Phone className="w-12 h-12 text-primary mx-auto mb-3" />
+                <h2 className="text-2xl font-bold mb-2">Verifieer je telefoonnummer</h2>
+                <p className="text-muted-foreground text-sm">
+                  We sturen een SMS met een 6-cijferige code naar je telefoon.
+                </p>
+              </div>
+
+              {!codeSent ? (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Telefoonnummer</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="+31 6 12345678"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Voer je nummer in met landcode (+31) of zonder voorloop 0
+                    </p>
+                  </div>
+                  <Button onClick={handleSendCode} className="w-full" disabled={sendingCode}>
+                    {sendingCode ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Verzenden...
+                      </>
+                    ) : (
+                      'Stuur verificatiecode'
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="code">Verificatiecode</Label>
+                    <Input
+                      id="code"
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                      placeholder="123456"
+                      className="text-center text-2xl tracking-widest"
+                    />
+                    <p className="text-xs text-muted-foreground text-center">
+                      Voer de 6-cijferige code in die je per SMS hebt ontvangen
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => setCodeSent(false)} className="flex-1">
+                      Opnieuw sturen
+                    </Button>
+                    <Button onClick={handleVerifyCode} className="flex-1" disabled={verifyingCode}>
+                      {verifyingCode ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Verifiëren...
+                        </>
+                      ) : (
+                        'Verifieer'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <Button 
+                variant="ghost" 
+                className="w-full" 
+                onClick={() => {
+                  setShowPhoneVerification(false);
+                  setCodeSent(false);
+                }}
+              >
+                Annuleren
+              </Button>
             </div>
           ) : (
             <div className="space-y-6">
@@ -339,7 +541,7 @@ export default function ClaimPage() {
                   <Button 
                     onClick={handleSearch} 
                     className="w-full" 
-                    disabled={isSearching}
+                    disabled={isSearching || !canCreateClaim}
                   >
                     {isSearching ? (
                       <>
@@ -535,6 +737,8 @@ export default function ClaimPage() {
                       <p className="text-xs text-muted-foreground text-center">
                         Door te claimen ga je akkoord met onze{' '}
                         <Link to="/terms" className="text-primary hover:underline">voorwaarden</Link>.
+                        <br />
+                        <span className="text-primary/80">Claimen geeft geen directe controle tot verificatie.</span>
                       </p>
                     </form>
                   </motion.div>

@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.send-claim-notification]
 verify_jwt = false
+
+[functions.send-sms-verification]
+verify_jwt = false
