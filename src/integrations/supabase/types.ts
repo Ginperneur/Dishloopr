@@ -162,6 +162,69 @@ export type Database = {
         }
         Relationships: []
       }
+      claim_activity_logs: {
+        Row: {
+          action_category: string
+          action_type: string
+          actor_id: string
+          actor_role: string
+          after_data: Json | null
+          before_data: Json | null
+          claim_id: string | null
+          created_at: string
+          id: string
+          ip_address: unknown
+          metadata: Json | null
+          restaurant_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action_category: string
+          action_type: string
+          actor_id: string
+          actor_role: string
+          after_data?: Json | null
+          before_data?: Json | null
+          claim_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          metadata?: Json | null
+          restaurant_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action_category?: string
+          action_type?: string
+          actor_id?: string
+          actor_role?: string
+          after_data?: Json | null
+          before_data?: Json | null
+          claim_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          metadata?: Json | null
+          restaurant_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claim_activity_logs_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_claims"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_activity_logs_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       claim_requests: {
         Row: {
           admin_notes: string | null
@@ -665,6 +728,95 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurant_claims: {
+        Row: {
+          admin_notes: string | null
+          claim_attempt_count: number
+          created_at: string
+          email_verified: boolean
+          email_verified_at: string | null
+          id: string
+          is_primary: boolean
+          phone_code_expires_at: string | null
+          phone_number: string | null
+          phone_verification_code: string | null
+          phone_verified: boolean
+          phone_verified_at: string | null
+          restaurant_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          verification_completed_at: string | null
+          verification_method:
+            | Database["public"]["Enums"]["verification_method"]
+            | null
+          verification_proof: Json | null
+          verification_started_at: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          claim_attempt_count?: number
+          created_at?: string
+          email_verified?: boolean
+          email_verified_at?: string | null
+          id?: string
+          is_primary?: boolean
+          phone_code_expires_at?: string | null
+          phone_number?: string | null
+          phone_verification_code?: string | null
+          phone_verified?: boolean
+          phone_verified_at?: string | null
+          restaurant_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          verification_completed_at?: string | null
+          verification_method?:
+            | Database["public"]["Enums"]["verification_method"]
+            | null
+          verification_proof?: Json | null
+          verification_started_at?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          claim_attempt_count?: number
+          created_at?: string
+          email_verified?: boolean
+          email_verified_at?: string | null
+          id?: string
+          is_primary?: boolean
+          phone_code_expires_at?: string | null
+          phone_number?: string | null
+          phone_verification_code?: string | null
+          phone_verified?: boolean
+          phone_verified_at?: string | null
+          restaurant_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          verification_completed_at?: string | null
+          verification_method?:
+            | Database["public"]["Enums"]["verification_method"]
+            | null
+          verification_proof?: Json | null
+          verification_started_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_claims_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_dishes: {
         Row: {
           clicks: number
@@ -766,12 +918,101 @@ export type Database = {
           },
         ]
       }
+      restaurant_managers: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          id: string
+          invited_by: string | null
+          restaurant_id: string
+          role: Database["public"]["Enums"]["manager_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          restaurant_id: string
+          role?: Database["public"]["Enums"]["manager_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          restaurant_id?: string
+          role?: Database["public"]["Enums"]["manager_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_managers_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurant_pending_edits: {
+        Row: {
+          created_at: string
+          id: string
+          proposed_changes: Json
+          restaurant_id: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_by: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          proposed_changes: Json
+          restaurant_id: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_by: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          proposed_changes?: Json
+          restaurant_id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_by?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_pending_edits_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurants: {
         Row: {
           accepts_routed_demand: boolean | null
           address: string
           ambience_tags: string[] | null
           city_id: string
+          claim_status: Database["public"]["Enums"]["restaurant_claim_status"]
           claimed_by_owner_id: string | null
           concepts: string[] | null
           created_at: string
@@ -808,6 +1049,7 @@ export type Database = {
           address: string
           ambience_tags?: string[] | null
           city_id: string
+          claim_status?: Database["public"]["Enums"]["restaurant_claim_status"]
           claimed_by_owner_id?: string | null
           concepts?: string[] | null
           created_at?: string
@@ -844,6 +1086,7 @@ export type Database = {
           address?: string
           ambience_tags?: string[] | null
           city_id?: string
+          claim_status?: Database["public"]["Enums"]["restaurant_claim_status"]
           claimed_by_owner_id?: string | null
           concepts?: string[] | null
           created_at?: string
@@ -1155,6 +1398,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_claim_limits: {
+        Row: {
+          active_unverified_claims: number
+          blocked_reason: string | null
+          blocked_until: string | null
+          created_at: string
+          id: string
+          is_blocked: boolean
+          last_claim_at: string | null
+          total_claims_attempted: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active_unverified_claims?: number
+          blocked_reason?: string | null
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          is_blocked?: boolean
+          last_claim_at?: string | null
+          total_claims_attempted?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active_unverified_claims?: number
+          blocked_reason?: string | null
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          is_blocked?: boolean
+          last_claim_at?: string | null
+          total_claims_attempted?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_perks: {
         Row: {
@@ -1479,10 +1761,19 @@ export type Database = {
         Args: { p_city_id: string; p_dish_id: string; p_duration_days?: number }
         Returns: number
       }
+      can_create_claim: { Args: { _user_id: string }; Returns: boolean }
       get_available_slots: { Args: { p_product_id: string }; Returns: number }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_restaurant_access: {
+        Args: {
+          _min_role?: Database["public"]["Enums"]["manager_role"]
+          _restaurant_id: string
+          _user_id: string
+        }
+        Returns: boolean
       }
       has_role: {
         Args: {
@@ -1491,12 +1782,28 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_verified_owner: {
+        Args: { _restaurant_id: string; _user_id: string }
+        Returns: boolean
+      }
       update_user_badges: { Args: { p_user_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "user" | "owner" | "admin"
+      manager_role: "viewer" | "editor" | "finance" | "primary_owner"
       price_level: "1" | "2" | "3" | "4"
+      restaurant_claim_status:
+        | "unclaimed"
+        | "claimed_unverified"
+        | "verified_owner"
+        | "disputed"
+        | "locked"
       review_status: "published" | "pending" | "flagged"
+      verification_method:
+        | "micro_payment"
+        | "dns_txt"
+        | "html_file"
+        | "google_business"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1625,8 +1932,22 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["user", "owner", "admin"],
+      manager_role: ["viewer", "editor", "finance", "primary_owner"],
       price_level: ["1", "2", "3", "4"],
+      restaurant_claim_status: [
+        "unclaimed",
+        "claimed_unverified",
+        "verified_owner",
+        "disputed",
+        "locked",
+      ],
       review_status: ["published", "pending", "flagged"],
+      verification_method: [
+        "micro_payment",
+        "dns_txt",
+        "html_file",
+        "google_business",
+      ],
     },
   },
 } as const
