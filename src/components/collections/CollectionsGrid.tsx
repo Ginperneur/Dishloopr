@@ -122,9 +122,9 @@ export function FeaturedCollections() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {[1, 2, 3, 4].map(i => (
-          <Skeleton key={i} className="h-40 rounded-xl" />
+          <Skeleton key={i} className="h-32 md:h-40 rounded-xl" />
         ))}
       </div>
     );
@@ -135,7 +135,7 @@ export function FeaturedCollections() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
       {featured.map((collection, index) => (
         <motion.div
           key={collection.id}
@@ -144,17 +144,17 @@ export function FeaturedCollections() {
           transition={{ delay: index * 0.1 }}
         >
           <Link to={`/collection/${collection.slug}`}>
-            <div className="group relative h-40 rounded-xl overflow-hidden">
+            <div className="group relative h-32 md:h-40 rounded-xl overflow-hidden">
               <img
                 src={collection.cover_image || `https://images.unsplash.com/photo-155512663${index}?w=400&q=80`}
                 alt={collection.title}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-4">
-                <h3 className="font-bold text-white text-lg">{collection.title}</h3>
+              <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
+                <h3 className="font-bold text-white text-sm md:text-lg line-clamp-2">{collection.title}</h3>
                 {collection.subtitle && (
-                  <p className="text-white/70 text-sm">{collection.subtitle}</p>
+                  <p className="text-white/70 text-xs md:text-sm line-clamp-1 hidden sm:block">{collection.subtitle}</p>
                 )}
               </div>
             </div>
