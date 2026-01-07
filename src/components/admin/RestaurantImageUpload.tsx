@@ -23,6 +23,52 @@ export function RestaurantImageUpload({
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const optimizeImage = (file: File, maxWidth = 1920, maxHeight = 1080, quality = 0.85): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      img.onload = () => {
+        let { width, height } = img;
+
+        // Calculate new dimensions maintaining aspect ratio
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        if (ctx) {
+          // Use high-quality image smoothing
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                resolve(blob);
+              } else {
+                reject(new Error('Canvas to Blob conversion failed'));
+              }
+            },
+            'image/webp',
+            quality
+          );
+        } else {
+          reject(new Error('Could not get canvas context'));
+        }
+      };
+
+      img.onerror = () => reject(new Error('Image load failed'));
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
@@ -37,19 +83,22 @@ export function RestaurantImageUpload({
         continue;
       }
 
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error(`${file.name} is te groot (max 5MB)`);
+      // Validate file size (max 10MB before optimization)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`${file.name} is te groot (max 10MB)`);
         continue;
       }
 
       try {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${restaurantId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        // Optimize image before upload
+        const optimizedBlob = await optimizeImage(file);
+        const fileName = `${restaurantId}/${Date.now()}-${Math.random().toString(36).substring(7)}.webp`;
 
         const { error: uploadError } = await supabase.storage
           .from('restaurant-images')
-          .upload(fileName, file);
+          .upload(fileName, optimizedBlob, {
+            contentType: 'image/webp'
+          });
 
         if (uploadError) {
           console.error('Upload error:', uploadError);
@@ -72,7 +121,7 @@ export function RestaurantImageUpload({
       const updatedImages = [...images, ...newImages];
       setImages(updatedImages);
       await saveImages(updatedImages);
-      toast.success(`${newImages.length} afbeelding(en) geüpload`);
+      toast.success(`${newImages.length} afbeelding(en) geoptimaliseerd en geüpload`);
     }
 
     setUploading(false);
