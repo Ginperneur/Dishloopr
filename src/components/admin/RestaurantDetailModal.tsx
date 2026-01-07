@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { TagInput } from '@/components/ui/tag-input';
 import { MenuUpload } from '@/components/admin/MenuUpload';
+import { RestaurantImageUpload } from '@/components/admin/RestaurantImageUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -460,6 +461,17 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
                 </div>
               </CardContent>
             </Card>
+
+            {/* Restaurant Images */}
+            <RestaurantImageUpload
+              restaurantId={restaurant.id}
+              restaurantName={restaurant.name}
+              existingImages={restaurant.images || []}
+              onImagesUpdate={(images) => {
+                restaurant.images = images;
+                onUpdate?.();
+              }}
+            />
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
