@@ -23,6 +23,22 @@ export const AMBIENCE_TAG_STYLES: { [key: string]: string } = {
   'trendy': 'tag-cozy',
   'casual': 'tag-family',
   'lively': 'tag-romantic',
+  'intimate': 'tag-romantic',
+  'relaxed': 'tag-cozy',
+};
+
+// Mapping from database tag values to i18n keys
+export const AMBIENCE_TAG_I18N_KEYS: { [key: string]: string } = {
+  'romantic': 'filters.romantic',
+  'family-friendly': 'filters.familyFriendly',
+  'high-end': 'filters.highEnd',
+  'cozy': 'filters.cozy',
+  'business': 'filters.business',
+  'trendy': 'filters.trendy',
+  'casual': 'filters.casual',
+  'lively': 'filters.lively',
+  'intimate': 'filters.intimate',
+  'relaxed': 'filters.relaxed',
 };
 
 export const LANGUAGES = [

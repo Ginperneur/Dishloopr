@@ -34,8 +34,8 @@ export default function ForRestaurantsPage() {
   return (
     <Layout>
       <SEOHead
-        title="Voor Restaurants | Dishloopr"
-        description="Claim en beheer je restaurantprofiel op Dishloopr. Ontdek hoe je toegang krijgt tot analytics, reviews kunt beantwoorden en je zichtbaarheid kunt vergroten."
+        title={`${t('forRestaurants.forOwners')} | Dishloopr`}
+        description={t('forRestaurants.pageDescription')}
       />
       
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
@@ -50,26 +50,24 @@ export default function ForRestaurantsPage() {
               transition={{ duration: 0.6 }}
             >
               <Badge variant="secondary" className="mb-4">
-                Voor restauranteigenaren
+                {t('forRestaurants.forOwners')}
               </Badge>
               <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                Restaurants claimen op Dishloopr
+                {t('forRestaurants.pageTitle')}
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed">
-                Dishloopr toont restaurants die wij zelf verzamelen en beheren. 
-                Restaurant­eigenaren en medewerkers kunnen hun restaurant claimen 
-                om inzicht te krijgen en het profiel te beheren.
+                {t('forRestaurants.heroSubtitle')}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button asChild size="lg" className="gap-2">
                   <Link to="/claim">
-                    Claim je restaurant
+                    {t('forRestaurants.claimYourRestaurant')}
                     <ChevronRight className="h-4 w-4" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">
                   <Link to="/contact">
-                    Vragen? Neem contact op
+                    {t('forRestaurants.questionsContact')}
                   </Link>
                 </Button>
               </div>
@@ -83,15 +81,15 @@ export default function ForRestaurantsPage() {
             <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-primary" />
-                <span>Veilig verificatieproces</span>
+                <span>{t('forRestaurants.secureVerification')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
-                <span>Meerdere beheerders mogelijk</span>
+                <span>{t('forRestaurants.multipleManagers')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Lock className="h-5 w-5 text-primary" />
-                <span>Privacy gegarandeerd</span>
+                <span>{t('forRestaurants.privacyGuaranteed')}</span>
               </div>
             </div>
           </div>
@@ -109,11 +107,9 @@ export default function ForRestaurantsPage() {
                   <div className="flex gap-4">
                     <AlertTriangle className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
                     <div>
-                      <h3 className="font-semibold text-lg mb-2">Waarom verificatie?</h3>
+                      <h3 className="font-semibold text-lg mb-2">{t('forRestaurants.whyVerification')}</h3>
                       <p className="text-muted-foreground">
-                        Om misbruik te voorkomen en eerlijkheid te garanderen, werkt Dishloopr 
-                        met een stapsgewijs verificatieproces. Dit beschermt zowel restaurants 
-                        als gasten.
+                        {t('forRestaurants.whyVerificationDesc')}
                       </p>
                     </div>
                   </div>
@@ -139,13 +135,12 @@ export default function ForRestaurantsPage() {
                 </div>
                 <div>
                   <Badge variant="outline" className="mb-1">Stap 1</Badge>
-                  <h2 className="text-2xl md:text-3xl font-bold">Restaurant claimen</h2>
+                  <h2 className="text-2xl md:text-3xl font-bold">{t('forRestaurants.step1Title')}</h2>
                 </div>
               </div>
               
               <p className="text-lg text-muted-foreground mb-8">
-                Iedereen die bij een restaurant werkt (zoals een eigenaar, manager of bedrijfsleider) 
-                kan een restaurant claimen.
+                {t('forRestaurants.step1Desc')}
               </p>
 
               <div className="grid md:grid-cols-2 gap-6 mb-8">
@@ -153,16 +148,16 @@ export default function ForRestaurantsPage() {
                   <CardContent className="p-6">
                     <h3 className="font-semibold mb-4 flex items-center gap-2">
                       <Mail className="h-5 w-5 text-primary" />
-                      Tijdens het claimen
+                      {t('forRestaurants.duringClaim')}
                     </h3>
                     <ul className="space-y-3">
                       <li className="flex items-start gap-2">
                         <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span>Bevestig je e-mailadres</span>
+                        <span>{t('forRestaurants.confirmEmail')}</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <Phone className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                        <span>Verifieer een telefoonnummer via een eenmalige sms-code</span>
+                        <span>{t('forRestaurants.verifyPhone')}</span>
                       </li>
                     </ul>
                   </CardContent>
@@ -170,22 +165,22 @@ export default function ForRestaurantsPage() {
 
                 <Card>
                   <CardContent className="p-6">
-                    <h3 className="font-semibold mb-4">Na deze stap krijg je beperkte toegang</h3>
+                    <h3 className="font-semibold mb-4">{t('forRestaurants.limitedAccess')}</h3>
                     <div className="space-y-4">
                       <div>
-                        <p className="text-sm font-medium text-green-600 mb-2">✓ Wat je wél kunt zien:</p>
+                        <p className="text-sm font-medium text-green-600 mb-2">✓ {t('forRestaurants.canSee')}</p>
                         <ul className="text-sm text-muted-foreground space-y-1 ml-4">
-                          <li>• Openbare restaurantinformatie</li>
-                          <li>• Een basisoverzicht dat het restaurant actief is op Dishloopr</li>
+                          <li>• {t('forRestaurants.publicInfo')}</li>
+                          <li>• {t('forRestaurants.basicOverview')}</li>
                         </ul>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-red-600 mb-2">✗ Wat je nog niet kunt:</p>
+                        <p className="text-sm font-medium text-red-600 mb-2">✗ {t('forRestaurants.cannotYet')}</p>
                         <ul className="text-sm text-muted-foreground space-y-1 ml-4">
-                          <li>• Profielwijzigingen live zetten</li>
-                          <li>• Reageren op reviews</li>
-                          <li>• Betaalde zichtbaarheid activeren</li>
-                          <li>• Gedetailleerde statistieken bekijken</li>
+                          <li>• {t('forRestaurants.profileChanges')}</li>
+                          <li>• {t('forRestaurants.respondReviews')}</li>
+                          <li>• {t('forRestaurants.paidVisibility')}</li>
+                          <li>• {t('forRestaurants.detailedStats')}</li>
                         </ul>
                       </div>
                     </div>
@@ -196,7 +191,7 @@ export default function ForRestaurantsPage() {
               <Card className="bg-muted/50 border-dashed">
                 <CardContent className="p-6">
                   <p className="text-center text-muted-foreground italic">
-                    💡 Claimen betekent dus niet automatisch volledige controle.
+                    💡 {t('forRestaurants.claimNotControl')}
                   </p>
                 </CardContent>
               </Card>
@@ -220,48 +215,47 @@ export default function ForRestaurantsPage() {
                 </div>
                 <div>
                   <Badge variant="outline" className="mb-1">Stap 2</Badge>
-                  <h2 className="text-2xl md:text-3xl font-bold">Verifiëren (voor volledige toegang)</h2>
+                  <h2 className="text-2xl md:text-3xl font-bold">{t('forRestaurants.step2Title')}</h2>
                 </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-6 mb-8">
                 <div>
-                  <h3 className="font-semibold mb-4">Wil je:</h3>
+                  <h3 className="font-semibold mb-4">{t('forRestaurants.wantTo')}</h3>
                   <ul className="space-y-3">
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                      <span>Je restaurantprofiel aanpassen</span>
+                      <span>{t('forRestaurants.adjustProfile')}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                      <span>Reageren op reviews</span>
+                      <span>{t('forRestaurants.respondReviews')}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                      <span>Inzicht krijgen in prestaties per gerecht</span>
+                      <span>{t('forRestaurants.insightPerDish')}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                      <span>Uitgelichte plaatsingen kopen</span>
+                      <span>{t('forRestaurants.buyFeatured')}</span>
                     </li>
                   </ul>
                   <p className="mt-4 text-muted-foreground">
-                    Dan vragen we om extra verificatie. Dit bewijst dat je daadwerkelijk 
-                    bevoegd bent om namens het restaurant te handelen.
+                    {t('forRestaurants.extraVerification')}
                   </p>
                 </div>
 
                 <Card className="border-primary/20">
                   <CardContent className="p-6">
-                    <h3 className="font-semibold mb-4">Verificatiemethoden</h3>
+                    <h3 className="font-semibold mb-4">{t('forRestaurants.verificationMethods')}</h3>
                     <ul className="space-y-4">
                       <li className="flex items-start gap-3">
                         <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
                           <CreditCard className="h-4 w-4 text-green-600" />
                         </div>
                         <div>
-                          <p className="font-medium">Verificatiebetaling</p>
-                          <p className="text-sm text-muted-foreground">Een kleine betaling van €0,10</p>
+                          <p className="font-medium">{t('forRestaurants.microPayment')}</p>
+                          <p className="text-sm text-muted-foreground">{t('forRestaurants.microPaymentDesc')}</p>
                         </div>
                       </li>
                       <li className="flex items-start gap-3">
@@ -269,8 +263,8 @@ export default function ForRestaurantsPage() {
                           <Globe className="h-4 w-4 text-blue-600" />
                         </div>
                         <div>
-                          <p className="font-medium">Website verificatie</p>
-                          <p className="text-sm text-muted-foreground">Via de restaurantwebsite</p>
+                          <p className="font-medium">{t('forRestaurants.websiteVerification')}</p>
+                          <p className="text-sm text-muted-foreground">{t('forRestaurants.websiteVerificationDesc')}</p>
                         </div>
                       </li>
                       <li className="flex items-start gap-3">
@@ -278,8 +272,8 @@ export default function ForRestaurantsPage() {
                           <Building2 className="h-4 w-4 text-purple-600" />
                         </div>
                         <div>
-                          <p className="font-medium">Bedrijfsprofiel koppeling</p>
-                          <p className="text-sm text-muted-foreground">Koppeling met een bestaand bedrijfsprofiel</p>
+                          <p className="font-medium">{t('forRestaurants.businessProfile')}</p>
+                          <p className="text-sm text-muted-foreground">{t('forRestaurants.businessProfileDesc')}</p>
                         </div>
                       </li>
                     </ul>
@@ -290,7 +284,7 @@ export default function ForRestaurantsPage() {
               <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
                 <CardContent className="p-6">
                   <p className="text-center font-medium text-green-800 dark:text-green-200">
-                    ✓ Na succesvolle verificatie word je aangemerkt als <strong>geverifieerde beheerder</strong>.
+                    ✓ {t('forRestaurants.afterVerification')}
                   </p>
                 </CardContent>
               </Card>
@@ -312,28 +306,28 @@ export default function ForRestaurantsPage() {
                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
                   <Users className="h-6 w-6 text-primary" />
                 </div>
-                <h2 className="text-2xl md:text-3xl font-bold">Meerdere medewerkers</h2>
+                <h2 className="text-2xl md:text-3xl font-bold">{t('forRestaurants.multipleEmployees')}</h2>
               </div>
 
               <p className="text-lg text-muted-foreground mb-8">
-                Een restaurant kan meerdere beheerders hebben.
+                {t('forRestaurants.multipleEmployeesDesc')}
               </p>
 
               <Card>
                 <CardContent className="p-6">
-                  <h3 className="font-semibold mb-4">De geverifieerde beheerder kan:</h3>
+                  <h3 className="font-semibold mb-4">{t('forRestaurants.verifiedManagerCan')}</h3>
                   <ul className="space-y-3">
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                      <span>Andere medewerkers uitnodigen</span>
+                      <span>{t('forRestaurants.inviteOthers')}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                      <span>Rollen toekennen (bijv. bekijken, bewerken of financieel beheer)</span>
+                      <span>{t('forRestaurants.assignRoles')}</span>
                     </li>
                   </ul>
                   <p className="mt-4 text-muted-foreground">
-                    Zo blijft controle duidelijk en veilig.
+                    {t('forRestaurants.controlClear')}
                   </p>
                 </CardContent>
               </Card>
@@ -355,36 +349,36 @@ export default function ForRestaurantsPage() {
                 <div className="h-12 w-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
                   <AlertTriangle className="h-6 w-6 text-amber-600" />
                 </div>
-                <h2 className="text-2xl md:text-3xl font-bold">Wat als meerdere mensen een restaurant claimen?</h2>
+                <h2 className="text-2xl md:text-3xl font-bold">{t('forRestaurants.multipleClaims')}</h2>
               </div>
 
               <p className="text-lg text-muted-foreground mb-8">
-                Dat kan gebeuren — en dat is oké.
+                {t('forRestaurants.multipleClaimsOk')}
               </p>
 
               <div className="grid md:grid-cols-3 gap-4">
                 <Card>
                   <CardContent className="p-6 text-center">
                     <XCircle className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
-                    <p className="font-medium">Een claim geeft nooit automatisch macht</p>
+                    <p className="font-medium">{t('forRestaurants.claimNoPower')}</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-6 text-center">
                     <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-3" />
-                    <p className="font-medium">Alleen geverifieerde beheerders kunnen beslissingen nemen</p>
+                    <p className="font-medium">{t('forRestaurants.onlyVerified')}</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-6 text-center">
                     <Shield className="h-8 w-8 text-primary mx-auto mb-3" />
-                    <p className="font-medium">Bij conflicten bekijkt Dishloopr wie het sterkste bewijs heeft</p>
+                    <p className="font-medium">{t('forRestaurants.conflictReview')}</p>
                   </CardContent>
                 </Card>
               </div>
 
               <p className="text-center text-muted-foreground mt-6">
-                Zo zorgen we dat altijd de juiste mensen toegang krijgen.
+                {t('forRestaurants.rightPeopleAccess')}
               </p>
             </motion.div>
           </div>
@@ -404,34 +398,34 @@ export default function ForRestaurantsPage() {
                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
                   <Shield className="h-6 w-6 text-primary" />
                 </div>
-                <h2 className="text-2xl md:text-3xl font-bold">Transparantie & veiligheid</h2>
+                <h2 className="text-2xl md:text-3xl font-bold">{t('forRestaurants.transparencySecurity')}</h2>
               </div>
 
               <div className="grid md:grid-cols-3 gap-6">
                 <Card className="border-primary/20">
                   <CardContent className="p-6">
                     <Lock className="h-8 w-8 text-primary mb-4" />
-                    <h3 className="font-semibold mb-2">Data beschermd</h3>
+                    <h3 className="font-semibold mb-2">{t('forRestaurants.dataProtected')}</h3>
                     <p className="text-sm text-muted-foreground">
-                      Gevoelige data is alleen zichtbaar voor geverifieerde beheerders
+                      {t('forRestaurants.dataProtectedDesc')}
                     </p>
                   </CardContent>
                 </Card>
                 <Card className="border-primary/20">
                   <CardContent className="p-6">
                     <CheckCircle2 className="h-8 w-8 text-primary mb-4" />
-                    <h3 className="font-semibold mb-2">Audit trail</h3>
+                    <h3 className="font-semibold mb-2">{t('forRestaurants.auditTrail')}</h3>
                     <p className="text-sm text-muted-foreground">
-                      Alle acties worden gelogd voor transparantie
+                      {t('forRestaurants.auditTrailDesc')}
                     </p>
                   </CardContent>
                 </Card>
                 <Card className="border-primary/20">
                   <CardContent className="p-6">
                     <AlertTriangle className="h-8 w-8 text-primary mb-4" />
-                    <h3 className="font-semibold mb-2">Misbruik melden</h3>
+                    <h3 className="font-semibold mb-2">{t('forRestaurants.reportAbuse')}</h3>
                     <p className="text-sm text-muted-foreground">
-                      Misbruik kan altijd worden gemeld bij ons team
+                      {t('forRestaurants.reportAbuseDesc')}
                     </p>
                   </CardContent>
                 </Card>
@@ -440,11 +434,11 @@ export default function ForRestaurantsPage() {
               <Card className="mt-8 bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
                 <CardContent className="p-8 text-center">
                   <p className="text-lg font-medium mb-4">
-                    Zo beschermen we restaurants, gasten én de betrouwbaarheid van Dishloopr.
+                    {t('forRestaurants.protectAll')}
                   </p>
                   <Button asChild size="lg" className="gap-2">
                     <Link to="/claim">
-                      Start met claimen
+                      {t('forRestaurants.startClaiming')}
                       <ChevronRight className="h-4 w-4" />
                     </Link>
                   </Button>
