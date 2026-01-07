@@ -30,6 +30,7 @@ import { EventsSection } from '@/components/restaurant/EventsSection';
 import { ReservationWidget } from '@/components/restaurant/ReservationWidget';
 import { AlternativeRestaurants } from '@/components/routing/AlternativeRestaurants';
 import { SocialShare } from '@/components/social/SocialShare';
+import { ImageGallery } from '@/components/restaurant/ImageGallery';
 import { SEOHead, createRestaurantSchema, createBreadcrumbSchema } from '@/components/seo/SEOHead';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useReviews } from '@/hooks/useReviews';
@@ -178,31 +179,23 @@ export default function RestaurantPage() {
           '@graph': [restaurantSchema, breadcrumbSchema]
         }}
       />
-      {/* Hero Image */}
-      <div className="relative h-56 md:h-96 overflow-hidden bg-muted">
-        {restaurant.images && restaurant.images.length > 0 ? (
-          <img
-            src={restaurant.images[0]}
-            alt={restaurant.name}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-            Geen afbeelding beschikbaar
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+      {/* Hero Image Gallery */}
+      <div className="relative">
+        <ImageGallery 
+          images={restaurant.images || []} 
+          restaurantName={restaurant.name} 
+        />
         
         {/* Back Button */}
         <Link
           to="/search"
-          className="absolute top-4 left-4 p-2 rounded-full bg-background/80 backdrop-blur hover:bg-background transition-colors"
+          className="absolute top-4 left-4 z-10 p-2 rounded-full bg-background/80 backdrop-blur hover:bg-background transition-colors"
         >
           <ChevronLeft className="h-5 w-5" />
         </Link>
 
         {/* Badges */}
-        <div className="absolute top-4 right-4 flex gap-2">
+        <div className="absolute top-4 right-4 z-10 flex gap-2">
           {restaurant.is_top_listing && (
             <Badge className="featured-badge border-0 gap-1">
               <Trophy className="h-3 w-3" />
