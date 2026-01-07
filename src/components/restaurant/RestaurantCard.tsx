@@ -13,22 +13,13 @@ interface RestaurantCardProps {
   variant?: 'default' | 'featured';
 }
 
+import { AMBIENCE_TAG_STYLES, AMBIENCE_TAG_I18N_KEYS } from '@/lib/constants';
+
 const priceLabels: { [key: number]: string } = {
   1: '€',
   2: '€€',
   3: '€€€',
   4: '€€€€',
-};
-
-const ambienceTagStyles: { [key: string]: string } = {
-  'romantic': 'tag-romantic',
-  'family-friendly': 'tag-family',
-  'high-end': 'tag-highend',
-  'cozy': 'tag-cozy',
-  'business': 'tag-business',
-  'trendy': 'tag-cozy',
-  'casual': 'tag-family',
-  'lively': 'tag-romantic',
 };
 
 export function RestaurantCard({ restaurant, index = 0, variant = 'default' }: RestaurantCardProps) {
@@ -164,10 +155,10 @@ export function RestaurantCard({ restaurant, index = 0, variant = 'default' }: R
               <span
                 key={tag}
                 className={`px-1.5 md:px-2 py-0.5 text-xs font-medium rounded-full ${
-                  ambienceTagStyles[tag] || 'bg-muted text-muted-foreground'
+                  AMBIENCE_TAG_STYLES[tag] || 'bg-muted text-muted-foreground'
                 }`}
               >
-                {t(`filters.${tag.replace('-', '')}`) || tag}
+                {AMBIENCE_TAG_I18N_KEYS[tag] ? t(AMBIENCE_TAG_I18N_KEYS[tag]) : tag}
               </span>
             ))}
           </div>

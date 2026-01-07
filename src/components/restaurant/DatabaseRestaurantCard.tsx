@@ -16,7 +16,7 @@ interface DatabaseRestaurantCardProps {
   isSponsored?: boolean;
 }
 
-import { PRICE_LABELS, AMBIENCE_TAG_STYLES } from '@/lib/constants';
+import { PRICE_LABELS, AMBIENCE_TAG_STYLES, AMBIENCE_TAG_I18N_KEYS } from '@/lib/constants';
 
 
 export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = false }: DatabaseRestaurantCardProps) {
@@ -149,7 +149,7 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
                     AMBIENCE_TAG_STYLES[tag] || 'bg-muted text-muted-foreground'
                   }`}
                 >
-                  {t(`filters.${tag.replace('-', '')}`) || tag}
+                  {AMBIENCE_TAG_I18N_KEYS[tag] ? t(AMBIENCE_TAG_I18N_KEYS[tag]) : tag}
                 </span>
               ))}
             </div>
