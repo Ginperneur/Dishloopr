@@ -28,6 +28,7 @@ import InsightsPage from "./pages/InsightsPage";
 import CollectionsPage from "./pages/CollectionsPage";
 import CollectionPage from "./pages/CollectionPage";
 import NotFound from "./pages/NotFound";
+import ForRestaurantsPage from "./pages/ForRestaurantsPage";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ const App = () => (
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/claim" element={<ClaimPage />} />
+                <Route path="/for-restaurants" element={<ForRestaurantsPage />} />
                 <Route path="/favorites" element={<FavoritesPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/account" element={<AccountPage />} />
