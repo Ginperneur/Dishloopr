@@ -140,6 +140,12 @@ export function Header() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
+                  <Link to="/for-restaurants" className="cursor-pointer">
+                    <Store className="mr-2 h-4 w-4" />
+                    {t('footer.forRestaurants')}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link to="/dashboard" className="cursor-pointer">
                     <Store className="mr-2 h-4 w-4" />
                     {t('nav.dashboard')}
