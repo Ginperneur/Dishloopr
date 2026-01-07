@@ -15,7 +15,7 @@ import { VerificationRequiredDialog } from '@/components/claims/VerificationRequ
 import { useRestaurantClaims } from '@/hooks/useRestaurantClaims';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import InputOTP from '@/components/ui/input-otp';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
 interface GooglePlaceResult {
   place_id: string;
@@ -211,12 +211,14 @@ export default function ClaimPage() {
       }
 
       // Create claim using the new system
-      const claimId = await createClaim(restaurantId, `Rol: ${role}\n${notes || ''}`);
+      const result = await createClaim(restaurantId, phoneNumber || undefined);
       
-      if (claimId) {
-        setCurrentClaimId(claimId);
+      if (result.success && result.claimId) {
+        setCurrentClaimId(result.claimId);
         setShowPhoneVerification(true);
         toast.success('Claim aangemaakt! Verifieer nu je telefoonnummer.');
+      } else if (result.error) {
+        toast.error(result.error);
       }
 
     } catch (error) {
@@ -385,12 +387,17 @@ export default function ClaimPage() {
                   {userClaims.map((claim) => (
                     <div key={claim.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                       <div>
-                        <p className="font-medium">{claim.restaurant?.name || 'Restaurant'}</p>
+                        <p className="font-medium">Restaurant #{claim.restaurant_id.slice(0, 8)}</p>
                         <p className="text-xs text-muted-foreground">
                           {new Date(claim.created_at).toLocaleDateString('nl-NL')}
                         </p>
                       </div>
-                      <ClaimStatusBadge status={claim.status} size="sm" />
+                      <Badge variant={claim.status === 'verified' ? 'default' : 'secondary'}>
+                        {claim.status === 'verified' ? 'Geverifieerd' : 
+                         claim.status === 'phone_verified' ? 'Telefoon Geverifieerd' :
+                         claim.status === 'email_verified' ? 'E-mail Geverifieerd' :
+                         claim.status === 'pending' ? 'In Afwachting' : claim.status}
+                      </Badge>
                     </div>
                   ))}
                 </div>

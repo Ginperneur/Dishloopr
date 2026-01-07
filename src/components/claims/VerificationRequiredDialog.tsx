@@ -30,12 +30,13 @@ import { toast } from 'sonner';
 interface VerificationRequiredDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  claimId: string;
+  claimId?: string;
   restaurantId: string;
   restaurantName: string;
   restaurantWebsite?: string | null;
-  triggerAction: VerificationTriggerAction;
-  onVerified: () => void;
+  triggerAction?: VerificationTriggerAction;
+  onVerified?: () => void;
+  onVerificationComplete?: () => void;
 }
 
 const actionLabels: Record<VerificationTriggerAction, string> = {
@@ -53,9 +54,14 @@ export function VerificationRequiredDialog({
   restaurantId,
   restaurantName,
   restaurantWebsite,
-  triggerAction,
+  triggerAction = 'access_detailed_analytics',
   onVerified,
+  onVerificationComplete,
 }: VerificationRequiredDialogProps) {
+  const handleVerified = () => {
+    onVerified?.();
+    onVerificationComplete?.();
+  };
   const {
     state,
     startVerification,
@@ -103,7 +109,7 @@ export function VerificationRequiredDialog({
       }
 
       if (success) {
-        onVerified();
+        handleVerified();
         onOpenChange(false);
       }
     } finally {
