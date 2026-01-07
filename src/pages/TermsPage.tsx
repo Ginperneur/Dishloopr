@@ -81,9 +81,9 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-semibold mb-4">8. Contact</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Voor vragen over deze voorwaarden kun je contact opnemen via{' '}
-                <a href="mailto:info@dishloopr.nl" className="text-primary hover:underline">
-                  info@dishloopr.nl
+              Voor vragen over deze voorwaarden kun je contact opnemen via{' '}
+                <a href="mailto:info@dishloopr.com" className="text-primary hover:underline">
+                  info@dishloopr.com
                 </a>
               </p>
             </section>

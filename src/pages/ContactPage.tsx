@@ -56,8 +56,8 @@ export default function ContactPage() {
               <Mail className="w-6 h-6 text-primary" />
             </div>
             <h3 className="font-semibold mb-2">E-mail</h3>
-            <a href="mailto:info@dishloopr.nl" className="text-primary hover:underline">
-              info@dishloopr.nl
+            <a href="mailto:info@dishloopr.com" className="text-primary hover:underline">
+              info@dishloopr.com
             </a>
           </motion.div>
 
@@ -86,8 +86,8 @@ export default function ContactPage() {
               <Building2 className="w-6 h-6 text-primary" />
             </div>
             <h3 className="font-semibold mb-2">Zakelijk</h3>
-            <a href="mailto:partners@dishloopr.nl" className="text-primary hover:underline">
-              partners@dishloopr.nl
+            <a href="mailto:partners@dishloopr.com" className="text-primary hover:underline">
+              partners@dishloopr.com
             </a>
           </motion.div>
         </div>

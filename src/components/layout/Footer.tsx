@@ -48,7 +48,7 @@ export function Footer() {
         </div>
 
         <div className="border-t border-border mt-6 md:mt-8 pt-6 md:pt-8 text-center text-xs md:text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Dishloopr. All rights reserved.
+          © {new Date().getFullYear()} Dishloopr. Alle rechten voorbehouden.
         </div>
       </div>
     </footer>
