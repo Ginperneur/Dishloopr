@@ -47,6 +47,7 @@ import { CitiesManager } from '@/components/admin/CitiesManager';
 import { UserRolesManager } from '@/components/admin/UserRolesManager';
 import { ActivityLog } from '@/components/admin/ActivityLog';
 import { SettingsManager } from '@/components/admin/SettingsManager';
+import { CollectionsManager } from '@/components/admin/CollectionsManager';
 import { useActivityLog } from '@/hooks/useActivityLog';
 
 interface Stats {
@@ -413,6 +414,10 @@ export default function AdminPanel() {
               <MapPin className="h-4 w-4" />
               <span className="hidden sm:inline">Steden</span>
             </TabsTrigger>
+            <TabsTrigger value="collections" className="gap-1.5">
+              <Sparkles className="h-4 w-4" />
+              <span className="hidden sm:inline">Collecties</span>
+            </TabsTrigger>
             <TabsTrigger value="bulk-import" className="gap-1.5">
               <Upload className="h-4 w-4" />
               <span className="hidden sm:inline">Import</span>
@@ -629,6 +634,10 @@ export default function AdminPanel() {
 
           <TabsContent value="cities">
             <CitiesManager onUpdate={fetchData} />
+          </TabsContent>
+
+          <TabsContent value="collections">
+            <CollectionsManager />
           </TabsContent>
 
           <TabsContent value="bulk-import">
