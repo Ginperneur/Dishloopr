@@ -54,7 +54,7 @@ export function UpcomingEvents() {
           </h2>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           {events.slice(0, 3).map((event, index) => {
             const Icon = eventTypeIcons[event.event_type] || Calendar;
             const eventDate = new Date(event.event_date);
@@ -66,30 +66,30 @@ export function UpcomingEvents() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="group p-5 rounded-xl border border-border bg-card hover:border-primary/50 hover:shadow-lg transition-all"
+                className="group p-4 md:p-5 rounded-xl border border-border bg-card hover:border-primary/50 hover:shadow-lg transition-all"
               >
                 <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                    <Icon className="h-5 w-5" />
+                  <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
+                    <Icon className="h-4 w-4 md:h-5 md:w-5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold group-hover:text-primary transition-colors line-clamp-1">
+                    <h3 className="font-semibold text-sm md:text-base group-hover:text-primary transition-colors line-clamp-1">
                       {event.title}
                     </h3>
-                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                    <p className="text-xs md:text-sm text-muted-foreground mt-1 line-clamp-2">
                       {event.description || t('events.noDescription', 'Geen beschrijving')}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between mt-4">
+                <div className="flex items-center justify-between mt-3 md:mt-4">
                   <div className="text-sm">
                     <Badge variant="secondary" className="text-xs">
                       {format(eventDate, 'd MMM', { locale: nl })}
                     </Badge>
                   </div>
                   {event.price && (
-                    <span className="text-sm font-semibold text-primary">
+                    <span className="text-xs md:text-sm font-semibold text-primary">
                       €{event.price}
                     </span>
                   )}
@@ -98,10 +98,10 @@ export function UpcomingEvents() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full mt-3 group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+                  className="w-full mt-3 text-xs md:text-sm group-hover:bg-primary group-hover:text-primary-foreground transition-all"
                 >
                   {t('events.viewDetails', 'Bekijk details')}
-                  <ArrowRight className="h-4 w-4 ml-1" />
+                  <ArrowRight className="h-3 w-3 md:h-4 md:w-4 ml-1" />
                 </Button>
               </motion.div>
             );
