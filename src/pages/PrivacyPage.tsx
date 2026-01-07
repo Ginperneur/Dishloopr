@@ -100,9 +100,9 @@ export default function PrivacyPage() {
             <section>
               <h2 className="text-2xl font-semibold mb-4">9. Contact</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Voor vragen over dit privacybeleid of je gegevens kun je contact opnemen via{' '}
-                <a href="mailto:privacy@dishloopr.nl" className="text-primary hover:underline">
-                  privacy@dishloopr.nl
+              Voor vragen over dit privacybeleid of je gegevens kun je contact opnemen via{' '}
+                <a href="mailto:privacy@dishloopr.com" className="text-primary hover:underline">
+                  privacy@dishloopr.com
                 </a>
               </p>
             </section>
