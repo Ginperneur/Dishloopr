@@ -1024,6 +1024,7 @@ export type Database = {
           geo_lng: number | null
           id: string
           images: string[] | null
+          instagram_url: string | null
           is_active: boolean
           is_featured: boolean
           is_top_listing: boolean
@@ -1039,6 +1040,7 @@ export type Database = {
           routed_demand_dishes: string[] | null
           slug: string
           sustainability_score: number | null
+          tiktok_url: string | null
           top_until: string | null
           updated_at: string
           website_url: string | null
@@ -1061,6 +1063,7 @@ export type Database = {
           geo_lng?: number | null
           id?: string
           images?: string[] | null
+          instagram_url?: string | null
           is_active?: boolean
           is_featured?: boolean
           is_top_listing?: boolean
@@ -1076,6 +1079,7 @@ export type Database = {
           routed_demand_dishes?: string[] | null
           slug: string
           sustainability_score?: number | null
+          tiktok_url?: string | null
           top_until?: string | null
           updated_at?: string
           website_url?: string | null
@@ -1098,6 +1102,7 @@ export type Database = {
           geo_lng?: number | null
           id?: string
           images?: string[] | null
+          instagram_url?: string | null
           is_active?: boolean
           is_featured?: boolean
           is_top_listing?: boolean
@@ -1113,6 +1118,7 @@ export type Database = {
           routed_demand_dishes?: string[] | null
           slug?: string
           sustainability_score?: number | null
+          tiktok_url?: string | null
           top_until?: string | null
           updated_at?: string
           website_url?: string | null

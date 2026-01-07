@@ -14,7 +14,8 @@ import {
   UtensilsCrossed,
   Link2,
   Check,
-  X
+  X,
+  Instagram
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -75,6 +76,9 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
   const [newDishName, setNewDishName] = useState('');
   const [zenchefId, setZenchefId] = useState<string>('');
   const [zenchefSaving, setZenchefSaving] = useState(false);
+  const [instagramUrl, setInstagramUrl] = useState<string>('');
+  const [tiktokUrl, setTiktokUrl] = useState<string>('');
+  const [socialSaving, setSocialSaving] = useState(false);
 
   useEffect(() => {
     if (open && restaurant) {
@@ -85,6 +89,8 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
       setMealTypes(restaurant.meal_types || []);
       setExperiences(restaurant.experiences || []);
       setZenchefId(restaurant.zenchef_id || '');
+      setInstagramUrl(restaurant.instagram_url || '');
+      setTiktokUrl(restaurant.tiktok_url || '');
     }
   }, [open, restaurant]);
 
@@ -158,6 +164,25 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
       onUpdate?.();
     }
     setZenchefSaving(false);
+  };
+
+  const saveSocialLinks = async () => {
+    setSocialSaving(true);
+    const { error } = await supabase
+      .from('restaurants')
+      .update({ 
+        instagram_url: instagramUrl || null,
+        tiktok_url: tiktokUrl || null 
+      })
+      .eq('id', restaurant.id);
+
+    if (error) {
+      toast.error('Social media links opslaan mislukt');
+    } else {
+      toast.success('Social media links opgeslagen');
+      onUpdate?.();
+    }
+    setSocialSaving(false);
   };
 
   const fetchData = async () => {
@@ -809,6 +834,45 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
                     {restaurant.reservation_url || 'Niet ingesteld'}
                   </code>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Social Media Links */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Instagram className="h-5 w-5" />
+                  Social Media
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <p className="text-sm font-medium mb-2">Instagram URL</p>
+                  <input
+                    type="url"
+                    value={instagramUrl}
+                    onChange={(e) => setInstagramUrl(e.target.value)}
+                    placeholder="https://instagram.com/restaurantnaam"
+                    className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background"
+                  />
+                </div>
+                <div>
+                  <p className="text-sm font-medium mb-2">TikTok URL</p>
+                  <input
+                    type="url"
+                    value={tiktokUrl}
+                    onChange={(e) => setTiktokUrl(e.target.value)}
+                    placeholder="https://tiktok.com/@restaurantnaam"
+                    className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background"
+                  />
+                </div>
+                <Button 
+                  onClick={saveSocialLinks}
+                  disabled={socialSaving}
+                  className="w-full"
+                >
+                  {socialSaving ? 'Opslaan...' : 'Social links opslaan'}
+                </Button>
               </CardContent>
             </Card>
 
