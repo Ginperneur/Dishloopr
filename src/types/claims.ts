@@ -88,6 +88,7 @@ export interface ClaimPermissions {
   canViewDishAnalytics: boolean;
   canViewTagPerformance: boolean;
   canViewCompetitiveData: boolean;
+  isVerifiedOwner: boolean;
 }
 
 export function getClaimPermissions(claimStatus: RestaurantClaimStatus, userRole?: ManagerRole): ClaimPermissions {
@@ -102,6 +103,7 @@ export function getClaimPermissions(claimStatus: RestaurantClaimStatus, userRole
     canViewDishAnalytics: false,
     canViewTagPerformance: false,
     canViewCompetitiveData: false,
+    isVerifiedOwner: false,
   };
 
   switch (claimStatus) {
@@ -133,6 +135,7 @@ export function getClaimPermissions(claimStatus: RestaurantClaimStatus, userRole
         canViewDishAnalytics: true,
         canViewTagPerformance: true,
         canViewCompetitiveData: isPrimaryOwner,
+        isVerifiedOwner: true,
       };
 
     case 'disputed':

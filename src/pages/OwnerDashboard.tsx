@@ -793,6 +793,7 @@ export default function OwnerDashboard() {
           onOpenChange={setVerificationDialogOpen}
           restaurantId={selectedRestaurant.id}
           restaurantName={selectedRestaurant.name}
+          restaurantWebsite={selectedRestaurant.website_url}
           onVerificationComplete={() => {
             loadPermissions();
             setVerificationDialogOpen(false);

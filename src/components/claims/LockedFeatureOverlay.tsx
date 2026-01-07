@@ -4,21 +4,50 @@ import { cn } from '@/lib/utils';
 
 interface LockedFeatureOverlayProps {
   featureName: string;
-  isLocked: boolean;
+  isLocked?: boolean;
+  description?: string;
   onRequestVerification?: () => void;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   className?: string;
 }
 
 export function LockedFeatureOverlay({
   featureName,
-  isLocked,
+  isLocked = true,
+  description,
   onRequestVerification,
   children,
   className,
 }: LockedFeatureOverlayProps) {
-  if (!isLocked) {
+  if (!isLocked && children) {
     return <>{children}</>;
+  }
+
+  // If no children, render as a standalone locked message
+  if (!children) {
+    return (
+      <div className={cn('flex items-center justify-center p-12 bg-muted/30 rounded-lg border border-dashed', className)}>
+        <div className="text-center max-w-sm">
+          <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+            <Lock className="h-6 w-6 text-muted-foreground" />
+          </div>
+          
+          <h3 className="font-semibold mb-2">{featureName}</h3>
+          
+          <p className="text-sm text-muted-foreground mb-4">
+            {description || 'Beschikbaar na verificatie. Verificatie beschermt restaurants en gasten tegen misbruik.'}
+          </p>
+
+          {onRequestVerification && (
+            <Button onClick={onRequestVerification} size="sm">
+              <ShieldCheck className="h-4 w-4 mr-2" />
+              Verifiëren
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          )}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -38,7 +67,7 @@ export function LockedFeatureOverlay({
           <h3 className="font-semibold mb-2">{featureName}</h3>
           
           <p className="text-sm text-muted-foreground mb-4">
-            Beschikbaar na verificatie. Verificatie beschermt restaurants en gasten tegen misbruik.
+            {description || 'Beschikbaar na verificatie. Verificatie beschermt restaurants en gasten tegen misbruik.'}
           </p>
 
           {onRequestVerification && (
