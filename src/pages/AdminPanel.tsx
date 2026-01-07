@@ -41,6 +41,7 @@ import { AddRestaurantModal } from '@/components/admin/AddRestaurantModal';
 import { SponsoredProductsManager } from '@/components/admin/SponsoredProductsManager';
 import { BulkRestaurantUpload } from '@/components/admin/BulkRestaurantUpload';
 import { ClaimRequestsQueue } from '@/components/admin/ClaimRequestsQueue';
+import { ClaimsVerificationManager } from '@/components/admin/ClaimsVerificationManager';
 import { DishesManager } from '@/components/admin/DishesManager';
 import { CitiesManager } from '@/components/admin/CitiesManager';
 import { UserRolesManager } from '@/components/admin/UserRolesManager';
@@ -635,7 +636,18 @@ export default function AdminPanel() {
           </TabsContent>
 
           <TabsContent value="claims">
-            <ClaimRequestsQueue onUpdate={fetchData} />
+            <Tabs defaultValue="requests" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="requests">Claim Requests</TabsTrigger>
+                <TabsTrigger value="verification">Verificatie Beheer</TabsTrigger>
+              </TabsList>
+              <TabsContent value="requests">
+                <ClaimRequestsQueue onUpdate={fetchData} />
+              </TabsContent>
+              <TabsContent value="verification">
+                <ClaimsVerificationManager />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           <TabsContent value="sponsored">
