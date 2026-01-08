@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.send-sms-verification]
 verify_jwt = false
+
+[functions.generate-seo-faq]
+verify_jwt = false
