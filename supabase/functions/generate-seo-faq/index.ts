@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { pageId, dishName, cityName } = await req.json();
+    const { pageId, dishName, cityName, pageType = 'DISH_CITY', language = 'nl' } = await req.json();
     
     if (!pageId || !dishName || !cityName) {
       return new Response(
@@ -26,23 +26,78 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    console.log(`Generating FAQ for ${dishName} in ${cityName}...`);
+    console.log(`Generating FAQ for ${dishName} in ${cityName} (type: ${pageType}, lang: ${language})...`);
 
-    const systemPrompt = `Je bent een SEO-expert voor een restaurant discovery platform in Nederland. 
-Genereer 5 relevante, natuurlijke FAQ vragen en antwoorden over ${dishName} in ${cityName}.
+    // Build language-specific instructions
+    const languageInstructions: Record<string, string> = {
+      nl: 'Schrijf alle FAQ content in het Nederlands.',
+      en: 'Write all FAQ content in English.',
+      de: 'Schreibe alle FAQ-Inhalte auf Deutsch.',
+      fr: 'Rédigez tout le contenu FAQ en français.',
+      es: 'Escribe todo el contenido de las FAQ en español.'
+    };
 
-De FAQ's moeten:
-- Praktisch en informatief zijn voor bezoekers
-- Natuurlijk klinken (geen keyword stuffing)
-- Lokale context bevatten waar mogelijk
-- Variëren in vraagtype (waar, wat, wanneer, hoeveel, tips)
+    const langInstruction = languageInstructions[language] || languageInstructions.nl;
 
-Voorbeelden van goede vragen:
-- Waar vind ik de beste [gerecht] in [stad]?
-- Wat kost gemiddeld een [gerecht] in [stad]?
-- Welke restaurants serveren authentieke [gerecht] in [stad]?
-- Is er een [gerecht] restaurant open op zondag in [stad]?
-- Welke [gerecht] restaurants in [stad] hebben een terras?`;
+    // Build page-type specific context
+    const pageTypeContext: Record<string, string> = {
+      DISH_CITY: `This is a dish-focused page about "${dishName}" restaurants in ${cityName}.`,
+      MEAL_CITY: `This is a meal-type page about "${dishName}" (e.g., brunch, lunch, dinner) in ${cityName}.`,
+      ATMOSPHERE_CITY: `This is an atmosphere-focused page about "${dishName}" dining experiences (e.g., romantic, casual, family-friendly) in ${cityName}.`
+    };
+
+    const typeContext = pageTypeContext[pageType] || pageTypeContext.DISH_CITY;
+
+    const systemPrompt = `You are an SEO expert generating FAQ sections for Dishloopr, a restaurant discovery platform.
+
+${langInstruction}
+
+CONTEXT:
+${typeContext}
+
+STRICT RULES:
+1. Generate exactly 6 FAQs (never less than 5, never more than 7)
+2. NEVER reuse identical questions or answers across different pages
+3. FAQs must be context-aware: adapt wording to BOTH "${cityName}" and "${dishName}"
+4. Tone must be informative and neutral — never promotional or sales-driven
+5. Answers must be fact-based, general knowledge, and platform-explanatory where relevant
+6. Do NOT mention specific restaurants by name inside FAQs
+7. Use natural language, no keyword stuffing
+8. Include "${dishName}" and "${cityName}" organically where relevant
+9. Answers should be 2-4 sentences max
+
+FAQ CATEGORY DISTRIBUTION (follow this structure):
+
+A. ENTITY EXPLANATION (1-2 FAQs)
+- What is ${dishName}?
+- What characterizes ${dishName}?
+- What are typical ingredients/features?
+
+B. CITY-SPECIFIC CONTEXT (1-2 FAQs)
+- Why is ${dishName} popular in ${cityName}?
+- What should you look for when choosing a ${dishName} spot in ${cityName}?
+- What makes ${cityName}'s ${dishName} scene unique?
+
+C. CHOICE GUIDANCE (1-2 FAQs)
+- Is ${dishName} suitable for vegetarians/vegans?
+- What's the average price for ${dishName} in ${cityName}?
+- What's the best time to visit for ${dishName}?
+- Is ${dishName} suitable for groups/dates/families?
+
+D. DISHLOOPR CONTEXT (1 FAQ)
+- How does Dishloopr help find ${dishName} in ${cityName}?
+- Can I filter by price, atmosphere, or dietary preferences on Dishloopr?
+- How are ${dishName} restaurants ranked on Dishloopr?
+
+IMPORTANT: All content must align with Google's helpful content guidelines and be valid for FAQPage structured data.`;
+
+    const userPrompt = `Generate 6 unique, high-quality FAQs for the "${dishName}" page in "${cityName}".
+
+Remember:
+- Mix questions across all 4 categories (A, B, C, D)
+- Make answers helpful and specific to ${cityName} where possible
+- Keep answers concise (2-4 sentences)
+- Never be promotional or mention specific restaurant names`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -54,7 +109,7 @@ Voorbeelden van goede vragen:
         model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Genereer 5 FAQ's voor "${dishName}" restaurants in "${cityName}".` }
+          { role: 'user', content: userPrompt }
         ],
         tools: [
           {
@@ -71,11 +126,14 @@ Voorbeelden van goede vragen:
                       type: 'object',
                       properties: {
                         question: { type: 'string', description: 'The FAQ question' },
-                        answer: { type: 'string', description: 'The FAQ answer (2-4 sentences)' }
+                        answer: { type: 'string', description: 'The FAQ answer (2-4 sentences)' },
+                        category: { type: 'string', enum: ['entity_explanation', 'city_context', 'choice_guidance', 'platform_context'], description: 'The FAQ category' }
                       },
                       required: ['question', 'answer'],
                       additionalProperties: false
-                    }
+                    },
+                    minItems: 5,
+                    maxItems: 7
                   }
                 },
                 required: ['faqs'],
