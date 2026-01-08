@@ -1199,6 +1199,81 @@ export type Database = {
           },
         ]
       }
+      seo_landing_pages: {
+        Row: {
+          canonical_url: string | null
+          city_id: string | null
+          created_at: string
+          created_by: string | null
+          dish_id: string | null
+          extended_description: string | null
+          faq_content: Json | null
+          h1_title: string
+          id: string
+          intro_text: string | null
+          is_active: boolean | null
+          is_auto_generated: boolean | null
+          keywords: string[] | null
+          meta_description: string
+          meta_title: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          canonical_url?: string | null
+          city_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          dish_id?: string | null
+          extended_description?: string | null
+          faq_content?: Json | null
+          h1_title: string
+          id?: string
+          intro_text?: string | null
+          is_active?: boolean | null
+          is_auto_generated?: boolean | null
+          keywords?: string[] | null
+          meta_description: string
+          meta_title: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          canonical_url?: string | null
+          city_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          dish_id?: string | null
+          extended_description?: string | null
+          faq_content?: Json | null
+          h1_title?: string
+          id?: string
+          intro_text?: string | null
+          is_active?: boolean | null
+          is_auto_generated?: boolean | null
+          keywords?: string[] | null
+          meta_description?: string
+          meta_title?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_landing_pages_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_landing_pages_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sponsored_products: {
         Row: {
           base_price: number
