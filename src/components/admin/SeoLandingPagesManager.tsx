@@ -13,7 +13,9 @@ import {
   Sparkles,
   Save,
   X,
-  ChevronDown
+  ChevronDown,
+  Wand2,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -87,7 +89,7 @@ const defaultForm: PageForm = {
 
 export function SeoLandingPagesManager() {
   const { t } = useTranslation();
-  const { pages, loading, updatePage, createPage, deletePage } = useSeoLandingPages();
+  const { pages, loading, updatePage, createPage, deletePage, fetchPages } = useSeoLandingPages();
   const [searchQuery, setSearchQuery] = useState('');
   const [editingPage, setEditingPage] = useState<string | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -96,6 +98,7 @@ export function SeoLandingPagesManager() {
   const [cities, setCities] = useState<{ id: string; name: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const [faqOpen, setFaqOpen] = useState(false);
+  const [generatingFaq, setGeneratingFaq] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchOptions() {
@@ -213,6 +216,42 @@ export function SeoLandingPagesManager() {
     }
   };
 
+  const generateFaqWithAI = async (pageId: string, dishName: string, cityName: string) => {
+    setGeneratingFaq(pageId);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-seo-faq', {
+        body: { pageId, dishName, cityName }
+      });
+
+      if (error) throw error;
+
+      if (data?.error) {
+        if (data.error.includes('Rate limit')) {
+          toast.error('AI rate limit bereikt, probeer het later opnieuw');
+        } else if (data.error.includes('credits')) {
+          toast.error('AI credits op, voeg credits toe aan je workspace');
+        } else {
+          throw new Error(data.error);
+        }
+        return;
+      }
+
+      toast.success(`${data.faqs?.length || 0} FAQ's gegenereerd!`);
+      fetchPages();
+      
+      // If editing this page, update form with new FAQs
+      if (editingPage === pageId && data.faqs) {
+        setForm(prev => ({ ...prev, faq_content: data.faqs }));
+        setFaqOpen(true);
+      }
+    } catch (error) {
+      console.error('FAQ generation error:', error);
+      toast.error('Fout bij genereren FAQ\'s');
+    } finally {
+      setGeneratingFaq(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -327,13 +366,31 @@ export function SeoLandingPagesManager() {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleEdit(page)}
+                        title="Bewerken"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
+                      {page.dish?.name && page.city?.name && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => generateFaqWithAI(page.id, page.dish!.name, page.city!.name)}
+                          disabled={generatingFaq === page.id}
+                          title="Genereer FAQ met AI"
+                          className="text-purple-600 hover:text-purple-700"
+                        >
+                          {generatingFaq === page.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Wand2 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
                         asChild
+                        title="Bekijken"
                       >
                         <a href={`/eten/${page.slug}`} target="_blank" rel="noopener noreferrer">
                           <ExternalLink className="h-4 w-4" />
@@ -344,6 +401,7 @@ export function SeoLandingPagesManager() {
                         size="icon"
                         onClick={() => handleDelete(page.id)}
                         className="text-destructive hover:text-destructive"
+                        title="Verwijderen"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -481,10 +539,33 @@ export function SeoLandingPagesManager() {
 
             {/* FAQ */}
             <Collapsible open={faqOpen} onOpenChange={setFaqOpen}>
-              <CollapsibleTrigger className="flex items-center gap-2 font-semibold w-full">
-                <ChevronDown className={`h-4 w-4 transition-transform ${faqOpen ? 'rotate-180' : ''}`} />
-                FAQ's ({form.faq_content.length})
-              </CollapsibleTrigger>
+              <div className="flex items-center justify-between">
+                <CollapsibleTrigger className="flex items-center gap-2 font-semibold">
+                  <ChevronDown className={`h-4 w-4 transition-transform ${faqOpen ? 'rotate-180' : ''}`} />
+                  FAQ's ({form.faq_content.length})
+                </CollapsibleTrigger>
+                {form.dish_id && form.city_id && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const dish = dishes.find(d => d.id === form.dish_id);
+                      const city = cities.find(c => c.id === form.city_id);
+                      if (dish && city && editingPage) {
+                        generateFaqWithAI(editingPage, dish.name, city.name);
+                      }
+                    }}
+                    disabled={generatingFaq === editingPage}
+                  >
+                    {generatingFaq === editingPage ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Wand2 className="h-4 w-4 mr-2" />
+                    )}
+                    Genereer met AI
+                  </Button>
+                )}
+              </div>
               <CollapsibleContent className="space-y-4 mt-4">
                 {form.faq_content.map((faq, index) => (
                   <div key={index} className="p-4 rounded-lg border space-y-3">
