@@ -15,8 +15,10 @@ import {
   X,
   ChevronDown,
   Wand2,
-  Loader2
+  Loader2,
+  Zap
 } from 'lucide-react';
+import { QuickSeoPageWizard } from './QuickSeoPageWizard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -99,6 +101,7 @@ export function SeoLandingPagesManager() {
   const [saving, setSaving] = useState(false);
   const [faqOpen, setFaqOpen] = useState(false);
   const [generatingFaq, setGeneratingFaq] = useState<string | null>(null);
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   useEffect(() => {
     async function fetchOptions() {
@@ -265,10 +268,16 @@ export function SeoLandingPagesManager() {
             className="pl-10"
           />
         </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
+        <div className="flex gap-2">
+          <Button onClick={() => setWizardOpen(true)} variant="default">
+            <Zap className="h-4 w-4 mr-2" />
+            Quick SEO Page
+          </Button>
+          <Button onClick={() => setIsCreateDialogOpen(true)} variant="outline">
           <Plus className="h-4 w-4 mr-2" />
-          Nieuwe pagina
-        </Button>
+            Nieuwe pagina
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -740,6 +749,13 @@ export function SeoLandingPagesManager() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Quick SEO Page Wizard */}
+      <QuickSeoPageWizard
+        open={wizardOpen}
+        onOpenChange={setWizardOpen}
+        onSuccess={fetchPages}
+      />
     </div>
   );
 }
