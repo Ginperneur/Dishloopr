@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
@@ -55,6 +55,7 @@ export default function SearchPage() {
   });
   const [sortBy, setSortBy] = useState<SortOption>('bestMatch');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [displayCount, setDisplayCount] = useState(12);
   
   // Geolocation for "near me" feature
   const { latitude, longitude, loading: locationLoading, requestLocation } = useGeolocation();
@@ -66,6 +67,7 @@ export default function SearchPage() {
   // Perform search when query, city, or filters change
   useEffect(() => {
     search(dishQuery, cityId, filters);
+    setDisplayCount(12); // Reset pagination on new search
   }, [dishQuery, cityId, filters]);
 
   // Apply sorting (including distance-based)
@@ -92,6 +94,17 @@ export default function SearchPage() {
         return 0; // Keep original order (best match from search)
     }
   });
+
+  // Paginated results
+  const displayedResults = useMemo(() => 
+    sortedResults.slice(0, displayCount), 
+    [sortedResults, displayCount]
+  );
+  const hasMore = displayCount < sortedResults.length;
+  
+  const loadMore = () => {
+    setDisplayCount(prev => Math.min(prev + 12, sortedResults.length));
+  };
 
   // Handle near me click
   const handleNearMe = () => {
@@ -350,22 +363,38 @@ export default function SearchPage() {
             ))}
           </div>
         ) : sortedResults.length > 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6"
-          >
-            {sortedResults.map((restaurant, index) => (
-              <motion.div
-                key={restaurant.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <DatabaseRestaurantCard restaurant={restaurant} />
-              </motion.div>
-            ))}
-          </motion.div>
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6"
+            >
+              {displayedResults.map((restaurant, index) => (
+                <motion.div
+                  key={restaurant.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: Math.min(index * 0.05, 0.3) }}
+                >
+                  <DatabaseRestaurantCard restaurant={restaurant} />
+                </motion.div>
+              ))}
+            </motion.div>
+            
+            {/* Load More Button */}
+            {hasMore && (
+              <div className="flex justify-center mt-8">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={loadMore}
+                  className="min-w-[200px]"
+                >
+                  Meer laden ({sortedResults.length - displayCount} resterend)
+                </Button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-12">
             <p className="text-muted-foreground text-lg">
