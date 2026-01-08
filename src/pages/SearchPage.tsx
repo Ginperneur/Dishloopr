@@ -1,8 +1,8 @@
 import { useState, useEffect, lazy, Suspense, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
-import { X, Map, LayoutGrid, Navigation, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Map, LayoutGrid, Navigation, Loader2, ArrowUp } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { SearchBar } from '@/components/search/SearchBar';
 import { DatabaseRestaurantCard } from '@/components/restaurant/DatabaseRestaurantCard';
@@ -56,10 +56,24 @@ export default function SearchPage() {
   const [sortBy, setSortBy] = useState<SortOption>('bestMatch');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [displayCount, setDisplayCount] = useState(12);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   
   // Geolocation for "near me" feature
   const { latitude, longitude, loading: locationLoading, requestLocation } = useGeolocation();
   const userLocation = latitude && longitude ? { lat: latitude, lng: longitude } : null;
+
+  // Show scroll-to-top button after scrolling
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Get unique cuisines from database
   const availableCuisines = [...new Set(dishes.flatMap(d => d.cuisine_tags || []))];
@@ -408,6 +422,22 @@ export default function SearchPage() {
           </div>
         )}
       </div>
+
+      {/* Scroll to Top Button */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={scrollToTop}
+            className="fixed bottom-6 right-6 z-50 p-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-colors"
+            aria-label="Terug naar boven"
+          >
+            <ArrowUp className="h-5 w-5" />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </Layout>
   );
 }
