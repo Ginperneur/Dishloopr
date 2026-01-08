@@ -48,6 +48,7 @@ import { UserRolesManager } from '@/components/admin/UserRolesManager';
 import { ActivityLog } from '@/components/admin/ActivityLog';
 import { SettingsManager } from '@/components/admin/SettingsManager';
 import { CollectionsManager } from '@/components/admin/CollectionsManager';
+import { SeoLandingPagesManager } from '@/components/admin/SeoLandingPagesManager';
 import { useActivityLog } from '@/hooks/useActivityLog';
 
 interface Stats {

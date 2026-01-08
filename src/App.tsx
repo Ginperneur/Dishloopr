@@ -27,6 +27,8 @@ import AccountPage from "./pages/AccountPage";
 import InsightsPage from "./pages/InsightsPage";
 import CollectionsPage from "./pages/CollectionsPage";
 import CollectionPage from "./pages/CollectionPage";
+import DishCityPage from "./pages/DishCityPage";
+import DishCityIndexPage from "./pages/DishCityIndexPage";
 import NotFound from "./pages/NotFound";
 import ForRestaurantsPage from "./pages/ForRestaurantsPage";
 
@@ -65,6 +67,8 @@ const App = () => (
                 <Route path="/insights" element={<InsightsPage />} />
                 <Route path="/collections" element={<CollectionsPage />} />
                 <Route path="/collection/:slug" element={<CollectionPage />} />
+                <Route path="/eten" element={<DishCityIndexPage />} />
+                <Route path="/eten/:slug" element={<DishCityPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
