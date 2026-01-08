@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Dish } from '@/data/mockData';
+import { Button } from '@/components/ui/button';
 
 interface TrendingDishesProps {
   dishes: Dish[];
@@ -19,20 +20,28 @@ export function TrendingDishes({ dishes, cityName }: TrendingDishesProps) {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-6 md:mb-10"
+          className="flex items-center justify-between mb-6 md:mb-10"
         >
-          <div className="inline-flex items-center gap-2 px-3 md:px-4 py-1 md:py-1.5 rounded-full bg-accent text-accent-foreground text-xs md:text-sm font-medium mb-3 md:mb-4">
-            <TrendingUp className="h-3.5 w-3.5 md:h-4 md:w-4" />
-            {t('trending.subtitle')}
+          <div className="text-center flex-1">
+            <div className="inline-flex items-center gap-2 px-3 md:px-4 py-1 md:py-1.5 rounded-full bg-accent text-accent-foreground text-xs md:text-sm font-medium mb-3 md:mb-4">
+              <TrendingUp className="h-3.5 w-3.5 md:h-4 md:w-4" />
+              {t('trending.subtitle')}
+            </div>
+            <h2 className="text-2xl md:text-4xl font-bold">
+              {t('trending.title')}
+              {cityName && (
+                <span className="text-gradient ml-2">
+                  {t('trending.inCity', { city: cityName })}
+                </span>
+              )}
+            </h2>
           </div>
-          <h2 className="text-2xl md:text-4xl font-bold">
-            {t('trending.title')}
-            {cityName && (
-              <span className="text-gradient ml-2">
-                {t('trending.inCity', { city: cityName })}
-              </span>
-            )}
-          </h2>
+          <Button variant="ghost" size="sm" asChild className="hidden md:flex">
+            <Link to="/eten" className="flex items-center gap-2">
+              Alle gerechten
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
         </motion.div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
@@ -67,6 +76,21 @@ export function TrendingDishes({ dishes, cityName }: TrendingDishesProps) {
             </motion.div>
           ))}
         </div>
+
+        {/* Link to SEO landing pages */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="flex justify-center mt-6 md:hidden"
+        >
+          <Button variant="outline" asChild>
+            <Link to="/eten" className="flex items-center gap-2">
+              Bekijk alle gerechten
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
+        </motion.div>
       </div>
     </section>
   );

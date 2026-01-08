@@ -39,6 +39,12 @@ serve(async (req) => {
       .order('search_count', { ascending: false })
       .limit(100);
 
+    // Get all active SEO landing pages
+    const { data: seoLandingPages } = await supabase
+      .from('seo_landing_pages')
+      .select('slug, updated_at')
+      .eq('is_active', true);
+
     const now = new Date().toISOString().split('T')[0];
 
     // Build sitemap XML
@@ -60,6 +66,12 @@ serve(async (req) => {
     <loc>${SITE_URL}/search</loc>
     <lastmod>${now}</lastmod>
     <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>${SITE_URL}/eten</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
@@ -87,6 +99,20 @@ serve(async (req) => {
     <priority>0.3</priority>
   </url>
 `;
+
+    // SEO Landing Pages (/eten/[slug]) - High priority for SEO
+    if (seoLandingPages) {
+      for (const page of seoLandingPages) {
+        const lastmod = page.updated_at?.split('T')[0] || now;
+        sitemap += `
+  <url>
+    <loc>${SITE_URL}/eten/${page.slug}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>`;
+      }
+    }
 
     // Restaurant pages
     if (restaurants) {
@@ -145,6 +171,8 @@ serve(async (req) => {
 
     sitemap += `
 </urlset>`;
+
+    console.log(`Sitemap generated: ${restaurants?.length || 0} restaurants, ${seoLandingPages?.length || 0} SEO pages, ${cities?.length || 0} cities, ${dishes?.length || 0} dishes`);
 
     return new Response(sitemap, {
       status: 200,
