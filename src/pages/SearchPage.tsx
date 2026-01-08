@@ -7,6 +7,7 @@ import { Layout } from '@/components/layout/Layout';
 import { SearchBar } from '@/components/search/SearchBar';
 import { DatabaseRestaurantCard } from '@/components/restaurant/DatabaseRestaurantCard';
 import { FilterPopover } from '@/components/search/FilterPopover';
+import { SeoLandingLinks } from '@/components/search/SeoLandingLinks';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { SkeletonCard } from '@/components/ui/skeleton-card';
@@ -408,6 +409,14 @@ export default function SearchPage() {
                 </Button>
               </div>
             )}
+
+            {/* SEO Internal Links */}
+            <SeoLandingLinks
+              currentDish={dishQuery}
+              currentCity={cityId !== 'all' ? cityId : undefined}
+              cities={cities.map(c => ({ id: c.id, name: c.name, slug: c.slug }))}
+              dishes={dishes.slice(0, 10).map(d => ({ id: d.id, name: d.name, slug: d.slug }))}
+            />
           </>
         ) : (
           <div className="text-center py-12">

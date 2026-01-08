@@ -461,6 +461,10 @@ export default function AdminPanel() {
               <Settings className="h-4 w-4" />
               <span className="hidden sm:inline">Instellingen</span>
             </TabsTrigger>
+            <TabsTrigger value="seo" className="gap-1.5">
+              <TrendingUp className="h-4 w-4" />
+              <span className="hidden sm:inline">SEO Pages</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="restaurants">
@@ -876,6 +880,21 @@ export default function AdminPanel() {
               </CardHeader>
               <CardContent>
                 <SettingsManager />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="seo">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  SEO Landing Pages
+                </CardTitle>
+                <CardDescription>Beheer city×dish SEO landing pages voor betere Google rankings</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SeoLandingPagesManager />
               </CardContent>
             </Card>
           </TabsContent>
