@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { TagInput } from '@/components/ui/tag-input';
 import { MenuUpload } from '@/components/admin/MenuUpload';
+import { MenuItemsManager } from '@/components/admin/MenuItemsManager';
 import { RestaurantImageUpload } from '@/components/admin/RestaurantImageUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
@@ -647,6 +648,14 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
                 />
               </CardContent>
             </Card>
+
+            {/* Menu Items Manager */}
+            <MenuItemsManager
+              restaurantId={restaurant.id}
+              restaurantName={restaurant.name}
+              onUpdate={onUpdate}
+              isAdmin={true}
+            />
 
             {/* Reviews Summary */}
             <Card>

@@ -131,11 +131,12 @@ export default function DishCityIndexPage() {
                 className="pl-10"
               />
             </div>
-            <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
+            <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide touch-pan-x">
               <Button
                 variant={selectedCity === null ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSelectedCity(null)}
+                className="shrink-0"
               >
                 Alle steden
               </Button>
@@ -145,7 +146,7 @@ export default function DishCityIndexPage() {
                   variant={selectedCity === city.id ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setSelectedCity(city.id)}
-                  className="whitespace-nowrap"
+                  className="whitespace-nowrap shrink-0"
                 >
                   {city.name}
                 </Button>

@@ -40,6 +40,7 @@ import { DemandRoutingSettings } from '@/components/routing/DemandRoutingSetting
 import { OptimizationDashboard } from '@/components/optimization/OptimizationDashboard';
 import { DishAnalytics } from '@/components/owner/DishAnalytics';
 import { ClaimStatusBadge } from '@/components/claims/ClaimStatusBadge';
+import { MenuItemsManager } from '@/components/admin/MenuItemsManager';
 import { LockedFeatureOverlay } from '@/components/claims/LockedFeatureOverlay';
 import { VerificationRequiredDialog } from '@/components/claims/VerificationRequiredDialog';
 import { getClaimPermissions, type ClaimPermissions } from '@/types/claims';
@@ -587,6 +588,10 @@ export default function OwnerDashboard() {
             <TabsTrigger value="reviews">
               Reviews ({reviews.length})
             </TabsTrigger>
+            <TabsTrigger value="menu">
+              <UtensilsCrossed className="h-4 w-4 mr-1" />
+              Menu
+            </TabsTrigger>
             <TabsTrigger value="dish-analytics" disabled={!isVerified}>
               <UtensilsCrossed className="h-4 w-4 mr-1" />
               Gerechten
@@ -630,6 +635,22 @@ export default function OwnerDashboard() {
                 <CardContent className="py-12 text-center">
                   <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">Nog geen reviews ontvangen</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="menu">
+            {selectedRestaurant ? (
+              <MenuItemsManager
+                restaurantId={selectedRestaurant.id}
+                restaurantName={selectedRestaurant.name}
+              />
+            ) : (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <UtensilsCrossed className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">Selecteer een restaurant</p>
                 </CardContent>
               </Card>
             )}
