@@ -731,6 +731,42 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurant_chains: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          name: string
+          slug: string
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name: string
+          slug: string
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       restaurant_claims: {
         Row: {
           admin_notes: string | null
@@ -1041,6 +1077,7 @@ export type Database = {
           accepts_routed_demand: boolean | null
           address: string
           ambience_tags: string[] | null
+          chain_id: string | null
           city_id: string
           claim_status: Database["public"]["Enums"]["restaurant_claim_status"]
           claimed_by_owner_id: string | null
@@ -1080,6 +1117,7 @@ export type Database = {
           accepts_routed_demand?: boolean | null
           address: string
           ambience_tags?: string[] | null
+          chain_id?: string | null
           city_id: string
           claim_status?: Database["public"]["Enums"]["restaurant_claim_status"]
           claimed_by_owner_id?: string | null
@@ -1119,6 +1157,7 @@ export type Database = {
           accepts_routed_demand?: boolean | null
           address?: string
           ambience_tags?: string[] | null
+          chain_id?: string | null
           city_id?: string
           claim_status?: Database["public"]["Enums"]["restaurant_claim_status"]
           claimed_by_owner_id?: string | null
@@ -1155,6 +1194,13 @@ export type Database = {
           zenchef_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "restaurants_chain_id_fkey"
+            columns: ["chain_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_chains"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "restaurants_city_id_fkey"
             columns: ["city_id"]
