@@ -52,6 +52,7 @@ import { SeoLandingPagesManager } from '@/components/admin/SeoLandingPagesManage
 import { DishApprovalManager } from '@/components/admin/DishApprovalManager';
 import { ChainsManager } from '@/components/admin/ChainsManager';
 import { GeocodeManager } from '@/components/admin/GeocodeManager';
+import { RestaurantDishesManager } from '@/components/admin/RestaurantDishesManager';
 import { useActivityLog } from '@/hooks/useActivityLog';
 
 interface Stats {
@@ -418,6 +419,10 @@ export default function AdminPanel() {
               <Check className="h-4 w-4" />
               <span className="hidden sm:inline">Dish Approval</span>
             </TabsTrigger>
+            <TabsTrigger value="restaurant-dishes" className="gap-1.5">
+              <UtensilsCrossed className="h-4 w-4" />
+              <span className="hidden sm:inline">Bekend Om</span>
+            </TabsTrigger>
             <TabsTrigger value="cities" className="gap-1.5">
               <MapPin className="h-4 w-4" />
               <span className="hidden sm:inline">Steden</span>
@@ -654,6 +659,10 @@ export default function AdminPanel() {
 
           <TabsContent value="dish-approval">
             <DishApprovalManager />
+          </TabsContent>
+
+          <TabsContent value="restaurant-dishes">
+            <RestaurantDishesManager />
           </TabsContent>
 
           <TabsContent value="cities">
