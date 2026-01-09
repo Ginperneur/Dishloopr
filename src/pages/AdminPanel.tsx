@@ -49,6 +49,7 @@ import { ActivityLog } from '@/components/admin/ActivityLog';
 import { SettingsManager } from '@/components/admin/SettingsManager';
 import { CollectionsManager } from '@/components/admin/CollectionsManager';
 import { SeoLandingPagesManager } from '@/components/admin/SeoLandingPagesManager';
+import { DishApprovalManager } from '@/components/admin/DishApprovalManager';
 import { useActivityLog } from '@/hooks/useActivityLog';
 
 interface Stats {
@@ -411,6 +412,10 @@ export default function AdminPanel() {
               <UtensilsCrossed className="h-4 w-4" />
               <span className="hidden sm:inline">Gerechten</span>
             </TabsTrigger>
+            <TabsTrigger value="dish-approval" className="gap-1.5">
+              <Check className="h-4 w-4" />
+              <span className="hidden sm:inline">Dish Approval</span>
+            </TabsTrigger>
             <TabsTrigger value="cities" className="gap-1.5">
               <MapPin className="h-4 w-4" />
               <span className="hidden sm:inline">Steden</span>
@@ -635,6 +640,10 @@ export default function AdminPanel() {
 
           <TabsContent value="dishes">
             <DishesManager onUpdate={fetchData} />
+          </TabsContent>
+
+          <TabsContent value="dish-approval">
+            <DishApprovalManager />
           </TabsContent>
 
           <TabsContent value="cities">
