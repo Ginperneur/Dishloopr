@@ -166,7 +166,7 @@ export function SearchBar({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                className="absolute top-full left-0 right-0 mt-2 bg-card rounded-xl shadow-lg border border-border z-50 overflow-hidden"
+                className="absolute top-full left-0 right-0 mt-2 bg-card rounded-xl shadow-lg border border-border z-50 overflow-hidden max-h-[60vh] overflow-y-auto"
               >
                 {/* Dish suggestions */}
                 {suggestions.length > 0 && (

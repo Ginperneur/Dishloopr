@@ -14,11 +14,11 @@ import { SEOHead, createWebsiteSchema } from '@/components/seo/SEOHead';
 import { Button } from '@/components/ui/button';
 import { SkeletonCard } from '@/components/ui/skeleton-card';
 import { useFeaturedRestaurants } from '@/hooks/useFeaturedRestaurants';
-import { getTrendingDishes } from '@/data/mockData';
+import { useTrendingDishes } from '@/hooks/useTrendingDishes';
 
 const Index = () => {
   const { t } = useTranslation();
-  const trendingDishes = getTrendingDishes();
+  const { dishes: trendingDishes, loading: dishesLoading } = useTrendingDishes();
   const { restaurants: featuredRestaurants, loading: featuredLoading } = useFeaturedRestaurants(3);
 
   return (

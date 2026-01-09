@@ -2,8 +2,10 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { TrendingUp, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Dish } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
+import type { Database } from '@/integrations/supabase/types';
+
+type Dish = Database['public']['Tables']['dishes']['Row'];
 
 interface TrendingDishesProps {
   dishes: Dish[];
@@ -63,7 +65,7 @@ export function TrendingDishes({ dishes, cityName }: TrendingDishesProps) {
                       {dish.name}
                     </h3>
                     <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-                      {dish.searchCount.toLocaleString()} {t('search.results').toLowerCase()}
+                      {(dish.search_count || 0).toLocaleString()} {t('search.results').toLowerCase()}
                     </p>
                   </div>
                   <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-accent flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors shrink-0">
