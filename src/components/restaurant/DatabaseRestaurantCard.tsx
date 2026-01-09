@@ -10,8 +10,13 @@ import { SponsoredBadge } from '@/components/sponsored/SponsoredBadge';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 
+type RestaurantCardData = Restaurant & {
+  chainName?: string;
+  chainLocationsCount?: number;
+};
+
 interface DatabaseRestaurantCardProps {
-  restaurant: Restaurant;
+  restaurant: RestaurantCardData;
   index?: number;
   isSponsored?: boolean;
 }
@@ -122,10 +127,24 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
             </div>
           </div>
 
-          {/* Location */}
-          <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
-            <MapPin className="h-3.5 w-3.5 shrink-0" />
-            <span className="line-clamp-1">{restaurant.address}</span>
+          {/* Chain + Location */}
+          <div className="space-y-1 mb-3">
+            {(restaurant.chainName || restaurant.chainLocationsCount) && (
+              <div className="text-xs text-muted-foreground line-clamp-1">
+                {restaurant.chainName ? (
+                  <span className="font-medium">{restaurant.chainName}</span>
+                ) : null}
+                {restaurant.chainName && restaurant.chainLocationsCount ? <span> • </span> : null}
+                {typeof restaurant.chainLocationsCount === 'number' ? (
+                  <span>{restaurant.chainLocationsCount} vestigingen</span>
+                ) : null}
+              </div>
+            )}
+
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <MapPin className="h-3.5 w-3.5 shrink-0" />
+              <span className="line-clamp-1">{restaurant.address}</span>
+            </div>
           </div>
 
           {/* Cuisines */}

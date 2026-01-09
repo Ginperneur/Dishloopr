@@ -225,6 +225,16 @@ export default function RestaurantPage() {
                   <h1 className="text-2xl md:text-4xl font-bold mb-1 md:mb-2 truncate">
                     {restaurant.name}
                   </h1>
+
+                  {restaurant.chain && (
+                    <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mb-1">
+                      <span className="font-medium">{restaurant.chain.name}</span>
+                      {typeof restaurant.chainLocationsCount === 'number' && (
+                        <span>• {restaurant.chainLocationsCount} vestigingen</span>
+                      )}
+                    </div>
+                  )}
+
                   <div className="flex flex-wrap items-center gap-2 md:gap-4 text-sm md:text-base text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Star className="h-4 w-4 md:h-5 md:w-5 fill-rating text-rating" />

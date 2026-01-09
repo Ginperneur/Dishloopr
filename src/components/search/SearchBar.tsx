@@ -166,7 +166,8 @@ export function SearchBar({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                className="absolute top-full left-0 right-0 mt-2 bg-card rounded-xl shadow-lg border border-border z-50 overflow-hidden max-h-[60vh] overflow-y-auto"
+                style={{ WebkitOverflowScrolling: 'touch' }}
+                className="absolute top-full left-0 right-0 mt-2 bg-card rounded-xl shadow-lg border border-border z-50 overflow-hidden max-h-[60vh] overflow-y-auto overscroll-contain touch-pan-y scrollbar-hide"
               >
                 {/* Dish suggestions */}
                 {suggestions.length > 0 && (
@@ -239,7 +240,8 @@ export function SearchBar({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                className="absolute top-full right-0 mt-2 bg-card rounded-xl shadow-lg border border-border z-50 overflow-hidden min-w-[180px]"
+                style={{ WebkitOverflowScrolling: 'touch' }}
+                className="absolute top-full right-0 mt-2 bg-card rounded-xl shadow-lg border border-border z-50 overflow-hidden min-w-[180px] max-h-[60vh] overflow-y-auto overscroll-contain touch-pan-y scrollbar-hide"
               >
                 <button
                   onClick={() => {
@@ -297,61 +299,62 @@ export function SearchBar({
         </Button>
       </motion.div>
 
-      {/* City Selector - Mobile only (below search bar) */}
-      {isHero && (
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
-          className="md:hidden mt-3 relative"
+      {/* City Selector - Mobile (below search bar) */}
+      <motion.div
+        initial={isHero ? { y: 20, opacity: 0 } : false}
+        animate={{ y: 0, opacity: 1 }}
+        transition={isHero ? { delay: 0.4, duration: 0.5 } : { duration: 0.2 }}
+        className={`md:hidden ${isHero ? 'mt-3' : 'mt-2'} relative`}
+      >
+        <button
+          onClick={() => setShowCityDropdown(!showCityDropdown)}
+          className={`w-full flex items-center justify-center gap-2 bg-card hover:bg-muted rounded-xl border border-border transition-colors ${
+            isHero ? 'px-4 py-3' : 'px-3 py-2'
+          }`}
         >
-          <button
-            onClick={() => setShowCityDropdown(!showCityDropdown)}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-card hover:bg-muted rounded-xl border border-border transition-colors"
-          >
-            <MapPin className="h-5 w-5 text-muted-foreground" />
-            <span className="font-medium">{cityLabel}</span>
-            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${showCityDropdown ? 'rotate-180' : ''}`} />
-          </button>
+          <MapPin className={`text-muted-foreground ${isHero ? 'h-5 w-5' : 'h-4 w-4'}`} />
+          <span className={`font-medium ${isHero ? '' : 'text-sm'}`}>{cityLabel}</span>
+          <ChevronDown className={`text-muted-foreground transition-transform ${showCityDropdown ? 'rotate-180' : ''} ${isHero ? 'h-4 w-4' : 'h-3.5 w-3.5'}`} />
+        </button>
 
-          <AnimatePresence>
-            {showCityDropdown && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                className="absolute top-full left-0 right-0 mt-2 bg-card rounded-xl shadow-lg border border-border z-50 overflow-hidden"
+        <AnimatePresence>
+          {showCityDropdown && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              style={{ WebkitOverflowScrolling: 'touch' }}
+              className="absolute top-full left-0 right-0 mt-2 bg-card rounded-xl shadow-lg border border-border z-50 overflow-hidden max-h-[60vh] overflow-y-auto overscroll-contain touch-pan-y scrollbar-hide"
+            >
+              <button
+                onClick={() => {
+                  setCityId('all');
+                  setShowCityDropdown(false);
+                }}
+                className={`w-full px-4 py-3 text-left hover:bg-muted transition-colors ${
+                  cityId === 'all' ? 'bg-accent' : ''
+                }`}
               >
+                {t('cities.all')}
+              </button>
+              {cities.map((city) => (
                 <button
+                  key={city.id}
                   onClick={() => {
-                    setCityId('all');
+                    setCityId(city.id);
                     setShowCityDropdown(false);
                   }}
                   className={`w-full px-4 py-3 text-left hover:bg-muted transition-colors ${
-                    cityId === 'all' ? 'bg-accent' : ''
+                    cityId === city.id ? 'bg-accent' : ''
                   }`}
                 >
-                  {t('cities.all')}
+                  {city.name}
                 </button>
-                {cities.map((city) => (
-                  <button
-                    key={city.id}
-                    onClick={() => {
-                      setCityId(city.id);
-                      setShowCityDropdown(false);
-                    }}
-                    className={`w-full px-4 py-3 text-left hover:bg-muted transition-colors ${
-                      cityId === city.id ? 'bg-accent' : ''
-                    }`}
-                  >
-                    {city.name}
-                  </button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-      )}
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 }
