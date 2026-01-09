@@ -11,6 +11,8 @@ export interface SearchResult extends Restaurant {
   matchedDishes?: string[];
   matchScore: number;
   isSponsored?: boolean;
+  chainName?: string;
+  chainLocationsCount?: number;
 }
 
 interface SearchFilters {
@@ -112,12 +114,42 @@ export function useSearch() {
       return;
     }
 
+    // Enrich chain info (chain name + number of locations)
+    const chainIds = Array.from(
+      new Set(restaurants.map(r => r.chain_id).filter(Boolean))
+    ) as string[];
+
+    const chainNameById = new Map<string, string>();
+    const chainCountById = new Map<string, number>();
+
+    if (chainIds.length > 0) {
+      const [chainsRes, chainRestaurantsRes] = await Promise.all([
+        supabase.from('restaurant_chains').select('id,name').in('id', chainIds),
+        supabase
+          .from('restaurants')
+          .select('id,chain_id')
+          .eq('is_active', true)
+          .in('chain_id', chainIds),
+      ]);
+
+      (chainsRes.data || []).forEach((c: any) => {
+        chainNameById.set(c.id, c.name);
+      });
+
+      (chainRestaurantsRes.data || []).forEach((r: any) => {
+        if (!r.chain_id) return;
+        chainCountById.set(r.chain_id, (chainCountById.get(r.chain_id) || 0) + 1);
+      });
+    }
+
     // If no search query, return all restaurants
     if (!queryLower) {
       const cityMap = new Map(cities.map(c => [c.id, c.name]));
       const scoredResults = restaurants.map(r => ({
         ...r,
         cityName: cityMap.get(r.city_id),
+        chainName: r.chain_id ? chainNameById.get(r.chain_id) : undefined,
+        chainLocationsCount: r.chain_id ? chainCountById.get(r.chain_id) : undefined,
         matchScore: r.is_featured ? 2 : r.is_top_listing ? 1 : 0
       }));
       
@@ -212,15 +244,17 @@ export function useSearch() {
       }
 
       // Only include if there's some match
-      if (matchScore > 0 || queryLower === '') {
-        scoredResults.push({
-          ...restaurant,
-          cityName: cityMap.get(restaurant.city_id),
-          matchedDishes,
-          matchScore,
-          isSponsored
-        });
-      }
+        if (matchScore > 0 || queryLower === '') {
+          scoredResults.push({
+            ...restaurant,
+            cityName: cityMap.get(restaurant.city_id),
+            chainName: restaurant.chain_id ? chainNameById.get(restaurant.chain_id) : undefined,
+            chainLocationsCount: restaurant.chain_id ? chainCountById.get(restaurant.chain_id) : undefined,
+            matchedDishes,
+            matchScore,
+            isSponsored
+          });
+        }
     }
 
     // Sort by match score, then rating
