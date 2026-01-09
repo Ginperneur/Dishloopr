@@ -21,7 +21,8 @@ import {
   UtensilsCrossed,
   Lock,
   Shield,
-  AlertTriangle
+  AlertTriangle,
+  Check
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,6 +44,7 @@ import { ClaimStatusBadge } from '@/components/claims/ClaimStatusBadge';
 import { MenuItemsManager } from '@/components/admin/MenuItemsManager';
 import { LockedFeatureOverlay } from '@/components/claims/LockedFeatureOverlay';
 import { VerificationRequiredDialog } from '@/components/claims/VerificationRequiredDialog';
+import { DishConfirmation } from '@/components/owner/DishConfirmation';
 import { getClaimPermissions, type ClaimPermissions } from '@/types/claims';
 
 function StatCard({ title, value, icon: Icon, trend, locked }: { 
@@ -583,10 +585,14 @@ export default function OwnerDashboard() {
         </motion.div>
 
         {/* Tabs */}
-        <Tabs defaultValue={isVerified ? "dish-analytics" : "reviews"} className="space-y-6">
+        <Tabs defaultValue={isVerified ? "dish-confirmation" : "reviews"} className="space-y-6">
           <TabsList className="flex-wrap h-auto gap-1">
             <TabsTrigger value="reviews">
               Reviews ({reviews.length})
+            </TabsTrigger>
+            <TabsTrigger value="dish-confirmation">
+              <Check className="h-4 w-4 mr-1" />
+              Gerechten Bevestigen
             </TabsTrigger>
             <TabsTrigger value="menu">
               <UtensilsCrossed className="h-4 w-4 mr-1" />
@@ -594,7 +600,7 @@ export default function OwnerDashboard() {
             </TabsTrigger>
             <TabsTrigger value="dish-analytics" disabled={!isVerified}>
               <UtensilsCrossed className="h-4 w-4 mr-1" />
-              Gerechten
+              Gerechten Analytics
               {!isVerified && <Lock className="h-3 w-3 ml-1" />}
             </TabsTrigger>
             <TabsTrigger value="analytics" disabled={!isVerified}>
@@ -635,6 +641,22 @@ export default function OwnerDashboard() {
                 <CardContent className="py-12 text-center">
                   <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">Nog geen reviews ontvangen</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="dish-confirmation">
+            {selectedRestaurant ? (
+              <DishConfirmation
+                restaurantId={selectedRestaurant.id}
+                restaurantName={selectedRestaurant.name}
+              />
+            ) : (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <UtensilsCrossed className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">Selecteer een restaurant</p>
                 </CardContent>
               </Card>
             )}

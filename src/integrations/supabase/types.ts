@@ -499,6 +499,7 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          name_en: string | null
           search_count: number
           seasonal_tags: string[] | null
           slug: string
@@ -511,6 +512,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          name_en?: string | null
           search_count?: number
           seasonal_tags?: string[] | null
           slug: string
@@ -523,6 +525,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          name_en?: string | null
           search_count?: number
           seasonal_tags?: string[] | null
           slug?: string
@@ -819,28 +822,55 @@ export type Database = {
       }
       restaurant_dishes: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           clicks: number
           confidence_score: number
           created_at: string
+          created_by: string | null
           dish_id: string
           id: string
+          rejected_reason: string | null
           restaurant_id: string
+          source: string | null
+          status: string | null
+          updated_at: string | null
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           clicks?: number
           confidence_score?: number
           created_at?: string
+          created_by?: string | null
           dish_id: string
           id?: string
+          rejected_reason?: string | null
           restaurant_id: string
+          source?: string | null
+          status?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           clicks?: number
           confidence_score?: number
           created_at?: string
+          created_by?: string | null
           dish_id?: string
           id?: string
+          rejected_reason?: string | null
           restaurant_id?: string
+          source?: string | null
+          status?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: [
           {
@@ -1871,6 +1901,17 @@ export type Database = {
     }
     Enums: {
       app_role: "user" | "owner" | "admin"
+      dish_source:
+        | "cuisine_rules"
+        | "website_hints"
+        | "user_review"
+        | "admin"
+        | "owner"
+      dish_status:
+        | "suggested"
+        | "approved_by_admin"
+        | "verified_by_owner"
+        | "rejected"
       manager_role: "viewer" | "editor" | "finance" | "primary_owner"
       price_level: "1" | "2" | "3" | "4"
       restaurant_claim_status:
@@ -2013,6 +2054,19 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["user", "owner", "admin"],
+      dish_source: [
+        "cuisine_rules",
+        "website_hints",
+        "user_review",
+        "admin",
+        "owner",
+      ],
+      dish_status: [
+        "suggested",
+        "approved_by_admin",
+        "verified_by_owner",
+        "rejected",
+      ],
       manager_role: ["viewer", "editor", "finance", "primary_owner"],
       price_level: ["1", "2", "3", "4"],
       restaurant_claim_status: [
