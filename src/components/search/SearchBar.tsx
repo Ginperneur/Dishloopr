@@ -82,6 +82,7 @@ export function SearchBar({
     }
   }, [query, allDishes]);
 
+  // Close dropdowns on outside click, scroll, or escape
   useEffect(() => {
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target as HTMLElement | null;
@@ -111,12 +112,20 @@ export function SearchBar({
       }
     };
 
+    // Close dropdowns when user scrolls the main page
+    const handleScroll = () => {
+      if (showSuggestions) setShowSuggestions(false);
+      if (showCityDropdown) setShowCityDropdown(false);
+    };
+
     window.addEventListener('pointerdown', handlePointerDown);
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
       window.removeEventListener('pointerdown', handlePointerDown);
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('scroll', handleScroll);
     };
   }, [showSuggestions, showCityDropdown]);
 
@@ -187,9 +196,10 @@ export function SearchBar({
             {showSuggestions && (suggestions.length > 0 || cuisineSuggestions.length > 0) && (
               <motion.div
                 ref={suggestionsRef}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
+                exit={{ opacity: 0, y: 6 }}
+                transition={{ duration: 0.15 }}
                 className="absolute top-full left-0 right-0 mt-2 bg-card rounded-xl shadow-lg border border-border z-50 overflow-hidden"
               >
                 <ScrollArea className="max-h-[60vh]">
@@ -267,9 +277,10 @@ export function SearchBar({
           <AnimatePresence>
             {showCityDropdown && (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
+                exit={{ opacity: 0, y: 6 }}
+                transition={{ duration: 0.15 }}
                 className="absolute top-full right-0 mt-2 bg-card rounded-xl shadow-lg border border-border z-50 overflow-hidden min-w-[180px]"
               >
                 <ScrollArea className="max-h-[60vh]">
@@ -357,9 +368,10 @@ export function SearchBar({
         <AnimatePresence>
           {showCityDropdown && (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
+              exit={{ opacity: 0, y: 6 }}
+              transition={{ duration: 0.15 }}
               className="absolute top-full left-0 right-0 mt-2 bg-card rounded-xl shadow-lg border border-border z-50 overflow-hidden"
             >
               <ScrollArea className="max-h-[60vh]">
