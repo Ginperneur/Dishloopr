@@ -67,6 +67,28 @@ function MapController({ center, zoom }: { center: [number, number]; zoom: numbe
   return null;
 }
 
+function MapInvalidator() {
+  const map = useMap();
+
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      map.invalidateSize();
+    }, 80);
+
+    const handleResize = () => map.invalidateSize();
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, [map]);
+
+  return null;
+}
+
 export function RestaurantMap({ restaurants, userLocation, onClose, className = '' }: RestaurantMapProps) {
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   
@@ -116,7 +138,8 @@ export function RestaurantMap({ restaurants, userLocation, onClose, className = 
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        
+
+        <MapInvalidator />
         <MapController center={center} zoom={13} />
         
         {/* User location marker */}
