@@ -50,6 +50,7 @@ import { SettingsManager } from '@/components/admin/SettingsManager';
 import { CollectionsManager } from '@/components/admin/CollectionsManager';
 import { SeoLandingPagesManager } from '@/components/admin/SeoLandingPagesManager';
 import { DishApprovalManager } from '@/components/admin/DishApprovalManager';
+import { ChainsManager } from '@/components/admin/ChainsManager';
 import { useActivityLog } from '@/hooks/useActivityLog';
 
 interface Stats {
@@ -469,6 +470,10 @@ export default function AdminPanel() {
             <TabsTrigger value="seo" className="gap-1.5">
               <TrendingUp className="h-4 w-4" />
               <span className="hidden sm:inline">SEO Pages</span>
+            </TabsTrigger>
+            <TabsTrigger value="chains" className="gap-1.5">
+              <Store className="h-4 w-4" />
+              <span className="hidden sm:inline">Ketens</span>
             </TabsTrigger>
           </TabsList>
 
@@ -906,6 +911,10 @@ export default function AdminPanel() {
                 <SeoLandingPagesManager />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="chains">
+            <ChainsManager />
           </TabsContent>
         </Tabs>
 
