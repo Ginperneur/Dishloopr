@@ -39,6 +39,7 @@ export function SearchBar({
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const lastDropdownOpenedAtRef = useRef(0);
 
   // Fetch cities and dishes on mount
   useEffect(() => {
@@ -59,7 +60,7 @@ export function SearchBar({
   useEffect(() => {
     if (query.length >= 2) {
       const queryLower = query.toLowerCase();
-      
+
       // Filter dishes by name or synonyms
       const filteredDishes = allDishes.filter(
         d =>
@@ -69,7 +70,7 @@ export function SearchBar({
       setSuggestions(filteredDishes.slice(0, 5));
 
       // Filter cuisines
-      const filteredCuisines = allCuisines.filter(c => 
+      const filteredCuisines = allCuisines.filter(c =>
         c.toLowerCase().includes(queryLower)
       );
       setCuisineSuggestions(filteredCuisines.slice(0, 3));
@@ -81,6 +82,13 @@ export function SearchBar({
       setShowSuggestions(false);
     }
   }, [query, allDishes]);
+
+  // Track when dropdowns open (prevents immediate close on mobile "address bar" scroll)
+  useEffect(() => {
+    if (showSuggestions || showCityDropdown) {
+      lastDropdownOpenedAtRef.current = Date.now();
+    }
+  }, [showSuggestions, showCityDropdown]);
 
   // Close dropdowns on outside click, scroll, or escape
   useEffect(() => {
@@ -114,6 +122,9 @@ export function SearchBar({
 
     // Close dropdowns when user scrolls the main page
     const handleScroll = () => {
+      const msSinceOpen = Date.now() - lastDropdownOpenedAtRef.current;
+      if (msSinceOpen < 250) return;
+
       if (showSuggestions) setShowSuggestions(false);
       if (showCityDropdown) setShowCityDropdown(false);
     };
