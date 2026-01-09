@@ -40,6 +40,7 @@ export function SearchBar({
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const lastDropdownOpenedAtRef = useRef(0);
+  const interactingWithCityDropdownRef = useRef(false);
 
   // Fetch cities and dishes on mount
   useEffect(() => {
@@ -124,6 +125,7 @@ export function SearchBar({
     const handleScroll = () => {
       const msSinceOpen = Date.now() - lastDropdownOpenedAtRef.current;
       if (msSinceOpen < 250) return;
+      if (interactingWithCityDropdownRef.current) return;
 
       if (showSuggestions) setShowSuggestions(false);
       if (showCityDropdown) setShowCityDropdown(false);
@@ -383,40 +385,47 @@ export function SearchBar({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 6 }}
               transition={{ duration: 0.15 }}
+              onPointerDown={() => {
+                interactingWithCityDropdownRef.current = true;
+              }}
+              onPointerUp={() => {
+                interactingWithCityDropdownRef.current = false;
+              }}
+              onPointerCancel={() => {
+                interactingWithCityDropdownRef.current = false;
+              }}
               className="absolute top-full left-0 right-0 mt-2 bg-card rounded-xl shadow-lg border border-border z-50 overflow-hidden"
             >
-              <ScrollArea className="max-h-[60vh]">
-                <div
-                  style={{ WebkitOverflowScrolling: 'touch' }}
-                  className="overscroll-contain touch-pan-y scrollbar-hide"
+              <div
+                style={{ WebkitOverflowScrolling: 'touch' }}
+                className="max-h-[60vh] overflow-y-auto overscroll-contain touch-pan-y scrollbar-hide"
+              >
+                <button
+                  onClick={() => {
+                    setCityId('all');
+                    setShowCityDropdown(false);
+                  }}
+                  className={`w-full px-4 py-3 text-left hover:bg-muted transition-colors ${
+                    cityId === 'all' ? 'bg-accent' : ''
+                  }`}
                 >
+                  {t('cities.all')}
+                </button>
+                {cities.map((city) => (
                   <button
+                    key={city.id}
                     onClick={() => {
-                      setCityId('all');
+                      setCityId(city.id);
                       setShowCityDropdown(false);
                     }}
                     className={`w-full px-4 py-3 text-left hover:bg-muted transition-colors ${
-                      cityId === 'all' ? 'bg-accent' : ''
+                      cityId === city.id ? 'bg-accent' : ''
                     }`}
                   >
-                    {t('cities.all')}
+                    {city.name}
                   </button>
-                  {cities.map((city) => (
-                    <button
-                      key={city.id}
-                      onClick={() => {
-                        setCityId(city.id);
-                        setShowCityDropdown(false);
-                      }}
-                      className={`w-full px-4 py-3 text-left hover:bg-muted transition-colors ${
-                        cityId === city.id ? 'bg-accent' : ''
-                      }`}
-                    >
-                      {city.name}
-                    </button>
-                  ))}
-                </div>
-              </ScrollArea>
+                ))}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
