@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRestaurantDishes, DishStatus, RestaurantDish } from '@/hooks/useRestaurantDishes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,8 +42,8 @@ export function DishApprovalManager() {
     includeAll: true,
   });
 
-  // Fetch restaurants
-  useState(() => {
+  // Fetch restaurants on mount
+  useEffect(() => {
     const fetchRestaurants = async () => {
       const { data } = await supabase
         .from('restaurants')
@@ -55,7 +55,12 @@ export function DishApprovalManager() {
       setLoadingRestaurants(false);
     };
     fetchRestaurants();
-  });
+  }, []);
+
+  // Refetch dishes when restaurant changes
+  useEffect(() => {
+    refetch();
+  }, [selectedRestaurant]);
 
   const getStatusBadge = (status: DishStatus) => {
     const variants: Record<DishStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
