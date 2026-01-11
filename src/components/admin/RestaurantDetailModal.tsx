@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { TagInput } from '@/components/ui/tag-input';
 import { MenuUpload } from '@/components/admin/MenuUpload';
+import { MenuImageUpload } from '@/components/admin/MenuImageUpload';
 import { MenuItemsManager } from '@/components/admin/MenuItemsManager';
 import { RestaurantImageUpload } from '@/components/admin/RestaurantImageUpload';
 import { supabase } from '@/integrations/supabase/client';
@@ -642,6 +643,13 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
                 {/* Menu PDF Upload */}
                 <Separator className="my-4" />
                 <MenuUpload 
+                  restaurantId={restaurant.id} 
+                  restaurantName={restaurant.name}
+                  onSuccess={fetchData}
+                />
+
+                {/* Menu Image Upload */}
+                <MenuImageUpload 
                   restaurantId={restaurant.id} 
                   restaurantName={restaurant.name}
                   onSuccess={fetchData}
