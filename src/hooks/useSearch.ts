@@ -11,6 +11,7 @@ export interface SearchResult extends Restaurant {
   matchedDishes?: string[];
   matchScore: number;
   isSponsored?: boolean;
+  hasDishMatch?: boolean;
   chainName?: string;
   chainLocationsCount?: number;
 }
@@ -235,19 +236,22 @@ export function useSearch() {
       const matchedDishes: string[] = [];
       const isSponsored = sponsoredRestaurants.has(restaurant.id);
 
-      // Check dish matches
+      // Check dish matches - PRIMARY RANKING FACTOR
       const linkedDishes = restaurantDishMap.get(restaurant.id);
-      if (linkedDishes) {
-        matchScore += linkedDishes.length * 10;
+      const hasDishMatch = linkedDishes && linkedDishes.length > 0;
+      
+      if (hasDishMatch) {
+        // Base score of 100 for any dish match, plus 20 per additional dish
+        matchScore += 100 + (linkedDishes.length - 1) * 20;
         matchedDishes.push(...linkedDishes);
       }
 
-      // Check cuisine match
+      // Check cuisine match (secondary factor)
       if (restaurant.cuisines?.some(c => c.toLowerCase().includes(queryLower))) {
         matchScore += 5;
       }
 
-      // Check name match
+      // Check name match (secondary factor)
       if (restaurant.name.toLowerCase().includes(queryLower)) {
         matchScore += 3;
       }
@@ -257,22 +261,23 @@ export function useSearch() {
       if (restaurant.is_top_listing) matchScore += 1;
       
       // Sponsored boost (contextually relevant only - must have dish match)
-      if (isSponsored && linkedDishes && linkedDishes.length > 0) {
-        matchScore += 8; // Significant but not overwhelming boost
+      if (isSponsored && hasDishMatch) {
+        matchScore += 15; // Boost within dish-matched restaurants
       }
 
-      // Only include if there's some match
-        if (matchScore > 0 || queryLower === '') {
-          scoredResults.push({
-            ...restaurant,
-            cityName: cityMap.get(restaurant.city_id),
-            chainName: restaurant.chain_id ? chainNameById.get(restaurant.chain_id) : undefined,
-            chainLocationsCount: restaurant.chain_id ? chainCountById.get(restaurant.chain_id) : undefined,
-            matchedDishes,
-            matchScore,
-            isSponsored
-          });
-        }
+      // Only include restaurants with actual relevance to the query
+      if (matchScore > 0 || queryLower === '') {
+        scoredResults.push({
+          ...restaurant,
+          cityName: cityMap.get(restaurant.city_id),
+          chainName: restaurant.chain_id ? chainNameById.get(restaurant.chain_id) : undefined,
+          chainLocationsCount: restaurant.chain_id ? chainCountById.get(restaurant.chain_id) : undefined,
+          matchedDishes,
+          matchScore,
+          isSponsored,
+          hasDishMatch // Include for sorting clarity
+        });
+      }
     }
 
     // Sort by match score, then rating
