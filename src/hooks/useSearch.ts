@@ -48,8 +48,24 @@ export function useSearch() {
     
     const queryLower = query.toLowerCase().trim();
     
+    // Fetch dishes directly if not already loaded (prevents race condition)
+    let dishesToSearch = dishes;
+    let citiesToUse = cities;
+    
+    if (dishesToSearch.length === 0 || citiesToUse.length === 0) {
+      const [dishesRes, citiesRes] = await Promise.all([
+        supabase.from('dishes').select('*').eq('is_active', true),
+        supabase.from('cities').select('*').eq('is_active', true).order('name')
+      ]);
+      dishesToSearch = dishesRes.data || [];
+      citiesToUse = citiesRes.data || [];
+      // Update state for future searches
+      if (dishesToSearch.length > 0) setDishes(dishesToSearch);
+      if (citiesToUse.length > 0) setCities(citiesToUse);
+    }
+    
     // Find matching dishes (by name or synonyms)
-    const matchingDishes = dishes.filter(dish => {
+    const matchingDishes = dishesToSearch.filter(dish => {
       const nameMatch = dish.name.toLowerCase().includes(queryLower);
       const synonymMatch = dish.synonyms?.some(s => s.toLowerCase().includes(queryLower));
       return nameMatch || synonymMatch;
@@ -144,7 +160,7 @@ export function useSearch() {
 
     // If no search query, return all restaurants
     if (!queryLower) {
-      const cityMap = new Map(cities.map(c => [c.id, c.name]));
+      const cityMap = new Map(citiesToUse.map(c => [c.id, c.name]));
       const scoredResults = restaurants.map(r => ({
         ...r,
         cityName: cityMap.get(r.city_id),
@@ -211,7 +227,7 @@ export function useSearch() {
     }
 
     // Score and filter restaurants
-    const cityMap = new Map(cities.map(c => [c.id, c.name]));
+    const cityMap = new Map(citiesToUse.map(c => [c.id, c.name]));
     const scoredResults: SearchResult[] = [];
 
     for (const restaurant of restaurants) {
