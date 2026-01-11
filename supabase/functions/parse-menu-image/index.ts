@@ -78,29 +78,16 @@ serve(async (req) => {
 
     console.log(`Processing menu image for restaurant: ${restaurantId}`);
 
-    // Validate image URL if provided
+    // Validate image URL if provided - only reject obvious non-image formats
     if (imageUrl) {
       const url = imageUrl.toLowerCase();
-      const validImageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-      const isDirectImageUrl = validImageExtensions.some(ext => url.includes(ext));
-      const isPdfUrl = url.includes('.pdf');
-      const isWebpageUrl = !isDirectImageUrl && !url.includes('data:') && !url.includes('base64');
       
-      if (isPdfUrl) {
+      // Only reject PDFs explicitly - let Gemini handle other URL validation
+      if (url.includes('.pdf') || url.endsWith('/pdf')) {
         return new Response(
           JSON.stringify({ 
             error: 'PDF bestanden worden niet ondersteund. Upload alstublieft een afbeelding (JPG, PNG, WebP of GIF) of gebruik de PDF parser.',
             code: 'UNSUPPORTED_FORMAT'
-          }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      if (isWebpageUrl) {
-        return new Response(
-          JSON.stringify({ 
-            error: 'Dit lijkt geen directe afbeeldings-URL te zijn. Gebruik alstublieft een directe link naar een afbeelding (eindigt op .jpg, .png, .webp of .gif) of upload een foto.',
-            code: 'INVALID_IMAGE_URL'
           }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
