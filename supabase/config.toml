@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.geocode-restaurants]
 verify_jwt = false
+
+[functions.n8n-menu-webhook]
+verify_jwt = false
