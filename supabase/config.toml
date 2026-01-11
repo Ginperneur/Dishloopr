@@ -3,6 +3,9 @@ project_id = "uktafmxojymsojqewzuy"
 [functions.parse-menu]
 verify_jwt = false
 
+[functions.parse-menu-image]
+verify_jwt = false
+
 [functions.create-listing-checkout]
 verify_jwt = false
 
