@@ -78,6 +78,35 @@ serve(async (req) => {
 
     console.log(`Processing menu image for restaurant: ${restaurantId}`);
 
+    // Validate image URL if provided
+    if (imageUrl) {
+      const url = imageUrl.toLowerCase();
+      const validImageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+      const isDirectImageUrl = validImageExtensions.some(ext => url.includes(ext));
+      const isPdfUrl = url.includes('.pdf');
+      const isWebpageUrl = !isDirectImageUrl && !url.includes('data:') && !url.includes('base64');
+      
+      if (isPdfUrl) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'PDF bestanden worden niet ondersteund. Upload alstublieft een afbeelding (JPG, PNG, WebP of GIF) of gebruik de PDF parser.',
+            code: 'UNSUPPORTED_FORMAT'
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      if (isWebpageUrl) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Dit lijkt geen directe afbeeldings-URL te zijn. Gebruik alstublieft een directe link naar een afbeelding (eindigt op .jpg, .png, .webp of .gif) of upload een foto.',
+            code: 'INVALID_IMAGE_URL'
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     // Build the image content for Gemini
     let imageContent: { type: string; image_url?: { url: string }; text?: string };
     
@@ -151,6 +180,22 @@ Retourneer je antwoord als JSON array met objecten die "name" en "confidence" be
           JSON.stringify({ error: 'AI credits exhausted. Please add more credits.' }),
           { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
+      }
+      
+      // Parse error for better feedback
+      try {
+        const errorData = JSON.parse(errorText);
+        if (errorData.error?.message?.includes('Unsupported image format')) {
+          return new Response(
+            JSON.stringify({ 
+              error: 'Afbeeldingsformaat niet ondersteund. Ondersteunde formaten: PNG, JPEG, WebP, GIF. Zorg dat de URL een directe link is naar een afbeelding.',
+              code: 'UNSUPPORTED_FORMAT'
+            }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } catch (_) {
+        // Ignore parse errors
       }
       
       throw new Error(`AI API error: ${aiResponse.status}`);
