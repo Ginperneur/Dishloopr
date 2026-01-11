@@ -169,10 +169,12 @@ export function useSearch() {
     
     if (matchingDishes.length > 0) {
       const dishIds = matchingDishes.map(d => d.id);
+      // Include all statuses except 'rejected' - suggested dishes should still be searchable
       const { data: links } = await supabase
         .from('restaurant_dishes')
-        .select('restaurant_id, dish_id')
-        .in('dish_id', dishIds);
+        .select('restaurant_id, dish_id, status')
+        .in('dish_id', dishIds)
+        .neq('status', 'rejected');
 
       if (links) {
         links.forEach(link => {
