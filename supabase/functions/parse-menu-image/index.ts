@@ -78,19 +78,66 @@ serve(async (req) => {
 
     console.log(`Processing menu image for restaurant: ${restaurantId}`);
 
-    // Validate image URL if provided - only reject obvious non-image formats
+    // Validate image URL if provided (helps return better errors than the AI gateway)
     if (imageUrl) {
-      const url = imageUrl.toLowerCase();
-      
-      // Only reject PDFs explicitly - let Gemini handle other URL validation
-      if (url.includes('.pdf') || url.endsWith('/pdf')) {
+      const url = String(imageUrl).trim();
+      const lower = url.toLowerCase();
+
+      // Reject PDFs explicitly
+      if (lower.includes('.pdf') || lower.endsWith('/pdf')) {
         return new Response(
-          JSON.stringify({ 
+          JSON.stringify({
             error: 'PDF bestanden worden niet ondersteund. Upload alstublieft een afbeelding (JPG, PNG, WebP of GIF) of gebruik de PDF parser.',
-            code: 'UNSUPPORTED_FORMAT'
+            code: 'UNSUPPORTED_FORMAT',
           }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         );
+      }
+
+      // Try to detect the content-type of the URL (many “menu” URLs are HTML pages)
+      try {
+        let contentType = '';
+
+        const headResp = await fetch(url, { method: 'HEAD', redirect: 'follow' });
+        contentType = headResp.headers.get('content-type') ?? '';
+
+        if ((!headResp.ok || !contentType) && headResp.status !== 405) {
+          // Fallback: some servers don’t support HEAD or don’t include content-type
+          const getResp = await fetch(url, {
+            method: 'GET',
+            redirect: 'follow',
+            headers: { Range: 'bytes=0-2047' },
+          });
+          contentType = getResp.headers.get('content-type') ?? '';
+        }
+
+        const normalized = contentType.split(';')[0].trim();
+
+        if (normalized && !normalized.startsWith('image/')) {
+          return new Response(
+            JSON.stringify({
+              error: `Dit is geen afbeelding-URL (content-type: ${normalized}). Plak een directe link naar een afbeelding (jpg/png/webp/gif) of upload een foto.`,
+              code: 'INVALID_IMAGE_URL',
+            }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          );
+        }
+
+        if (normalized) {
+          const supported = new Set(['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif']);
+          if (!supported.has(normalized)) {
+            return new Response(
+              JSON.stringify({
+                error: `Afbeeldingsformaat niet ondersteund (${normalized}). Ondersteund: PNG, JPEG, WebP, GIF. Upload de afbeelding als bestand als de server AVIF/HEIC/SVG levert.`,
+                code: 'UNSUPPORTED_FORMAT',
+              }),
+              { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+            );
+          }
+        }
+      } catch (e) {
+        // If we can't validate (network / blocked), let the AI gateway attempt it.
+        console.warn('Could not validate imageUrl content-type, continuing:', e);
       }
     }
 
