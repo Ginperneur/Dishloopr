@@ -22,7 +22,8 @@ import {
   RefreshCw,
   Settings,
   Crown,
-  AlertCircle
+  AlertCircle,
+  Image
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -52,6 +53,7 @@ import { SeoLandingPagesManager } from '@/components/admin/SeoLandingPagesManage
 import { DishApprovalManager } from '@/components/admin/DishApprovalManager';
 import { ChainsManager } from '@/components/admin/ChainsManager';
 import { GeocodeManager } from '@/components/admin/GeocodeManager';
+import { PhotosManager } from '@/components/admin/PhotosManager';
 import { RestaurantDishesManager } from '@/components/admin/RestaurantDishesManager';
 import { useActivityLog } from '@/hooks/useActivityLog';
 
@@ -484,6 +486,10 @@ export default function AdminPanel() {
             <TabsTrigger value="geocode" className="gap-1.5">
               <MapPin className="h-4 w-4" />
               <span className="hidden sm:inline">Geocode</span>
+            </TabsTrigger>
+            <TabsTrigger value="photos" className="gap-1.5">
+              <Image className="h-4 w-4" />
+              <span className="hidden sm:inline">Foto's</span>
             </TabsTrigger>
           </TabsList>
 
@@ -933,6 +939,10 @@ export default function AdminPanel() {
 
           <TabsContent value="geocode">
             <GeocodeManager />
+          </TabsContent>
+
+          <TabsContent value="photos">
+            <PhotosManager />
           </TabsContent>
         </Tabs>
 
