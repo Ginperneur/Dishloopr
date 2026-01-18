@@ -14,6 +14,7 @@ interface CSVRestaurant {
   status: 'pending' | 'enriching' | 'success' | 'error';
   errorMessage?: string;
   enrichedData?: {
+    place_id: string;
     address: string;
     geo_lat: number | null;
     geo_lng: number | null;
@@ -22,6 +23,7 @@ interface CSVRestaurant {
     rating: number | null;
     price_level: number;
     opening_hours: string[] | null;
+    photo_references: string[];
   };
 }
 
@@ -124,6 +126,7 @@ export function BulkRestaurantUpload({ onSuccess }: BulkRestaurantUploadProps) {
               ...r, 
               status: 'success',
               enrichedData: {
+                place_id: place.place_id,
                 address: place.address,
                 geo_lat: place.geo_lat,
                 geo_lng: place.geo_lng,
@@ -131,7 +134,8 @@ export function BulkRestaurantUpload({ onSuccess }: BulkRestaurantUploadProps) {
                 website: place.website,
                 rating: place.rating,
                 price_level: place.price_level || 2,
-                opening_hours: place.opening_hours
+                opening_hours: place.opening_hours,
+                photo_references: place.photo_references || []
               }
             } : r
           ));
@@ -229,7 +233,7 @@ export function BulkRestaurantUpload({ onSuccess }: BulkRestaurantUploadProps) {
             .replace(/[^a-z0-9\s-]/g, '')
             .replace(/\s+/g, '-');
 
-          await supabase
+          const { data: newRestaurant, error: insertError } = await supabase
             .from('restaurants')
             .insert({
               name: restaurant.name,
@@ -246,7 +250,21 @@ export function BulkRestaurantUpload({ onSuccess }: BulkRestaurantUploadProps) {
                 ? { weekday_text: restaurant.enrichedData!.opening_hours } 
                 : null,
               is_active: true
-            });
+            })
+            .select('id')
+            .single();
+
+          // Fetch Google photos for new restaurant in background
+          if (!insertError && newRestaurant && restaurant.enrichedData!.photo_references.length > 0) {
+            supabase.functions.invoke('fetch-google-photos', {
+              body: { 
+                place_id: restaurant.enrichedData!.place_id,
+                photo_references: restaurant.enrichedData!.photo_references,
+                restaurant_id: newRestaurant.id,
+                max_photos: 5
+              }
+            }).catch(err => console.error('Failed to fetch photos:', err));
+          }
         }
 
         imported++;
