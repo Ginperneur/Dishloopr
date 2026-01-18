@@ -6,6 +6,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Format dish name: first letter uppercase, rest lowercase (e.g., "STEAK" -> "Steak")
+function formatDishName(name: string): string {
+  if (!name || typeof name !== 'string') return '';
+  const trimmed = name.trim();
+  if (trimmed.length === 0) return '';
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -276,7 +284,8 @@ Retourneer je antwoord als JSON array met objecten die "name" en "confidence" be
 
     for (const dish of dishes) {
       try {
-        const dishName = dish.name.trim();
+        // Format dish name to sentence case
+        const dishName = formatDishName(dish.name);
         const confidence = dish.confidence || 0.7;
         
         if (!dishName || dishName.length < 2) continue;

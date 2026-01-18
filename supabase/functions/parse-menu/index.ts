@@ -6,6 +6,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Format dish name: first letter uppercase, rest lowercase (e.g., "STEAK" -> "Steak")
+function formatDishName(name: string): string {
+  if (!name || typeof name !== 'string') return '';
+  const trimmed = name.trim();
+  if (trimmed.length === 0) return '';
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -202,7 +210,8 @@ Houd de gerechtnamen in het Nederlands waar mogelijk, maar gebruik de originele 
     const existingDishes: string[] = [];
 
     for (const dish of extractedDishes) {
-      const dishName = dish.name.trim();
+      // Format dish name to sentence case
+      const dishName = formatDishName(dish.name);
       const dishSlug = dishName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
       
       if (!dishName || dishName.length < 2) continue;

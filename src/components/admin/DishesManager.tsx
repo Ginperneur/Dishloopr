@@ -20,6 +20,7 @@ import { TagInput } from '@/components/ui/tag-input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useActivityLog } from '@/hooks/useActivityLog';
+import { formatDishName } from '@/lib/utils';
 
 interface Dish {
   id: string;
@@ -80,13 +81,15 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
       return;
     }
 
+    const formattedName = formatDishName(newDishName);
+    
     const { data, error } = await supabase
       .from('dishes')
       .insert({
-        name: newDishName.trim(),
-        slug: generateSlug(newDishName),
-        synonyms: newDishSynonyms,
-        cuisine_tags: newDishCuisines,
+        name: formattedName,
+        slug: generateSlug(formattedName),
+        synonyms: newDishSynonyms.map(s => s.toLowerCase()),
+        cuisine_tags: newDishCuisines.map(c => c.toLowerCase()),
         is_active: true
       })
       .select()
@@ -99,7 +102,7 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
         actionType: 'create',
         entityType: 'dish',
         entityId: data?.id,
-        entityName: newDishName.trim()
+        entityName: formattedName
       });
       toast.success('Gerecht toegevoegd');
       setNewDishName('');
@@ -112,13 +115,15 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
   };
 
   const updateDish = async (dish: Dish) => {
+    const formattedName = formatDishName(dish.name);
+    
     const { error } = await supabase
       .from('dishes')
       .update({
-        name: dish.name,
-        slug: generateSlug(dish.name),
-        synonyms: dish.synonyms,
-        cuisine_tags: dish.cuisine_tags,
+        name: formattedName,
+        slug: generateSlug(formattedName),
+        synonyms: dish.synonyms?.map(s => s.toLowerCase()),
+        cuisine_tags: dish.cuisine_tags?.map(c => c.toLowerCase()),
         is_active: dish.is_active
       })
       .eq('id', dish.id);
@@ -291,7 +296,7 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
               ) : (
                 filteredDishes.map(dish => (
                   <TableRow key={dish.id}>
-                    <TableCell className="font-medium capitalize">{dish.name}</TableCell>
+                    <TableCell className="font-medium">{formatDishName(dish.name)}</TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1 max-w-[200px]">
                         {dish.synonyms?.slice(0, 3).map((s, i) => (
