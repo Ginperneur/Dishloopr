@@ -6,6 +6,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-secret',
 };
 
+// Format dish name: first letter uppercase, rest lowercase (e.g., "STEAK" -> "Steak")
+function formatDishName(name: string): string {
+  if (!name || typeof name !== 'string') return '';
+  const trimmed = name.trim();
+  if (trimmed.length === 0) return '';
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -154,8 +162,12 @@ Regels:
 
     for (const dish of extractedDishes) {
       try {
+        // Format dish name to sentence case
+        const formattedName = formatDishName(dish.name);
+        if (!formattedName || formattedName.length < 2) continue;
+        
         // Create slug from dish name
-        const slug = dish.name
+        const slug = formattedName
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/^-|-$/g, '');
@@ -172,7 +184,7 @@ Regels:
           const { data: dishByName } = await supabase
             .from('dishes')
             .select('id, name')
-            .ilike('name', dish.name)
+            .ilike('name', formattedName)
             .single();
           existingDish = dishByName;
         }
@@ -186,8 +198,8 @@ Regels:
           const { data: newDish, error: createError } = await supabase
             .from('dishes')
             .insert({
-              name: dish.name,
-              name_en: dish.name_en || null,
+              name: formattedName,
+              name_en: dish.name_en ? formatDishName(dish.name_en) : null,
               slug: slug,
               is_active: true,
             })
@@ -196,7 +208,7 @@ Regels:
 
           if (createError) {
             console.error('Error creating dish:', createError);
-            results.errors.push(dish.name);
+            results.errors.push(formattedName);
             continue;
           }
           dishId = newDish.id;

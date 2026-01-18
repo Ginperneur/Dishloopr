@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Check, X, Plus, Loader2, ChefHat, AlertCircle, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/lib/utils';
+import { cn, formatDishName } from '@/lib/utils';
 
 interface DishConfirmationProps {
   restaurantId: string;
@@ -58,8 +58,8 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
 
   const getDishName = (dish: Dish | RestaurantDish['dish']) => {
     if (!dish) return '';
-    if (isNL) return dish.name;
-    return dish.name_en || dish.name;
+    const name = isNL ? dish.name : (dish.name_en || dish.name);
+    return formatDishName(name);
   };
 
   const handleConfirm = async (id: string) => {

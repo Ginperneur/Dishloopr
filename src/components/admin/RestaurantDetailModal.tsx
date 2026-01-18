@@ -30,6 +30,7 @@ import { RestaurantImageUpload } from '@/components/admin/RestaurantImageUpload'
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { formatDishName } from '@/lib/utils';
 
 interface RestaurantDetailModalProps {
   restaurant: any;
@@ -589,8 +590,8 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
                 <div className="flex flex-wrap gap-2">
                   {dishes.map((dish) => (
                     <div key={dish.id} className="group relative">
-                      <Badge variant="default" className="pr-6 capitalize">
-                        {dish.name}
+                      <Badge variant="default" className="pr-6">
+                        {formatDishName(dish.name)}
                         <button
                           onClick={() => removeDish(dish.id)}
                           className="absolute right-1 top-1/2 -translate-y-1/2 opacity-50 hover:opacity-100 hover:text-destructive"
@@ -627,7 +628,7 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
                     <div className="space-y-3">
                       {dishes.map((dish) => (
                         <div key={dish.id} className="p-3 rounded-lg bg-muted/50">
-                          <p className="text-sm font-medium capitalize mb-2">{dish.name}</p>
+                          <p className="text-sm font-medium mb-2">{formatDishName(dish.name)}</p>
                           <TagInput
                             tags={dish.synonyms || []}
                             onTagsChange={(newSynonyms) => updateDishSynonyms(dish.id, newSynonyms)}
