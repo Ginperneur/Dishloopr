@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.n8n-menu-webhook]
 verify_jwt = false
+
+[functions.fetch-google-photos]
+verify_jwt = false

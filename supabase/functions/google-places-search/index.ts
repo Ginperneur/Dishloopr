@@ -159,7 +159,7 @@ serve(async (req) => {
 
     console.log(`Found ${detailedResults.length} detailed results`);
 
-    // Transform results to our format
+    // Transform results to our format - include ALL photo references
     const transformedResults = detailedResults.map((place) => ({
       place_id: place.place_id,
       name: place.name,
@@ -174,6 +174,7 @@ serve(async (req) => {
       opening_hours: place.opening_hours?.weekday_text || null,
       opening_hours_periods: place.opening_hours?.periods || null,
       photo_reference: place.photos?.[0]?.photo_reference || null,
+      photo_references: place.photos?.map(p => p.photo_reference) || [],
     }));
 
     return new Response(

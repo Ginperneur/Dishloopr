@@ -29,6 +29,7 @@ interface GooglePlaceResult {
   review_count: number | null;
   price_level: number;
   opening_hours: string[] | null;
+  photo_references?: string[];
 }
 
 export default function ClaimPage() {
@@ -202,6 +203,24 @@ export default function ClaimPage() {
 
         if (restaurantError) throw restaurantError;
         restaurantId = newRestaurant.id;
+
+        // Fetch and store Google Places photos automatically
+        if (selectedPlace.place_id && selectedPlace.photo_references?.length) {
+          supabase.functions.invoke('fetch-google-photos', {
+            body: { 
+              place_id: selectedPlace.place_id,
+              photo_references: selectedPlace.photo_references,
+              restaurant_id: restaurantId,
+              max_photos: 5
+            }
+          }).then(({ error }) => {
+            if (error) {
+              console.error('Failed to fetch Google photos:', error);
+            } else {
+              console.log('Google photos fetched successfully');
+            }
+          });
+        }
       } else {
         // Update existing restaurant claim status
         await supabase

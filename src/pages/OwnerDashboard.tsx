@@ -22,7 +22,8 @@ import {
   Lock,
   Shield,
   AlertTriangle,
-  Check
+  Check,
+  Image
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,6 +46,7 @@ import { MenuItemsManager } from '@/components/admin/MenuItemsManager';
 import { LockedFeatureOverlay } from '@/components/claims/LockedFeatureOverlay';
 import { VerificationRequiredDialog } from '@/components/claims/VerificationRequiredDialog';
 import { DishConfirmation } from '@/components/owner/DishConfirmation';
+import { RestaurantImageUpload } from '@/components/admin/RestaurantImageUpload';
 import { getClaimPermissions, type ClaimPermissions } from '@/types/claims';
 
 function StatCard({ title, value, icon: Icon, trend, locked }: { 
@@ -590,6 +592,11 @@ export default function OwnerDashboard() {
             <TabsTrigger value="reviews">
               Reviews ({reviews.length})
             </TabsTrigger>
+            <TabsTrigger value="photos" disabled={!isVerified}>
+              <Image className="h-4 w-4 mr-1" />
+              Foto's
+              {!isVerified && <Lock className="h-3 w-3 ml-1" />}
+            </TabsTrigger>
             <TabsTrigger value="dish-confirmation">
               <Check className="h-4 w-4 mr-1" />
               Gerechten Bevestigen
@@ -643,6 +650,42 @@ export default function OwnerDashboard() {
                   <p className="text-muted-foreground">Nog geen reviews ontvangen</p>
                 </CardContent>
               </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="photos">
+            {isVerified && selectedRestaurant ? (
+              <div className="space-y-4">
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <Image className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                      <div className="text-sm">
+                        <p className="font-medium mb-1">Foto's beheren</p>
+                        <p className="text-muted-foreground">
+                          Je foto's worden automatisch opgehaald van Google bij het aanmaken van je profiel. 
+                          Hier kun je ze vervangen of aanvullen met eigen foto's.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <RestaurantImageUpload
+                  restaurantId={selectedRestaurant.id}
+                  restaurantName={selectedRestaurant.name}
+                  existingImages={selectedRestaurant.images || []}
+                  onImagesUpdate={(images) => {
+                    // Refresh the restaurant data
+                    toast.success('Foto\'s opgeslagen');
+                  }}
+                />
+              </div>
+            ) : (
+              <LockedFeatureOverlay 
+                featureName="Foto's Beheren"
+                description="Vervang of voeg nieuwe foto's toe aan je restaurantprofiel."
+                onRequestVerification={() => setVerificationDialogOpen(true)}
+              />
             )}
           </TabsContent>
 
