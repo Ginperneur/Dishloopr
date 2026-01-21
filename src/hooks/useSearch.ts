@@ -181,15 +181,15 @@ export function useSearch() {
       return;
     }
 
-    // Get restaurant-dish links for matching dishes
-    let restaurantDishMap: Map<string, string[]> = new Map();
+    // Get restaurant-dish links for matching dishes (including signature status)
+    let restaurantDishMap: Map<string, { name: string; isSignature: boolean }[]> = new Map();
     
     if (matchingDishes.length > 0) {
       const dishIds = matchingDishes.map(d => d.id);
       // Include all statuses except 'rejected' - suggested dishes should still be searchable
       const { data: links } = await supabase
         .from('restaurant_dishes')
-        .select('restaurant_id, dish_id, status')
+        .select('restaurant_id, dish_id, status, is_signature')
         .in('dish_id', dishIds)
         .neq('status', 'rejected');
 
@@ -198,7 +198,7 @@ export function useSearch() {
           const dishName = matchingDishes.find(d => d.id === link.dish_id)?.name;
           if (dishName) {
             const existing = restaurantDishMap.get(link.restaurant_id) || [];
-            restaurantDishMap.set(link.restaurant_id, [...existing, dishName]);
+            restaurantDishMap.set(link.restaurant_id, [...existing, { name: dishName, isSignature: link.is_signature || false }]);
           }
         });
       }
@@ -243,7 +243,14 @@ export function useSearch() {
       if (hasDishMatch) {
         // Base score of 100 for any dish match, plus 20 per additional dish
         matchScore += 100 + (linkedDishes.length - 1) * 20;
-        matchedDishes.push(...linkedDishes);
+        
+        // SIGNATURE BOOST: Extra 50 points for each matched signature dish
+        const signatureMatches = linkedDishes.filter(d => d.isSignature).length;
+        if (signatureMatches > 0) {
+          matchScore += signatureMatches * 50;
+        }
+        
+        matchedDishes.push(...linkedDishes.map(d => d.name));
       }
 
       // Check cuisine match (secondary factor)
