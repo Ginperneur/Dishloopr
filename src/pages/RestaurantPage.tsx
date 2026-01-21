@@ -40,7 +40,7 @@ import { useAIRecommendations } from '@/hooks/useAIRecommendations';
 import { useAlternativeRestaurants, type RoutingReason } from '@/hooks/useAlternativeRestaurants';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGeolocation } from '@/hooks/useGeolocation';
-import { PRICE_LABELS_FULL, AMBIENCE_TAG_STYLES, WEEK_DAYS } from '@/lib/constants';
+import { PRICE_LABELS_FULL, AMBIENCE_TAG_STYLES, AMBIENCE_TAG_I18N_KEYS, WEEK_DAYS } from '@/lib/constants';
 
 export default function RestaurantPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -323,7 +323,7 @@ export default function RestaurantPage() {
                       AMBIENCE_TAG_STYLES[tag] || 'bg-muted text-muted-foreground'
                     }`}
                   >
-                    {t(`filters.${tag.replace('-', '')}`) || tag}
+                    {AMBIENCE_TAG_I18N_KEYS[tag] ? t(AMBIENCE_TAG_I18N_KEYS[tag]) : tag}
                   </span>
                 ))}
                 {restaurant.cuisines?.map((cuisine) => (
