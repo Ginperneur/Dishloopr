@@ -80,7 +80,7 @@ const Index = () => {
             className="text-center mb-6 md:mb-10"
           >
             <h2 className="text-xl sm:text-2xl md:text-4xl font-bold">
-              {t('restaurant.featured')} restaurants
+              {t('home.featuredRestaurants', 'Uitgelichte restaurants')}
             </h2>
           </motion.div>
 
