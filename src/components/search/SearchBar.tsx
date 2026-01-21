@@ -154,13 +154,17 @@ export function SearchBar({
       if (cityId && cityId !== 'all') params.set('city', cityId);
       navigate(`/search?${params.toString()}`);
     }
+    // Close all dropdowns on search (especially important for mobile)
     setShowSuggestions(false);
+    setShowCityDropdown(false);
   };
 
   const handleSuggestionClick = (value: string) => {
     setQuery(value);
     addSearch(value);
+    // Close all dropdowns on suggestion click (especially important for mobile)
     setShowSuggestions(false);
+    setShowCityDropdown(false);
     if (onSearch) {
       onSearch(value, cityId);
     } else {
