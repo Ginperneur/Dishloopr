@@ -32,37 +32,48 @@ export function useMenuItems(restaurantId: string | undefined) {
     const fetchMenuItems = async () => {
       setLoading(true);
       try {
-        // Fetch menu items
-        const { data: menuData, error: menuError } = await supabase
-          .from('menu_items')
-          .select('*')
-          .eq('restaurant_id', restaurantId)
-          .eq('is_available', true)
-          .order('category')
-          .order('name');
-
-        if (menuError) throw menuError;
-
-        // Fetch signature dishes for this restaurant
-        const { data: signatureDishes } = await supabase
+        // Fetch restaurant dishes (the actual dishes linked to the restaurant)
+        const { data: restaurantDishes, error: dishesError } = await supabase
           .from('restaurant_dishes')
-          .select('dish:dishes(name)')
+          .select(`
+            id,
+            restaurant_id,
+            is_signature,
+            status,
+            dish:dishes(
+              id,
+              name,
+              cuisine_tags
+            )
+          `)
           .eq('restaurant_id', restaurantId)
-          .eq('is_signature', true);
+          .in('status', ['approved_by_admin', 'verified_by_owner']);
 
-        // Create a set of signature dish names (lowercase for matching)
-        const signatureNames = new Set(
-          (signatureDishes || [])
-            .map(sd => (sd.dish as any)?.name?.toLowerCase())
-            .filter(Boolean)
-        );
+        if (dishesError) throw dishesError;
 
-        const items = (menuData || []).map(item => ({
-          ...item,
-          price: Number(item.price),
-          allergens: item.allergens || [],
-          is_signature: signatureNames.has(item.name.toLowerCase()),
-        }));
+        // Transform restaurant_dishes to MenuItem format
+        const items: MenuItem[] = (restaurantDishes || [])
+          .filter(rd => rd.dish) // Ensure dish exists
+          .map(rd => {
+            const dish = rd.dish as { id: string; name: string; cuisine_tags: string[] | null };
+            const cuisineTags = dish.cuisine_tags || [];
+            
+            return {
+              id: rd.id,
+              restaurant_id: rd.restaurant_id,
+              name: dish.name,
+              description: null, // restaurant_dishes doesn't have descriptions
+              price: 0, // restaurant_dishes doesn't have prices
+              category: cuisineTags[0] || 'Gerechten', // Use first cuisine tag as category
+              allergens: [],
+              is_vegetarian: cuisineTags.some(t => t.toLowerCase().includes('vegetar')),
+              is_vegan: cuisineTags.some(t => t.toLowerCase().includes('vegan')),
+              is_gluten_free: cuisineTags.some(t => t.toLowerCase().includes('gluten')),
+              image_url: null,
+              is_available: true,
+              is_signature: rd.is_signature,
+            };
+          });
 
         setMenuItems(items);
         
@@ -70,7 +81,7 @@ export function useMenuItems(restaurantId: string | undefined) {
         const uniqueCategories = [...new Set(items.map(item => item.category))];
         setCategories(uniqueCategories);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load menu');
+        setError(err instanceof Error ? err.message : 'Failed to load dishes');
       } finally {
         setLoading(false);
       }
