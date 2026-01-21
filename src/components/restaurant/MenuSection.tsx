@@ -102,7 +102,7 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
       >
-        <h2 className="text-lg md:text-xl font-bold mb-4">{t('restaurant.menu', 'Menukaart')}</h2>
+        <h2 className="text-lg md:text-xl font-bold mb-4">{t('restaurant.dishes', 'Gerechten')}</h2>
         <div className="rounded-xl border border-border bg-card p-6 text-center">
           <p className="text-muted-foreground">{t('menu.noItems', 'Er is nog geen menukaart beschikbaar voor dit restaurant.')}</p>
         </div>
@@ -128,7 +128,7 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
       transition={{ delay: 0.15 }}
     >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-        <h2 className="text-lg md:text-xl font-bold">{t('restaurant.menu', 'Menukaart')}</h2>
+        <h2 className="text-lg md:text-xl font-bold">{t('restaurant.dishes', 'Gerechten')}</h2>
         
         {/* Filter toggles */}
         <div className="flex flex-wrap gap-2">
