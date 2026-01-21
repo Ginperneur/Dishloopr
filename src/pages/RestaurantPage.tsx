@@ -390,11 +390,13 @@ export default function RestaurantPage() {
               </>
             )}
 
-            {/* Menu Section - only shown when restaurant is open */}
-            {isCurrentlyOpen ? (
-              <MenuSection restaurantId={restaurant.id} />
-            ) : (
-              /* Closed message + Alternative Restaurants */
+            {/* Menu Section - always shown */}
+            <MenuSection restaurantId={restaurant.id} />
+
+            <Separator />
+
+            {/* Closed message + Alternative Restaurants - shown when restaurant is closed */}
+            {!isCurrentlyOpen && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -418,10 +420,10 @@ export default function RestaurantPage() {
                   sourceRestaurantName={restaurant.name}
                   onAlternativeClick={handleAlternativeClick}
                 />
+                
+                <Separator />
               </motion.div>
             )}
-
-            <Separator />
 
             {/* Events Section */}
             <EventsSection restaurantId={restaurant.id} />
