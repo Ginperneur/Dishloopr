@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Leaf, Wheat, AlertCircle, X, ZoomIn, ZoomOut, Star } from 'lucide-react';
+import { ChevronDown, Leaf, Wheat, AlertCircle, X, ZoomIn, ZoomOut, Star, Filter } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useMenuItems } from '@/hooks/useMenuItems';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Toggle } from '@/components/ui/toggle';
 import {
   Dialog,
   DialogContent,
@@ -30,6 +31,8 @@ const allergenLabels: Record<string, string> = {
   sulphites: 'Sulfieten',
 };
 
+type FilterType = 'signature' | 'vegetarian' | 'glutenFree';
+
 export function MenuSection({ restaurantId }: MenuSectionProps) {
   const { t } = useTranslation();
   const { menuItems, categories, loading, error } = useMenuItems(restaurantId);
@@ -37,6 +40,43 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
   const [showAllergens, setShowAllergens] = useState<string | null>(null);
   const [lightboxImage, setLightboxImage] = useState<{ url: string; name: string } | null>(null);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<Set<FilterType>>(new Set());
+
+  const toggleFilter = (filter: FilterType) => {
+    setActiveFilters(prev => {
+      const newFilters = new Set(prev);
+      if (newFilters.has(filter)) {
+        newFilters.delete(filter);
+      } else {
+        newFilters.add(filter);
+      }
+      return newFilters;
+    });
+  };
+
+  const filteredMenuItems = useMemo(() => {
+    if (activeFilters.size === 0) return menuItems;
+    
+    return menuItems.filter(item => {
+      if (activeFilters.has('signature') && !item.is_signature) return false;
+      if (activeFilters.has('vegetarian') && !item.is_vegetarian && !item.is_vegan) return false;
+      if (activeFilters.has('glutenFree') && !item.is_gluten_free) return false;
+      return true;
+    });
+  }, [menuItems, activeFilters]);
+
+  const filteredCategories = useMemo(() => {
+    return categories.filter(category => 
+      filteredMenuItems.some(item => item.category === category)
+    );
+  }, [categories, filteredMenuItems]);
+
+  // Count items per filter for badges
+  const filterCounts = useMemo(() => ({
+    signature: menuItems.filter(item => item.is_signature).length,
+    vegetarian: menuItems.filter(item => item.is_vegetarian || item.is_vegan).length,
+    glutenFree: menuItems.filter(item => item.is_gluten_free).length,
+  }), [menuItems]);
 
   if (loading) {
     return (
@@ -72,11 +112,77 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.15 }}
     >
-      <h2 className="text-lg md:text-xl font-bold mb-4">{t('restaurant.menu', 'Menukaart')}</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <h2 className="text-lg md:text-xl font-bold">{t('restaurant.menu', 'Menukaart')}</h2>
+        
+        {/* Filter toggles */}
+        <div className="flex flex-wrap gap-2">
+          <Toggle
+            pressed={activeFilters.has('signature')}
+            onPressedChange={() => toggleFilter('signature')}
+            size="sm"
+            className="gap-1.5 data-[state=on]:bg-primary/10 data-[state=on]:text-primary"
+            disabled={filterCounts.signature === 0}
+          >
+            <Star className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{t('menu.filter.signature', 'Bekend om')}</span>
+            <span className="sm:hidden">⭐</span>
+            {filterCounts.signature > 0 && (
+              <span className="text-xs text-muted-foreground">({filterCounts.signature})</span>
+            )}
+          </Toggle>
+          
+          <Toggle
+            pressed={activeFilters.has('vegetarian')}
+            onPressedChange={() => toggleFilter('vegetarian')}
+            size="sm"
+            className="gap-1.5 data-[state=on]:bg-green-100 data-[state=on]:text-green-700 dark:data-[state=on]:bg-green-900/30 dark:data-[state=on]:text-green-400"
+            disabled={filterCounts.vegetarian === 0}
+          >
+            <Leaf className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{t('menu.filter.vegetarian', 'Vegetarisch')}</span>
+            <span className="sm:hidden">V</span>
+            {filterCounts.vegetarian > 0 && (
+              <span className="text-xs text-muted-foreground">({filterCounts.vegetarian})</span>
+            )}
+          </Toggle>
+          
+          <Toggle
+            pressed={activeFilters.has('glutenFree')}
+            onPressedChange={() => toggleFilter('glutenFree')}
+            size="sm"
+            className="gap-1.5 data-[state=on]:bg-amber-100 data-[state=on]:text-amber-700 dark:data-[state=on]:bg-amber-900/30 dark:data-[state=on]:text-amber-400"
+            disabled={filterCounts.glutenFree === 0}
+          >
+            <Wheat className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{t('menu.filter.glutenFree', 'Glutenvrij')}</span>
+            <span className="sm:hidden">GV</span>
+            {filterCounts.glutenFree > 0 && (
+              <span className="text-xs text-muted-foreground">({filterCounts.glutenFree})</span>
+            )}
+          </Toggle>
+        </div>
+      </div>
+
+      {/* Active filters indicator */}
+      {activeFilters.size > 0 && (
+        <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
+          <Filter className="h-4 w-4" />
+          <span>
+            {filteredMenuItems.length} {filteredMenuItems.length === 1 ? 'gerecht' : 'gerechten'} gevonden
+          </span>
+          <button
+            onClick={() => setActiveFilters(new Set())}
+            className="ml-auto text-xs text-primary hover:underline"
+          >
+            Filters wissen
+          </button>
+        </div>
+      )}
       
       <div className="space-y-2">
-        {categories.map((category) => {
-          const categoryItems = menuItems.filter(item => item.category === category);
+        {filteredCategories.map((category) => {
+          const categoryItems = filteredMenuItems.filter(item => item.category === category);
           const isExpanded = expandedCategory === category;
 
           return (
