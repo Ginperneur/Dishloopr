@@ -230,29 +230,31 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
 
       {/* Thumbnail Strip (for more than 6 images) */}
       {images.length > 6 && (
-        <div className="flex gap-2 px-4 py-2 overflow-x-auto scrollbar-hide">
-          {images.map((image, index) => (
-            <button
-              key={index}
-              onClick={() => handleThumbnailClick(index)}
-              className={`shrink-0 h-12 w-16 rounded-md overflow-hidden border-2 transition-all ${
-                index === currentIndex 
-                  ? 'border-primary' 
-                  : 'border-transparent opacity-70 hover:opacity-100'
-              }`}
-            >
-              {loadedImages.has(index) ? (
-                <img
-                  src={image}
-                  alt={`${restaurantName} thumbnail ${index + 1}`}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="w-full h-full bg-muted animate-pulse" />
-              )}
-            </button>
-          ))}
+        <div className="hidden md:block w-full max-w-full overflow-x-auto scrollbar-hide">
+          <div className="flex w-max gap-2 px-4 py-2">
+            {images.map((image, index) => (
+              <button
+                key={index}
+                onClick={() => handleThumbnailClick(index)}
+                className={`shrink-0 h-12 w-16 rounded-md overflow-hidden border-2 transition-all ${
+                  index === currentIndex 
+                    ? 'border-primary' 
+                    : 'border-transparent opacity-70 hover:opacity-100'
+                }`}
+              >
+                {loadedImages.has(index) ? (
+                  <img
+                    src={image}
+                    alt={`${restaurantName} thumbnail ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-muted animate-pulse" />
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
