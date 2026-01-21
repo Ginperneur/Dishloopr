@@ -14,6 +14,7 @@ interface MenuItem {
   is_gluten_free: boolean;
   image_url: string | null;
   is_available: boolean;
+  is_signature: boolean;
 }
 
 export function useMenuItems(restaurantId: string | undefined) {
@@ -31,7 +32,8 @@ export function useMenuItems(restaurantId: string | undefined) {
     const fetchMenuItems = async () => {
       setLoading(true);
       try {
-        const { data, error: fetchError } = await supabase
+        // Fetch menu items
+        const { data: menuData, error: menuError } = await supabase
           .from('menu_items')
           .select('*')
           .eq('restaurant_id', restaurantId)
@@ -39,12 +41,27 @@ export function useMenuItems(restaurantId: string | undefined) {
           .order('category')
           .order('name');
 
-        if (fetchError) throw fetchError;
+        if (menuError) throw menuError;
 
-        const items = (data || []).map(item => ({
+        // Fetch signature dishes for this restaurant
+        const { data: signatureDishes } = await supabase
+          .from('restaurant_dishes')
+          .select('dish:dishes(name)')
+          .eq('restaurant_id', restaurantId)
+          .eq('is_signature', true);
+
+        // Create a set of signature dish names (lowercase for matching)
+        const signatureNames = new Set(
+          (signatureDishes || [])
+            .map(sd => (sd.dish as any)?.name?.toLowerCase())
+            .filter(Boolean)
+        );
+
+        const items = (menuData || []).map(item => ({
           ...item,
           price: Number(item.price),
           allergens: item.allergens || [],
+          is_signature: signatureNames.has(item.name.toLowerCase()),
         }));
 
         setMenuItems(items);

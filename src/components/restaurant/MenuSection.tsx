@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Leaf, Wheat, AlertCircle, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { ChevronDown, Leaf, Wheat, AlertCircle, X, ZoomIn, ZoomOut, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useMenuItems } from '@/hooks/useMenuItems';
@@ -134,6 +134,12 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <span className="font-medium">{item.name}</span>
+                                  {item.is_signature && (
+                                    <Badge variant="secondary" className="bg-primary/10 text-primary dark:bg-primary/20 gap-1">
+                                      <Star className="h-3 w-3 fill-current" />
+                                      {t('menu.signature', 'Bekend om')}
+                                    </Badge>
+                                  )}
                                   {item.is_vegetarian && (
                                     <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 gap-1">
                                       <Leaf className="h-3 w-3" />
