@@ -30,6 +30,7 @@ import { EventsSection } from '@/components/restaurant/EventsSection';
 import { ReservationWidget } from '@/components/restaurant/ReservationWidget';
 import { AlternativeRestaurants } from '@/components/routing/AlternativeRestaurants';
 import { SocialShare } from '@/components/social/SocialShare';
+import { OpeningHoursDisplay } from '@/components/restaurant/OpeningHoursDisplay';
 import { ImageGallery } from '@/components/restaurant/ImageGallery';
 import { SEOHead, createRestaurantSchema, createBreadcrumbSchema } from '@/components/seo/SEOHead';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -341,20 +342,9 @@ export default function RestaurantPage() {
               )}
             </div>
 
-            {/* Alternative Restaurants (when unavailable) */}
-            {getUnavailabilityReason && (
-              <AlternativeRestaurants
-                alternatives={alternatives}
-                loading={alternativesLoading}
-                reason={getUnavailabilityReason}
-                sourceRestaurantName={restaurant.name}
-                onAlternativeClick={handleAlternativeClick}
-              />
-            )}
-
             <Separator />
 
-            {/* Known For */}
+            {/* Known For - Signature dishes that boost search ranking */}
             {restaurant.dishes && restaurant.dishes.length > 0 && (
               <>
                 <motion.div
@@ -368,9 +358,9 @@ export default function RestaurantPage() {
                       <Link
                         key={dish.id}
                         to={`/search?dish=${encodeURIComponent(dish.name)}`}
-                        className="flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-lg md:rounded-xl bg-accent hover:bg-accent/80 transition-colors text-sm md:text-base"
+                        className="flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-lg md:rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/20 transition-colors text-sm md:text-base group"
                       >
-                        <span className="font-medium">{dish.name}</span>
+                        <span className="font-medium text-primary group-hover:text-primary/80">{dish.name}</span>
                       </Link>
                     ))}
                   </div>
@@ -384,6 +374,24 @@ export default function RestaurantPage() {
             <MenuSection restaurantId={restaurant.id} />
 
             <Separator />
+
+            {/* Alternative Restaurants - shown when restaurant is closed/busy */}
+            {getUnavailabilityReason && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+              >
+                <AlternativeRestaurants
+                  alternatives={alternatives}
+                  loading={alternativesLoading}
+                  reason={getUnavailabilityReason}
+                  sourceRestaurantName={restaurant.name}
+                  onAlternativeClick={handleAlternativeClick}
+                />
+                <Separator className="mt-6 md:mt-8" />
+              </motion.div>
+            )}
 
             {/* Events Section */}
             <EventsSection restaurantId={restaurant.id} />
@@ -498,23 +506,8 @@ export default function RestaurantPage() {
                 </div>
               </div>
 
-              {/* Opening Hours */}
-              <div className="p-6 rounded-2xl border border-border bg-card">
-                <h3 className="font-semibold mb-4 flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  Openingstijden
-                </h3>
-                <div className="space-y-2 text-sm">
-                  {Object.entries(openingHours).map(([day, hours]) => (
-                    <div key={day} className="flex justify-between">
-                      <span className="capitalize text-muted-foreground">{day}</span>
-                      <span className={hours === 'closed' ? 'text-muted-foreground' : ''}>
-                        {hours === 'closed' ? 'Gesloten' : hours}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              {/* Opening Hours - Enhanced display */}
+              <OpeningHoursDisplay openingHours={openingHours} />
 
               {/* Smart AI Suggestions */}
               {restaurant.dishes && restaurant.dishes.length > 0 && smartSuggestions.length > 0 && (
