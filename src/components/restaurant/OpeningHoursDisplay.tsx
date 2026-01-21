@@ -1,5 +1,13 @@
-import { Clock, CheckCircle2, XCircle } from 'lucide-react';
+import { Clock, CheckCircle2, XCircle, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
 interface OpeningHoursDisplayProps {
   openingHours: { [key: string]: string };
@@ -56,15 +64,20 @@ export function OpeningHoursDisplay({ openingHours, className }: OpeningHoursDis
     isOpen: day === currentDayKey && isCurrentlyOpen(openingHours[day])
   }));
 
-  return (
-    <div className={cn("p-5 rounded-2xl border border-border bg-card", className)}>
+  const todayInfo = sortedDays.find(d => d.isToday);
+  const todayHours = todayInfo ? formatHours(todayInfo.hours) : 'Onbekend';
+  const isOpen = todayInfo?.isOpen || false;
+
+  // Desktop view - full list
+  const DesktopView = () => (
+    <div className={cn("hidden md:block p-5 rounded-2xl border border-border bg-card", className)}>
       <h3 className="font-semibold mb-4 flex items-center gap-2">
         <Clock className="h-4 w-4 text-primary" />
         Openingstijden
       </h3>
       
       <div className="space-y-0">
-        {sortedDays.map(({ key, label, hours, isToday, isOpen }) => {
+        {sortedDays.map(({ key, label, hours, isToday, isOpen: dayIsOpen }) => {
           const isClosed = hours === 'closed' || !hours;
           
           return (
@@ -77,7 +90,7 @@ export function OpeningHoursDisplay({ openingHours, className }: OpeningHoursDis
             >
               <div className="flex items-center gap-2">
                 {isToday && (
-                  isOpen ? (
+                  dayIsOpen ? (
                     <CheckCircle2 className="h-4 w-4 text-tag-family" />
                   ) : (
                     <XCircle className="h-4 w-4 text-muted-foreground" />
@@ -95,8 +108,8 @@ export function OpeningHoursDisplay({ openingHours, className }: OpeningHoursDis
               <span className={cn(
                 "text-sm font-medium",
                 isClosed && "text-muted-foreground",
-                isToday && isOpen && "text-tag-family",
-                isToday && !isOpen && isClosed && "text-destructive"
+                isToday && dayIsOpen && "text-tag-family",
+                isToday && !dayIsOpen && isClosed && "text-destructive"
               )}>
                 {formatHours(hours)}
               </span>
@@ -105,5 +118,85 @@ export function OpeningHoursDisplay({ openingHours, className }: OpeningHoursDis
         })}
       </div>
     </div>
+  );
+
+  // Mobile view - accordion
+  const MobileView = () => (
+    <div className={cn("md:hidden", className)}>
+      <Accordion type="single" collapsible className="w-full">
+        <AccordionItem value="opening-hours" className="border border-border rounded-2xl bg-card overflow-hidden">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/50 [&[data-state=open]>svg]:rotate-180">
+            <div className="flex items-center justify-between w-full pr-2">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-primary" />
+                <span className="font-semibold text-sm">Openingstijden</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {isOpen ? (
+                  <span className="text-xs font-medium text-tag-family bg-tag-family/10 px-2 py-0.5 rounded-full">
+                    Nu open
+                  </span>
+                ) : (
+                  <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                    Gesloten
+                  </span>
+                )}
+                <span className="text-sm text-muted-foreground">{todayHours}</span>
+              </div>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pb-0">
+            <div className="px-4 pb-4 space-y-0">
+              {sortedDays.map(({ key, label, hours, isToday, isOpen: dayIsOpen }) => {
+                const isClosed = hours === 'closed' || !hours;
+                
+                return (
+                  <div 
+                    key={key} 
+                    className={cn(
+                      "flex items-center justify-between py-2.5 border-b border-border/50 last:border-0",
+                      isToday && "bg-primary/5 -mx-2 px-2 rounded-lg border-0"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      {isToday && (
+                        dayIsOpen ? (
+                          <CheckCircle2 className="h-4 w-4 text-tag-family" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-muted-foreground" />
+                        )
+                      )}
+                      <span className={cn(
+                        "text-sm",
+                        isToday ? "font-semibold text-foreground" : "text-muted-foreground"
+                      )}>
+                        {label}
+                        {isToday && <span className="ml-1 text-xs text-primary">(vandaag)</span>}
+                      </span>
+                    </div>
+                    
+                    <span className={cn(
+                      "text-sm font-medium",
+                      isClosed && "text-muted-foreground",
+                      isToday && dayIsOpen && "text-tag-family",
+                      isToday && !dayIsOpen && isClosed && "text-destructive"
+                    )}>
+                      {formatHours(hours)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    </div>
+  );
+
+  return (
+    <>
+      <DesktopView />
+      <MobileView />
+    </>
   );
 }
