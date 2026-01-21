@@ -229,85 +229,87 @@ export function SearchBar({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 6 }}
                 transition={{ duration: 0.15 }}
-                className="absolute top-full left-0 right-0 mt-2 bg-card rounded-xl shadow-xl border border-border z-[100] overflow-hidden"
+                className="absolute top-full left-0 right-0 mt-2 bg-background rounded-xl shadow-2xl border-2 border-border z-[200] overflow-hidden"
+                style={{ 
+                  backgroundColor: 'hsl(var(--background))',
+                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                }}
               >
-                <ScrollArea className="max-h-[60vh]">
-                  <div
-                    style={{ WebkitOverflowScrolling: 'touch' }}
-                    className="overscroll-contain touch-pan-y scrollbar-hide"
-                  >
-                    {/* Dish suggestions */}
-                    {suggestions.length > 0 && (
-                      <>
-                        <div className="px-4 py-2 text-xs font-semibold text-muted-foreground bg-muted/50">
-                          Gerechten
-                        </div>
-                        {suggestions.map((dish) => (
-                          <button
-                            key={dish.id}
-                            onClick={() => handleSuggestionClick(dish.name)}
-                            className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3"
-                          >
-                            <Search className="h-4 w-4 text-muted-foreground" />
-                            <div>
-                              <span className="font-medium">{dish.name}</span>
-                              {dish.synonyms && dish.synonyms.length > 0 && (
-                                <span className="text-sm text-muted-foreground ml-2">
-                                  ({dish.synonyms.slice(0, 2).join(', ')})
-                                </span>
-                              )}
-                            </div>
-                          </button>
-                        ))}
-                      </>
-                    )}
+                <div
+                  style={{ WebkitOverflowScrolling: 'touch' }}
+                  className="max-h-[50vh] overflow-y-auto overscroll-contain touch-pan-y"
+                >
+                  {/* Dish suggestions */}
+                  {suggestions.length > 0 && (
+                    <>
+                      <div className="px-4 py-2.5 text-xs font-bold text-muted-foreground bg-muted border-b border-border">
+                        Gerechten
+                      </div>
+                      {suggestions.map((dish) => (
+                        <button
+                          key={dish.id}
+                          onClick={() => handleSuggestionClick(dish.name)}
+                          className="w-full px-4 py-3.5 text-left hover:bg-muted active:bg-muted/80 transition-colors flex items-center gap-3 border-b border-border/50 last:border-b-0"
+                        >
+                          <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <span className="font-medium">{dish.name}</span>
+                            {dish.synonyms && dish.synonyms.length > 0 && (
+                              <span className="text-sm text-muted-foreground ml-2">
+                                ({dish.synonyms.slice(0, 2).join(', ')})
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </>
+                  )}
 
-                    {/* Restaurant suggestions */}
-                    {restaurantSuggestions.length > 0 && (
-                      <>
-                        <div className="px-4 py-2 text-xs font-semibold text-muted-foreground bg-muted/50">
-                          Restaurants
-                        </div>
-                        {restaurantSuggestions.map((restaurant) => (
-                          <button
-                            key={restaurant.id}
-                            onClick={() => navigate(`/restaurant/${restaurant.slug}`)}
-                            className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3"
-                          >
-                            <Store className="h-4 w-4 text-muted-foreground" />
-                            <div className="flex-1 min-w-0">
-                              <span className="font-medium">{restaurant.name}</span>
-                              {restaurant.cuisines && restaurant.cuisines.length > 0 && (
-                                <span className="text-sm text-muted-foreground ml-2">
-                                  ({restaurant.cuisines.slice(0, 2).join(', ')})
-                                </span>
-                              )}
-                            </div>
-                          </button>
-                        ))}
-                      </>
-                    )}
+                  {/* Restaurant suggestions */}
+                  {restaurantSuggestions.length > 0 && (
+                    <>
+                      <div className="px-4 py-2.5 text-xs font-bold text-muted-foreground bg-muted border-b border-border">
+                        Restaurants
+                      </div>
+                      {restaurantSuggestions.map((restaurant) => (
+                        <button
+                          key={restaurant.id}
+                          onClick={() => navigate(`/restaurant/${restaurant.slug}`)}
+                          className="w-full px-4 py-3.5 text-left hover:bg-muted active:bg-muted/80 transition-colors flex items-center gap-3 border-b border-border/50 last:border-b-0"
+                        >
+                          <Store className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <span className="font-medium">{restaurant.name}</span>
+                            {restaurant.cuisines && restaurant.cuisines.length > 0 && (
+                              <span className="text-sm text-muted-foreground ml-2">
+                                ({restaurant.cuisines.slice(0, 2).join(', ')})
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </>
+                  )}
 
-                    {/* Cuisine suggestions */}
-                    {cuisineSuggestions.length > 0 && (
-                      <>
-                        <div className="px-4 py-2 text-xs font-semibold text-muted-foreground bg-muted/50">
-                          Keukens
-                        </div>
-                        {cuisineSuggestions.map((cuisine) => (
-                          <button
-                            key={cuisine}
-                            onClick={() => handleSuggestionClick(cuisine)}
-                            className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3 capitalize"
-                          >
-                            <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-medium">{cuisine}</span>
-                          </button>
-                        ))}
-                      </>
-                    )}
-                  </div>
-                </ScrollArea>
+                  {/* Cuisine suggestions */}
+                  {cuisineSuggestions.length > 0 && (
+                    <>
+                      <div className="px-4 py-2.5 text-xs font-bold text-muted-foreground bg-muted border-b border-border">
+                        Keukens
+                      </div>
+                      {cuisineSuggestions.map((cuisine) => (
+                        <button
+                          key={cuisine}
+                          onClick={() => handleSuggestionClick(cuisine)}
+                          className="w-full px-4 py-3.5 text-left hover:bg-muted active:bg-muted/80 transition-colors flex items-center gap-3 capitalize border-b border-border/50 last:border-b-0"
+                        >
+                          <UtensilsCrossed className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <span className="font-medium">{cuisine}</span>
+                        </button>
+                      ))}
+                    </>
+                  )}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -336,40 +338,42 @@ export function SearchBar({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 6 }}
                 transition={{ duration: 0.15 }}
-                className="absolute top-full right-0 mt-2 bg-card rounded-xl shadow-xl border border-border z-[100] overflow-hidden min-w-[180px]"
+                className="absolute top-full right-0 mt-2 bg-background rounded-xl shadow-2xl border-2 border-border z-[200] overflow-hidden min-w-[180px]"
+                style={{ 
+                  backgroundColor: 'hsl(var(--background))',
+                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                }}
               >
-                <ScrollArea className="max-h-[60vh]">
-                  <div
-                    style={{ WebkitOverflowScrolling: 'touch' }}
-                    className="overscroll-contain touch-pan-y scrollbar-hide"
+                <div
+                  style={{ WebkitOverflowScrolling: 'touch' }}
+                  className="max-h-[50vh] overflow-y-auto overscroll-contain touch-pan-y"
+                >
+                  <button
+                    onClick={() => {
+                      setCityId('all');
+                      setShowCityDropdown(false);
+                    }}
+                    className={`w-full px-4 py-3.5 text-left hover:bg-muted active:bg-muted/80 transition-colors border-b border-border/50 ${
+                      cityId === 'all' ? 'bg-accent font-medium' : ''
+                    }`}
                   >
+                    {t('cities.all')}
+                  </button>
+                  {cities.map((city) => (
                     <button
+                      key={city.id}
                       onClick={() => {
-                        setCityId('all');
+                        setCityId(city.id);
                         setShowCityDropdown(false);
                       }}
-                      className={`w-full px-4 py-3 text-left hover:bg-muted transition-colors ${
-                        cityId === 'all' ? 'bg-accent' : ''
+                      className={`w-full px-4 py-3.5 text-left hover:bg-muted active:bg-muted/80 transition-colors border-b border-border/50 last:border-b-0 ${
+                        cityId === city.id ? 'bg-accent font-medium' : ''
                       }`}
                     >
-                      {t('cities.all')}
+                      {city.name}
                     </button>
-                    {cities.map((city) => (
-                      <button
-                        key={city.id}
-                        onClick={() => {
-                          setCityId(city.id);
-                          setShowCityDropdown(false);
-                        }}
-                        className={`w-full px-4 py-3 text-left hover:bg-muted transition-colors ${
-                          cityId === city.id ? 'bg-accent' : ''
-                        }`}
-                      >
-                        {city.name}
-                      </button>
-                    ))}
-                  </div>
-                </ScrollArea>
+                  ))}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -436,19 +440,23 @@ export function SearchBar({
               onPointerCancel={() => {
                 interactingWithCityDropdownRef.current = false;
               }}
-              className="absolute top-full left-0 right-0 mt-2 bg-card rounded-xl shadow-xl border border-border z-[100] overflow-hidden"
+              className="absolute top-full left-0 right-0 mt-2 bg-background rounded-xl shadow-2xl border-2 border-border z-[200] overflow-hidden"
+              style={{ 
+                backgroundColor: 'hsl(var(--background))',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+              }}
             >
               <div
                 style={{ WebkitOverflowScrolling: 'touch' }}
-                className="max-h-[60vh] overflow-y-auto overscroll-contain touch-pan-y scrollbar-hide"
+                className="max-h-[50vh] overflow-y-auto overscroll-contain touch-pan-y"
               >
                 <button
                   onClick={() => {
                     setCityId('all');
                     setShowCityDropdown(false);
                   }}
-                  className={`w-full px-4 py-3 text-left hover:bg-muted transition-colors ${
-                    cityId === 'all' ? 'bg-accent' : ''
+                  className={`w-full px-4 py-3.5 text-left hover:bg-muted active:bg-muted/80 transition-colors border-b border-border/50 ${
+                    cityId === 'all' ? 'bg-accent font-medium' : ''
                   }`}
                 >
                   {t('cities.all')}
@@ -460,8 +468,8 @@ export function SearchBar({
                       setCityId(city.id);
                       setShowCityDropdown(false);
                     }}
-                    className={`w-full px-4 py-3 text-left hover:bg-muted transition-colors ${
-                      cityId === city.id ? 'bg-accent' : ''
+                    className={`w-full px-4 py-3.5 text-left hover:bg-muted active:bg-muted/80 transition-colors border-b border-border/50 last:border-b-0 ${
+                      cityId === city.id ? 'bg-accent font-medium' : ''
                     }`}
                   >
                     {city.name}
