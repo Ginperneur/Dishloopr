@@ -9,7 +9,7 @@ type Chain = Database['public']['Tables']['restaurant_chains']['Row'];
 
 export interface RestaurantWithDetails extends Restaurant {
   city?: City;
-  dishes?: Dish[];
+  dishes?: Dish[]; // Signature dishes only (is_signature = true) for "Bekend om"
   chain?: Chain;
   chainLocationsCount?: number;
 }
@@ -64,7 +64,9 @@ export function useRestaurant(slug: string | undefined) {
       supabase
         .from('restaurant_dishes')
         .select('dish_id')
-        .eq('restaurant_id', restaurantData.id),
+        .eq('restaurant_id', restaurantData.id)
+        .eq('is_signature', true)
+        .neq('status', 'rejected'),
       chainId
         ? supabase.from('restaurant_chains').select('*').eq('id', chainId).maybeSingle()
         : Promise.resolve({ data: null as Chain | null }),

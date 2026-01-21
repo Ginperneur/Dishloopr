@@ -866,6 +866,7 @@ export type Database = {
           created_by: string | null
           dish_id: string
           id: string
+          is_signature: boolean
           rejected_reason: string | null
           restaurant_id: string
           source: string | null
@@ -883,6 +884,7 @@ export type Database = {
           created_by?: string | null
           dish_id: string
           id?: string
+          is_signature?: boolean
           rejected_reason?: string | null
           restaurant_id: string
           source?: string | null
@@ -900,6 +902,7 @@ export type Database = {
           created_by?: string | null
           dish_id?: string
           id?: string
+          is_signature?: boolean
           rejected_reason?: string | null
           restaurant_id?: string
           source?: string | null

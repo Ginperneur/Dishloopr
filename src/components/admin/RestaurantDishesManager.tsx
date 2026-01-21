@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Trash2, Store, UtensilsCrossed, Check, X } from 'lucide-react';
+import { Search, Plus, Trash2, Store, UtensilsCrossed, Check, X, Star } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -33,6 +34,7 @@ interface RestaurantDish {
   confidence_score: number;
   source: string | null;
   created_at: string;
+  is_signature: boolean;
   dishes?: Dish | null;
 }
 
@@ -92,6 +94,7 @@ export function RestaurantDishesManager() {
       .from('restaurant_dishes')
       .select('*, dishes:dish_id(id, name, name_en, slug)')
       .eq('restaurant_id', selectedRestaurant)
+      .order('is_signature', { ascending: false })
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -166,6 +169,30 @@ export function RestaurantDishesManager() {
     toast.success('Status bijgewerkt');
     setRestaurantDishes(prev => prev.map(rd => 
       rd.id === id ? { ...rd, status } : rd
+    ));
+  };
+
+  const toggleSignature = async (id: string, currentValue: boolean) => {
+    // Check if we're trying to add a signature dish and already have 5
+    const signatureCount = restaurantDishes.filter(rd => rd.is_signature).length;
+    if (!currentValue && signatureCount >= 5) {
+      toast.error('Maximum 5 signature gerechten per restaurant');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('restaurant_dishes')
+      .update({ is_signature: !currentValue })
+      .eq('id', id);
+
+    if (error) {
+      toast.error('Fout bij bijwerken signature status');
+      return;
+    }
+
+    toast.success(!currentValue ? 'Gerecht gemarkeerd als "Bekend om"' : '"Bekend om" verwijderd');
+    setRestaurantDishes(prev => prev.map(rd => 
+      rd.id === id ? { ...rd, is_signature: !currentValue } : rd
     ));
   };
 
@@ -268,10 +295,16 @@ export function RestaurantDishesManager() {
         {/* Selected Restaurant Dishes */}
         {selectedRestaurant ? (
           <>
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                {restaurantDishes.length} gerechten gekoppeld
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-3">
+                <p className="text-sm text-muted-foreground">
+                  {restaurantDishes.length} gerechten gekoppeld
+                </p>
+                <Badge variant="outline" className="gap-1">
+                  <Star className="h-3 w-3 fill-primary text-primary" />
+                  {restaurantDishes.filter(rd => rd.is_signature).length}/5 bekend om
+                </Badge>
+              </div>
               <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm">
@@ -334,10 +367,10 @@ export function RestaurantDishesManager() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[80px]">Bekend om</TableHead>
                   <TableHead>Gerecht</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Bron</TableHead>
-                  <TableHead>Score</TableHead>
                   <TableHead className="w-[100px]">Acties</TableHead>
                 </TableRow>
               </TableHeader>
@@ -350,22 +383,31 @@ export function RestaurantDishesManager() {
                   </TableRow>
                 ) : (
                   restaurantDishes.map((rd) => (
-                    <TableRow key={rd.id}>
+                    <TableRow key={rd.id} className={rd.is_signature ? 'bg-primary/5' : ''}>
                       <TableCell>
-                        <div>
-                          <p className="font-medium">{rd.dishes?.name || 'Onbekend'}</p>
-                          {rd.dishes?.name_en && (
-                            <p className="text-xs text-muted-foreground">{rd.dishes.name_en}</p>
+                        <div className="flex items-center justify-center">
+                          <Switch
+                            checked={rd.is_signature}
+                            onCheckedChange={() => toggleSignature(rd.id, rd.is_signature)}
+                            disabled={!rd.is_signature && restaurantDishes.filter(d => d.is_signature).length >= 5}
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {rd.is_signature && (
+                            <Star className="h-4 w-4 fill-primary text-primary shrink-0" />
                           )}
+                          <div>
+                            <p className="font-medium">{rd.dishes?.name || 'Onbekend'}</p>
+                            {rd.dishes?.name_en && (
+                              <p className="text-xs text-muted-foreground">{rd.dishes.name_en}</p>
+                            )}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(rd.status)}</TableCell>
                       <TableCell>{getSourceBadge(rd.source)}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="font-mono">
-                          {(rd.confidence_score * 100).toFixed(0)}%
-                        </Badge>
-                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
                           {rd.status !== 'verified_by_owner' && (
