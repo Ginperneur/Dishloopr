@@ -317,9 +317,6 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
                                   )}
                                 </AnimatePresence>
                               </div>
-                              <span className="font-semibold text-primary shrink-0">
-                                {formatPrice(item.price)}
-                              </span>
                             </div>
                           </div>
                         </div>
