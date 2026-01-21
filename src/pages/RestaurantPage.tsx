@@ -54,20 +54,40 @@ export default function RestaurantPage() {
   const { latitude, longitude } = useGeolocation();
   const { user } = useAuth();
 
-  // Determine if restaurant is unavailable
-  const getUnavailabilityReason = useMemo((): RoutingReason | null => {
-    if (!restaurant) return null;
+  // Determine if restaurant is currently open
+  const isCurrentlyOpen = useMemo((): boolean => {
+    if (!restaurant) return false;
     
     const openingHours = (restaurant.opening_hours || {}) as { [key: string]: string };
     const now = new Date();
     const day = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][now.getDay()];
     const hours = openingHours[day];
     
-    if (!hours || hours === 'closed') return 'closed';
-    if (restaurant.current_busy_level === 'very_busy') return 'busy';
+    if (!hours || hours === 'closed') return false;
     
-    return null;
+    // Try to parse hours like "12:00 - 22:00" or "12:00-22:00"
+    const match = hours.match(/(\d{1,2}):?(\d{2})?\s*[-–]\s*(\d{1,2}):?(\d{2})?/);
+    if (!match) return true; // If can't parse, assume open
+    
+    const openHour = parseInt(match[1]);
+    const openMin = parseInt(match[2] || '0');
+    const closeHour = parseInt(match[3]);
+    const closeMin = parseInt(match[4] || '0');
+    
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const openMinutes = openHour * 60 + openMin;
+    const closeMinutes = closeHour * 60 + closeMin;
+    
+    return currentMinutes >= openMinutes && currentMinutes < closeMinutes;
   }, [restaurant]);
+
+  // Determine if restaurant is unavailable (for alternatives)
+  const getUnavailabilityReason = useMemo((): RoutingReason | null => {
+    if (!restaurant) return null;
+    if (!isCurrentlyOpen) return 'closed';
+    if (restaurant.current_busy_level === 'very_busy') return 'busy';
+    return null;
+  }, [restaurant, isCurrentlyOpen]);
 
   // Get smart suggestions when we have dishes
   useEffect(() => {
@@ -370,28 +390,38 @@ export default function RestaurantPage() {
               </>
             )}
 
-            {/* Menu Section */}
-            <MenuSection restaurantId={restaurant.id} />
-
-            <Separator />
-
-            {/* Alternative Restaurants - shown when restaurant is closed/busy */}
-            {getUnavailabilityReason && (
+            {/* Menu Section - only shown when restaurant is open */}
+            {isCurrentlyOpen ? (
+              <MenuSection restaurantId={restaurant.id} />
+            ) : (
+              /* Closed message + Alternative Restaurants */
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
+                className="space-y-6"
               >
+                {/* Closed notice */}
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border">
+                  <Clock className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium text-foreground">Dit restaurant is momenteel gesloten</p>
+                    <p className="text-sm text-muted-foreground">Bekijk vergelijkbare restaurants die nu wel open zijn</p>
+                  </div>
+                </div>
+
+                {/* Alternative restaurants */}
                 <AlternativeRestaurants
                   alternatives={alternatives}
                   loading={alternativesLoading}
-                  reason={getUnavailabilityReason}
+                  reason={getUnavailabilityReason || 'closed'}
                   sourceRestaurantName={restaurant.name}
                   onAlternativeClick={handleAlternativeClick}
                 />
-                <Separator className="mt-6 md:mt-8" />
               </motion.div>
             )}
+
+            <Separator />
 
             {/* Events Section */}
             <EventsSection restaurantId={restaurant.id} />
