@@ -9,10 +9,10 @@ interface LayoutProps {
 
 export function Layout({ children, showFooter = true }: LayoutProps) {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col w-full overflow-x-hidden">
       <Header />
       <motion.main 
-        className="flex-1"
+        className="flex-1 w-full overflow-x-hidden"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
