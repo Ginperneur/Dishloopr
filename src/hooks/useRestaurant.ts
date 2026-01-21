@@ -54,8 +54,8 @@ export function useRestaurant(slug: string | undefined) {
 
     const chainId = restaurantData.chain_id;
 
-    // Fetch city + restaurant dishes + chain info (parallel)
-    const [cityRes, restaurantDishesRes, chainRes, chainCountRes] = await Promise.all([
+    // Fetch city + restaurant dishes (signature only) + chain info (parallel)
+    const [cityRes, signatureDishesRes, chainRes, chainCountRes] = await Promise.all([
       supabase
         .from('cities')
         .select('*')
@@ -79,17 +79,36 @@ export function useRestaurant(slug: string | undefined) {
         : Promise.resolve({ count: null as number | null }),
     ]);
 
-    // Fetch dishes linked to this restaurant
-    const restaurantDishes = restaurantDishesRes.data || [];
+    // Check if there are signature dishes
+    const signatureDishes = signatureDishesRes.data || [];
 
     let dishes: Dish[] = [];
-    if (restaurantDishes.length > 0) {
-      const dishIds = restaurantDishes.map(rd => rd.dish_id);
+    
+    if (signatureDishes.length > 0) {
+      // Use signature dishes for "Bekend om"
+      const dishIds = signatureDishes.map(rd => rd.dish_id);
       const { data: dishData } = await supabase
         .from('dishes')
         .select('*')
         .in('id', dishIds);
       dishes = dishData || [];
+    } else {
+      // Fallback: if no signature dishes, show up to 5 approved dishes as "Bekend om"
+      const { data: fallbackDishLinks } = await supabase
+        .from('restaurant_dishes')
+        .select('dish_id')
+        .eq('restaurant_id', restaurantData.id)
+        .neq('status', 'rejected')
+        .limit(5);
+      
+      if (fallbackDishLinks && fallbackDishLinks.length > 0) {
+        const dishIds = fallbackDishLinks.map(rd => rd.dish_id);
+        const { data: dishData } = await supabase
+          .from('dishes')
+          .select('*')
+          .in('id', dishIds);
+        dishes = dishData || [];
+      }
     }
 
     setRestaurant({
