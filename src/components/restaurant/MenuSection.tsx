@@ -91,8 +91,23 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
     );
   }
 
-  if (error || menuItems.length === 0) {
+  if (error) {
     return null;
+  }
+
+  if (menuItems.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+      >
+        <h2 className="text-lg md:text-xl font-bold mb-4">{t('restaurant.menu', 'Menukaart')}</h2>
+        <div className="rounded-xl border border-border bg-card p-6 text-center">
+          <p className="text-muted-foreground">{t('menu.noItems', 'Er is nog geen menukaart beschikbaar voor dit restaurant.')}</p>
+        </div>
+      </motion.div>
+    );
   }
 
   const toggleCategory = (category: string) => {
