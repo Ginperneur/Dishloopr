@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, ChevronDown, UtensilsCrossed } from 'lucide-react';
+import { Search, MapPin, ChevronDown, UtensilsCrossed, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { VoiceSearch } from '@/components/search/VoiceSearch';
@@ -12,6 +12,7 @@ import type { Database } from '@/integrations/supabase/types';
 
 type Dish = Database['public']['Tables']['dishes']['Row'];
 type City = Database['public']['Tables']['cities']['Row'];
+type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 
 interface SearchBarProps {
   onSearch?: (query: string, cityId: string) => void;
@@ -32,9 +33,11 @@ export function SearchBar({
   const [query, setQuery] = useState(initialQuery);
   const [cityId, setCityId] = useState(initialCity);
   const [suggestions, setSuggestions] = useState<Dish[]>([]);
+  const [restaurantSuggestions, setRestaurantSuggestions] = useState<Restaurant[]>([]);
   const [cuisineSuggestions, setCuisineSuggestions] = useState<string[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [allDishes, setAllDishes] = useState<Dish[]>([]);
+  const [allRestaurants, setAllRestaurants] = useState<Restaurant[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -42,15 +45,17 @@ export function SearchBar({
   const lastDropdownOpenedAtRef = useRef(0);
   const interactingWithCityDropdownRef = useRef(false);
 
-  // Fetch cities and dishes on mount
+  // Fetch cities, dishes and restaurants on mount
   useEffect(() => {
     const fetchData = async () => {
-      const [citiesRes, dishesRes] = await Promise.all([
+      const [citiesRes, dishesRes, restaurantsRes] = await Promise.all([
         supabase.from('cities').select('*').eq('is_active', true).order('name'),
-        supabase.from('dishes').select('*').eq('is_active', true).order('search_count', { ascending: false })
+        supabase.from('dishes').select('*').eq('is_active', true).order('search_count', { ascending: false }),
+        supabase.from('restaurants').select('*').eq('is_active', true).order('rating', { ascending: false })
       ]);
       setCities(citiesRes.data || []);
       setAllDishes(dishesRes.data || []);
+      setAllRestaurants(restaurantsRes.data || []);
     };
     fetchData();
   }, []);
@@ -70,19 +75,26 @@ export function SearchBar({
       );
       setSuggestions(filteredDishes.slice(0, 5));
 
+      // Filter restaurants by name
+      const filteredRestaurants = allRestaurants.filter(
+        r => r.name.toLowerCase().includes(queryLower)
+      );
+      setRestaurantSuggestions(filteredRestaurants.slice(0, 3));
+
       // Filter cuisines
       const filteredCuisines = allCuisines.filter(c =>
         c.toLowerCase().includes(queryLower)
       );
       setCuisineSuggestions(filteredCuisines.slice(0, 3));
 
-      setShowSuggestions(filteredDishes.length > 0 || filteredCuisines.length > 0);
+      setShowSuggestions(filteredDishes.length > 0 || filteredCuisines.length > 0 || filteredRestaurants.length > 0);
     } else {
       setSuggestions([]);
+      setRestaurantSuggestions([]);
       setCuisineSuggestions([]);
       setShowSuggestions(false);
     }
-  }, [query, allDishes]);
+  }, [query, allDishes, allRestaurants]);
 
   // Track when dropdowns open (prevents immediate close on mobile "address bar" scroll)
   useEffect(() => {
@@ -210,7 +222,7 @@ export function SearchBar({
 
           {/* Autocomplete Suggestions */}
           <AnimatePresence>
-            {showSuggestions && (suggestions.length > 0 || cuisineSuggestions.length > 0) && (
+            {showSuggestions && (suggestions.length > 0 || cuisineSuggestions.length > 0 || restaurantSuggestions.length > 0) && (
               <motion.div
                 ref={suggestionsRef}
                 initial={{ opacity: 0, y: 6 }}
@@ -242,6 +254,32 @@ export function SearchBar({
                               {dish.synonyms && dish.synonyms.length > 0 && (
                                 <span className="text-sm text-muted-foreground ml-2">
                                   ({dish.synonyms.slice(0, 2).join(', ')})
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </>
+                    )}
+
+                    {/* Restaurant suggestions */}
+                    {restaurantSuggestions.length > 0 && (
+                      <>
+                        <div className="px-4 py-2 text-xs font-semibold text-muted-foreground bg-muted/50">
+                          Restaurants
+                        </div>
+                        {restaurantSuggestions.map((restaurant) => (
+                          <button
+                            key={restaurant.id}
+                            onClick={() => navigate(`/restaurant/${restaurant.slug}`)}
+                            className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3"
+                          >
+                            <Store className="h-4 w-4 text-muted-foreground" />
+                            <div className="flex-1 min-w-0">
+                              <span className="font-medium">{restaurant.name}</span>
+                              {restaurant.cuisines && restaurant.cuisines.length > 0 && (
+                                <span className="text-sm text-muted-foreground ml-2">
+                                  ({restaurant.cuisines.slice(0, 2).join(', ')})
                                 </span>
                               )}
                             </div>
