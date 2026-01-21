@@ -69,7 +69,12 @@ export function Header() {
           >
             {t('nav.discover')}
           </Link>
-
+          <Link
+            to="/collections"
+            className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
+          >
+            Collections
+          </Link>
           {user && (
             <Link
               to="/favorites"
@@ -77,6 +82,23 @@ export function Header() {
             >
               <Heart className="h-4 w-4" />
               {t('nav.favorites')}
+            </Link>
+          )}
+          {user && (
+            <Link
+              to="/dashboard"
+              className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
+            >
+              Dashboard
+            </Link>
+          )}
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1.5"
+            >
+              <Shield className="h-4 w-4" />
+              Admin
             </Link>
           )}
 
