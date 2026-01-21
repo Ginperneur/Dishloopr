@@ -1,16 +1,16 @@
-import { Clock, CheckCircle2, XCircle, ChevronDown } from 'lucide-react';
+import { Clock, CheckCircle2, XCircle, Phone } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { Button } from '@/components/ui/button';
 
 interface OpeningHoursDisplayProps {
   openingHours: { [key: string]: string };
+  phone?: string | null;
   className?: string;
 }
 
@@ -26,7 +26,7 @@ const DAY_LABELS: { [key: string]: string } = {
   sun: 'Zondag',
 };
 
-export function OpeningHoursDisplay({ openingHours, className }: OpeningHoursDisplayProps) {
+export function OpeningHoursDisplay({ openingHours, phone, className }: OpeningHoursDisplayProps) {
   const now = new Date();
   const currentDayIndex = now.getDay();
   const currentDayKey = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][currentDayIndex];
@@ -120,76 +120,92 @@ export function OpeningHoursDisplay({ openingHours, className }: OpeningHoursDis
     </div>
   );
 
-  // Mobile view - accordion
+  // Mobile view - accordion with call button
   const MobileView = () => (
     <div className={cn("md:hidden", className)}>
-      <Accordion type="single" collapsible className="w-full">
-        <AccordionItem value="opening-hours" className="border border-border rounded-2xl bg-card overflow-hidden">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/50 [&[data-state=open]>svg]:rotate-180">
-            <div className="flex items-center justify-between w-full pr-2">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-primary" />
-                <span className="font-semibold text-sm">Openingstijden</span>
+      <div className="flex gap-2">
+        {/* Opening hours accordion */}
+        <Accordion type="single" collapsible className="flex-1">
+          <AccordionItem value="opening-hours" className="border border-border rounded-2xl bg-card overflow-hidden">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/50 [&[data-state=open]>svg]:rotate-180">
+              <div className="flex items-center justify-between w-full pr-2">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-primary" />
+                  <span className="font-semibold text-sm">Openingstijden</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isOpen ? (
+                    <span className="text-xs font-medium text-tag-family bg-tag-family/10 px-2 py-0.5 rounded-full">
+                      Nu open
+                    </span>
+                  ) : (
+                    <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                      Gesloten
+                    </span>
+                  )}
+                  <span className="text-sm text-muted-foreground">{todayHours}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                {isOpen ? (
-                  <span className="text-xs font-medium text-tag-family bg-tag-family/10 px-2 py-0.5 rounded-full">
-                    Nu open
-                  </span>
-                ) : (
-                  <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                    Gesloten
-                  </span>
-                )}
-                <span className="text-sm text-muted-foreground">{todayHours}</span>
-              </div>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="pb-0">
-            <div className="px-4 pb-4 space-y-0">
-              {sortedDays.map(({ key, label, hours, isToday, isOpen: dayIsOpen }) => {
-                const isClosed = hours === 'closed' || !hours;
-                
-                return (
-                  <div 
-                    key={key} 
-                    className={cn(
-                      "flex items-center justify-between py-2.5 border-b border-border/50 last:border-0",
-                      isToday && "bg-primary/5 -mx-2 px-2 rounded-lg border-0"
-                    )}
-                  >
-                    <div className="flex items-center gap-2">
-                      {isToday && (
-                        dayIsOpen ? (
-                          <CheckCircle2 className="h-4 w-4 text-tag-family" />
-                        ) : (
-                          <XCircle className="h-4 w-4 text-muted-foreground" />
-                        )
+            </AccordionTrigger>
+            <AccordionContent className="pb-0">
+              <div className="px-4 pb-4 space-y-0">
+                {sortedDays.map(({ key, label, hours, isToday, isOpen: dayIsOpen }) => {
+                  const isClosed = hours === 'closed' || !hours;
+                  
+                  return (
+                    <div 
+                      key={key} 
+                      className={cn(
+                        "flex items-center justify-between py-2.5 border-b border-border/50 last:border-0",
+                        isToday && "bg-primary/5 -mx-2 px-2 rounded-lg border-0"
                       )}
+                    >
+                      <div className="flex items-center gap-2">
+                        {isToday && (
+                          dayIsOpen ? (
+                            <CheckCircle2 className="h-4 w-4 text-tag-family" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-muted-foreground" />
+                          )
+                        )}
+                        <span className={cn(
+                          "text-sm",
+                          isToday ? "font-semibold text-foreground" : "text-muted-foreground"
+                        )}>
+                          {label}
+                          {isToday && <span className="ml-1 text-xs text-primary">(vandaag)</span>}
+                        </span>
+                      </div>
+                      
                       <span className={cn(
-                        "text-sm",
-                        isToday ? "font-semibold text-foreground" : "text-muted-foreground"
+                        "text-sm font-medium",
+                        isClosed && "text-muted-foreground",
+                        isToday && dayIsOpen && "text-tag-family",
+                        isToday && !dayIsOpen && isClosed && "text-destructive"
                       )}>
-                        {label}
-                        {isToday && <span className="ml-1 text-xs text-primary">(vandaag)</span>}
+                        {formatHours(hours)}
                       </span>
                     </div>
-                    
-                    <span className={cn(
-                      "text-sm font-medium",
-                      isClosed && "text-muted-foreground",
-                      isToday && dayIsOpen && "text-tag-family",
-                      isToday && !dayIsOpen && isClosed && "text-destructive"
-                    )}>
-                      {formatHours(hours)}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+                  );
+                })}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+
+        {/* Call now button - only on mobile */}
+        {phone && (
+          <Button
+            asChild
+            className="h-auto rounded-2xl px-4 py-3 flex-shrink-0"
+          >
+            <a href={`tel:${phone}`} className="flex flex-col items-center gap-1">
+              <Phone className="h-5 w-5" />
+              <span className="text-xs font-medium">Bel nu</span>
+            </a>
+          </Button>
+        )}
+      </div>
     </div>
   );
 

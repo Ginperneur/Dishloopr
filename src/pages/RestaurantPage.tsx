@@ -506,8 +506,8 @@ export default function RestaurantPage() {
                 </div>
               </div>
 
-              {/* Opening Hours - Enhanced display */}
-              <OpeningHoursDisplay openingHours={openingHours} />
+              {/* Opening Hours - Enhanced display with call button on mobile */}
+              <OpeningHoursDisplay openingHours={openingHours} phone={restaurant.phone} />
 
               {/* Smart AI Suggestions */}
               {restaurant.dishes && restaurant.dishes.length > 0 && smartSuggestions.length > 0 && (
