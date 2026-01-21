@@ -1,4 +1,4 @@
-import { Clock, CheckCircle2, XCircle, Phone } from 'lucide-react';
+import { Clock, CheckCircle2, XCircle, Phone, Navigation } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Accordion,
@@ -11,6 +11,9 @@ import { Button } from '@/components/ui/button';
 interface OpeningHoursDisplayProps {
   openingHours: { [key: string]: string };
   phone?: string | null;
+  geoLat?: number | null;
+  geoLng?: number | null;
+  restaurantName?: string;
   className?: string;
 }
 
@@ -26,8 +29,16 @@ const DAY_LABELS: { [key: string]: string } = {
   sun: 'Zondag',
 };
 
-export function OpeningHoursDisplay({ openingHours, phone, className }: OpeningHoursDisplayProps) {
+export function OpeningHoursDisplay({ openingHours, phone, geoLat, geoLng, restaurantName, className }: OpeningHoursDisplayProps) {
   const now = new Date();
+  
+  // Generate Google Maps directions URL
+  const getDirectionsUrl = () => {
+    if (!geoLat || !geoLng) return null;
+    const destination = `${geoLat},${geoLng}`;
+    const label = restaurantName ? encodeURIComponent(restaurantName) : '';
+    return `https://www.google.com/maps/dir/?api=1&destination=${destination}&destination_place_id=${label}`;
+  };
   const currentDayIndex = now.getDay();
   const currentDayKey = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][currentDayIndex];
   
@@ -193,17 +204,38 @@ export function OpeningHoursDisplay({ openingHours, phone, className }: OpeningH
           </AccordionItem>
         </Accordion>
 
-        {/* Call now button - only on mobile */}
-        {phone && (
-          <Button
-            asChild
-            className="h-auto rounded-2xl px-4 py-3 flex-shrink-0"
-          >
-            <a href={`tel:${phone}`} className="flex flex-col items-center gap-1">
-              <Phone className="h-5 w-5" />
-              <span className="text-xs font-medium">Bel nu</span>
-            </a>
-          </Button>
+        {/* Action buttons - call and directions on mobile */}
+        {(phone || (geoLat && geoLng)) && (
+          <div className="flex flex-col gap-2 flex-shrink-0">
+            {phone && (
+              <Button
+                asChild
+                className="h-auto rounded-2xl px-4 py-3"
+              >
+                <a href={`tel:${phone}`} className="flex flex-col items-center gap-1">
+                  <Phone className="h-5 w-5" />
+                  <span className="text-xs font-medium">Bel nu</span>
+                </a>
+              </Button>
+            )}
+            {geoLat && geoLng && (
+              <Button
+                asChild
+                variant="outline"
+                className="h-auto rounded-2xl px-4 py-3"
+              >
+                <a 
+                  href={getDirectionsUrl()!} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex flex-col items-center gap-1"
+                >
+                  <Navigation className="h-5 w-5" />
+                  <span className="text-xs font-medium">Route</span>
+                </a>
+              </Button>
+            )}
+          </div>
         )}
       </div>
     </div>

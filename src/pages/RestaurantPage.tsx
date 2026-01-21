@@ -506,8 +506,14 @@ export default function RestaurantPage() {
                 </div>
               </div>
 
-              {/* Opening Hours - Enhanced display with call button on mobile */}
-              <OpeningHoursDisplay openingHours={openingHours} phone={restaurant.phone} />
+              {/* Opening Hours - Enhanced display with call & directions on mobile */}
+              <OpeningHoursDisplay 
+                openingHours={openingHours} 
+                phone={restaurant.phone}
+                geoLat={restaurant.geo_lat ? Number(restaurant.geo_lat) : undefined}
+                geoLng={restaurant.geo_lng ? Number(restaurant.geo_lng) : undefined}
+                restaurantName={restaurant.name}
+              />
 
               {/* Smart AI Suggestions */}
               {restaurant.dishes && restaurant.dishes.length > 0 && smartSuggestions.length > 0 && (
