@@ -229,7 +229,7 @@ export function SearchBar({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 6 }}
                 transition={{ duration: 0.15 }}
-                className="absolute top-full left-0 right-0 mt-2 bg-card rounded-xl shadow-lg border border-border z-50 overflow-hidden"
+                className="absolute top-full left-0 right-0 mt-2 bg-card rounded-xl shadow-xl border border-border z-[100] overflow-hidden"
               >
                 <ScrollArea className="max-h-[60vh]">
                   <div
@@ -336,7 +336,7 @@ export function SearchBar({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 6 }}
                 transition={{ duration: 0.15 }}
-                className="absolute top-full right-0 mt-2 bg-card rounded-xl shadow-lg border border-border z-50 overflow-hidden min-w-[180px]"
+                className="absolute top-full right-0 mt-2 bg-card rounded-xl shadow-xl border border-border z-[100] overflow-hidden min-w-[180px]"
               >
                 <ScrollArea className="max-h-[60vh]">
                   <div
@@ -436,7 +436,7 @@ export function SearchBar({
               onPointerCancel={() => {
                 interactingWithCityDropdownRef.current = false;
               }}
-              className="absolute top-full left-0 right-0 mt-2 bg-card rounded-xl shadow-lg border border-border z-50 overflow-hidden"
+              className="absolute top-full left-0 right-0 mt-2 bg-card rounded-xl shadow-xl border border-border z-[100] overflow-hidden"
             >
               <div
                 style={{ WebkitOverflowScrolling: 'touch' }}
