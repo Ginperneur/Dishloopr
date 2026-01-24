@@ -342,6 +342,13 @@ export default function RestaurantPage() {
                 restaurantName={restaurant.name}
                 variant="button"
               />
+              {restaurant.website_url && (
+                <Button variant="outline" size="icon" asChild className="shrink-0">
+                  <a href={restaurant.website_url} target="_blank" rel="noopener noreferrer">
+                    <Globe className="h-4 w-4" />
+                  </a>
+                </Button>
+              )}
               {restaurant.phone && (
                 <Button variant="outline" size="icon" asChild className="shrink-0">
                   <a href={`tel:${restaurant.phone}`}>
