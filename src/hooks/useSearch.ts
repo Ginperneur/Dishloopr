@@ -44,7 +44,7 @@ export function useSearch() {
     setCities(citiesRes.data || []);
   };
 
-  const search = useCallback(async (query: string, cityId?: string, filters?: SearchFilters) => {
+  const search = useCallback(async (query: string, cityId?: string, filters?: SearchFilters, featuredOnly?: boolean) => {
     setLoading(true);
     
     const queryLower = query.toLowerCase().trim();
@@ -80,6 +80,11 @@ export function useSearch() {
       .from('restaurants')
       .select('*')
       .eq('is_active', true);
+
+    // Filter for featured/top listing restaurants only
+    if (featuredOnly) {
+      restaurantQuery = restaurantQuery.or('is_featured.eq.true,is_top_listing.eq.true');
+    }
 
     // Filter by city
     if (cityId && cityId !== 'all') {

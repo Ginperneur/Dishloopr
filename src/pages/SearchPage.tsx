@@ -45,6 +45,7 @@ export default function SearchPage() {
   
   const dishQuery = searchParams.get('dish') || '';
   const cityId = searchParams.get('city') || 'all';
+  const featuredOnly = searchParams.get('featured') === 'true';
   
   const [filters, setFilters] = useState<Filters>({
     priceLevel: [],
@@ -79,11 +80,11 @@ export default function SearchPage() {
   // Get unique cuisines from database
   const availableCuisines = [...new Set(dishes.flatMap(d => d.cuisine_tags || []))];
 
-  // Perform search when query, city, or filters change
+  // Perform search when query, city, filters, or featured mode change
   useEffect(() => {
-    search(dishQuery, cityId, filters);
+    search(dishQuery, cityId, filters, featuredOnly);
     setDisplayCount(12); // Reset pagination on new search
-  }, [dishQuery, cityId, filters]);
+  }, [dishQuery, cityId, filters, featuredOnly]);
 
   // Apply sorting (including distance-based)
   const sortedResults = [...results].sort((a, b) => {
@@ -181,9 +182,11 @@ export default function SearchPage() {
     ? t('cities.all') 
     : cities.find(c => c.id === cityId)?.name || '';
 
-  const pageTitle = dishQuery 
-    ? `${dishQuery} restaurants${cityId && cityId !== 'all' ? ` in ${cities.find(c => c.id === cityId)?.name || ''}` : ''}`
-    : 'Zoek restaurants';
+  const pageTitle = featuredOnly 
+    ? 'Uitgelichte restaurants'
+    : dishQuery 
+      ? `${dishQuery} restaurants${cityId && cityId !== 'all' ? ` in ${cities.find(c => c.id === cityId)?.name || ''}` : ''}`
+      : 'Zoek restaurants';
 
   return (
     <Layout>
@@ -221,7 +224,9 @@ export default function SearchPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="min-w-0">
               <h1 className="text-xl md:text-2xl font-bold truncate">
-                {dishQuery ? (
+                {featuredOnly ? (
+                  <>Uitgelichte restaurants {cityName && cityName !== t('cities.all') && `in ${cityName}`}</>
+                ) : dishQuery ? (
                   <>
                     {dishQuery} {cityName && `in ${cityName}`}
                   </>

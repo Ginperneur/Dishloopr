@@ -77,11 +77,17 @@ const Index = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-6 md:mb-10"
+            className="flex items-center justify-between mb-6 md:mb-10"
           >
             <h2 className="text-xl sm:text-2xl md:text-4xl font-bold">
               {t('home.featuredRestaurants', 'Uitgelichte restaurants')}
             </h2>
+            <Button variant="ghost" size="sm" asChild className="text-sm">
+              <Link to="/search?featured=true" className="flex items-center gap-1 md:gap-2">
+                Bekijk alle
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
