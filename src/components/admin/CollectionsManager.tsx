@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Image, GripVertical, Eye, EyeOff, Star, Upload } from 'lucide-react';
+import { Plus, Pencil, Trash2, Image, Eye, EyeOff, Star, Users, X, Search } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -31,6 +32,7 @@ interface Collection {
   seo_description: string | null;
   city?: { name: string } | null;
   dish?: { name: string } | null;
+  restaurant_count?: number;
 }
 
 interface City {
@@ -41,6 +43,24 @@ interface City {
 interface Dish {
   id: string;
   name: string;
+}
+
+interface Restaurant {
+  id: string;
+  name: string;
+  address: string;
+  city?: { name: string } | null;
+  cuisines: string[] | null;
+  images: string[] | null;
+}
+
+interface CollectionRestaurant {
+  id: string;
+  restaurant_id: string;
+  collection_id: string;
+  sort_order: number | null;
+  featured_reason: string | null;
+  restaurant: Restaurant;
 }
 
 const emptyCollection: Partial<Collection> = {
@@ -69,6 +89,14 @@ export function CollectionsManager() {
   const [editingCollection, setEditingCollection] = useState<Partial<Collection> | null>(null);
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  
+  // Restaurant management state
+  const [restaurantsDialogOpen, setRestaurantsDialogOpen] = useState(false);
+  const [managingCollection, setManagingCollection] = useState<Collection | null>(null);
+  const [collectionRestaurants, setCollectionRestaurants] = useState<CollectionRestaurant[]>([]);
+  const [allRestaurants, setAllRestaurants] = useState<Restaurant[]>([]);
+  const [restaurantSearch, setRestaurantSearch] = useState('');
+  const [loadingRestaurants, setLoadingRestaurants] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -86,11 +114,133 @@ export function CollectionsManager() {
       supabase.from('dishes').select('id, name').eq('is_active', true).order('name')
     ]);
 
-    if (collectionsRes.data) setCollections(collectionsRes.data as Collection[]);
+    if (collectionsRes.data) {
+      // Get restaurant counts for each collection
+      const collectionsWithCounts = await Promise.all(
+        (collectionsRes.data as Collection[]).map(async (collection) => {
+          const { count } = await supabase
+            .from('collection_restaurants')
+            .select('*', { count: 'exact', head: true })
+            .eq('collection_id', collection.id);
+          return { ...collection, restaurant_count: count || 0 };
+        })
+      );
+      setCollections(collectionsWithCounts);
+    }
     if (citiesRes.data) setCities(citiesRes.data);
     if (dishesRes.data) setDishes(dishesRes.data);
     
     setLoading(false);
+  };
+
+  const fetchCollectionRestaurants = async (collectionId: string) => {
+    setLoadingRestaurants(true);
+    
+    const { data, error } = await supabase
+      .from('collection_restaurants')
+      .select(`
+        *,
+        restaurant:restaurant_id (
+          id, name, address, cuisines, images,
+          city:city_id (name)
+        )
+      `)
+      .eq('collection_id', collectionId)
+      .order('sort_order', { ascending: true });
+    
+    if (data) {
+      setCollectionRestaurants(data as unknown as CollectionRestaurant[]);
+    }
+    
+    setLoadingRestaurants(false);
+  };
+
+  const fetchAllRestaurants = async (search: string = '') => {
+    let query = supabase
+      .from('restaurants')
+      .select('id, name, address, cuisines, images, city:city_id (name)')
+      .eq('is_active', true)
+      .order('name')
+      .limit(50);
+    
+    if (search) {
+      query = query.ilike('name', `%${search}%`);
+    }
+    
+    const { data } = await query;
+    if (data) {
+      setAllRestaurants(data as unknown as Restaurant[]);
+    }
+  };
+
+  const handleManageRestaurants = async (collection: Collection) => {
+    setManagingCollection(collection);
+    setRestaurantsDialogOpen(true);
+    await Promise.all([
+      fetchCollectionRestaurants(collection.id),
+      fetchAllRestaurants()
+    ]);
+  };
+
+  const handleAddRestaurant = async (restaurantId: string) => {
+    if (!managingCollection) return;
+    
+    // Check if already in collection
+    if (collectionRestaurants.some(cr => cr.restaurant_id === restaurantId)) {
+      toast.error('Restaurant zit al in deze collectie');
+      return;
+    }
+    
+    const maxOrder = Math.max(0, ...collectionRestaurants.map(cr => cr.sort_order || 0));
+    
+    const { error } = await supabase
+      .from('collection_restaurants')
+      .insert({
+        collection_id: managingCollection.id,
+        restaurant_id: restaurantId,
+        sort_order: maxOrder + 1
+      });
+    
+    if (error) {
+      toast.error('Toevoegen mislukt: ' + error.message);
+      return;
+    }
+    
+    toast.success('Restaurant toegevoegd');
+    await fetchCollectionRestaurants(managingCollection.id);
+    fetchData(); // Update counts
+  };
+
+  const handleRemoveRestaurant = async (collectionRestaurantId: string) => {
+    const { error } = await supabase
+      .from('collection_restaurants')
+      .delete()
+      .eq('id', collectionRestaurantId);
+    
+    if (error) {
+      toast.error('Verwijderen mislukt: ' + error.message);
+      return;
+    }
+    
+    toast.success('Restaurant verwijderd uit collectie');
+    setCollectionRestaurants(prev => prev.filter(cr => cr.id !== collectionRestaurantId));
+    fetchData(); // Update counts
+  };
+
+  const handleUpdateFeaturedReason = async (collectionRestaurantId: string, reason: string) => {
+    const { error } = await supabase
+      .from('collection_restaurants')
+      .update({ featured_reason: reason || null })
+      .eq('id', collectionRestaurantId);
+    
+    if (error) {
+      toast.error('Update mislukt');
+      return;
+    }
+    
+    setCollectionRestaurants(prev => 
+      prev.map(cr => cr.id === collectionRestaurantId ? { ...cr, featured_reason: reason } : cr)
+    );
   };
 
   const generateSlug = (title: string) => {
@@ -295,6 +445,7 @@ export function CollectionsManager() {
                   <TableHead className="w-12"></TableHead>
                   <TableHead>Cover</TableHead>
                   <TableHead>Titel</TableHead>
+                  <TableHead>Restaurants</TableHead>
                   <TableHead>Filters</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Acties</TableHead>
@@ -326,6 +477,17 @@ export function CollectionsManager() {
                           <p className="text-sm text-muted-foreground">{collection.subtitle}</p>
                         )}
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleManageRestaurants(collection)}
+                        className="gap-1.5"
+                      >
+                        <Users className="h-4 w-4" />
+                        {collection.restaurant_count || 0}
+                      </Button>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
@@ -388,7 +550,7 @@ export function CollectionsManager() {
                 ))}
                 {collections.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       Nog geen collecties. Klik op "Nieuwe collectie" om te beginnen.
                     </TableCell>
                   </TableRow>
@@ -611,6 +773,131 @@ export function CollectionsManager() {
             </Button>
             <Button onClick={handleSave} disabled={uploading}>
               {editingCollection?.id ? 'Opslaan' : 'Aanmaken'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manage Restaurants Dialog */}
+      <Dialog open={restaurantsDialogOpen} onOpenChange={setRestaurantsDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>
+              Restaurants in "{managingCollection?.title}"
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-hidden flex flex-col gap-4">
+            {/* Search to add restaurants */}
+            <div className="space-y-2">
+              <Label>Restaurant toevoegen</Label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Zoek restaurant..."
+                    value={restaurantSearch}
+                    onChange={(e) => {
+                      setRestaurantSearch(e.target.value);
+                      fetchAllRestaurants(e.target.value);
+                    }}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+              
+              {/* Search results dropdown */}
+              {restaurantSearch && allRestaurants.length > 0 && (
+                <div className="border rounded-lg bg-background shadow-lg max-h-48 overflow-y-auto">
+                  {allRestaurants
+                    .filter(r => !collectionRestaurants.some(cr => cr.restaurant_id === r.id))
+                    .slice(0, 10)
+                    .map(restaurant => (
+                      <button
+                        key={restaurant.id}
+                        onClick={() => {
+                          handleAddRestaurant(restaurant.id);
+                          setRestaurantSearch('');
+                        }}
+                        className="w-full flex items-center gap-3 p-2 hover:bg-muted text-left transition-colors"
+                      >
+                        {restaurant.images?.[0] ? (
+                          <img src={restaurant.images[0]} alt="" className="w-10 h-10 object-cover rounded" />
+                        ) : (
+                          <div className="w-10 h-10 bg-muted rounded flex items-center justify-center">
+                            <Image className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{restaurant.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {restaurant.city?.name} • {restaurant.cuisines?.slice(0, 2).join(', ')}
+                          </p>
+                        </div>
+                        <Plus className="h-4 w-4 text-primary shrink-0" />
+                      </button>
+                    ))}
+                </div>
+              )}
+            </div>
+
+            {/* Current restaurants in collection */}
+            <div className="flex-1 overflow-hidden">
+              <Label className="mb-2 block">
+                Restaurants in collectie ({collectionRestaurants.length})
+              </Label>
+              <ScrollArea className="h-[300px] border rounded-lg">
+                {loadingRestaurants ? (
+                  <div className="p-8 text-center text-muted-foreground">
+                    Laden...
+                  </div>
+                ) : collectionRestaurants.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground">
+                    Nog geen restaurants in deze collectie
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {collectionRestaurants.map((cr, index) => (
+                      <div key={cr.id} className="flex items-center gap-3 p-3">
+                        <span className="text-sm text-muted-foreground w-6">{index + 1}</span>
+                        {cr.restaurant.images?.[0] ? (
+                          <img src={cr.restaurant.images[0]} alt="" className="w-12 h-12 object-cover rounded" />
+                        ) : (
+                          <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
+                            <Image className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{cr.restaurant.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {cr.restaurant.city?.name} • {cr.restaurant.address}
+                          </p>
+                          <Input
+                            placeholder="Waarom uitgelicht? (optioneel)"
+                            value={cr.featured_reason || ''}
+                            onChange={(e) => handleUpdateFeaturedReason(cr.id, e.target.value)}
+                            className="mt-1 h-7 text-xs"
+                          />
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive shrink-0"
+                          onClick={() => handleRemoveRestaurant(cr.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button onClick={() => setRestaurantsDialogOpen(false)}>
+              Sluiten
             </Button>
           </DialogFooter>
         </DialogContent>
