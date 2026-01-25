@@ -225,13 +225,6 @@ export default function SearchPage() {
                 onSearch={handleSearch}
               />
             </div>
-            
-            {/* Filter Button */}
-            <FilterPopover 
-              filters={filters}
-              onFiltersChange={setFilters}
-              availableCuisines={availableCuisines}
-            />
           </div>
         </div>
       </div>
@@ -239,59 +232,73 @@ export default function SearchPage() {
       <div className="container px-4 md:px-6 py-4 md:py-8">
         {/* Results Header */}
         <div className="flex flex-col gap-3 mb-4 md:mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-xl md:text-2xl font-bold truncate">
-                  {featuredOnly ? (
-                    <>Uitgelichte restaurants {cityName && cityName !== t('cities.all') && `in ${cityName}`}</>
-                  ) : dishQuery ? (
-                    <>
-                      {dishQuery} {cityName && `in ${cityName}`}
-                    </>
-                  ) : (
-                    <>Restaurants {cityName && `in ${cityName}`}</>
-                  )}
-                </h1>
-                {featuredOnly && (
-                  <Select value={selectedCityId} onValueChange={handleCityChange}>
-                    <SelectTrigger className="w-[160px] h-8">
-                      <SelectValue placeholder="Kies stad" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">{t('cities.all')}</SelectItem>
-                      {cities.map(city => (
-                        <SelectItem key={city.id} value={city.id}>
-                          {city.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+          {/* Mobile: Title + City + Filter row */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl md:text-2xl font-bold truncate">
+                {featuredOnly ? (
+                  <>Uitgelichte restaurants {cityName && cityName !== t('cities.all') && `in ${cityName}`}</>
+                ) : dishQuery ? (
+                  <>
+                    {dishQuery} {cityName && `in ${cityName}`}
+                  </>
+                ) : (
+                  <>Restaurants {cityName && `in ${cityName}`}</>
                 )}
-              </div>
+              </h1>
               <p className="text-muted-foreground text-sm mt-0.5">
                 {loading ? 'Zoeken...' : `${sortedResults.length} ${t('search.results')}`}
               </p>
             </div>
+            
+            {/* City selector + Filter button - side by side on mobile */}
+            <div className="flex items-center gap-2 shrink-0">
+              {featuredOnly && (
+                <Select value={selectedCityId} onValueChange={handleCityChange}>
+                  <SelectTrigger className="w-[120px] sm:w-[160px] h-9">
+                    <SelectValue placeholder="Kies stad" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t('cities.all')}</SelectItem>
+                    {cities.map(city => (
+                      <SelectItem key={city.id} value={city.id}>
+                        {city.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              
+              {/* Filter Button - visible on mobile next to city */}
+              <div className="md:hidden">
+                <FilterPopover 
+                  filters={filters}
+                  onFiltersChange={setFilters}
+                  availableCuisines={availableCuisines}
+                />
+              </div>
+            </div>
+          </div>
 
-            {/* View Mode Toggle + Sort */}
+          {/* Sort & View controls row */}
+          <div className="flex items-center justify-between gap-2">
+            {/* Near Me Button */}
+            <Button
+              variant={sortBy === 'nearest' ? 'default' : 'outline'}
+              size="sm"
+              onClick={handleNearMe}
+              disabled={locationLoading}
+              className="shrink-0"
+            >
+              {locationLoading ? (
+                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+              ) : (
+                <Navigation className="h-4 w-4 mr-1.5" />
+              )}
+              <span className="hidden sm:inline">Bij mij</span>
+            </Button>
+
             <div className="flex items-center gap-2">
-              {/* Near Me Button */}
-              <Button
-                variant={sortBy === 'nearest' ? 'default' : 'outline'}
-                size="sm"
-                onClick={handleNearMe}
-                disabled={locationLoading}
-                className="shrink-0"
-              >
-                {locationLoading ? (
-                  <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-                ) : (
-                  <Navigation className="h-4 w-4 mr-1.5" />
-                )}
-                <span className="hidden sm:inline">Bij mij</span>
-              </Button>
-
               {/* View Mode Toggle */}
               <div className="flex items-center border border-border rounded-lg p-0.5">
                 <Button
@@ -314,7 +321,7 @@ export default function SearchPage() {
 
               {/* Sort */}
               <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-                <SelectTrigger className="w-full sm:w-44">
+                <SelectTrigger className="w-[130px] sm:w-44">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -326,6 +333,15 @@ export default function SearchPage() {
                   {userLocation && <SelectItem value="nearest">Dichtstbij</SelectItem>}
                 </SelectContent>
               </Select>
+              
+              {/* Filter Button - hidden on mobile, visible on desktop in header */}
+              <div className="hidden md:block">
+                <FilterPopover 
+                  filters={filters}
+                  onFiltersChange={setFilters}
+                  availableCuisines={availableCuisines}
+                />
+              </div>
             </div>
           </div>
         </div>
