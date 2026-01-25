@@ -112,7 +112,8 @@
     "website": "Website",
     "addToFavorites": "Toevoegen aan favorieten",
     "removeFromFavorites": "Verwijderen uit favorieten",
-    "menu": "Menukaart"
+    "menu": "Menukaart",
+    "featuredRestaurants": "Uitgelichte restaurants"
   },
   "reviews": {
     "title": "Beoordelingen",
