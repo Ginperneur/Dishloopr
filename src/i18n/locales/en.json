@@ -112,7 +112,8 @@
     "website": "Website",
     "addToFavorites": "Add to favorites",
     "removeFromFavorites": "Remove from favorites",
-    "menu": "Menu"
+    "menu": "Menu",
+    "featuredRestaurants": "Featured restaurants"
   },
   "reviews": {
     "title": "Reviews",

@@ -32,6 +32,7 @@ import { AlternativeRestaurants } from '@/components/routing/AlternativeRestaura
 import { SocialShare } from '@/components/social/SocialShare';
 import { OpeningHoursDisplay } from '@/components/restaurant/OpeningHoursDisplay';
 import { ImageGallery } from '@/components/restaurant/ImageGallery';
+import { FeaturedRestaurantsCarousel } from '@/components/restaurant/FeaturedRestaurantsCarousel';
 import { SEOHead, createRestaurantSchema, createBreadcrumbSchema } from '@/components/seo/SEOHead';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useReviews } from '@/hooks/useReviews';
@@ -442,6 +443,12 @@ export default function RestaurantPage() {
                 <SustainabilityScore score={restaurant.sustainability_score} />
               </>
             )}
+
+            {/* Featured Restaurants Carousel */}
+            <FeaturedRestaurantsCarousel 
+              currentRestaurantId={restaurant.id}
+              cityId={restaurant.city_id}
+            />
 
             <Separator />
 
