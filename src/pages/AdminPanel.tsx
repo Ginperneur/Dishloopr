@@ -55,6 +55,7 @@ import { ChainsManager } from '@/components/admin/ChainsManager';
 import { GeocodeManager } from '@/components/admin/GeocodeManager';
 import { PhotosManager } from '@/components/admin/PhotosManager';
 import { RestaurantDishesManager } from '@/components/admin/RestaurantDishesManager';
+import { FeaturedSlotsManager } from '@/components/admin/FeaturedSlotsManager';
 import { useActivityLog } from '@/hooks/useActivityLog';
 
 interface Stats {
@@ -450,6 +451,10 @@ export default function AdminPanel() {
               <Sparkles className="h-4 w-4" />
               <span className="hidden sm:inline">Sponsored</span>
             </TabsTrigger>
+            <TabsTrigger value="featured-slots" className="gap-1.5">
+              <Crown className="h-4 w-4" />
+              <span className="hidden sm:inline">Featured</span>
+            </TabsTrigger>
             <TabsTrigger value="reviews" className="gap-1.5 relative">
               <MessageSquare className="h-4 w-4" />
               <span className="hidden sm:inline">Reviews</span>
@@ -700,6 +705,10 @@ export default function AdminPanel() {
 
           <TabsContent value="sponsored">
             <SponsoredProductsManager />
+          </TabsContent>
+
+          <TabsContent value="featured-slots">
+            <FeaturedSlotsManager />
           </TabsContent>
 
           <TabsContent value="reviews">
