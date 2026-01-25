@@ -250,11 +250,11 @@ export default function SearchPage() {
             </p>
           </div>
           
-          {/* City + Filter row (below title for smooth look) */}
+          {/* City + Filter row (below title, aligned right) */}
           {featuredOnly && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-end gap-2">
               <Select value={selectedCityId} onValueChange={handleCityChange}>
-                <SelectTrigger className="w-[140px] sm:w-[160px] h-9">
+                <SelectTrigger className="w-auto min-w-[140px] h-9">
                   <SelectValue placeholder="Kies stad" />
                 </SelectTrigger>
                 <SelectContent>
