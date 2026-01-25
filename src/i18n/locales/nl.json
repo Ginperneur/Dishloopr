@@ -156,7 +156,15 @@
     "privacy": "Privacy",
     "forRestaurants": "Voor restaurants",
     "claimRestaurant": "Claim je restaurant",
-    "howItWorks": "Hoe het werkt"
+    "howItWorks": "Hoe het werkt",
+    "collections": "Collecties",
+    "newsletterTitle": "Blijf op de hoogte",
+    "newsletterSubtitle": "Ontvang wekelijks de beste restaurant tips en nieuwe gerechten in je inbox.",
+    "emailPlaceholder": "Je e-mailadres",
+    "subscribe": "Aanmelden",
+    "newsletterSuccess": "Bedankt! Je bent aangemeld voor de nieuwsbrief.",
+    "allRights": "Alle rechten voorbehouden.",
+    "madeIn": "Gemaakt in Nederland"
   },
   "forRestaurants": {
     "pageTitle": "Restaurants claimen op Dishloopr",
@@ -219,7 +227,24 @@
     "reportAbuse": "Misbruik melden",
     "reportAbuseDesc": "Misbruik kan altijd worden gemeld bij ons team",
     "protectAll": "Zo beschermen we restaurants, gasten én de betrouwbaarheid van Dishloopr.",
-    "startClaiming": "Start met claimen"
+    "startClaiming": "Start met claimen",
+    "whyDishloopr": "Waarom Dishloopr?",
+    "benefitVisibility": "Gerichte zichtbaarheid",
+    "benefitVisibilityDesc": "Bereik gasten die actief zoeken naar jouw gerechten, niet alleen jouw keuken.",
+    "benefitInsights": "Gerecht-level insights",
+    "benefitInsightsDesc": "Ontdek welke gerechten het beste presteren en waar gasten naar zoeken.",
+    "benefitFeatured": "Premium plaatsingen",
+    "benefitFeaturedDesc": "Boost je zichtbaarheid met uitgelichte posities per stad en keuken.",
+    "whatOwnersSay": "Wat eigenaren zeggen",
+    "testimonial1Quote": "Sinds we op Dishloopr staan, krijgen we wekelijks nieuwe gasten die specifiek voor onze ramen komen.",
+    "testimonial2Quote": "De insights per gerecht zijn goud waard. We weten nu precies welke gerechten het beste presteren.",
+    "statsRestaurants": "Restaurants",
+    "statsSearches": "Zoekopdrachten/maand",
+    "statsRating": "Gem. rating",
+    "statsConversion": "Click-to-visit rate",
+    "readyToStart": "Klaar om te beginnen?",
+    "ctaSubtitle": "Claim je restaurant in minder dan 5 minuten en krijg toegang tot krachtige tools.",
+    "exploreFirst": "Bekijk eerst het platform"
   },
   "ai": {
     "surpriseMe": "Verras me!",

@@ -156,7 +156,15 @@
     "privacy": "Privacy",
     "forRestaurants": "For restaurants",
     "claimRestaurant": "Claim your restaurant",
-    "howItWorks": "How it works"
+    "howItWorks": "How it works",
+    "collections": "Collections",
+    "newsletterTitle": "Stay updated",
+    "newsletterSubtitle": "Get weekly restaurant tips and new dishes delivered to your inbox.",
+    "emailPlaceholder": "Your email address",
+    "subscribe": "Subscribe",
+    "newsletterSuccess": "Thanks! You've been subscribed to the newsletter.",
+    "allRights": "All rights reserved.",
+    "madeIn": "Made in the Netherlands"
   },
   "forRestaurants": {
     "pageTitle": "Claim restaurants on Dishloopr",
@@ -219,7 +227,24 @@
     "reportAbuse": "Report abuse",
     "reportAbuseDesc": "Abuse can always be reported to our team",
     "protectAll": "This is how we protect restaurants, guests, and Dishloopr's reliability.",
-    "startClaiming": "Start claiming"
+    "startClaiming": "Start claiming",
+    "whyDishloopr": "Why Dishloopr?",
+    "benefitVisibility": "Targeted visibility",
+    "benefitVisibilityDesc": "Reach guests who are actively searching for your dishes, not just your cuisine.",
+    "benefitInsights": "Dish-level insights",
+    "benefitInsightsDesc": "Discover which dishes perform best and what guests are searching for.",
+    "benefitFeatured": "Premium placements",
+    "benefitFeaturedDesc": "Boost your visibility with featured positions per city and cuisine.",
+    "whatOwnersSay": "What owners say",
+    "testimonial1Quote": "Since we've been on Dishloopr, we get new guests every week who come specifically for our ramen.",
+    "testimonial2Quote": "The insights per dish are invaluable. We now know exactly which dishes perform best.",
+    "statsRestaurants": "Restaurants",
+    "statsSearches": "Searches/month",
+    "statsRating": "Avg. rating",
+    "statsConversion": "Click-to-visit rate",
+    "readyToStart": "Ready to get started?",
+    "ctaSubtitle": "Claim your restaurant in less than 5 minutes and get access to powerful tools.",
+    "exploreFirst": "Explore the platform first"
   },
   "ai": {
     "surpriseMe": "Surprise me!",

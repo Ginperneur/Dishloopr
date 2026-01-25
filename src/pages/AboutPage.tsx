@@ -10,39 +10,40 @@ export default function AboutPage() {
   const features = [
     {
       icon: Search,
-      title: 'Zoek op gerecht',
-      description: 'Vind restaurants niet op basis van categorie, maar op het specifieke gerecht waar je zin in hebt.'
+      title: t('about.featureSearch', 'Zoek op gerecht'),
+      description: t('about.featureSearchDesc', 'Vind restaurants niet op basis van categorie, maar op het specifieke gerecht waar je zin in hebt.')
     },
     {
       icon: MapPin,
-      title: 'Lokaal & relevant',
-      description: 'Filter op stad en locatie om de beste opties in jouw buurt te ontdekken.'
+      title: t('about.featureLocal', 'Lokaal & relevant'),
+      description: t('about.featureLocalDesc', 'Filter op stad en locatie om de beste opties in jouw buurt te ontdekken.')
     },
     {
       icon: Star,
-      title: 'Eerlijke reviews',
-      description: 'Lees echte ervaringen van andere gasten en deel je eigen mening.'
+      title: t('about.featureReviews', 'Eerlijke reviews'),
+      description: t('about.featureReviewsDesc', 'Lees echte ervaringen van andere gasten en deel je eigen mening.')
     },
     {
       icon: Users,
-      title: 'Voor iedereen',
-      description: 'Of je nu zoekt naar een romantisch diner of een familievriendelijk restaurant - wij helpen je vinden.'
+      title: t('about.featureEveryone', 'Voor iedereen'),
+      description: t('about.featureEveryoneDesc', 'Of je nu zoekt naar een romantisch diner of een familievriendelijk restaurant - wij helpen je vinden.')
     }
   ];
 
   const faqs = [
-    { question: 'Wat is Dishloopr?', answer: 'Dishloopr is een platform om restaurants te vinden op basis van het gerecht waar je zin in hebt, gefilterd op stad, sfeer en prijs.' },
-    { question: 'Hoe werkt Dishloopr?', answer: 'Zoek simpelweg op het gerecht dat je wilt eten, filter op locatie en voorkeuren, en ontdek de beste restaurants in jouw buurt.' },
-    { question: 'Is Dishloopr gratis?', answer: 'Ja, Dishloopr is volledig gratis te gebruiken voor consumenten.' }
+    { question: t('about.faq1q', 'Wat is Dishloopr?'), answer: t('about.faq1a', 'Dishloopr is een platform om restaurants te vinden op basis van het gerecht waar je zin in hebt, gefilterd op stad, sfeer en prijs.') },
+    { question: t('about.faq2q', 'Hoe werkt Dishloopr?'), answer: t('about.faq2a', 'Zoek simpelweg op het gerecht dat je wilt eten, filter op locatie en voorkeuren, en ontdek de beste restaurants in jouw buurt.') },
+    { question: t('about.faq3q', 'Is Dishloopr gratis?'), answer: t('about.faq3a', 'Ja, Dishloopr is volledig gratis te gebruiken voor consumenten.') }
   ];
 
   return (
     <Layout>
       <SEOHead
-        title="Over Dishloopr - Ontdek restaurants op basis van gerechten"
-        description="Leer meer over Dishloopr, de snelste manier om restaurants te vinden op basis van het gerecht waar je zin in hebt. Gefilterd op stad, sfeer en prijs."
+        title={t('about.seoTitle', 'Over Dishloopr - Ontdek restaurants op basis van gerechten')}
+        description={t('about.seoDescription', 'Leer meer over Dishloopr, de snelste manier om restaurants te vinden op basis van het gerecht waar je zin in hebt. Gefilterd op stad, sfeer en prijs.')}
         keywords={['over dishloopr', 'restaurant zoeken', 'gerechten vinden', 'uit eten', 'Nederland']}
         structuredData={createFAQSchema(faqs)}
+        canonical="https://dishloopr.com/about"
       />
       <div className="container py-16">
         <motion.div

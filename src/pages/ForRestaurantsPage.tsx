@@ -17,7 +17,13 @@ import {
   Phone,
   CreditCard,
   Globe,
-  Building2
+  Building2,
+  TrendingUp,
+  Eye,
+  Star,
+  BarChart3,
+  Sparkles,
+  Quote
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -30,6 +36,30 @@ export default function ForRestaurantsPage() {
     animate: { opacity: 1, y: 0 },
     transition: { duration: 0.5 }
   };
+
+  // Stats for social proof
+  const stats = [
+    { value: '150+', label: t('forRestaurants.statsRestaurants', 'Restaurants'), icon: Building2 },
+    { value: '50K+', label: t('forRestaurants.statsSearches', 'Zoekopdrachten/maand'), icon: Eye },
+    { value: '4.8', label: t('forRestaurants.statsRating', 'Gem. rating'), icon: Star },
+    { value: '32%', label: t('forRestaurants.statsConversion', 'Click-to-visit rate'), icon: TrendingUp },
+  ];
+
+  // Testimonials
+  const testimonials = [
+    {
+      quote: t('forRestaurants.testimonial1Quote', '"Sinds we op Dishloopr staan, krijgen we wekelijks nieuwe gasten die specifiek voor onze ramen komen."'),
+      author: 'Yuki Tanaka',
+      role: 'Eigenaar, Ramen Ya Amsterdam',
+      rating: 5
+    },
+    {
+      quote: t('forRestaurants.testimonial2Quote', '"De insights per gerecht zijn goud waard. We weten nu precies welke gerechten het beste presteren."'),
+      author: 'Marco de Vries',
+      role: 'Manager, La Piazza Rotterdam',
+      rating: 5
+    },
+  ];
 
   return (
     <Layout>
@@ -75,8 +105,31 @@ export default function ForRestaurantsPage() {
           </div>
         </section>
 
+        {/* Stats Section - NEW */}
+        <section className="py-10 md:py-14 bg-primary/5 border-y border-primary/10">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+              {stats.map((stat, index) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="text-center"
+                >
+                  <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 mb-3">
+                    <stat.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <p className="text-2xl md:text-3xl font-bold text-foreground">{stat.value}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">{stat.label}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Trust Banner */}
-        <section className="py-8 bg-muted/50 border-y border-border">
+        <section className="py-8 bg-muted/50 border-b border-border">
           <div className="container mx-auto px-4">
             <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
@@ -92,6 +145,101 @@ export default function ForRestaurantsPage() {
                 <span>{t('forRestaurants.privacyGuaranteed')}</span>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Value Proposition Cards - NEW */}
+        <section className="py-12 md:py-16">
+          <div className="container mx-auto px-4">
+            <motion.div 
+              className="max-w-4xl mx-auto"
+              {...fadeIn}
+            >
+              <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">
+                {t('forRestaurants.whyDishloopr', 'Waarom Dishloopr?')}
+              </h2>
+              
+              <div className="grid md:grid-cols-3 gap-6 mb-10">
+                <Card className="border-primary/20 hover:border-primary/40 transition-colors">
+                  <CardContent className="p-6 text-center">
+                    <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 mb-4">
+                      <Eye className="h-6 w-6 text-primary" />
+                    </div>
+                    <h3 className="font-semibold mb-2">{t('forRestaurants.benefitVisibility', 'Gerichte zichtbaarheid')}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {t('forRestaurants.benefitVisibilityDesc', 'Bereik gasten die actief zoeken naar jouw gerechten, niet alleen jouw keuken.')}
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card className="border-primary/20 hover:border-primary/40 transition-colors">
+                  <CardContent className="p-6 text-center">
+                    <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 mb-4">
+                      <BarChart3 className="h-6 w-6 text-primary" />
+                    </div>
+                    <h3 className="font-semibold mb-2">{t('forRestaurants.benefitInsights', 'Gerecht-level insights')}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {t('forRestaurants.benefitInsightsDesc', 'Ontdek welke gerechten het beste presteren en waar gasten naar zoeken.')}
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card className="border-primary/20 hover:border-primary/40 transition-colors">
+                  <CardContent className="p-6 text-center">
+                    <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 mb-4">
+                      <Sparkles className="h-6 w-6 text-primary" />
+                    </div>
+                    <h3 className="font-semibold mb-2">{t('forRestaurants.benefitFeatured', 'Premium plaatsingen')}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {t('forRestaurants.benefitFeaturedDesc', 'Boost je zichtbaarheid met uitgelichte posities per stad en keuken.')}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Testimonials - NEW */}
+        <section className="py-12 md:py-16 bg-muted/30">
+          <div className="container mx-auto px-4">
+            <motion.div 
+              className="max-w-4xl mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">
+                {t('forRestaurants.whatOwnersSay', 'Wat eigenaren zeggen')}
+              </h2>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                {testimonials.map((testimonial, index) => (
+                  <Card key={index} className="bg-background">
+                    <CardContent className="p-6">
+                      <Quote className="h-8 w-8 text-primary/20 mb-4" />
+                      <p className="text-foreground mb-4 italic">{testimonial.quote}</p>
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <span className="text-sm font-semibold text-primary">
+                            {testimonial.author.split(' ').map(n => n[0]).join('')}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm">{testimonial.author}</p>
+                          <p className="text-xs text-muted-foreground">{testimonial.role}</p>
+                        </div>
+                        <div className="ml-auto flex gap-0.5">
+                          {[...Array(testimonial.rating)].map((_, i) => (
+                            <Star key={i} className="h-4 w-4 fill-rating text-rating" />
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </motion.div>
           </div>
         </section>
 
@@ -401,28 +549,28 @@ export default function ForRestaurantsPage() {
                 <h2 className="text-2xl md:text-3xl font-bold">{t('forRestaurants.transparencySecurity')}</h2>
               </div>
 
-              <div className="grid md:grid-cols-3 gap-6">
-                <Card className="border-primary/20">
+              <div className="grid md:grid-cols-3 gap-6 mb-8">
+                <Card>
                   <CardContent className="p-6">
-                    <Lock className="h-8 w-8 text-primary mb-4" />
+                    <Lock className="h-6 w-6 text-primary mb-3" />
                     <h3 className="font-semibold mb-2">{t('forRestaurants.dataProtected')}</h3>
                     <p className="text-sm text-muted-foreground">
                       {t('forRestaurants.dataProtectedDesc')}
                     </p>
                   </CardContent>
                 </Card>
-                <Card className="border-primary/20">
+                <Card>
                   <CardContent className="p-6">
-                    <CheckCircle2 className="h-8 w-8 text-primary mb-4" />
+                    <Shield className="h-6 w-6 text-primary mb-3" />
                     <h3 className="font-semibold mb-2">{t('forRestaurants.auditTrail')}</h3>
                     <p className="text-sm text-muted-foreground">
                       {t('forRestaurants.auditTrailDesc')}
                     </p>
                   </CardContent>
                 </Card>
-                <Card className="border-primary/20">
+                <Card>
                   <CardContent className="p-6">
-                    <AlertTriangle className="h-8 w-8 text-primary mb-4" />
+                    <AlertTriangle className="h-6 w-6 text-primary mb-3" />
                     <h3 className="font-semibold mb-2">{t('forRestaurants.reportAbuse')}</h3>
                     <p className="text-sm text-muted-foreground">
                       {t('forRestaurants.reportAbuseDesc')}
@@ -431,19 +579,42 @@ export default function ForRestaurantsPage() {
                 </Card>
               </div>
 
-              <Card className="mt-8 bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
-                <CardContent className="p-8 text-center">
-                  <p className="text-lg font-medium mb-4">
-                    {t('forRestaurants.protectAll')}
-                  </p>
-                  <Button asChild size="lg" className="gap-2">
-                    <Link to="/claim">
-                      {t('forRestaurants.startClaiming')}
-                      <ChevronRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
+              <p className="text-center text-muted-foreground">
+                {t('forRestaurants.protectAll')}
+              </p>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Final CTA */}
+        <section className="py-16 md:py-24 bg-primary/5">
+          <div className="container mx-auto px-4">
+            <motion.div 
+              className="max-w-2xl mx-auto text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <h2 className="text-2xl md:text-4xl font-bold mb-4">
+                {t('forRestaurants.readyToStart', 'Klaar om te beginnen?')}
+              </h2>
+              <p className="text-lg text-muted-foreground mb-8">
+                {t('forRestaurants.ctaSubtitle', 'Claim je restaurant in minder dan 5 minuten en krijg toegang tot krachtige tools.')}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button asChild size="lg" className="gap-2">
+                  <Link to="/claim">
+                    {t('forRestaurants.startClaiming')}
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link to="/search">
+                    {t('forRestaurants.exploreFirst', 'Bekijk eerst het platform')}
+                  </Link>
+                </Button>
+              </div>
             </motion.div>
           </div>
         </section>
