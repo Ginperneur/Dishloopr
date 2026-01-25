@@ -629,6 +629,7 @@ export type Database = {
         Row: {
           base_price: number
           city_id: string
+          cooling_off_days: number
           created_at: string
           cuisine: string
           demand_multiplier: number
@@ -641,6 +642,7 @@ export type Database = {
         Insert: {
           base_price?: number
           city_id: string
+          cooling_off_days?: number
           created_at?: string
           cuisine: string
           demand_multiplier?: number
@@ -653,6 +655,7 @@ export type Database = {
         Update: {
           base_price?: number
           city_id?: string
+          cooling_off_days?: number
           created_at?: string
           cuisine?: string
           demand_multiplier?: number

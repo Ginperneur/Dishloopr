@@ -17,8 +17,12 @@ interface FeaturedSlot {
   cuisine: string;
   base_price: number;
   max_slots: number;
-  cooling_off_days: number;
+  cooling_off_days?: number;
   created_at: string;
+  demand_multiplier?: number;
+  is_active?: boolean;
+  last_price_update?: string;
+  updated_at?: string;
   cities?: { name: string };
   active_count?: number;
 }
@@ -40,7 +44,6 @@ export function FeaturedSlotsManager() {
     cuisine: '',
     base_price: 99,
     max_slots: 15,
-    cooling_off_days: 30,
   });
 
   const cuisineOptions = [
@@ -111,7 +114,6 @@ export function FeaturedSlotsManager() {
           .update({
             base_price: formData.base_price,
             max_slots: formData.max_slots,
-            cooling_off_days: formData.cooling_off_days,
           })
           .eq('id', editingSlot.id);
 
@@ -138,7 +140,6 @@ export function FeaturedSlotsManager() {
             cuisine: formData.cuisine,
             base_price: formData.base_price,
             max_slots: formData.max_slots,
-            cooling_off_days: formData.cooling_off_days,
           });
 
         if (error) throw error;
@@ -180,7 +181,6 @@ export function FeaturedSlotsManager() {
       cuisine: slot.cuisine,
       base_price: slot.base_price,
       max_slots: slot.max_slots,
-      cooling_off_days: slot.cooling_off_days,
     });
     setDialogOpen(true);
   };
@@ -191,7 +191,6 @@ export function FeaturedSlotsManager() {
       cuisine: '',
       base_price: 99,
       max_slots: 15,
-      cooling_off_days: 30,
     });
   };
 
@@ -311,16 +310,6 @@ export function FeaturedSlotsManager() {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Cooling-off Periode (dagen)</Label>
-                    <Input
-                      type="number"
-                      min={7}
-                      max={90}
-                      value={formData.cooling_off_days}
-                      onChange={(e) => setFormData(prev => ({ ...prev, cooling_off_days: parseInt(e.target.value) || 30 }))}
-                    />
-                  </div>
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setDialogOpen(false)}>
