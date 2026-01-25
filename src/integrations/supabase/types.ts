@@ -47,6 +47,33 @@ export type Database = {
         }
         Relationships: []
       }
+      ambiance_pricing: {
+        Row: {
+          ambiance_tag: string
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          monthly_price: number
+        }
+        Insert: {
+          ambiance_tag: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          monthly_price?: number
+        }
+        Update: {
+          ambiance_tag?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          monthly_price?: number
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           city_id: string | null
@@ -559,6 +586,223 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      featured_pricing_history: {
+        Row: {
+          created_at: string
+          id: string
+          new_price: number
+          old_price: number
+          reason: string | null
+          slot_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          new_price: number
+          old_price: number
+          reason?: string | null
+          slot_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          new_price?: number
+          old_price?: number
+          reason?: string | null
+          slot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "featured_pricing_history_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "featured_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      featured_slots: {
+        Row: {
+          base_price: number
+          city_id: string
+          created_at: string
+          cuisine: string
+          demand_multiplier: number
+          id: string
+          is_active: boolean
+          last_price_update: string | null
+          max_slots: number
+          updated_at: string
+        }
+        Insert: {
+          base_price?: number
+          city_id: string
+          created_at?: string
+          cuisine: string
+          demand_multiplier?: number
+          id?: string
+          is_active?: boolean
+          last_price_update?: string | null
+          max_slots?: number
+          updated_at?: string
+        }
+        Update: {
+          base_price?: number
+          city_id?: string
+          created_at?: string
+          cuisine?: string
+          demand_multiplier?: number
+          id?: string
+          is_active?: boolean
+          last_price_update?: string | null
+          max_slots?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "featured_slots_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      featured_subscriptions: {
+        Row: {
+          ambiance_addon_price: number
+          consecutive_months: number
+          cooling_off_until: string | null
+          created_at: string
+          expires_at: string
+          extra_ambiances: string[] | null
+          id: string
+          included_ambiance: string | null
+          max_duration_months: number
+          monthly_price: number
+          restaurant_id: string
+          slot_id: string
+          starts_at: string
+          status: Database["public"]["Enums"]["featured_subscription_status"]
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          total_clicks: number
+          total_monthly_price: number
+          total_views: number
+          updated_at: string
+        }
+        Insert: {
+          ambiance_addon_price?: number
+          consecutive_months?: number
+          cooling_off_until?: string | null
+          created_at?: string
+          expires_at: string
+          extra_ambiances?: string[] | null
+          id?: string
+          included_ambiance?: string | null
+          max_duration_months?: number
+          monthly_price: number
+          restaurant_id: string
+          slot_id: string
+          starts_at?: string
+          status?: Database["public"]["Enums"]["featured_subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          total_clicks?: number
+          total_monthly_price: number
+          total_views?: number
+          updated_at?: string
+        }
+        Update: {
+          ambiance_addon_price?: number
+          consecutive_months?: number
+          cooling_off_until?: string | null
+          created_at?: string
+          expires_at?: string
+          extra_ambiances?: string[] | null
+          id?: string
+          included_ambiance?: string | null
+          max_duration_months?: number
+          monthly_price?: number
+          restaurant_id?: string
+          slot_id?: string
+          starts_at?: string
+          status?: Database["public"]["Enums"]["featured_subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          total_clicks?: number
+          total_monthly_price?: number
+          total_views?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "featured_subscriptions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "featured_subscriptions_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "featured_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      featured_waitlist: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          notified_at: string | null
+          position: number
+          price_at_registration: number
+          restaurant_id: string
+          selected_ambiances: string[] | null
+          slot_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          notified_at?: string | null
+          position: number
+          price_at_registration: number
+          restaurant_id: string
+          selected_ambiances?: string[] | null
+          slot_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          notified_at?: string | null
+          position?: number
+          price_at_registration?: number
+          restaurant_id?: string
+          selected_ambiances?: string[] | null
+          slot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "featured_waitlist_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "featured_waitlist_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "featured_slots"
             referencedColumns: ["id"]
           },
         ]
@@ -1913,6 +2157,10 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_featured_market_price: {
+        Args: { p_city_id: string; p_cuisine: string }
+        Returns: Json
+      }
       calculate_reviewer_level: {
         Args: { helpful_count: number; review_count: number }
         Returns: string
@@ -1923,9 +2171,17 @@ export type Database = {
       }
       can_create_claim: { Args: { _user_id: string }; Returns: boolean }
       get_available_slots: { Args: { p_product_id: string }; Returns: number }
+      get_featured_active_count: {
+        Args: { p_slot_id: string }
+        Returns: number
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
+      }
+      get_waitlist_position: {
+        Args: { p_restaurant_id: string; p_slot_id: string }
+        Returns: number
       }
       has_restaurant_access: {
         Args: {
@@ -1940,6 +2196,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_in_cooling_off: {
+        Args: { p_restaurant_id: string; p_slot_id: string }
         Returns: boolean
       }
       is_verified_owner: {
@@ -1961,6 +2221,12 @@ export type Database = {
         | "approved_by_admin"
         | "verified_by_owner"
         | "rejected"
+      featured_subscription_status:
+        | "active"
+        | "pending_payment"
+        | "cooling_off"
+        | "expired"
+        | "cancelled"
       manager_role: "viewer" | "editor" | "finance" | "primary_owner"
       price_level: "1" | "2" | "3" | "4"
       restaurant_claim_status:
@@ -2115,6 +2381,13 @@ export const Constants = {
         "approved_by_admin",
         "verified_by_owner",
         "rejected",
+      ],
+      featured_subscription_status: [
+        "active",
+        "pending_payment",
+        "cooling_off",
+        "expired",
+        "cancelled",
       ],
       manager_role: ["viewer", "editor", "finance", "primary_owner"],
       price_level: ["1", "2", "3", "4"],
