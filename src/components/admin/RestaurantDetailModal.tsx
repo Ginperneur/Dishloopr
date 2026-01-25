@@ -15,7 +15,9 @@ import {
   Link2,
   Check,
   X,
-  Instagram
+  Instagram,
+  Sparkles,
+  Crown
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -83,6 +85,8 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
   const [instagramUrl, setInstagramUrl] = useState<string>('');
   const [tiktokUrl, setTiktokUrl] = useState<string>('');
   const [socialSaving, setSocialSaving] = useState(false);
+  const [isFeatured, setIsFeatured] = useState(false);
+  const [isTopListing, setIsTopListing] = useState(false);
 
   useEffect(() => {
     if (open && restaurant) {
@@ -95,8 +99,42 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
       setZenchefId(restaurant.zenchef_id || '');
       setInstagramUrl(restaurant.instagram_url || '');
       setTiktokUrl(restaurant.tiktok_url || '');
+      setIsFeatured(restaurant.is_featured || false);
+      setIsTopListing(restaurant.is_top_listing || false);
     }
   }, [open, restaurant]);
+
+  const toggleFeatured = async () => {
+    const newValue = !isFeatured;
+    const { error } = await supabase
+      .from('restaurants')
+      .update({ is_featured: newValue })
+      .eq('id', restaurant.id);
+
+    if (error) {
+      toast.error('Featured status bijwerken mislukt');
+    } else {
+      setIsFeatured(newValue);
+      toast.success(newValue ? 'Restaurant is nu Featured' : 'Featured status verwijderd');
+      onUpdate?.();
+    }
+  };
+
+  const toggleTopListing = async () => {
+    const newValue = !isTopListing;
+    const { error } = await supabase
+      .from('restaurants')
+      .update({ is_top_listing: newValue })
+      .eq('id', restaurant.id);
+
+    if (error) {
+      toast.error('Top Listing status bijwerken mislukt');
+    } else {
+      setIsTopListing(newValue);
+      toast.success(newValue ? 'Restaurant is nu Top Listing' : 'Top Listing status verwijderd');
+      onUpdate?.();
+    }
+  };
 
   const updateTags = async (field: 'cuisines' | 'ambience_tags' | 'concepts' | 'meal_types' | 'experiences', tags: string[]) => {
     const { error } = await supabase
@@ -403,12 +441,24 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
           <DialogTitle className="flex items-center justify-between">
             <span className="text-xl">{restaurant.name}</span>
             <div className="flex gap-2">
-              {restaurant.is_featured && (
-                <Badge className="bg-amber-500">Featured</Badge>
-              )}
-              {restaurant.is_top_listing && (
-                <Badge className="bg-purple-500">Top Listing</Badge>
-              )}
+              <Button
+                variant={isFeatured ? 'default' : 'outline'}
+                size="sm"
+                onClick={toggleFeatured}
+                className={isFeatured ? 'bg-amber-500 hover:bg-amber-600' : ''}
+              >
+                <Sparkles className="h-4 w-4 mr-1" />
+                Featured
+              </Button>
+              <Button
+                variant={isTopListing ? 'default' : 'outline'}
+                size="sm"
+                onClick={toggleTopListing}
+                className={isTopListing ? 'bg-purple-500 hover:bg-purple-600' : ''}
+              >
+                <Crown className="h-4 w-4 mr-1" />
+                Top Listing
+              </Button>
               <Badge variant={restaurant.is_active ? 'default' : 'secondary'}>
                 {restaurant.is_active ? 'Actief' : 'Inactief'}
               </Badge>
