@@ -56,6 +56,7 @@ import { GeocodeManager } from '@/components/admin/GeocodeManager';
 import { PhotosManager } from '@/components/admin/PhotosManager';
 import { RestaurantDishesManager } from '@/components/admin/RestaurantDishesManager';
 import { FeaturedSlotsManager } from '@/components/admin/FeaturedSlotsManager';
+import { AmbiancePricingManager } from '@/components/admin/AmbiancePricingManager';
 import { useActivityLog } from '@/hooks/useActivityLog';
 
 interface Stats {
@@ -708,7 +709,10 @@ export default function AdminPanel() {
           </TabsContent>
 
           <TabsContent value="featured-slots">
-            <FeaturedSlotsManager />
+            <div className="space-y-6">
+              <FeaturedSlotsManager />
+              <AmbiancePricingManager />
+            </div>
           </TabsContent>
 
           <TabsContent value="reviews">
