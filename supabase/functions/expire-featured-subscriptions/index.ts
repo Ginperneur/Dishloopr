@@ -158,6 +158,34 @@ serve(async (req) => {
                 })
                 .eq("id", entry.id);
 
+              // Send email notification via edge function
+              try {
+                const notifyUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-waitlist-notification`;
+                const notifyResponse = await fetch(notifyUrl, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                  },
+                  body: JSON.stringify({
+                    waitlist_entry_id: entry.id,
+                    restaurant_id: entry.restaurant_id,
+                    slot_id: slot.id,
+                  }),
+                });
+
+                const notifyResult = await notifyResponse.json();
+                logStep("Waitlist notification sent", { 
+                  entryId: entry.id, 
+                  result: notifyResult 
+                });
+              } catch (notifyError) {
+                logStep("Failed to send notification email", { 
+                  entryId: entry.id, 
+                  error: notifyError instanceof Error ? notifyError.message : String(notifyError)
+                });
+              }
+
               logStep("Waitlist entry notified", { 
                 entryId: entry.id, 
                 restaurantId: entry.restaurant_id,
