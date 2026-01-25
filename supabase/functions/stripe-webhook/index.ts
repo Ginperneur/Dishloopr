@@ -50,10 +50,80 @@ serve(async (req) => {
       const session = event.data.object as Stripe.Checkout.Session;
       logStep("Checkout session completed", { sessionId: session.id });
 
-      const { restaurantId, listingType, userId, productId, durationDays, type } = session.metadata || {};
+      const metadata = session.metadata || {};
+      const { restaurantId, listingType, userId, productId, durationDays, type } = metadata;
       
+      // Handle featured subscription purchase (NEW)
+      if (type === "featured_subscription" && metadata.slot_id && restaurantId) {
+        const durationMonths = parseInt(metadata.duration_months || "1");
+        const monthlyPrice = parseFloat(metadata.monthly_price || "0");
+        const ambianceAddonPrice = parseFloat(metadata.ambiance_addon_price || "0");
+        const totalMonthlyPrice = parseFloat(metadata.total_monthly_price || "0");
+        const includedAmbiance = metadata.included_ambiance || null;
+        const extraAmbiances = metadata.extra_ambiances ? JSON.parse(metadata.extra_ambiances) : [];
+
+        const startsAt = new Date();
+        const expiresAt = new Date();
+        expiresAt.setMonth(expiresAt.getMonth() + durationMonths);
+
+        // Get existing consecutive months count
+        const { data: existingSub } = await supabaseAdmin
+          .from("featured_subscriptions")
+          .select("consecutive_months")
+          .eq("restaurant_id", restaurantId)
+          .eq("slot_id", metadata.slot_id)
+          .in("status", ["expired", "cooling_off"])
+          .order("expires_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const previousMonths = existingSub?.consecutive_months || 0;
+        const newConsecutiveMonths = previousMonths + durationMonths;
+
+        // If exceeding 3 months, set cooling off
+        const willExceedMax = newConsecutiveMonths >= 3;
+
+        const { error: subError } = await supabaseAdmin
+          .from("featured_subscriptions")
+          .insert({
+            slot_id: metadata.slot_id,
+            restaurant_id: restaurantId,
+            monthly_price: monthlyPrice,
+            ambiance_addon_price: ambianceAddonPrice,
+            total_monthly_price: totalMonthlyPrice,
+            included_ambiance: includedAmbiance,
+            extra_ambiances: extraAmbiances,
+            starts_at: startsAt.toISOString(),
+            expires_at: expiresAt.toISOString(),
+            consecutive_months: newConsecutiveMonths,
+            status: "active",
+            stripe_subscription_id: session.subscription as string || null,
+            stripe_customer_id: session.customer as string || null,
+            cooling_off_until: willExceedMax 
+              ? new Date(expiresAt.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString() 
+              : null,
+          });
+
+        if (subError) {
+          logStep("Featured subscription insert error", { error: subError.message });
+          return new Response(JSON.stringify({ error: subError.message }), { status: 500 });
+        }
+
+        // Also set restaurant as featured
+        await supabaseAdmin
+          .from("restaurants")
+          .update({ is_featured: true, featured_until: expiresAt.toISOString() })
+          .eq("id", restaurantId);
+
+        logStep("Featured subscription created", { 
+          slotId: metadata.slot_id, 
+          restaurantId, 
+          durationMonths,
+          consecutiveMonths: newConsecutiveMonths
+        });
+      }
       // Handle sponsored dish purchase
-      if (type === "sponsored_dish" && productId && restaurantId) {
+      else if (type === "sponsored_dish" && productId && restaurantId) {
         const duration = parseInt(durationDays || "30");
         const startsAt = new Date();
         const expiresAt = new Date();
@@ -80,7 +150,7 @@ serve(async (req) => {
 
         logStep("Sponsored purchase created successfully", { productId, restaurantId, duration });
       }
-      // Handle featured/top listing purchase
+      // Handle featured/top listing purchase (legacy)
       else if (restaurantId && listingType) {
         // Calculate expiration date (30 days from now)
         const expirationDate = new Date();

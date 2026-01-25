@@ -38,6 +38,7 @@ import { useRestaurantClaims } from '@/hooks/useRestaurantClaims';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { SponsoredMarketplace } from '@/components/sponsored/SponsoredMarketplace';
+import { FeaturedMarketplace } from '@/components/featured/FeaturedMarketplace';
 import { DemandRoutingSettings } from '@/components/routing/DemandRoutingSettings';
 import { OptimizationDashboard } from '@/components/optimization/OptimizationDashboard';
 import { DishAnalytics } from '@/components/owner/DishAnalytics';
@@ -828,10 +829,27 @@ export default function OwnerDashboard() {
 
           <TabsContent value="sponsored">
             {selectedRestaurant && (
-              <SponsoredMarketplace 
-                restaurantId={selectedRestaurant.id} 
-                restaurantName={selectedRestaurant.name}
-              />
+              <div className="space-y-8">
+                {/* New Featured Marketplace - Primary monetization */}
+                <FeaturedMarketplace 
+                  restaurantId={selectedRestaurant.id} 
+                  restaurantName={selectedRestaurant.name}
+                  restaurantCuisines={selectedRestaurant.cuisines || []}
+                  cityId={selectedRestaurant.city_id}
+                  cityName="Stad"
+                />
+                
+                {/* Legacy Sponsored Marketplace */}
+                <div className="pt-6 border-t">
+                  <h3 className="text-lg font-semibold mb-4 text-muted-foreground">
+                    Gerecht-specifieke promoties
+                  </h3>
+                  <SponsoredMarketplace 
+                    restaurantId={selectedRestaurant.id} 
+                    restaurantName={selectedRestaurant.name}
+                  />
+                </div>
+              </div>
             )}
           </TabsContent>
 
