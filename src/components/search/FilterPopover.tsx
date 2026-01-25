@@ -66,6 +66,28 @@ const EXPERIENCE_OPTIONS = [
   { value: 'celebration', key: 'filters.celebration' },
 ];
 
+// Popular cuisine options for featured restaurants filter
+const CUISINE_OPTIONS = [
+  { value: 'japanese', key: 'cuisines.japanese' },
+  { value: 'italian', key: 'cuisines.italian' },
+  { value: 'french', key: 'cuisines.french' },
+  { value: 'chinese', key: 'cuisines.chinese' },
+  { value: 'indian', key: 'cuisines.indian' },
+  { value: 'mexican', key: 'cuisines.mexican' },
+  { value: 'thai', key: 'cuisines.thai' },
+  { value: 'greek', key: 'cuisines.greek' },
+  { value: 'spanish', key: 'cuisines.spanish' },
+  { value: 'korean', key: 'cuisines.korean' },
+  { value: 'vietnamese', key: 'cuisines.vietnamese' },
+  { value: 'american', key: 'cuisines.american' },
+  { value: 'vegetarian', key: 'cuisines.vegetarian' },
+  { value: 'vegan', key: 'cuisines.vegan' },
+  { value: 'seafood', key: 'cuisines.seafood' },
+  { value: 'steakhouse', key: 'cuisines.steakhouse' },
+  { value: 'sushi', key: 'cuisines.sushi' },
+  { value: 'mediterranean', key: 'cuisines.mediterranean' },
+];
+
 const PRICE_OPTIONS = [
   { value: 1, label: '€', description: 'filters.budget' },
   { value: 2, label: '€€', description: 'filters.moderate' },
@@ -176,17 +198,15 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
                 <span className="ml-1 text-xs text-primary">({filters.concepts.length})</span>
               )}
             </TabsTrigger>
-            {availableCuisines.length > 0 && (
-              <TabsTrigger 
-                value="cuisine"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-3 py-2 text-sm"
-              >
-                {t('filters.cuisine')}
-                {filters.cuisines.length > 0 && (
-                  <span className="ml-1 text-xs text-primary">({filters.cuisines.length})</span>
-                )}
-              </TabsTrigger>
-            )}
+            <TabsTrigger 
+              value="cuisine"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-3 py-2 text-sm"
+            >
+              {t('filters.cuisine')}
+              {filters.cuisines.length > 0 && (
+                <span className="ml-1 text-xs text-primary">({filters.cuisines.length})</span>
+              )}
+            </TabsTrigger>
           </TabsList>
 
           <ScrollArea className="h-[280px]">
@@ -266,9 +286,24 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
               ))}
             </TabsContent>
 
-            {availableCuisines.length > 0 && (
-              <TabsContent value="cuisine" className="p-4 mt-0 space-y-2">
-                {availableCuisines.map((cuisine) => (
+            <TabsContent value="cuisine" className="p-4 mt-0 space-y-2">
+              {/* Show predefined cuisine options first */}
+              {CUISINE_OPTIONS.map((option) => (
+                <label 
+                  key={option.value} 
+                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted cursor-pointer transition-colors capitalize"
+                >
+                  <Checkbox
+                    checked={filters.cuisines.includes(option.value)}
+                    onCheckedChange={() => toggleFilter('cuisines', option.value)}
+                  />
+                  <span className="text-sm">{t(option.key, option.value)}</span>
+                </label>
+              ))}
+              {/* Show any additional cuisines from database that aren't in the predefined list */}
+              {availableCuisines
+                .filter(c => !CUISINE_OPTIONS.some(opt => opt.value === c.toLowerCase()))
+                .map((cuisine) => (
                   <label 
                     key={cuisine} 
                     className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted cursor-pointer transition-colors capitalize"
@@ -280,8 +315,7 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
                     <span className="text-sm">{cuisine}</span>
                   </label>
                 ))}
-              </TabsContent>
-            )}
+            </TabsContent>
           </ScrollArea>
         </Tabs>
 

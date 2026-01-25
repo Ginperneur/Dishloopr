@@ -4,9 +4,34 @@ import type { Database } from '@/integrations/supabase/types';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 
-export function useFeaturedRestaurants(limit = 3) {
+export function useFeaturedRestaurants(defaultLimit = 3) {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [limit, setLimit] = useState(defaultLimit);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const { data } = await supabase
+          .from('app_settings')
+          .select('value')
+          .eq('key', 'featured_restaurants_count')
+          .single();
+        
+        if (data?.value) {
+          const configuredLimit = parseInt(data.value, 10);
+          if (!isNaN(configuredLimit) && configuredLimit > 0) {
+            setLimit(configuredLimit);
+          }
+        }
+      } catch (error) {
+        // Use default if setting not found
+        console.log('Using default featured restaurants count');
+      }
+    };
+
+    fetchSettings();
+  }, []);
 
   useEffect(() => {
     const fetchFeatured = async () => {

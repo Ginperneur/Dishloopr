@@ -69,6 +69,26 @@
     "prixFixe": "Prix fixe",
     "popUp": "Pop-up"
   },
+  "cuisines": {
+    "japanese": "Japans",
+    "italian": "Italiaans",
+    "french": "Frans",
+    "chinese": "Chinees",
+    "indian": "Indiaas",
+    "mexican": "Mexicaans",
+    "thai": "Thais",
+    "greek": "Grieks",
+    "spanish": "Spaans",
+    "korean": "Koreaans",
+    "vietnamese": "Vietnamees",
+    "american": "Amerikaans",
+    "vegetarian": "Vegetarisch",
+    "vegan": "Veganistisch",
+    "seafood": "Vis & zeevruchten",
+    "steakhouse": "Steakhouse",
+    "sushi": "Sushi",
+    "mediterranean": "Mediterraans"
+  },
   "sort": {
     "bestMatch": "Beste match",
     "highestRated": "Hoogst beoordeeld",
