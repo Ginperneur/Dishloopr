@@ -232,53 +232,48 @@ export default function SearchPage() {
       <div className="container px-4 md:px-6 py-4 md:py-8">
         {/* Results Header */}
         <div className="flex flex-col gap-3 mb-4 md:mb-6">
-          {/* Mobile: Title + City + Filter row */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <h1 className="text-xl md:text-2xl font-bold truncate">
-                {featuredOnly ? (
-                  <>Uitgelichte restaurants {cityName && cityName !== t('cities.all') && `in ${cityName}`}</>
-                ) : dishQuery ? (
-                  <>
-                    {dishQuery} {cityName && `in ${cityName}`}
-                  </>
-                ) : (
-                  <>Restaurants {cityName && `in ${cityName}`}</>
-                )}
-              </h1>
-              <p className="text-muted-foreground text-sm mt-0.5">
-                {loading ? 'Zoeken...' : `${sortedResults.length} ${t('search.results')}`}
-              </p>
-            </div>
-            
-            {/* City selector + Filter button - side by side on mobile */}
-            <div className="flex items-center gap-2 shrink-0">
-              {featuredOnly && (
-                <Select value={selectedCityId} onValueChange={handleCityChange}>
-                  <SelectTrigger className="w-[120px] sm:w-[160px] h-9">
-                    <SelectValue placeholder="Kies stad" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t('cities.all')}</SelectItem>
-                    {cities.map(city => (
-                      <SelectItem key={city.id} value={city.id}>
-                        {city.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          {/* Title row */}
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold">
+              {featuredOnly ? (
+                <>Uitgelichte restaurants</>
+              ) : dishQuery ? (
+                <>
+                  {dishQuery} {cityName && `in ${cityName}`}
+                </>
+              ) : (
+                <>Restaurants {cityName && `in ${cityName}`}</>
               )}
-              
-              {/* Filter Button - visible on mobile next to city */}
-              <div className="md:hidden">
-                <FilterPopover 
-                  filters={filters}
-                  onFiltersChange={setFilters}
-                  availableCuisines={availableCuisines}
-                />
-              </div>
-            </div>
+            </h1>
+            <p className="text-muted-foreground text-sm mt-0.5">
+              {loading ? 'Zoeken...' : `${sortedResults.length} ${t('search.results')}`}
+            </p>
           </div>
+          
+          {/* City + Filter row (below title for smooth look) */}
+          {featuredOnly && (
+            <div className="flex items-center gap-2">
+              <Select value={selectedCityId} onValueChange={handleCityChange}>
+                <SelectTrigger className="w-[140px] sm:w-[160px] h-9">
+                  <SelectValue placeholder="Kies stad" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('cities.all')}</SelectItem>
+                  {cities.map(city => (
+                    <SelectItem key={city.id} value={city.id}>
+                      {city.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <FilterPopover 
+                filters={filters}
+                onFiltersChange={setFilters}
+                availableCuisines={availableCuisines}
+              />
+            </div>
+          )}
 
           {/* Sort & View controls row */}
           <div className="flex items-center justify-between gap-2">
@@ -334,14 +329,14 @@ export default function SearchPage() {
                 </SelectContent>
               </Select>
               
-              {/* Filter Button - hidden on mobile, visible on desktop in header */}
-              <div className="hidden md:block">
+              {/* Filter Button - only show here for non-featured pages */}
+              {!featuredOnly && <div className="hidden md:block">
                 <FilterPopover 
                   filters={filters}
                   onFiltersChange={setFilters}
                   availableCuisines={availableCuisines}
                 />
-              </div>
+              </div>}
             </div>
           </div>
         </div>
