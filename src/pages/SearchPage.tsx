@@ -46,6 +46,7 @@ export default function SearchPage() {
   const dishQuery = searchParams.get('dish') || '';
   const cityId = searchParams.get('city') || 'all';
   const featuredOnly = searchParams.get('featured') === 'true';
+  const [selectedCityId, setSelectedCityId] = useState(cityId);
   
   const [filters, setFilters] = useState<Filters>({
     priceLevel: [],
@@ -63,6 +64,11 @@ export default function SearchPage() {
   // Geolocation for "near me" feature
   const { latitude, longitude, loading: locationLoading, requestLocation } = useGeolocation();
   const userLocation = latitude && longitude ? { lat: latitude, lng: longitude } : null;
+
+  // Sync selectedCityId with URL on mount
+  useEffect(() => {
+    setSelectedCityId(cityId);
+  }, [cityId]);
 
   // Show scroll-to-top button after scrolling
   useEffect(() => {
@@ -82,9 +88,21 @@ export default function SearchPage() {
 
   // Perform search when query, city, filters, or featured mode change
   useEffect(() => {
-    search(dishQuery, cityId, filters, featuredOnly);
+    search(dishQuery, selectedCityId, filters, featuredOnly);
     setDisplayCount(12); // Reset pagination on new search
-  }, [dishQuery, cityId, filters, featuredOnly]);
+  }, [dishQuery, selectedCityId, filters, featuredOnly]);
+
+  // Handle city change for featured page
+  const handleCityChange = (newCityId: string) => {
+    setSelectedCityId(newCityId);
+    const params = new URLSearchParams(searchParams);
+    if (newCityId && newCityId !== 'all') {
+      params.set('city', newCityId);
+    } else {
+      params.delete('city');
+    }
+    setSearchParams(params);
+  };
 
   // Apply sorting (including distance-based)
   const sortedResults = [...results].sort((a, b) => {
@@ -178,21 +196,21 @@ export default function SearchPage() {
     filters.mealTypes.length +
     filters.experiences.length;
 
-  const cityName = cityId === 'all' 
+  const cityName = selectedCityId === 'all' 
     ? t('cities.all') 
-    : cities.find(c => c.id === cityId)?.name || '';
+    : cities.find(c => c.id === selectedCityId)?.name || '';
 
   const pageTitle = featuredOnly 
     ? 'Uitgelichte restaurants'
     : dishQuery 
-      ? `${dishQuery} restaurants${cityId && cityId !== 'all' ? ` in ${cities.find(c => c.id === cityId)?.name || ''}` : ''}`
+      ? `${dishQuery} restaurants${selectedCityId && selectedCityId !== 'all' ? ` in ${cities.find(c => c.id === selectedCityId)?.name || ''}` : ''}`
       : 'Zoek restaurants';
 
   return (
     <Layout>
       <SEOHead
         title={`${pageTitle} | Dishloopr`}
-        description={`Vind de beste ${dishQuery || 'restaurants'}${cityId && cityId !== 'all' ? ` in ${cities.find(c => c.id === cityId)?.name || 'Nederland'}` : ' in Nederland'}. Bekijk reviews, menu's en reserveer direct.`}
+        description={`Vind de beste ${dishQuery || 'restaurants'}${selectedCityId && selectedCityId !== 'all' ? ` in ${cities.find(c => c.id === selectedCityId)?.name || 'Nederland'}` : ' in Nederland'}. Bekijk reviews, menu's en reserveer direct.`}
         keywords={[dishQuery || 'restaurants', 'eten', 'uit eten', 'Nederland', 'reviews'].filter(Boolean) as string[]}
       />
       {/* Search Header */}
@@ -203,7 +221,7 @@ export default function SearchPage() {
               <SearchBar 
                 variant="compact" 
                 initialQuery={dishQuery}
-                initialCity={cityId}
+                initialCity={selectedCityId}
                 onSearch={handleSearch}
               />
             </div>
@@ -223,17 +241,34 @@ export default function SearchPage() {
         <div className="flex flex-col gap-3 mb-4 md:mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="min-w-0">
-              <h1 className="text-xl md:text-2xl font-bold truncate">
-                {featuredOnly ? (
-                  <>Uitgelichte restaurants {cityName && cityName !== t('cities.all') && `in ${cityName}`}</>
-                ) : dishQuery ? (
-                  <>
-                    {dishQuery} {cityName && `in ${cityName}`}
-                  </>
-                ) : (
-                  <>Restaurants {cityName && `in ${cityName}`}</>
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-xl md:text-2xl font-bold truncate">
+                  {featuredOnly ? (
+                    <>Uitgelichte restaurants {cityName && cityName !== t('cities.all') && `in ${cityName}`}</>
+                  ) : dishQuery ? (
+                    <>
+                      {dishQuery} {cityName && `in ${cityName}`}
+                    </>
+                  ) : (
+                    <>Restaurants {cityName && `in ${cityName}`}</>
+                  )}
+                </h1>
+                {featuredOnly && (
+                  <Select value={selectedCityId} onValueChange={handleCityChange}>
+                    <SelectTrigger className="w-[160px] h-8">
+                      <SelectValue placeholder="Kies stad" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t('cities.all')}</SelectItem>
+                      {cities.map(city => (
+                        <SelectItem key={city.id} value={city.id}>
+                          {city.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 )}
-              </h1>
+              </div>
               <p className="text-muted-foreground text-sm mt-0.5">
                 {loading ? 'Zoeken...' : `${sortedResults.length} ${t('search.results')}`}
               </p>
@@ -418,7 +453,7 @@ export default function SearchPage() {
             {/* SEO Internal Links */}
             <SeoLandingLinks
               currentDish={dishQuery}
-              currentCity={cityId !== 'all' ? cityId : undefined}
+              currentCity={selectedCityId !== 'all' ? selectedCityId : undefined}
               cities={cities.map(c => ({ id: c.id, name: c.name, slug: c.slug }))}
               dishes={dishes.slice(0, 10).map(d => ({ id: d.id, name: d.name, slug: d.slug }))}
             />
