@@ -25,8 +25,8 @@ export function Footer() {
   };
 
   return (
-    <footer className="border-t border-border bg-muted/30">
-      <div className="container px-4 md:px-6 py-10 md:py-16">
+    <footer className="border-t border-border bg-muted/30 w-full">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-10 md:py-16">
         {/* Newsletter Section */}
         <div className="mb-10 md:mb-14 pb-8 md:pb-10 border-b border-border">
           <div className="max-w-xl mx-auto text-center">
