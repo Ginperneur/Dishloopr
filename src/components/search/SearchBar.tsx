@@ -428,15 +428,20 @@ export function SearchBar({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 6 }}
               transition={{ duration: 0.15 }}
-              className="hidden md:block absolute top-full left-0 right-0 mt-2 rounded-xl overflow-hidden"
+              className="hidden md:block absolute top-full left-0 right-0 mt-3 rounded-xl"
               style={{ 
                 backgroundColor: 'hsl(var(--background))',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
                 border: '2px solid hsl(var(--border))',
                 zIndex: 9999
               }}
+              onWheel={(e) => e.stopPropagation()}
             >
-              <div className="max-h-[70vh] overflow-y-auto">
+              <div 
+                className="overflow-y-auto overscroll-contain rounded-xl"
+                style={{ maxHeight: '400px' }}
+                onWheel={(e) => e.stopPropagation()}
+              >
                 {/* Dish suggestions */}
                 {suggestions.length > 0 && (
                   <>
