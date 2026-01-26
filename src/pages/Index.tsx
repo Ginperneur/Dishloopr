@@ -30,7 +30,7 @@ const Index = () => {
         structuredData={createWebsiteSchema()}
       />
       {/* Hero Section */}
-      <section className="relative py-10 md:py-32 pb-24 md:pb-48 overflow-hidden">
+      <section className="relative py-10 md:py-32 pb-16 md:pb-36 overflow-hidden">
         {/* Background gradient */}
         <div 
           className="absolute inset-0 -z-10"
