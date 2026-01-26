@@ -299,13 +299,13 @@ export function SearchBar({
       <AnimatePresence>
         {showSuggestions && hasSuggestions && (
           <>
-            {/* Backdrop */}
+            {/* Backdrop - both mobile and desktop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className="fixed inset-0 bg-black/40 z-[9998] md:hidden"
+              className="fixed inset-0 z-[9998] md:bg-transparent bg-black/40"
               onClick={() => setShowSuggestions(false)}
             />
             
