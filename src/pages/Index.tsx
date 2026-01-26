@@ -30,7 +30,7 @@ const Index = () => {
         structuredData={createWebsiteSchema()}
       />
       {/* Hero Section */}
-      <section className="relative py-10 md:py-20 lg:py-24 pb-20 md:pb-28 lg:pb-32 overflow-hidden z-10">
+      <section className="relative py-10 md:py-20 lg:py-24 pb-20 md:pb-44 lg:pb-56 overflow-hidden z-10">
         {/* Background gradient */}
         <div 
           className="absolute inset-0 -z-10"
@@ -71,7 +71,7 @@ const Index = () => {
       </section>
 
       {/* Featured Restaurants - Direct onder Surprise Me */}
-      <section className="relative py-8 md:py-16 bg-muted/30 -mt-12 md:-mt-20 pt-16 md:pt-24">
+      <section className="relative py-8 md:py-16 bg-muted/30 -mt-12 md:-mt-32 lg:-mt-40 pt-16 md:pt-28 lg:pt-36">
         <div className="container px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
