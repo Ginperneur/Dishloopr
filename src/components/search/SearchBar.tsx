@@ -436,7 +436,7 @@ export function SearchBar({
                 zIndex: 9999
               }}
             >
-              <div className="max-h-[50vh] overflow-y-auto">
+              <div className="max-h-[70vh] overflow-y-auto">
                 {/* Dish suggestions */}
                 {suggestions.length > 0 && (
                   <>
