@@ -308,5 +308,21 @@
     "visibilityChange": "Changement de visibilité",
     "confidence": "Confiance",
     "disclaimer": "Toutes les informations sont basées sur des données réelles de la plateforme. Aucune manipulation possible."
+  },
+  "openingHours": {
+    "title": "Heures d'ouverture",
+    "openNow": "Ouvert maintenant",
+    "closed": "Fermé",
+    "today": "aujourd'hui",
+    "unknown": "Inconnu",
+    "callNow": "Appeler",
+    "route": "Itinéraire",
+    "monday": "Lundi",
+    "tuesday": "Mardi",
+    "wednesday": "Mercredi",
+    "thursday": "Jeudi",
+    "friday": "Vendredi",
+    "saturday": "Samedi",
+    "sunday": "Dimanche"
   }
 }

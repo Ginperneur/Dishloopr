@@ -1,4 +1,5 @@
 import { Clock, CheckCircle2, XCircle, Phone, Navigation } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import {
   Accordion,
@@ -17,19 +18,22 @@ interface OpeningHoursDisplayProps {
   className?: string;
 }
 
-// Dutch day names in correct order starting from Monday
-const DAY_ORDER = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-const DAY_LABELS: { [key: string]: string } = {
-  mon: 'Maandag',
-  tue: 'Dinsdag',
-  wed: 'Woensdag',
-  thu: 'Donderdag',
-  fri: 'Vrijdag',
-  sat: 'Zaterdag',
-  sun: 'Zondag',
+// Day keys in correct order starting from Monday
+const DAY_ORDER = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
+
+// Mapping from day keys to i18n keys
+const DAY_I18N_KEYS: { [key: string]: string } = {
+  mon: 'openingHours.monday',
+  tue: 'openingHours.tuesday',
+  wed: 'openingHours.wednesday',
+  thu: 'openingHours.thursday',
+  fri: 'openingHours.friday',
+  sat: 'openingHours.saturday',
+  sun: 'openingHours.sunday',
 };
 
 export function OpeningHoursDisplay({ openingHours, phone, geoLat, geoLng, restaurantName, className }: OpeningHoursDisplayProps) {
+  const { t } = useTranslation();
   const now = new Date();
   
   // Generate Google Maps directions URL
@@ -39,6 +43,7 @@ export function OpeningHoursDisplay({ openingHours, phone, geoLat, geoLng, resta
     const label = restaurantName ? encodeURIComponent(restaurantName) : '';
     return `https://www.google.com/maps/dir/?api=1&destination=${destination}&destination_place_id=${label}`;
   };
+  
   const currentDayIndex = now.getDay();
   const currentDayKey = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][currentDayIndex];
   
@@ -62,21 +67,21 @@ export function OpeningHoursDisplay({ openingHours, phone, geoLat, geoLng, resta
   };
 
   const formatHours = (hours: string): string => {
-    if (!hours || hours === 'closed') return 'Gesloten';
+    if (!hours || hours === 'closed') return t('openingHours.closed');
     return hours;
   };
 
   // Get sorted entries based on DAY_ORDER
   const sortedDays = DAY_ORDER.map(day => ({
     key: day,
-    label: DAY_LABELS[day],
+    label: t(DAY_I18N_KEYS[day]),
     hours: openingHours[day] || 'closed',
     isToday: day === currentDayKey,
     isOpen: day === currentDayKey && isCurrentlyOpen(openingHours[day])
   }));
 
   const todayInfo = sortedDays.find(d => d.isToday);
-  const todayHours = todayInfo ? formatHours(todayInfo.hours) : 'Onbekend';
+  const todayHours = todayInfo ? formatHours(todayInfo.hours) : t('openingHours.unknown');
   const isOpen = todayInfo?.isOpen || false;
 
   // Desktop view - full list
@@ -84,7 +89,7 @@ export function OpeningHoursDisplay({ openingHours, phone, geoLat, geoLng, resta
     <div className={cn("hidden md:block p-5 rounded-2xl border border-border bg-card", className)}>
       <h3 className="font-semibold mb-4 flex items-center gap-2">
         <Clock className="h-4 w-4 text-primary" />
-        Openingstijden
+        {t('openingHours.title')}
       </h3>
       
       <div className="space-y-0">
@@ -112,7 +117,7 @@ export function OpeningHoursDisplay({ openingHours, phone, geoLat, geoLng, resta
                   isToday ? "font-semibold text-foreground" : "text-muted-foreground"
                 )}>
                   {label}
-                  {isToday && <span className="ml-1.5 text-xs text-primary">(vandaag)</span>}
+                  {isToday && <span className="ml-1.5 text-xs text-primary">({t('openingHours.today')})</span>}
                 </span>
               </div>
               
@@ -142,16 +147,16 @@ export function OpeningHoursDisplay({ openingHours, phone, geoLat, geoLng, resta
               <div className="flex items-center justify-between w-full pr-2">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-primary" />
-                  <span className="font-semibold text-sm">Openingstijden</span>
+                  <span className="font-semibold text-sm">{t('openingHours.title')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {isOpen ? (
                     <span className="text-xs font-medium text-tag-family bg-tag-family/10 px-2 py-0.5 rounded-full">
-                      Nu open
+                      {t('openingHours.openNow')}
                     </span>
                   ) : (
                     <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                      Gesloten
+                      {t('openingHours.closed')}
                     </span>
                   )}
                   <span className="text-sm text-muted-foreground">{todayHours}</span>
@@ -184,7 +189,7 @@ export function OpeningHoursDisplay({ openingHours, phone, geoLat, geoLng, resta
                           isToday ? "font-semibold text-foreground" : "text-muted-foreground"
                         )}>
                           {label}
-                          {isToday && <span className="ml-1 text-xs text-primary">(vandaag)</span>}
+                          {isToday && <span className="ml-1 text-xs text-primary">({t('openingHours.today')})</span>}
                         </span>
                       </div>
                       
@@ -214,7 +219,7 @@ export function OpeningHoursDisplay({ openingHours, phone, geoLat, geoLng, resta
               >
                 <a href={`tel:${phone}`} className="flex flex-col items-center gap-1">
                   <Phone className="h-5 w-5" />
-                  <span className="text-xs font-medium">Bel nu</span>
+                  <span className="text-xs font-medium">{t('openingHours.callNow')}</span>
                 </a>
               </Button>
             )}
@@ -231,7 +236,7 @@ export function OpeningHoursDisplay({ openingHours, phone, geoLat, geoLng, resta
                   className="flex flex-col items-center gap-1"
                 >
                   <Navigation className="h-5 w-5" />
-                  <span className="text-xs font-medium">Route</span>
+                  <span className="text-xs font-medium">{t('openingHours.route')}</span>
                 </a>
               </Button>
             )}
