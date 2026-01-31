@@ -335,7 +335,18 @@ export default function RestaurantPage() {
               </div>
             </motion.div>
 
-            {/* Mobile CTA Buttons */}
+            {/* Mobile Opening Hours - Always visible */}
+            <div className="lg:hidden">
+              <OpeningHoursDisplay 
+                openingHours={openingHours} 
+                phone={restaurant.phone}
+                geoLat={restaurant.geo_lat ? Number(restaurant.geo_lat) : undefined}
+                geoLng={restaurant.geo_lng ? Number(restaurant.geo_lng) : undefined}
+                restaurantName={restaurant.name}
+              />
+            </div>
+
+            {/* Mobile CTA Buttons - only reservation and website */}
             <div className="lg:hidden flex gap-2">
               <ReservationWidget 
                 zenchefId={restaurant.zenchef_id}
@@ -347,24 +358,6 @@ export default function RestaurantPage() {
                 <Button variant="outline" size="icon" asChild className="shrink-0">
                   <a href={restaurant.website_url} target="_blank" rel="noopener noreferrer">
                     <Globe className="h-4 w-4" />
-                  </a>
-                </Button>
-              )}
-              {restaurant.phone && (
-                <Button variant="outline" size="icon" asChild className="shrink-0">
-                  <a href={`tel:${restaurant.phone}`}>
-                    <Phone className="h-4 w-4" />
-                  </a>
-                </Button>
-              )}
-              {restaurant.geo_lat && restaurant.geo_lng && (
-                <Button variant="outline" size="icon" asChild className="shrink-0">
-                  <a 
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${restaurant.geo_lat},${restaurant.geo_lng}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Navigation className="h-4 w-4" />
                   </a>
                 </Button>
               )}
