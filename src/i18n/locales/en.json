@@ -354,5 +354,21 @@
     "visibilityChange": "Visibility change",
     "confidence": "Confidence",
     "disclaimer": "All insights are based on real platform data. No manipulation possible."
+  },
+  "openingHours": {
+    "title": "Opening hours",
+    "openNow": "Open now",
+    "closed": "Closed",
+    "today": "today",
+    "unknown": "Unknown",
+    "callNow": "Call now",
+    "route": "Directions",
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday"
   }
 }

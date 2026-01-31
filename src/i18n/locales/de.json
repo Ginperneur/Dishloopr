@@ -308,5 +308,21 @@
     "visibilityChange": "Sichtbarkeitsänderung",
     "confidence": "Vertrauen",
     "disclaimer": "Alle Einblicke basieren auf echten Plattformdaten. Keine Manipulation möglich."
+  },
+  "openingHours": {
+    "title": "Öffnungszeiten",
+    "openNow": "Jetzt geöffnet",
+    "closed": "Geschlossen",
+    "today": "heute",
+    "unknown": "Unbekannt",
+    "callNow": "Jetzt anrufen",
+    "route": "Route",
+    "monday": "Montag",
+    "tuesday": "Dienstag",
+    "wednesday": "Mittwoch",
+    "thursday": "Donnerstag",
+    "friday": "Freitag",
+    "saturday": "Samstag",
+    "sunday": "Sonntag"
   }
 }

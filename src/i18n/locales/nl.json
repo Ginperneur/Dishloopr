@@ -354,5 +354,21 @@
     "visibilityChange": "Zichtbaarheidsverandering",
     "confidence": "Betrouwbaarheid",
     "disclaimer": "Alle inzichten zijn gebaseerd op echte platformdata. Geen manipulatie mogelijk."
+  },
+  "openingHours": {
+    "title": "Openingstijden",
+    "openNow": "Nu open",
+    "closed": "Gesloten",
+    "today": "vandaag",
+    "unknown": "Onbekend",
+    "callNow": "Bel nu",
+    "route": "Route",
+    "monday": "Maandag",
+    "tuesday": "Dinsdag",
+    "wednesday": "Woensdag",
+    "thursday": "Donderdag",
+    "friday": "Vrijdag",
+    "saturday": "Zaterdag",
+    "sunday": "Zondag"
   }
 }
