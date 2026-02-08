@@ -359,17 +359,6 @@ export default function RestaurantPage() {
                     )}
                   </div>
                 </div>
-
-                {/* Right: Opening Hours (compact version) */}
-                <div className="w-full md:w-auto md:min-w-[280px]">
-                  <OpeningHoursDisplay 
-                    openingHours={openingHours} 
-                    phone={restaurant.phone}
-                    geoLat={restaurant.geo_lat ? Number(restaurant.geo_lat) : undefined}
-                    geoLng={restaurant.geo_lng ? Number(restaurant.geo_lng) : undefined}
-                    restaurantName={restaurant.name}
-                  />
-                </div>
               </div>
             </motion.div>
 
