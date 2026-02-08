@@ -154,8 +154,23 @@ export function SearchBar({
   const isHero = variant === 'hero';
   const hasSuggestions = suggestions.length > 0 || cuisineSuggestions.length > 0 || restaurantSuggestions.length > 0;
 
+  // Calculate position for desktop dropdown
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  const searchBarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (showSuggestions && searchBarRef.current) {
+      const rect = searchBarRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 8,
+        left: rect.left,
+        width: rect.width
+      });
+    }
+  }, [showSuggestions]);
+
   return (
-    <div className={`relative w-full ${isHero ? 'max-w-3xl mx-auto' : ''}`}>
+    <div ref={searchBarRef} className={`relative w-full ${isHero ? 'max-w-3xl mx-auto' : ''}`}>
       {/* Main search bar */}
       <motion.div
         initial={isHero ? { y: 20, opacity: 0 } : false}
@@ -422,14 +437,17 @@ export function SearchBar({
               </div>
             </motion.div>
 
-            {/* Desktop Suggestions (positioned) */}
+            {/* Desktop Suggestions (fixed position to avoid overflow clipping) */}
             <motion.div
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 6 }}
               transition={{ duration: 0.15 }}
-              className="hidden md:block absolute top-full left-0 right-0 mt-3 rounded-xl"
+              className="hidden md:block fixed rounded-xl"
               style={{ 
+                top: dropdownPosition.top,
+                left: dropdownPosition.left,
+                width: dropdownPosition.width,
                 backgroundColor: 'hsl(var(--background))',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
                 border: '2px solid hsl(var(--border))',
