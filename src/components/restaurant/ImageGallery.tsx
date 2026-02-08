@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -14,15 +14,63 @@ interface TouchState {
   isDragging: boolean;
 }
 
+// Preload an image and return a promise
+const preloadImage = (src: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve();
+    img.onerror = reject;
+    img.src = src;
+  });
+};
+
 export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set([0]));
+  const [preloadedImages, setPreloadedImages] = useState<Set<number>>(new Set());
   const [zoomLevel, setZoomLevel] = useState(1);
   const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
   const touchRef = useRef<TouchState>({ startX: 0, startY: 0, isDragging: false });
   const lastTapRef = useRef<number>(0);
   const imageContainerRef = useRef<HTMLDivElement>(null);
+
+  // Preload adjacent images (next 2 and previous 1)
+  useEffect(() => {
+    if (!images || images.length <= 1) return;
+
+    const indicesToPreload = [
+      (currentIndex + 1) % images.length,
+      (currentIndex + 2) % images.length,
+      (currentIndex - 1 + images.length) % images.length,
+    ].filter(i => !preloadedImages.has(i) && i !== currentIndex);
+
+    indicesToPreload.forEach(async (index) => {
+      try {
+        await preloadImage(images[index]);
+        setPreloadedImages(prev => new Set([...prev, index]));
+        setLoadedImages(prev => new Set([...prev, index]));
+      } catch {
+        // Silently fail - image might not exist
+      }
+    });
+  }, [currentIndex, images, preloadedImages]);
+
+  // Preload first few images on mount
+  useEffect(() => {
+    if (!images || images.length <= 1) return;
+
+    const initialPreload = images.slice(0, Math.min(3, images.length));
+    initialPreload.forEach(async (src, index) => {
+      try {
+        await preloadImage(src);
+        setPreloadedImages(prev => new Set([...prev, index]));
+        setLoadedImages(prev => new Set([...prev, index]));
+      } catch {
+        // Silently fail
+      }
+    });
+  }, [images]);
 
   const handlePrev = useCallback(() => {
     if (zoomLevel > 1) return; // Don't navigate when zoomed
@@ -145,7 +193,7 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
 
   if (!images || images.length === 0) {
     return (
-      <div className="h-56 md:h-96 bg-muted flex items-center justify-center text-muted-foreground">
+      <div className="aspect-[16/9] md:aspect-[21/9] bg-muted flex items-center justify-center text-muted-foreground">
         Geen afbeeldingen beschikbaar
       </div>
     );
@@ -155,7 +203,7 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
     <>
       {/* Main Gallery */}
       <div 
-        className="relative h-56 md:h-96 overflow-hidden bg-muted group touch-pan-y"
+        className="relative aspect-[16/9] md:aspect-[21/9] overflow-hidden bg-muted group touch-pan-y"
         onKeyDown={handleKeyDown}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -168,13 +216,20 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
             src={images[currentIndex]}
             alt={`${restaurantName} - ${currentIndex + 1}`}
             className="w-full h-full object-cover cursor-pointer select-none"
+            style={{
+              imageRendering: 'auto',
+              WebkitBackfaceVisibility: 'hidden',
+              backfaceVisibility: 'hidden',
+            }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.2 }}
             onClick={() => setIsFullscreen(true)}
-            loading="lazy"
+            loading="eager"
             draggable={false}
+            decoding="async"
+            fetchPriority="high"
           />
         </AnimatePresence>
 
