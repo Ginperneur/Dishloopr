@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
-
+import logo from '@/assets/dishloopr-logo.png';
 import { LANGUAGES } from '@/lib/constants';
 
 export function Header() {
@@ -57,17 +57,14 @@ export function Header() {
     >
       <div className="container flex h-14 md:h-16 items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 shrink-0" aria-label="Ga naar home">
+        <Link to="/" className="flex items-center shrink-0" aria-label="Ga naar home">
           <img
-            src="/favicon.png"
+            src={logo}
             alt="Dishloopr"
-            className="h-8 w-8 md:h-9 md:w-9"
+            className="h-9 md:h-11 w-auto"
             loading="eager"
             decoding="async"
           />
-          <span className="hidden sm:inline text-base md:text-lg font-extrabold tracking-tight text-foreground">
-            Dishloopr
-          </span>
         </Link>
 
         {/* Desktop Navigation */}
