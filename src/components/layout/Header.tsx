@@ -57,7 +57,7 @@ export function Header() {
     >
       <div className="container flex h-14 md:h-16 items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center shrink-0" aria-label="Ga naar home">
+        <Link to="/" className="flex items-center shrink-0 mr-8" aria-label="Ga naar home">
           <img
             src={logo}
             alt="Dishloopr"
