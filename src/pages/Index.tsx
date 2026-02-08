@@ -83,7 +83,7 @@ const Index = () => {
             className="flex flex-wrap justify-center gap-2 mt-4 md:mt-6 max-w-3xl mx-auto"
           >
             <span className="text-sm text-muted-foreground mr-1 hidden sm:inline self-center">
-              Populair:
+              {t('home.popular', 'Populair')}:
             </span>
             {POPULAR_CUISINES.map((cuisine) => (
               <button
@@ -118,11 +118,11 @@ const Index = () => {
             className="flex items-center justify-between mb-6 md:mb-10"
           >
             <h2 className="text-xl sm:text-2xl md:text-4xl font-bold">
-              {t('home.featuredRestaurants', 'Uitgelichte restaurants')}
+              {t('home.featuredRestaurants')}
             </h2>
             <Button variant="ghost" size="sm" asChild className="text-sm">
               <Link to="/search?featured=true" className="flex items-center gap-1 md:gap-2">
-                Bekijk alle
+                {t('home.viewAll')}
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -160,10 +160,10 @@ const Index = () => {
             viewport={{ once: true }}
             className="flex items-center justify-between mb-4 md:mb-6"
           >
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">Onze Collecties</h2>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">{t('home.ourCollections')}</h2>
             <Button variant="ghost" size="sm" asChild className="text-sm">
               <Link to="/collections" className="flex items-center gap-1 md:gap-2">
-                Bekijk alle
+                {t('home.viewAll')}
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>

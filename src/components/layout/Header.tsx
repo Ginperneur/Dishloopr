@@ -79,13 +79,13 @@ export function Header() {
             to="/collections"
             className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
           >
-            Collections
+            {t('nav.collections')}
           </Link>
           <Link
             to="/search?featured=true"
             className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
           >
-            Uitgelicht
+            {t('nav.featured')}
           </Link>
           {user && (
             <Link
@@ -157,7 +157,7 @@ export function Header() {
                 <DropdownMenuItem asChild>
                   <Link to="/profile" className="cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
-                    Mijn Profiel
+                    {t('home.myProfile')}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
@@ -196,7 +196,7 @@ export function Header() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
-                  Uitloggen
+                  {t('nav.logout')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -258,7 +258,7 @@ export function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <User className="h-5 w-5 text-muted-foreground" />
-                    <span className="font-medium">Mijn Profiel</span>
+                    <span className="font-medium">{t('home.myProfile')}</span>
                   </Link>
                   <Link
                     to="/insights"
@@ -266,7 +266,7 @@ export function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <BarChart3 className="h-5 w-5 text-muted-foreground" />
-                    <span className="font-medium">Inzichten</span>
+                    <span className="font-medium">{t('nav.insights')}</span>
                   </Link>
                   <Link
                     to="/dashboard"
@@ -291,7 +291,7 @@ export function Header() {
 
               {/* Mobile Language Switcher */}
               <div className="px-3 py-3">
-                <p className="text-xs text-muted-foreground mb-2">Taal</p>
+                <p className="text-xs text-muted-foreground mb-2">{t('home.language')}</p>
                 <div className="flex items-center gap-2 flex-wrap">
                   {LANGUAGES.map((lang) => (
                     <button
@@ -323,13 +323,13 @@ export function Header() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{user.user_metadata?.name || 'Gebruiker'}</p>
+                      <p className="text-sm font-medium truncate">{user.user_metadata?.name || t('home.user')}</p>
                       <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                     </div>
                   </div>
                   <Button variant="destructive" onClick={handleSignOut} className="w-full">
                     <LogOut className="mr-2 h-4 w-4" />
-                    Uitloggen
+                    {t('nav.logout')}
                   </Button>
                 </div>
               ) : (
