@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 interface OpeningHoursDisplayProps {
-  openingHours: { [key: string]: string };
+  openingHours: { [key: string]: string | string[] };
   phone?: string | null;
   geoLat?: number | null;
   geoLng?: number | null;
@@ -32,9 +32,74 @@ const DAY_I18N_KEYS: { [key: string]: string } = {
   sun: 'openingHours.sunday',
 };
 
-export function OpeningHoursDisplay({ openingHours, phone, geoLat, geoLng, restaurantName, className }: OpeningHoursDisplayProps) {
+// Mapping from Dutch/English day names to keys (for Google weekday_text format)
+const DAY_NAME_TO_KEY: { [key: string]: string } = {
+  'maandag': 'mon', 'monday': 'mon',
+  'dinsdag': 'tue', 'tuesday': 'tue',
+  'woensdag': 'wed', 'wednesday': 'wed',
+  'donderdag': 'thu', 'thursday': 'thu',
+  'vrijdag': 'fri', 'friday': 'fri',
+  'zaterdag': 'sat', 'saturday': 'sat',
+  'zondag': 'sun', 'sunday': 'sun',
+};
+
+// Parse Google weekday_text format: ["maandag: 12:00–22:00", "dinsdag: Gesloten", ...]
+function parseWeekdayText(weekdayText: string[]): { [key: string]: string } {
+  const result: { [key: string]: string } = {};
+  
+  for (const line of weekdayText) {
+    // Split on first colon
+    const colonIndex = line.indexOf(':');
+    if (colonIndex === -1) continue;
+    
+    const dayName = line.substring(0, colonIndex).toLowerCase().trim();
+    let hours = line.substring(colonIndex + 1).trim();
+    
+    const dayKey = DAY_NAME_TO_KEY[dayName];
+    if (!dayKey) continue;
+    
+    // Normalize hours format
+    hours = hours
+      .replace(/–/g, ' - ')  // Replace en-dash with spaced hyphen
+      .replace(/-/g, ' - ')  // Normalize regular hyphen
+      .replace(/\s+/g, ' ')  // Collapse multiple spaces
+      .trim();
+    
+    // Handle closed variants
+    if (hours.toLowerCase().includes('gesloten') || hours.toLowerCase().includes('closed')) {
+      result[dayKey] = 'closed';
+    } else {
+      result[dayKey] = hours;
+    }
+  }
+  
+  return result;
+}
+
+// Normalize opening hours from various formats to consistent format
+function normalizeOpeningHours(openingHours: { [key: string]: string | string[] }): { [key: string]: string } {
+  // Check if it's in Google weekday_text format
+  if (openingHours.weekday_text && Array.isArray(openingHours.weekday_text)) {
+    return parseWeekdayText(openingHours.weekday_text as string[]);
+  }
+  
+  // Already in correct format, just ensure string values
+  const result: { [key: string]: string } = {};
+  for (const key of DAY_ORDER) {
+    const value = openingHours[key];
+    if (typeof value === 'string') {
+      result[key] = value;
+    }
+  }
+  return result;
+}
+
+export function OpeningHoursDisplay({ openingHours: rawOpeningHours, phone, geoLat, geoLng, restaurantName, className }: OpeningHoursDisplayProps) {
   const { t } = useTranslation();
   const now = new Date();
+  
+  // Normalize opening hours from various formats
+  const openingHours = normalizeOpeningHours(rawOpeningHours);
   
   // Generate Google Maps directions URL
   const getDirectionsUrl = () => {
