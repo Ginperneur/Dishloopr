@@ -81,6 +81,12 @@ export function Header() {
           >
             Collections
           </Link>
+          <Link
+            to="/search?featured=true"
+            className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
+          >
+            Uitgelicht
+          </Link>
           {user && (
             <Link
               to="/favorites"
