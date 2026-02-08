@@ -68,7 +68,7 @@ export function Header() {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-4 xl:gap-6">
+        <nav className="hidden md:flex items-center gap-4 lg:gap-6">
           <Link
             to="/search"
             className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
@@ -114,13 +114,13 @@ export function Header() {
             </Link>
           )}
 
-          {/* Language Switcher - Compact */}
-          <div className="flex items-center gap-0.5 border border-border rounded-md px-0.5 py-0.5">
-            {LANGUAGES.slice(0, 3).map((lang) => (
+          {/* Language Switcher */}
+          <div className="flex items-center gap-0.5 border border-border rounded-lg px-1 py-1">
+            {LANGUAGES.map((lang) => (
               <button
                 key={lang.code}
                 onClick={() => i18n.changeLanguage(lang.code)}
-                className={`px-2 py-0.5 text-xs font-medium rounded transition-colors ${
+                className={`px-2 py-1 text-xs font-semibold rounded-md transition-colors ${
                   i18n.language === lang.code
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
@@ -212,9 +212,9 @@ export function Header() {
           )}
         </nav>
 
-        {/* Mobile/Tablet Menu Button */}
+        {/* Mobile Menu Button */}
         <button
-          className="lg:hidden p-2 -mr-2"
+          className="md:hidden p-2 -mr-2"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label={mobileMenuOpen ? 'Menu sluiten' : 'Menu openen'}
         >
@@ -230,7 +230,7 @@ export function Header() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="lg:hidden border-t border-border bg-background overflow-hidden"
+            className="md:hidden border-t border-border bg-background overflow-hidden"
           >
             <nav className="container py-4 flex flex-col gap-2 px-4">
               <Link
