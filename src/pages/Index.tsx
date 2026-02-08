@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { SearchBar } from '@/components/search/SearchBar';
 import { Layout } from '@/components/layout/Layout';
@@ -16,10 +16,27 @@ import { SkeletonCard } from '@/components/ui/skeleton-card';
 import { useFeaturedRestaurants } from '@/hooks/useFeaturedRestaurants';
 import { useTrendingDishes } from '@/hooks/useTrendingDishes';
 
+// Popular cuisines to show as quick links in hero
+const POPULAR_CUISINES = [
+  { label: 'All you can eat', value: 'all you can eat' },
+  { label: 'Surinaams', value: 'surinaams' },
+  { label: 'Sushi', value: 'sushi' },
+  { label: 'Italiaans', value: 'italiaans' },
+  { label: 'Indiaas', value: 'indiaas' },
+  { label: 'Mexicaans', value: 'mexicaans' },
+  { label: 'Thais', value: 'thais' },
+  { label: 'Grieks', value: 'grieks' },
+];
+
 const Index = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { dishes: trendingDishes, loading: dishesLoading } = useTrendingDishes();
   const { restaurants: featuredRestaurants, loading: featuredLoading } = useFeaturedRestaurants(3);
+
+  const handleCuisineClick = (cuisine: string) => {
+    navigate(`/search?dish=${encodeURIComponent(cuisine)}`);
+  };
 
   return (
     <Layout>
@@ -57,13 +74,34 @@ const Index = () => {
           </motion.div>
 
           <SearchBar variant="hero" />
+
+          {/* Popular Cuisines Quick Links */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="flex flex-wrap justify-center gap-2 mt-4 md:mt-6 max-w-3xl mx-auto"
+          >
+            <span className="text-sm text-muted-foreground mr-1 hidden sm:inline self-center">
+              Populair:
+            </span>
+            {POPULAR_CUISINES.map((cuisine) => (
+              <button
+                key={cuisine.value}
+                onClick={() => handleCuisineClick(cuisine.value)}
+                className="px-3 py-1.5 text-sm font-medium rounded-full bg-card border border-border hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
+              >
+                {cuisine.label}
+              </button>
+            ))}
+          </motion.div>
           
           {/* AI Surprise Button */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.5 }}
-            className="flex justify-center mt-4 md:mt-8"
+            className="flex justify-center mt-4 md:mt-6"
           >
             <SurpriseMe />
           </motion.div>
