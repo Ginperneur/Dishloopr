@@ -120,9 +120,24 @@
     @apply border-border;
   }
 
+  html {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: "cv11", "ss01";
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+
+  #root {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
   }
 
   h1, h2, h3, h4, h5, h6 {
