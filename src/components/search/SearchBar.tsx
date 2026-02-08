@@ -154,17 +154,22 @@ export function SearchBar({
   const isHero = variant === 'hero';
   const hasSuggestions = suggestions.length > 0 || cuisineSuggestions.length > 0 || restaurantSuggestions.length > 0;
 
-  // Calculate position for desktop dropdown
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  // Calculate position for desktop dropdown with viewport-aware max-height
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0, maxHeight: 400 });
   const searchBarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (showSuggestions && searchBarRef.current) {
       const rect = searchBarRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const spaceBelow = viewportHeight - rect.bottom - 24; // 24px padding from bottom
+      const calculatedMaxHeight = Math.min(Math.max(spaceBelow, 200), 500); // Min 200px, max 500px
+      
       setDropdownPosition({
         top: rect.bottom + 8,
         left: rect.left,
-        width: rect.width
+        width: rect.width,
+        maxHeight: calculatedMaxHeight
       });
     }
   }, [showSuggestions]);
@@ -443,11 +448,12 @@ export function SearchBar({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 6 }}
               transition={{ duration: 0.15 }}
-              className="hidden md:block fixed rounded-xl"
+              className="hidden md:block fixed rounded-xl overflow-hidden"
               style={{ 
                 top: dropdownPosition.top,
                 left: dropdownPosition.left,
                 width: dropdownPosition.width,
+                maxHeight: dropdownPosition.maxHeight,
                 backgroundColor: 'hsl(var(--background))',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
                 border: '2px solid hsl(var(--border))',
@@ -456,8 +462,8 @@ export function SearchBar({
               onWheel={(e) => e.stopPropagation()}
             >
               <div 
-                className="overflow-y-auto overscroll-contain rounded-xl"
-                style={{ maxHeight: '400px' }}
+                className="overflow-y-auto overscroll-contain"
+                style={{ maxHeight: dropdownPosition.maxHeight - 4 }}
                 onWheel={(e) => e.stopPropagation()}
               >
                 {/* Dish suggestions */}
