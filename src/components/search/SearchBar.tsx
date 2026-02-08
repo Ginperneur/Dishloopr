@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { VoiceSearch } from '@/components/search/VoiceSearch';
 import { supabase } from '@/integrations/supabase/client';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
+import { toTitleCase } from '@/lib/utils';
 import type { Database } from '@/integrations/supabase/types';
 
 type Dish = Database['public']['Tables']['dishes']['Row'];
@@ -379,10 +380,10 @@ export function SearchBar({
                           <Search className="h-5 w-5 text-primary" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <span className="font-medium text-base block">{dish.name}</span>
+                          <span className="font-medium text-base block">{toTitleCase(dish.name)}</span>
                           {dish.synonyms && dish.synonyms.length > 0 && (
                             <span className="text-sm text-muted-foreground">
-                              {dish.synonyms.slice(0, 2).join(', ')}
+                              {dish.synonyms.slice(0, 2).map(s => toTitleCase(s)).join(', ')}
                             </span>
                           )}
                         </div>
@@ -407,10 +408,10 @@ export function SearchBar({
                           <Store className="h-5 w-5 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <span className="font-medium text-base block">{restaurant.name}</span>
+                          <span className="font-medium text-base block">{toTitleCase(restaurant.name)}</span>
                           {restaurant.cuisines && restaurant.cuisines.length > 0 && (
                             <span className="text-sm text-muted-foreground">
-                              {restaurant.cuisines.slice(0, 2).join(', ')}
+                              {restaurant.cuisines.slice(0, 2).map(c => toTitleCase(c)).join(', ')}
                             </span>
                           )}
                         </div>
@@ -429,12 +430,12 @@ export function SearchBar({
                       <button
                         key={cuisine}
                         onClick={() => handleSuggestionClick(cuisine)}
-                        className="w-full px-4 py-4 text-left hover:bg-muted active:bg-muted transition-colors flex items-center gap-3 capitalize border-b border-border/30 last:border-b-0"
+                        className="w-full px-4 py-4 text-left hover:bg-muted active:bg-muted transition-colors flex items-center gap-3 border-b border-border/30 last:border-b-0"
                       >
                         <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
                           <UtensilsCrossed className="h-5 w-5 text-green-600 dark:text-green-400" />
                         </div>
-                        <span className="font-medium text-base">{cuisine}</span>
+                        <span className="font-medium text-base">{toTitleCase(cuisine)}</span>
                       </button>
                     ))}
                   </>
@@ -480,10 +481,10 @@ export function SearchBar({
                       >
                         <Search className="h-4 w-4 text-muted-foreground" />
                         <div>
-                          <span className="font-medium">{dish.name}</span>
+                          <span className="font-medium">{toTitleCase(dish.name)}</span>
                           {dish.synonyms && dish.synonyms.length > 0 && (
                             <span className="text-sm text-muted-foreground ml-2">
-                              ({dish.synonyms.slice(0, 2).join(', ')})
+                              ({dish.synonyms.slice(0, 2).map(s => toTitleCase(s)).join(', ')})
                             </span>
                           )}
                         </div>
@@ -506,10 +507,10 @@ export function SearchBar({
                       >
                         <Store className="h-4 w-4 text-muted-foreground" />
                         <div className="flex-1 min-w-0">
-                          <span className="font-medium">{restaurant.name}</span>
+                          <span className="font-medium">{toTitleCase(restaurant.name)}</span>
                           {restaurant.cuisines && restaurant.cuisines.length > 0 && (
                             <span className="text-sm text-muted-foreground ml-2">
-                              ({restaurant.cuisines.slice(0, 2).join(', ')})
+                              ({restaurant.cuisines.slice(0, 2).map(c => toTitleCase(c)).join(', ')})
                             </span>
                           )}
                         </div>
@@ -528,10 +529,10 @@ export function SearchBar({
                       <button
                         key={cuisine}
                         onClick={() => handleSuggestionClick(cuisine)}
-                        className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3 capitalize"
+                        className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3"
                       >
                         <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{cuisine}</span>
+                        <span className="font-medium">{toTitleCase(cuisine)}</span>
                       </button>
                     ))}
                   </>
