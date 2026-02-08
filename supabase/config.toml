@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.create-featured-checkout]
 verify_jwt = false
+
+[functions.email-hook]
+verify_jwt = false
