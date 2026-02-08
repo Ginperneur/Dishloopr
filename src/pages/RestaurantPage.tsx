@@ -237,13 +237,14 @@ export default function RestaurantPage() {
         <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6 md:space-y-8">
-            {/* Header */}
+            {/* Header - Two column layout with info and opening hours */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <div className="flex items-start justify-between gap-3 mb-3 md:mb-4">
-                <div className="min-w-0">
+              <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+                {/* Left: Restaurant Info */}
+                <div className="flex-1 min-w-0">
                   <h1 className="text-2xl md:text-4xl font-bold mb-1 md:mb-2 truncate">
                     {restaurant.name}
                   </h1>
@@ -257,7 +258,7 @@ export default function RestaurantPage() {
                     </div>
                   )}
 
-                  <div className="flex flex-wrap items-center gap-2 md:gap-4 text-sm md:text-base text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-2 md:gap-4 text-sm md:text-base text-muted-foreground mb-3">
                     <div className="flex items-center gap-1">
                       <Star className="h-4 w-4 md:h-5 md:w-5 fill-rating text-rating" />
                       <span className="font-semibold text-foreground">{Number(restaurant.rating).toFixed(1)}</span>
@@ -266,102 +267,111 @@ export default function RestaurantPage() {
                     <span className="hidden md:inline">{PRICE_LABELS_FULL[restaurant.price_level]}</span>
                     <span className="md:hidden">{'€'.repeat(restaurant.price_level)}</span>
                   </div>
+
+                  {/* Location */}
+                  <div className="flex items-center gap-2 text-sm md:text-base text-muted-foreground mb-3">
+                    <MapPin className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{restaurant.address}, {restaurant.postal_code} {restaurant.city?.name}</span>
+                  </div>
+
+                  {/* Open Status & Busy Level */}
+                  <div className="flex flex-wrap items-center gap-3 mb-3">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      {isOpen() ? (
+                        <Badge variant="secondary" className="bg-tag-family/10 text-tag-family text-xs">
+                          {t('restaurant.openNow')}
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="bg-destructive/10 text-destructive text-xs">
+                          {t('restaurant.closed')}
+                        </Badge>
+                      )}
+                    </div>
+                    {restaurant.current_busy_level && (
+                      <BusyIndicator busyLevel={restaurant.current_busy_level} />
+                    )}
+                    {restaurant.sustainability_score && (
+                      <SustainabilityScore score={restaurant.sustainability_score} compact />
+                    )}
+                  </div>
+
+                  {/* Tags */}
+                  <div className="flex flex-wrap gap-1.5 md:gap-2 mb-4">
+                    {restaurant.ambience_tags?.map((tag) => (
+                      <span
+                        key={tag}
+                        className={`px-2 md:px-3 py-0.5 md:py-1 text-xs md:text-sm font-medium rounded-full ${
+                          AMBIENCE_TAG_STYLES[tag] || 'bg-muted text-muted-foreground'
+                        }`}
+                      >
+                        {AMBIENCE_TAG_I18N_KEYS[tag] ? t(AMBIENCE_TAG_I18N_KEYS[tag]) : tag}
+                      </span>
+                    ))}
+                    {restaurant.cuisines?.map((cuisine) => (
+                      <Badge key={cuisine} variant="outline" className="capitalize text-xs md:text-sm">
+                        {cuisine}
+                      </Badge>
+                    ))}
+                  </div>
+
+                  {/* Action buttons: Favorites, Share, Socials, Website */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => toggleFavorite(restaurant.id)}
+                      className={`gap-2 ${isFavorite(restaurant.id) ? 'text-red-500 border-red-500/30' : ''}`}
+                    >
+                      <Heart className={`h-4 w-4 ${isFavorite(restaurant.id) ? 'fill-current' : ''}`} />
+                      <span className="hidden sm:inline">{isFavorite(restaurant.id) ? 'Opgeslagen' : 'Opslaan'}</span>
+                    </Button>
+                    <SocialShare 
+                      title={restaurant.name} 
+                      description={`Bekijk ${restaurant.name} op Dishloopr`}
+                      hashtags={['dishloopr', ...(restaurant.cuisines || [])]}
+                      variant="icon"
+                      className="h-8 w-8"
+                    />
+                    {restaurant.website_url && (
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={restaurant.website_url} target="_blank" rel="noopener noreferrer" className="gap-2">
+                          <Globe className="h-4 w-4" />
+                          <span className="hidden sm:inline">Website</span>
+                        </a>
+                      </Button>
+                    )}
+                    {restaurant.instagram_url && (
+                      <Button variant="outline" size="icon" className="h-8 w-8" asChild>
+                        <a href={restaurant.instagram_url} target="_blank" rel="noopener noreferrer" title="Instagram">
+                          <Instagram className="h-4 w-4" />
+                        </a>
+                      </Button>
+                    )}
+                    {restaurant.tiktok_url && (
+                      <Button variant="outline" size="icon" className="h-8 w-8" asChild>
+                        <a href={restaurant.tiktok_url} target="_blank" rel="noopener noreferrer" title="TikTok">
+                          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                          </svg>
+                        </a>
+                      </Button>
+                    )}
+                  </div>
                 </div>
-                
-                <div className="flex gap-2 shrink-0">
-                  <Button 
-                    variant="outline" 
-                    size="icon"
-                    onClick={() => toggleFavorite(restaurant.id)}
-                    className={`h-9 w-9 md:h-10 md:w-10 ${isFavorite(restaurant.id) ? 'text-red-500' : ''}`}
-                  >
-                    <Heart className={`h-4 w-4 ${isFavorite(restaurant.id) ? 'fill-current' : ''}`} />
-                  </Button>
-                  <SocialShare 
-                    title={restaurant.name} 
-                    description={`Bekijk ${restaurant.name} op Dishloopr`}
-                    hashtags={['dishloopr', ...(restaurant.cuisines || [])]}
-                    variant="icon"
-                    className="h-9 w-9 md:h-10 md:w-10"
+
+                {/* Right: Opening Hours (compact version) */}
+                <div className="w-full md:w-auto md:min-w-[280px]">
+                  <OpeningHoursDisplay 
+                    openingHours={openingHours} 
+                    phone={restaurant.phone}
+                    geoLat={restaurant.geo_lat ? Number(restaurant.geo_lat) : undefined}
+                    geoLng={restaurant.geo_lng ? Number(restaurant.geo_lng) : undefined}
+                    restaurantName={restaurant.name}
                   />
                 </div>
               </div>
-
-              {/* Location */}
-              <div className="flex items-center gap-2 text-sm md:text-base text-muted-foreground mb-3 md:mb-4">
-                <MapPin className="h-4 w-4 shrink-0" />
-                <span className="truncate">{restaurant.address}, {restaurant.postal_code} {restaurant.city?.name}</span>
-              </div>
-
-              {/* Open Status & Busy Level */}
-              <div className="flex flex-wrap items-center gap-3 mb-3 md:mb-4">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  {isOpen() ? (
-                    <Badge variant="secondary" className="bg-tag-family/10 text-tag-family text-xs">
-                      {t('restaurant.openNow')}
-                    </Badge>
-                  ) : (
-                    <Badge variant="secondary" className="bg-destructive/10 text-destructive text-xs">
-                      {t('restaurant.closed')}
-                    </Badge>
-                  )}
-                </div>
-                {restaurant.current_busy_level && (
-                  <BusyIndicator busyLevel={restaurant.current_busy_level} />
-                )}
-                {restaurant.sustainability_score && (
-                  <SustainabilityScore score={restaurant.sustainability_score} compact />
-                )}
-              </div>
-
-              {/* Tags */}
-              <div className="flex flex-wrap gap-1.5 md:gap-2">
-                {restaurant.ambience_tags?.map((tag) => (
-                  <span
-                    key={tag}
-                    className={`px-2 md:px-3 py-0.5 md:py-1 text-xs md:text-sm font-medium rounded-full ${
-                      AMBIENCE_TAG_STYLES[tag] || 'bg-muted text-muted-foreground'
-                    }`}
-                  >
-                    {AMBIENCE_TAG_I18N_KEYS[tag] ? t(AMBIENCE_TAG_I18N_KEYS[tag]) : tag}
-                  </span>
-                ))}
-                {restaurant.cuisines?.map((cuisine) => (
-                  <Badge key={cuisine} variant="outline" className="capitalize text-xs md:text-sm">
-                    {cuisine}
-                  </Badge>
-                ))}
-              </div>
             </motion.div>
-
-            {/* Mobile Opening Hours - Always visible */}
-            <div className="lg:hidden">
-              <OpeningHoursDisplay 
-                openingHours={openingHours} 
-                phone={restaurant.phone}
-                geoLat={restaurant.geo_lat ? Number(restaurant.geo_lat) : undefined}
-                geoLng={restaurant.geo_lng ? Number(restaurant.geo_lng) : undefined}
-                restaurantName={restaurant.name}
-              />
-            </div>
-
-            {/* Mobile CTA Buttons - only reservation and website */}
-            <div className="lg:hidden flex gap-2">
-              <ReservationWidget 
-                zenchefId={restaurant.zenchef_id}
-                reservationUrl={restaurant.reservation_url}
-                restaurantName={restaurant.name}
-                variant="button"
-              />
-              {restaurant.website_url && (
-                <Button variant="outline" size="icon" asChild className="shrink-0">
-                  <a href={restaurant.website_url} target="_blank" rel="noopener noreferrer">
-                    <Globe className="h-4 w-4" />
-                  </a>
-                </Button>
-              )}
-            </div>
 
             <Separator />
 
