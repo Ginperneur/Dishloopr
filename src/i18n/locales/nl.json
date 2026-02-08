@@ -8,7 +8,18 @@
     "logout": "Uitloggen",
     "profile": "Profiel",
     "favorites": "Favorieten",
-    "insights": "Inzichten"
+    "insights": "Inzichten",
+    "collections": "Collecties",
+    "featured": "Uitgelicht"
+  },
+  "home": {
+    "featuredRestaurants": "Uitgelichte restaurants",
+    "ourCollections": "Onze Collecties",
+    "viewAll": "Bekijk alle",
+    "popular": "Populair",
+    "myProfile": "Mijn Profiel",
+    "user": "Gebruiker",
+    "language": "Taal"
   },
   "hero": {
     "title": "Vind restaurants",
@@ -23,7 +34,7 @@
     "rotterdam": "Rotterdam",
     "all": "Heel Nederland"
   },
-"filters": {
+  "filters": {
     "title": "Filters",
     "price": "Prijs",
     "priceLevel": "Prijsniveau",
@@ -87,7 +98,8 @@
     "seafood": "Vis & zeevruchten",
     "steakhouse": "Steakhouse",
     "sushi": "Sushi",
-    "mediterranean": "Mediterraans"
+    "mediterranean": "Mediterraans",
+    "surinamese": "Surinaams"
   },
   "sort": {
     "bestMatch": "Beste match",

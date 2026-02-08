@@ -8,7 +8,18 @@
     "logout": "Cerrar sesión",
     "profile": "Perfil",
     "favorites": "Favoritos",
-    "insights": "Perspectivas"
+    "insights": "Perspectivas",
+    "collections": "Colecciones",
+    "featured": "Destacado"
+  },
+  "home": {
+    "featuredRestaurants": "Restaurantes destacados",
+    "ourCollections": "Nuestras Colecciones",
+    "viewAll": "Ver todo",
+    "popular": "Popular",
+    "myProfile": "Mi Perfil",
+    "user": "Usuario",
+    "language": "Idioma"
   },
   "hero": {
     "title": "Encuentra restaurantes",
@@ -23,7 +34,7 @@
     "rotterdam": "Róterdam",
     "all": "Toda Holanda"
   },
-"filters": {
+  "filters": {
     "title": "Filtros",
     "price": "Precio",
     "priceLevel": "Nivel de precio",
@@ -69,6 +80,27 @@
     "prixFixe": "Precio fijo",
     "popUp": "Pop-up"
   },
+  "cuisines": {
+    "japanese": "Japonesa",
+    "italian": "Italiana",
+    "french": "Francesa",
+    "chinese": "China",
+    "indian": "India",
+    "mexican": "Mexicana",
+    "thai": "Tailandesa",
+    "greek": "Griega",
+    "spanish": "Española",
+    "korean": "Coreana",
+    "vietnamese": "Vietnamita",
+    "american": "Americana",
+    "vegetarian": "Vegetariana",
+    "vegan": "Vegana",
+    "seafood": "Mariscos",
+    "steakhouse": "Steakhouse",
+    "sushi": "Sushi",
+    "mediterranean": "Mediterránea",
+    "surinamese": "Surinamesa"
+  },
   "sort": {
     "bestMatch": "Mejor coincidencia",
     "highestRated": "Mejor valorado",
@@ -92,7 +124,8 @@
     "website": "Web",
     "addToFavorites": "Añadir a favoritos",
     "removeFromFavorites": "Quitar de favoritos",
-    "menu": "Menú"
+    "menu": "Menú",
+    "featuredRestaurants": "Restaurantes destacados"
   },
   "reviews": {
     "title": "Reseñas",
@@ -135,7 +168,15 @@
     "privacy": "Privacidad",
     "forRestaurants": "Para restaurantes",
     "claimRestaurant": "Reclama tu restaurante",
-    "howItWorks": "Cómo funciona"
+    "howItWorks": "Cómo funciona",
+    "collections": "Colecciones",
+    "newsletterTitle": "Mantente informado",
+    "newsletterSubtitle": "Recibe semanalmente los mejores consejos de restaurantes y nuevos platos en tu correo.",
+    "emailPlaceholder": "Tu correo electrónico",
+    "subscribe": "Suscribirse",
+    "newsletterSuccess": "¡Gracias! Te has suscrito al boletín.",
+    "allRights": "Todos los derechos reservados.",
+    "madeIn": "Hecho en los Países Bajos"
   },
   "forRestaurants": {
     "pageTitle": "Reclamar restaurantes en Dishloopr",
@@ -198,7 +239,24 @@
     "reportAbuse": "Reportar abuso",
     "reportAbuseDesc": "El abuso siempre puede ser reportado a nuestro equipo",
     "protectAll": "Así es como protegemos restaurantes, clientes y la fiabilidad de Dishloopr.",
-    "startClaiming": "Comenzar a reclamar"
+    "startClaiming": "Comenzar a reclamar",
+    "whyDishloopr": "¿Por qué Dishloopr?",
+    "benefitVisibility": "Visibilidad dirigida",
+    "benefitVisibilityDesc": "Llega a clientes que buscan activamente tus platos, no solo tu cocina.",
+    "benefitInsights": "Información por plato",
+    "benefitInsightsDesc": "Descubre qué platos funcionan mejor y qué buscan los clientes.",
+    "benefitFeatured": "Ubicaciones premium",
+    "benefitFeaturedDesc": "Aumenta tu visibilidad con posiciones destacadas por ciudad y cocina.",
+    "whatOwnersSay": "Lo que dicen los propietarios",
+    "testimonial1Quote": "Desde que estamos en Dishloopr, recibimos nuevos clientes cada semana que vienen específicamente por nuestro ramen.",
+    "testimonial2Quote": "La información por plato es invaluable. Ahora sabemos exactamente qué platos funcionan mejor.",
+    "statsRestaurants": "Restaurantes",
+    "statsSearches": "Búsquedas/mes",
+    "statsRating": "Valoración promedio",
+    "statsConversion": "Tasa de clic-a-visita",
+    "readyToStart": "¿Listo para empezar?",
+    "ctaSubtitle": "Reclama tu restaurante en menos de 5 minutos y accede a herramientas poderosas.",
+    "exploreFirst": "Explorar la plataforma primero"
   },
   "ai": {
     "surpriseMe": "¡Sorpréndeme!",
@@ -255,14 +313,14 @@
     "error": "Algo salió mal"
   },
   "sponsored": {
-    "badge": "Patrocinado",
+    "badge": "Destacado",
     "marketplace": "Mercado de Patrocinio",
     "availableSlots": "Espacios disponibles",
     "purchaseSlot": "Comprar espacio",
     "activeSponsorings": "Patrocinios activos",
     "disclaimer": "Los listados patrocinados nunca influyen en las reseñas o puntuaciones de popularidad.",
     "whatYouGet": "Lo que obtienes",
-    "prominentLabel": "Etiqueta \"Patrocinado\" en resultados de búsqueda",
+    "prominentLabel": "Etiqueta \"Destacado\" en resultados de búsqueda",
     "higherPosition": "Posición más alta en búsquedas relevantes",
     "exclusiveSlot": "Espacio exclusivo"
   },

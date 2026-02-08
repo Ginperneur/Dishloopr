@@ -8,7 +8,18 @@
     "logout": "Logout",
     "profile": "Profile",
     "favorites": "Favorites",
-    "insights": "Insights"
+    "insights": "Insights",
+    "collections": "Collections",
+    "featured": "Featured"
+  },
+  "home": {
+    "featuredRestaurants": "Featured restaurants",
+    "ourCollections": "Our Collections",
+    "viewAll": "View all",
+    "popular": "Popular",
+    "myProfile": "My Profile",
+    "user": "User",
+    "language": "Language"
   },
   "hero": {
     "title": "Find restaurants",
@@ -23,7 +34,7 @@
     "rotterdam": "Rotterdam",
     "all": "All Netherlands"
   },
-"filters": {
+  "filters": {
     "title": "Filters",
     "price": "Price",
     "priceLevel": "Price level",
@@ -87,7 +98,8 @@
     "seafood": "Seafood",
     "steakhouse": "Steakhouse",
     "sushi": "Sushi",
-    "mediterranean": "Mediterranean"
+    "mediterranean": "Mediterranean",
+    "surinamese": "Surinamese"
   },
   "sort": {
     "bestMatch": "Best match",
@@ -301,14 +313,14 @@
     "error": "Something went wrong"
   },
   "sponsored": {
-    "badge": "Sponsored",
+    "badge": "Featured",
     "marketplace": "Sponsoring Marketplace",
     "availableSlots": "Available slots",
     "purchaseSlot": "Purchase slot",
     "activeSponsorings": "Active Sponsorings",
     "disclaimer": "Sponsored listings never influence reviews or popularity scores.",
     "whatYouGet": "What you get",
-    "prominentLabel": "\"Sponsored\" label in search results",
+    "prominentLabel": "\"Featured\" label in search results",
     "higherPosition": "Higher position in relevant searches",
     "exclusiveSlot": "Exclusive slot"
   },

@@ -8,7 +8,18 @@
     "logout": "Déconnexion",
     "profile": "Profil",
     "favorites": "Favoris",
-    "insights": "Aperçus"
+    "insights": "Aperçus",
+    "collections": "Collections",
+    "featured": "En vedette"
+  },
+  "home": {
+    "featuredRestaurants": "Restaurants en vedette",
+    "ourCollections": "Nos Collections",
+    "viewAll": "Voir tout",
+    "popular": "Populaire",
+    "myProfile": "Mon Profil",
+    "user": "Utilisateur",
+    "language": "Langue"
   },
   "hero": {
     "title": "Trouvez des restaurants",
@@ -23,7 +34,7 @@
     "rotterdam": "Rotterdam",
     "all": "Tous les Pays-Bas"
   },
-"filters": {
+  "filters": {
     "title": "Filtres",
     "price": "Prix",
     "priceLevel": "Niveau de prix",
@@ -69,6 +80,27 @@
     "prixFixe": "Prix fixe",
     "popUp": "Pop-up"
   },
+  "cuisines": {
+    "japanese": "Japonaise",
+    "italian": "Italienne",
+    "french": "Française",
+    "chinese": "Chinoise",
+    "indian": "Indienne",
+    "mexican": "Mexicaine",
+    "thai": "Thaïlandaise",
+    "greek": "Grecque",
+    "spanish": "Espagnole",
+    "korean": "Coréenne",
+    "vietnamese": "Vietnamienne",
+    "american": "Américaine",
+    "vegetarian": "Végétarienne",
+    "vegan": "Végétalienne",
+    "seafood": "Fruits de mer",
+    "steakhouse": "Steakhouse",
+    "sushi": "Sushi",
+    "mediterranean": "Méditerranéenne",
+    "surinamese": "Surinamaise"
+  },
   "sort": {
     "bestMatch": "Meilleure correspondance",
     "highestRated": "Mieux noté",
@@ -92,7 +124,8 @@
     "website": "Site web",
     "addToFavorites": "Ajouter aux favoris",
     "removeFromFavorites": "Retirer des favoris",
-    "menu": "Menu"
+    "menu": "Menu",
+    "featuredRestaurants": "Restaurants en vedette"
   },
   "reviews": {
     "title": "Avis",
@@ -135,7 +168,15 @@
     "privacy": "Confidentialité",
     "forRestaurants": "Pour les restaurants",
     "claimRestaurant": "Réclamez votre restaurant",
-    "howItWorks": "Comment ça marche"
+    "howItWorks": "Comment ça marche",
+    "collections": "Collections",
+    "newsletterTitle": "Restez informé",
+    "newsletterSubtitle": "Recevez chaque semaine les meilleurs conseils restaurants et nouveaux plats dans votre boîte mail.",
+    "emailPlaceholder": "Votre adresse e-mail",
+    "subscribe": "S'abonner",
+    "newsletterSuccess": "Merci! Vous êtes inscrit à la newsletter.",
+    "allRights": "Tous droits réservés.",
+    "madeIn": "Fait aux Pays-Bas"
   },
   "forRestaurants": {
     "pageTitle": "Réclamer des restaurants sur Dishloopr",
@@ -198,7 +239,24 @@
     "reportAbuse": "Signaler un abus",
     "reportAbuseDesc": "Les abus peuvent toujours être signalés à notre équipe",
     "protectAll": "C'est ainsi que nous protégeons les restaurants, les clients et la fiabilité de Dishloopr.",
-    "startClaiming": "Commencer à réclamer"
+    "startClaiming": "Commencer à réclamer",
+    "whyDishloopr": "Pourquoi Dishloopr?",
+    "benefitVisibility": "Visibilité ciblée",
+    "benefitVisibilityDesc": "Atteignez les clients qui recherchent activement vos plats, pas seulement votre cuisine.",
+    "benefitInsights": "Informations par plat",
+    "benefitInsightsDesc": "Découvrez quels plats fonctionnent le mieux et ce que les clients recherchent.",
+    "benefitFeatured": "Placements premium",
+    "benefitFeaturedDesc": "Augmentez votre visibilité avec des positions en vedette par ville et cuisine.",
+    "whatOwnersSay": "Ce que disent les propriétaires",
+    "testimonial1Quote": "Depuis que nous sommes sur Dishloopr, nous avons de nouveaux clients chaque semaine qui viennent spécifiquement pour nos ramen.",
+    "testimonial2Quote": "Les informations par plat sont inestimables. Nous savons maintenant exactement quels plats fonctionnent le mieux.",
+    "statsRestaurants": "Restaurants",
+    "statsSearches": "Recherches/mois",
+    "statsRating": "Note moyenne",
+    "statsConversion": "Taux de clic-à-visite",
+    "readyToStart": "Prêt à commencer?",
+    "ctaSubtitle": "Réclamez votre restaurant en moins de 5 minutes et accédez à des outils puissants.",
+    "exploreFirst": "Explorer la plateforme d'abord"
   },
   "ai": {
     "surpriseMe": "Surprenez-moi!",
@@ -255,14 +313,14 @@
     "error": "Une erreur s'est produite"
   },
   "sponsored": {
-    "badge": "Sponsorisé",
+    "badge": "En vedette",
     "marketplace": "Marché Sponsoring",
     "availableSlots": "Créneaux disponibles",
     "purchaseSlot": "Acheter un créneau",
     "activeSponsorings": "Sponsorings actifs",
     "disclaimer": "Les listings sponsorisés n'influencent jamais les avis ou les scores de popularité.",
     "whatYouGet": "Ce que vous obtenez",
-    "prominentLabel": "Label \"Sponsorisé\" dans les résultats",
+    "prominentLabel": "Label \"En vedette\" dans les résultats",
     "higherPosition": "Position plus élevée dans les recherches pertinentes",
     "exclusiveSlot": "Créneau exclusif"
   },
