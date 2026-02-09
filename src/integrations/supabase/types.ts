@@ -2244,6 +2244,7 @@ export type Database = {
         | "dns_txt"
         | "html_file"
         | "google_business"
+        | "domain_email"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2407,6 +2408,7 @@ export const Constants = {
         "dns_txt",
         "html_file",
         "google_business",
+        "domain_email",
       ],
     },
   },
