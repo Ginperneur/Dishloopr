@@ -30,6 +30,10 @@ interface GooglePlaceResult {
   price_level: number;
   opening_hours: string[] | null;
   photo_references?: string[];
+  // Local database fields
+  is_local?: boolean;
+  restaurant_id?: string;
+  claim_status?: string;
 }
 
 export default function ClaimPage() {
@@ -137,20 +141,42 @@ export default function ClaimPage() {
     const notes = formData.get('notes') as string;
 
     try {
-      // First check if restaurant exists in our database
-      const { data: existingRestaurant } = await supabase
-        .from('restaurants')
-        .select('id, claimed_by_owner_id, claim_status')
-        .eq('name', selectedPlace.name)
-        .maybeSingle();
+      let restaurantId: string | undefined;
 
-      if (existingRestaurant?.claim_status === 'verified_owner') {
-        toast.error('Dit restaurant is al geclaimd en geverifieerd. Neem contact op als je denkt dat dit onjuist is.');
-        setIsSubmitting(false);
-        return;
+      // If this is a local restaurant from our database, use its ID directly
+      if (selectedPlace.is_local && selectedPlace.restaurant_id) {
+        console.log('Using local restaurant:', selectedPlace.restaurant_id);
+        
+        // Check if already verified
+        const { data: existingRestaurant } = await supabase
+          .from('restaurants')
+          .select('id, claimed_by_owner_id, claim_status')
+          .eq('id', selectedPlace.restaurant_id)
+          .maybeSingle();
+
+        if (existingRestaurant?.claim_status === 'verified_owner') {
+          toast.error('Dit restaurant is al geclaimd en geverifieerd. Neem contact op als je denkt dat dit onjuist is.');
+          setIsSubmitting(false);
+          return;
+        }
+
+        restaurantId = existingRestaurant?.id;
+      } else {
+        // Google Places result - check if restaurant exists in our database by name
+        const { data: existingRestaurant } = await supabase
+          .from('restaurants')
+          .select('id, claimed_by_owner_id, claim_status')
+          .eq('name', selectedPlace.name)
+          .maybeSingle();
+
+        if (existingRestaurant?.claim_status === 'verified_owner') {
+          toast.error('Dit restaurant is al geclaimd en geverifieerd. Neem contact op als je denkt dat dit onjuist is.');
+          setIsSubmitting(false);
+          return;
+        }
+
+        restaurantId = existingRestaurant?.id;
       }
-
-      let restaurantId = existingRestaurant?.id;
 
       // If restaurant doesn't exist, create it
       if (!restaurantId) {
@@ -605,7 +631,19 @@ export default function ClaimPage() {
                         >
                           <div className="flex items-start justify-between gap-4">
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-semibold truncate">{place.name}</h4>
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-semibold truncate">{place.name}</h4>
+                                {place.is_local && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    In database
+                                  </Badge>
+                                )}
+                                {place.claim_status === 'claimed_unverified' && (
+                                  <Badge variant="outline" className="text-xs border-yellow-500 text-yellow-600">
+                                    Claim pending
+                                  </Badge>
+                                )}
+                              </div>
                               <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
                                 <MapPin className="w-3 h-3 flex-shrink-0" />
                                 <span className="truncate">{place.address}</span>
