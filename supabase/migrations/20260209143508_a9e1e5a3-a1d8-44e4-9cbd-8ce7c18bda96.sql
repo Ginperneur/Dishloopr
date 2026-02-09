@@ -1,0 +1,1 @@
+ALTER TYPE verification_method ADD VALUE 'domain_email';

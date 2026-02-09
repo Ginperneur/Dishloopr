@@ -1,7 +1,7 @@
 // Restaurant Claim Types
 export type RestaurantClaimStatus = 'unclaimed' | 'claimed_unverified' | 'verified_owner' | 'disputed' | 'locked';
 
-export type VerificationMethod = 'micro_payment' | 'dns_txt' | 'html_file' | 'google_business';
+export type VerificationMethod = 'micro_payment' | 'dns_txt' | 'html_file' | 'google_business' | 'domain_email';
 
 export type ManagerRole = 'viewer' | 'editor' | 'finance' | 'primary_owner';
 

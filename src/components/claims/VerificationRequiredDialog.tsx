@@ -10,9 +10,11 @@ import {
   Copy,
   ArrowRight,
   Lock,
-  Building2
+  Building2,
+  Mail
 } from 'lucide-react';
 import { GoogleBusinessVerification } from './GoogleBusinessVerification';
+import { DomainEmailVerification } from './DomainEmailVerification';
 import {
   Dialog,
   DialogContent,
@@ -230,6 +232,28 @@ export function VerificationRequiredDialog({
                     </button>
                   )}
 
+                  {/* Domain Email */}
+                  {restaurantWebsite && (
+                    <button
+                      onClick={() => handleSelectMethod('domain_email')}
+                      className="flex items-start gap-4 p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-colors text-left"
+                    >
+                      <div className="h-10 w-10 rounded-full bg-orange-500/10 flex items-center justify-center flex-shrink-0">
+                        <Mail className="h-5 w-5 text-orange-600" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">E-mail vanuit domein</span>
+                          <Badge variant="secondary" className="text-xs">Aanbevolen</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Ontvang een code op je zakelijke e-mail (bijv. info@jouwrestaurant.nl).
+                        </p>
+                      </div>
+                      <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                    </button>
+                  )}
+
                   {/* Google Business */}
                   <button
                     onClick={() => handleSelectMethod('google_business')}
@@ -239,10 +263,7 @@ export function VerificationRequiredDialog({
                       <Building2 className="h-5 w-5 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">Google Business Profile</span>
-                        <Badge variant="secondary" className="text-xs">Aanbevolen</Badge>
-                      </div>
+                      <span className="font-medium">Google Business Profile</span>
                       <p className="text-sm text-muted-foreground mt-1">
                         Bewijs eigenaarschap via je Google Business profiel.
                       </p>
@@ -413,6 +434,18 @@ export function VerificationRequiredDialog({
                 claimId={claimId}
                 restaurantId={restaurantId}
                 restaurantName={restaurantName}
+                onBack={() => setSelectedMethod(null)}
+                onVerified={() => {
+                  handleVerified();
+                  onOpenChange(false);
+                }}
+              />
+            ) : selectedMethod === 'domain_email' && claimId ? (
+              <DomainEmailVerification
+                claimId={claimId}
+                restaurantId={restaurantId}
+                restaurantName={restaurantName}
+                restaurantWebsite={restaurantWebsite}
                 onBack={() => setSelectedMethod(null)}
                 onVerified={() => {
                   handleVerified();
