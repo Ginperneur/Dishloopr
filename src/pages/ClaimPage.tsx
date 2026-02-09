@@ -1,11 +1,11 @@
 import { Layout } from '@/components/layout/Layout';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, TrendingUp, MessageSquare, BarChart3, Search, MapPin, Clock, Phone, Globe, Star, Loader2, Shield, AlertCircle } from 'lucide-react';
+import { CheckCircle, TrendingUp, MessageSquare, BarChart3, Search, MapPin, Clock, Phone, Globe, Star, Loader2, Shield, AlertCircle, Upload, FileText, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
@@ -62,6 +62,11 @@ export default function ClaimPage() {
   const [sendingCode, setSendingCode] = useState(false);
   const [verifyingCode, setVerifyingCode] = useState(false);
   const [currentClaimId, setCurrentClaimId] = useState<string | null>(null);
+  
+  // File upload state
+  const [proofFiles, setProofFiles] = useState<File[]>([]);
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const benefits = [
     {
@@ -259,8 +264,40 @@ export default function ClaimPage() {
       const result = await createClaim(restaurantId, phoneNumber || undefined);
       
       if (result.success && result.claimId) {
+        // Upload proof files if any
+        if (proofFiles.length > 0) {
+          setIsUploadingFiles(true);
+          const uploadedUrls: string[] = [];
+          
+          for (const file of proofFiles) {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${result.claimId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+            
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('menus') // Using menus bucket for claim documents
+              .upload(`claim-documents/${fileName}`, file);
+            
+            if (uploadError) {
+              console.error('Upload error:', uploadError);
+            } else if (uploadData) {
+              uploadedUrls.push(uploadData.path);
+            }
+          }
+          
+          // Update claim with proof documents
+          if (uploadedUrls.length > 0) {
+            await supabase
+              .from('claim_requests')
+              .update({ proof_documents: uploadedUrls })
+              .eq('id', result.claimId);
+          }
+          
+          setIsUploadingFiles(false);
+        }
+        
         setCurrentClaimId(result.claimId);
         setShowPhoneVerification(true);
+        setProofFiles([]);
         toast.success('Claim aangemaakt! Verifieer nu je telefoonnummer.');
       } else if (result.error) {
         toast.error(result.error);
@@ -271,7 +308,46 @@ export default function ClaimPage() {
       toast.error('Er ging iets mis. Probeer het opnieuw.');
     } finally {
       setIsSubmitting(false);
+      setIsUploadingFiles(false);
     }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    
+    const validFiles: File[] = [];
+    
+    for (const file of Array.from(files)) {
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(`${file.name}: Alleen PDF, JPG, PNG of WEBP bestanden toegestaan`);
+        continue;
+      }
+      if (file.size > maxSize) {
+        toast.error(`${file.name}: Bestand is te groot (max 10MB)`);
+        continue;
+      }
+      validFiles.push(file);
+    }
+    
+    if (validFiles.length + proofFiles.length > 5) {
+      toast.error('Je kunt maximaal 5 bestanden uploaden');
+      return;
+    }
+    
+    setProofFiles(prev => [...prev, ...validFiles]);
+    
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setProofFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSendCode = async () => {
@@ -774,6 +850,64 @@ export default function ClaimPage() {
                         />
                       </div>
 
+                      {/* Proof Documents Upload */}
+                      <div className="space-y-3">
+                        <Label>Bewijsdocumenten (optioneel)</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Upload documenten om te bewijzen dat je bij dit restaurant hoort. Bijvoorbeeld: KVK-uittreksel, 
+                          huurcontract, visitekaartje of andere officiële documenten.
+                        </p>
+                        
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png,.webp"
+                          multiple
+                          onChange={handleFileSelect}
+                          className="hidden"
+                        />
+                        
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="w-full border-dashed"
+                          disabled={proofFiles.length >= 5}
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          {proofFiles.length >= 5 ? 'Maximum bereikt (5 bestanden)' : 'Upload KVK of ander bewijs'}
+                        </Button>
+                        
+                        {proofFiles.length > 0 && (
+                          <div className="space-y-2">
+                            {proofFiles.map((file, index) => (
+                              <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                  <span className="text-sm truncate">{file.name}</span>
+                                  <span className="text-xs text-muted-foreground flex-shrink-0">
+                                    ({(file.size / 1024 / 1024).toFixed(1)} MB)
+                                  </span>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeFile(index)}
+                                  className="h-8 w-8 p-0 flex-shrink-0"
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        <p className="text-xs text-muted-foreground">
+                          Toegestaan: PDF, JPG, PNG, WEBP • Max 10MB per bestand • Max 5 bestanden
+                        </p>
+                      </div>
+
                       <div className="flex gap-3">
                         <Button 
                           type="button" 
@@ -786,11 +920,11 @@ export default function ClaimPage() {
                         >
                           Andere zoeken
                         </Button>
-                        <Button type="submit" className="flex-1" disabled={isSubmitting}>
-                          {isSubmitting ? (
+                        <Button type="submit" className="flex-1" disabled={isSubmitting || isUploadingFiles}>
+                          {isSubmitting || isUploadingFiles ? (
                             <>
                               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Verzenden...
+                              {isUploadingFiles ? 'Bestanden uploaden...' : 'Verzenden...'}
                             </>
                           ) : (
                             'Claim aanvragen'
