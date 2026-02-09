@@ -5,13 +5,14 @@ import {
   CreditCard, 
   Globe, 
   FileCode, 
-  ExternalLink, 
   CheckCircle2, 
   Loader2,
   Copy,
   ArrowRight,
-  Lock
+  Lock,
+  Building2
 } from 'lucide-react';
+import { GoogleBusinessVerification } from './GoogleBusinessVerification';
 import {
   Dialog,
   DialogContent,
@@ -232,19 +233,18 @@ export function VerificationRequiredDialog({
                   {/* Google Business */}
                   <button
                     onClick={() => handleSelectMethod('google_business')}
-                    className="flex items-start gap-4 p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-colors text-left opacity-50"
-                    disabled
+                    className="flex items-start gap-4 p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-colors text-left"
                   >
-                    <div className="h-10 w-10 rounded-full bg-orange-500/10 flex items-center justify-center flex-shrink-0">
-                      <ExternalLink className="h-5 w-5 text-orange-600" />
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Building2 className="h-5 w-5 text-primary" />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="font-medium">Google Business Profile</span>
-                        <Badge variant="outline" className="text-xs">Binnenkort</Badge>
+                        <Badge variant="secondary" className="text-xs">Aanbevolen</Badge>
                       </div>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Koppel je geverifieerde Google Business profiel.
+                        Bewijs eigenaarschap via je Google Business profiel.
                       </p>
                     </div>
                     <ArrowRight className="h-5 w-5 text-muted-foreground" />
@@ -408,6 +408,17 @@ export function VerificationRequiredDialog({
                   Terug naar methodes
                 </Button>
               </motion.div>
+            ) : selectedMethod === 'google_business' && claimId ? (
+              <GoogleBusinessVerification
+                claimId={claimId}
+                restaurantId={restaurantId}
+                restaurantName={restaurantName}
+                onBack={() => setSelectedMethod(null)}
+                onVerified={() => {
+                  handleVerified();
+                  onOpenChange(false);
+                }}
+              />
             ) : null}
           </AnimatePresence>
         </div>
