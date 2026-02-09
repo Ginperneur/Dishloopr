@@ -30,6 +30,8 @@ interface ClaimRequest {
     name: string;
     address: string;
     phone: string | null;
+    is_active: boolean;
+    claim_status: string;
   };
   profile?: {
     name: string | null;
@@ -73,7 +75,7 @@ export function ClaimRequestsQueue({ onUpdate }: ClaimRequestsQueueProps) {
     
     for (const request of data || []) {
       const [restaurantResult, profileResult] = await Promise.all([
-        supabase.from('restaurants').select('id, name, address, phone').eq('id', request.restaurant_id).single(),
+        supabase.from('restaurants').select('id, name, address, phone, is_active, claim_status').eq('id', request.restaurant_id).single(),
         supabase.from('profiles').select('name, email').eq('id', request.user_id).single()
       ]);
 
@@ -104,16 +106,30 @@ export function ClaimRequestsQueue({ onUpdate }: ClaimRequestsQueueProps) {
 
       if (claimError) throw claimError;
 
-      // Update restaurant with owner
+      // Update restaurant with owner and activate if it was a new restaurant submission
       const { error: restaurantError } = await supabase
         .from('restaurants')
         .update({
           claimed_by_owner_id: request.user_id,
+          claim_status: 'verified_owner',
+          is_active: true, // Activate the restaurant upon approval
           updated_at: new Date().toISOString()
         })
         .eq('id', request.restaurant_id);
 
       if (restaurantError) throw restaurantError;
+
+      // Add user as primary owner in restaurant_managers
+      const { error: managerError } = await supabase
+        .from('restaurant_managers')
+        .upsert({
+          restaurant_id: request.restaurant_id,
+          user_id: request.user_id,
+          role: 'primary_owner',
+          accepted_at: new Date().toISOString()
+        }, { onConflict: 'restaurant_id,user_id' });
+
+      if (managerError) console.error('Error adding manager:', managerError);
 
       // Give user the owner role
       const { data: existingRole } = await supabase
@@ -257,6 +273,9 @@ export function ClaimRequestsQueue({ onUpdate }: ClaimRequestsQueueProps) {
                       <div className="flex items-center gap-2 mb-2">
                         <Store className="h-4 w-4 text-muted-foreground" />
                         <span className="font-semibold">{request.restaurant?.name || 'Onbekend restaurant'}</span>
+                        {request.restaurant && !request.restaurant.is_active && (
+                          <Badge variant="outline" className="text-xs">Nieuw restaurant</Badge>
+                        )}
                       </div>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
