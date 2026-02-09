@@ -23,7 +23,8 @@ import {
   Star,
   BarChart3,
   Sparkles,
-  Quote
+  Quote,
+  Store
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -93,6 +94,12 @@ export default function ForRestaurantsPage() {
                   <Link to="/claim">
                     {t('forRestaurants.claimYourRestaurant')}
                     <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button asChild variant="secondary" size="lg" className="gap-2">
+                  <Link to="/add-restaurant">
+                    {t('forRestaurants.addYourRestaurant', 'Restaurant toevoegen')}
+                    <Store className="h-4 w-4" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">
