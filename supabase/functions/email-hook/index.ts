@@ -206,7 +206,7 @@ serve(async (req: Request): Promise<Response> => {
 
     // Send email via Resend
     const emailResponse = await resend.emails.send({
-      from: "Dishloopr <noreply@resend.dev>",
+      from: "Dishloopr <noreply@dishloopr.com>",
       to: [user.email],
       subject,
       html: htmlContent,
