@@ -9,6 +9,7 @@ const corsHeaders = {
 interface PlaceSearchRequest {
   query: string;
   city?: string;
+  includeLocal?: boolean; // Whether to also search local database
 }
 
 interface PlaceDetailsResult {
@@ -38,6 +39,21 @@ interface PlaceDetailsResult {
   }>;
 }
 
+interface LocalRestaurant {
+  id: string;
+  name: string;
+  address: string;
+  geo_lat: number | null;
+  geo_lng: number | null;
+  phone: string | null;
+  website_url: string | null;
+  rating: number;
+  review_count: number;
+  price_level: number;
+  claim_status: string;
+  is_local: boolean;
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -45,7 +61,13 @@ serve(async (req) => {
   }
 
   try {
-    // Authentication check - require admin role
+    // Create Supabase client with service role for database access
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Create Supabase client for auth
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
@@ -71,44 +93,91 @@ serve(async (req) => {
       );
     }
 
-    // Check if user has admin role using the has_role function
-    const { data: hasAdminRole, error: roleError } = await supabaseClient
-      .rpc('has_role', { _user_id: user.id, _role: 'admin' });
+    console.log('Authenticated user:', user.id);
 
-    if (roleError) {
-      console.error('Role check failed:', roleError.message);
-      return new Response(
-        JSON.stringify({ error: 'Authorization check failed' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (!hasAdminRole) {
-      console.error('User is not admin:', user.id);
-      return new Response(
-        JSON.stringify({ error: 'Admin access required' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log('Admin user authenticated:', user.id);
-
-    const apiKey = Deno.env.get('GOOGLE_PLACES_API_KEY');
-    if (!apiKey) {
-      console.error('GOOGLE_PLACES_API_KEY not configured');
-      throw new Error('Google Places API key not configured');
-    }
-
-    const { query, city }: PlaceSearchRequest = await req.json();
+    const { query, city, includeLocal = true }: PlaceSearchRequest = await req.json();
     
     if (!query) {
       throw new Error('Query is required');
     }
 
-    const searchQuery = city ? `${query} restaurant ${city} Netherlands` : `${query} restaurant Netherlands`;
-    console.log('Searching for:', searchQuery);
+    console.log('Searching for:', query, 'in city:', city || 'all');
 
-    // Step 1: Text Search to find places
+    // Step 1: FIRST search local database for existing restaurants
+    let localResults: LocalRestaurant[] = [];
+    
+    if (includeLocal) {
+      console.log('Searching local database first...');
+      
+      // Build query for local restaurants
+      let dbQuery = supabaseAdmin
+        .from('restaurants')
+        .select(`
+          id,
+          name,
+          address,
+          geo_lat,
+          geo_lng,
+          phone,
+          website_url,
+          rating,
+          review_count,
+          price_level,
+          claim_status,
+          city_id,
+          cities!inner(name)
+        `)
+        .eq('is_active', true)
+        .ilike('name', `%${query}%`);
+
+      // Filter by city if provided
+      if (city) {
+        dbQuery = dbQuery.ilike('cities.name', `%${city}%`);
+      }
+
+      const { data: localData, error: localError } = await dbQuery.limit(10);
+
+      if (localError) {
+        console.error('Error searching local database:', localError);
+      } else if (localData && localData.length > 0) {
+        console.log(`Found ${localData.length} local results`);
+        localResults = localData.map((r: any) => ({
+          place_id: `local_${r.id}`,
+          name: r.name,
+          address: r.address,
+          geo_lat: r.geo_lat,
+          geo_lng: r.geo_lng,
+          phone: r.phone,
+          website: r.website_url,
+          rating: r.rating,
+          review_count: r.review_count,
+          price_level: r.price_level,
+          opening_hours: null,
+          photo_references: [],
+          is_local: true,
+          restaurant_id: r.id,
+          claim_status: r.claim_status,
+        }));
+      }
+    }
+
+    // If we found local results, return them first
+    // We still search Google to provide additional options
+    const apiKey = Deno.env.get('GOOGLE_PLACES_API_KEY');
+    
+    // If no API key, only return local results
+    if (!apiKey) {
+      console.log('No Google Places API key, returning only local results');
+      return new Response(
+        JSON.stringify({ results: localResults }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const searchQuery = city ? `${query} restaurant ${city} Netherlands` : `${query} restaurant Netherlands`;
+    console.log('Searching Google Places for:', searchQuery);
+
+    // Step 2: Text Search to find places
     const searchUrl = new URL('https://maps.googleapis.com/maps/api/place/textsearch/json');
     searchUrl.searchParams.set('query', searchQuery);
     searchUrl.searchParams.set('type', 'restaurant');
@@ -119,21 +188,29 @@ serve(async (req) => {
     const searchResponse = await fetch(searchUrl.toString());
     const searchData = await searchResponse.json();
 
-    console.log('Search response status:', searchData.status);
+    console.log('Google Search response status:', searchData.status);
 
     if (searchData.status !== 'OK' && searchData.status !== 'ZERO_RESULTS') {
       console.error('Google Places Search error:', searchData);
+      // Return local results only if Google fails
+      if (localResults.length > 0) {
+        return new Response(
+          JSON.stringify({ results: localResults }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
       throw new Error(`Google Places API error: ${searchData.status}`);
     }
 
     if (!searchData.results || searchData.results.length === 0) {
+      // Return local results only
       return new Response(
-        JSON.stringify({ results: [], message: 'No restaurants found' }),
+        JSON.stringify({ results: localResults, message: localResults.length > 0 ? 'Found in local database' : 'No restaurants found' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Step 2: Get details for top 5 results
+    // Step 3: Get details for top 5 Google results
     const topResults = searchData.results.slice(0, 5);
     const detailedResults: PlaceDetailsResult[] = [];
 
@@ -157,10 +234,10 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Found ${detailedResults.length} detailed results`);
+    console.log(`Found ${detailedResults.length} Google detailed results`);
 
-    // Transform results to our format - include ALL photo references
-    const transformedResults = detailedResults.map((place) => ({
+    // Transform Google results to our format
+    const googleResults = detailedResults.map((place) => ({
       place_id: place.place_id,
       name: place.name,
       address: place.formatted_address,
@@ -175,10 +252,26 @@ serve(async (req) => {
       opening_hours_periods: place.opening_hours?.periods || null,
       photo_reference: place.photos?.[0]?.photo_reference || null,
       photo_references: place.photos?.map(p => p.photo_reference) || [],
+      is_local: false,
     }));
 
+    // Merge results: local results first, then Google results (avoiding duplicates)
+    const allResults = [...localResults];
+    
+    for (const googleResult of googleResults) {
+      // Check if this Google result matches any local result by name similarity
+      const isDuplicate = localResults.some(local => 
+        local.name.toLowerCase().includes(googleResult.name.toLowerCase()) ||
+        googleResult.name.toLowerCase().includes(local.name.toLowerCase())
+      );
+      
+      if (!isDuplicate) {
+        allResults.push(googleResult);
+      }
+    }
+
     return new Response(
-      JSON.stringify({ results: transformedResults }),
+      JSON.stringify({ results: allResults }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
