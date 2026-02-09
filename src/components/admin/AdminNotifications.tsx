@@ -37,18 +37,20 @@ export function AdminNotifications({ onNavigate }: AdminNotificationsProps) {
   const fetchPendingCounts = async () => {
     setLoading(true);
 
-    const [claimsResult, oldClaimsResult, dishesResult] = await Promise.all([
+    const [claimsResult, oldClaimsResult, dishesResult, newRestaurantsResult] = await Promise.all([
       // New restaurant_claims table
       supabase.from('restaurant_claims').select('id, created_at, restaurant_id', { count: 'exact' }).in('status', ['pending', 'email_verified', 'phone_verified']),
       // Legacy claim_requests table  
       supabase.from('claim_requests').select('id, created_at, restaurant_id', { count: 'exact' }).eq('status', 'pending'),
       supabase.from('restaurant_dishes').select('id, created_at, restaurant_id, dish_id', { count: 'exact' }).eq('status', 'suggested'),
+      // New restaurants submitted by owners (is_active = false, claimed_by_owner_id is set)
+      supabase.from('restaurants').select('id, name, created_at', { count: 'exact' }).eq('is_active', false).not('claimed_by_owner_id', 'is', null),
     ]);
 
     setCounts({
       claims: (claimsResult.count || 0) + (oldClaimsResult.count || 0),
       dishes: dishesResult.count || 0,
-      restaurants: 0,
+      restaurants: newRestaurantsResult.count || 0,
     });
 
     // Build recent items list
