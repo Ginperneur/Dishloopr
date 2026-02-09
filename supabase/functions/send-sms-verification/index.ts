@@ -32,7 +32,7 @@ serve(async (req) => {
       );
     }
 
-    const { claimId, phoneNumber, action } = await req.json();
+    const { claimId, phoneNumber, action, code } = await req.json();
 
     if (!claimId || !phoneNumber) {
       return new Response(
@@ -156,8 +156,6 @@ serve(async (req) => {
       );
 
     } else if (action === 'verify') {
-      const { code } = await req.json();
-
       if (!code) {
         return new Response(
           JSON.stringify({ error: 'Missing verification code' }),
