@@ -58,6 +58,7 @@ import { RestaurantDishesManager } from '@/components/admin/RestaurantDishesMana
 import { FeaturedSlotsManager } from '@/components/admin/FeaturedSlotsManager';
 import { AmbiancePricingManager } from '@/components/admin/AmbiancePricingManager';
 import { useActivityLog } from '@/hooks/useActivityLog';
+import { AdminNotifications } from '@/components/admin/AdminNotifications';
 
 interface Stats {
   totalUsers: number;
@@ -155,7 +156,8 @@ export default function AdminPanel() {
       { count: cityCount },
       { count: dishCount },
       { count: pendingCount },
-      { count: claimsCount },
+      { count: newClaimsCount },
+      { count: legacyClaimsCount },
       { count: activeCount }
     ] = await Promise.all([
       supabase.from('profiles').select('*', { count: 'exact', head: true }),
@@ -164,6 +166,7 @@ export default function AdminPanel() {
       supabase.from('cities').select('*', { count: 'exact', head: true }),
       supabase.from('dishes').select('*', { count: 'exact', head: true }),
       supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabase.from('restaurant_claims').select('*', { count: 'exact', head: true }).in('status', ['pending', 'email_verified', 'phone_verified']),
       supabase.from('claim_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
       supabase.from('restaurants').select('*', { count: 'exact', head: true }).eq('is_active', true)
     ]);
@@ -175,7 +178,7 @@ export default function AdminPanel() {
       totalCities: cityCount || 0,
       totalDishes: dishCount || 0,
       pendingReviews: pendingCount || 0,
-      pendingClaims: claimsCount || 0,
+      pendingClaims: (newClaimsCount || 0) + (legacyClaimsCount || 0),
       activeRestaurants: activeCount || 0
     });
 
@@ -407,6 +410,22 @@ export default function AdminPanel() {
             alert={stats.pendingClaims > 0}
           />
         </motion.div>
+
+        {/* Admin Notifications */}
+        {(stats.pendingClaims > 0 || stats.pendingReviews > 0) && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="mb-6"
+          >
+            <AdminNotifications onNavigate={(tab) => {
+              // Find and click the tab trigger
+              const tabTrigger = document.querySelector(`[data-state][value="${tab}"]`) as HTMLButtonElement;
+              if (tabTrigger) tabTrigger.click();
+            }} />
+          </motion.div>
+        )}
 
         {/* Tabs */}
         <Tabs defaultValue="restaurants" className="space-y-4">

@@ -24,6 +24,7 @@ interface ClaimRequest {
   created_at: string;
   user_id: string;
   restaurant_id: string;
+  proof_documents: string[] | null;
   restaurant?: {
     id: string;
     name: string;
@@ -364,6 +365,37 @@ export function ClaimRequestsQueue({ onUpdate }: ClaimRequestsQueueProps) {
                   <h4 className="font-semibold text-sm">Notities van aanvrager</h4>
                   <div className="p-3 bg-muted/30 rounded-lg text-sm whitespace-pre-wrap">
                     {selectedRequest.notes}
+                  </div>
+                </div>
+              )}
+
+              {/* Proof documents */}
+              {selectedRequest.proof_documents && selectedRequest.proof_documents.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Bewijsdocumenten ({selectedRequest.proof_documents.length})
+                  </h4>
+                  <div className="space-y-2">
+                    {selectedRequest.proof_documents.map((doc, index) => {
+                      const fileName = doc.split('/').pop() || `Document ${index + 1}`;
+                      const isImage = /\.(jpg|jpeg|png|webp)$/i.test(doc);
+                      return (
+                        <a
+                          key={index}
+                          href={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/menus/${doc}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg text-sm hover:bg-muted/50 transition-colors"
+                        >
+                          <FileText className="h-4 w-4 text-primary" />
+                          <span className="truncate flex-1">{fileName}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {isImage ? 'Afbeelding' : 'PDF'}
+                          </span>
+                        </a>
+                      );
+                    })}
                   </div>
                 </div>
               )}

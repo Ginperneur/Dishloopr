@@ -31,6 +31,7 @@ import DishCityPage from "./pages/DishCityPage";
 import DishCityIndexPage from "./pages/DishCityIndexPage";
 import NotFound from "./pages/NotFound";
 import ForRestaurantsPage from "./pages/ForRestaurantsPage";
+import AddRestaurantPage from "./pages/AddRestaurantPage";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +62,7 @@ const App = () => (
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/claim" element={<ClaimPage />} />
                 <Route path="/for-restaurants" element={<ForRestaurantsPage />} />
+                <Route path="/add-restaurant" element={<AddRestaurantPage />} />
                 <Route path="/favorites" element={<FavoritesPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/account" element={<AccountPage />} />
