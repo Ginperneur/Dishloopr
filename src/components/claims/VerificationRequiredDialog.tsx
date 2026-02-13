@@ -28,6 +28,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useClaimVerification } from '@/hooks/useClaimVerification';
 import { VerificationMethod, VerificationTriggerAction } from '@/types/claims';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface VerificationRequiredDialogProps {
@@ -79,6 +80,7 @@ export function VerificationRequiredDialog({
   const [dnsDetails, setDnsDetails] = useState<{ txtRecord: string; domain: string } | null>(null);
   const [htmlDetails, setHtmlDetails] = useState<{ fileName: string; fileContent: string } | null>(null);
   const [verifying, setVerifying] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
 
   const handleSelectMethod = async (method: VerificationMethod) => {
     setSelectedMethod(method);
@@ -417,17 +419,63 @@ export function VerificationRequiredDialog({
               >
                 <h3 className="font-semibold">Micro-betaling Verificatie</h3>
 
-                <div className="bg-muted/50 rounded-lg p-4 text-center">
-                  <CreditCard className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                  <p className="text-muted-foreground">
-                    Micro-betaling verificatie wordt binnenkort beschikbaar. 
-                    Probeer een andere verificatiemethode.
-                  </p>
+                <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <CreditCard className="h-10 w-10 text-green-600 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium">€1,00 verificatiebetaling</p>
+                      <p className="text-sm text-muted-foreground">
+                        Dit bedrag wordt na verificatie als tegoed op je account gestort.
+                      </p>
+                    </div>
+                  </div>
+                  <ul className="text-sm text-muted-foreground space-y-1 ml-13">
+                    <li>✓ Directe verificatie na betaling</li>
+                    <li>✓ Veilig via Stripe</li>
+                    <li>✓ €1 wordt teruggestort als tegoed</li>
+                  </ul>
                 </div>
 
-                <Button variant="outline" onClick={() => setSelectedMethod(null)} className="w-full">
-                  Terug naar methodes
-                </Button>
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={() => setSelectedMethod(null)}>
+                    Terug
+                  </Button>
+                  <Button
+                    onClick={async () => {
+                      setPaymentLoading(true);
+                      try {
+                        const { data, error } = await supabase.functions.invoke('create-verification-checkout', {
+                          body: { claimId, restaurantId, restaurantName },
+                        });
+                        if (error) throw error;
+                        if (data?.url) {
+                          window.open(data.url, '_blank');
+                        } else {
+                          throw new Error('Geen checkout URL ontvangen');
+                        }
+                      } catch (err: any) {
+                        console.error('Checkout error:', err);
+                        toast.error('Kon betaling niet starten. Probeer het opnieuw.');
+                      } finally {
+                        setPaymentLoading(false);
+                      }
+                    }}
+                    disabled={paymentLoading}
+                    className="flex-1"
+                  >
+                    {paymentLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Bezig...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        Betaal €1,00 en verifieer
+                      </>
+                    )}
+                  </Button>
+                </div>
               </motion.div>
             ) : selectedMethod === 'google_business' && claimId ? (
               <GoogleBusinessVerification

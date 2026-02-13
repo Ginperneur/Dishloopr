@@ -62,3 +62,6 @@ verify_jwt = false
 
 [functions.send-domain-verification]
 verify_jwt = false
+
+[functions.create-verification-checkout]
+verify_jwt = false

@@ -52,9 +52,68 @@ serve(async (req) => {
 
       const metadata = session.metadata || {};
       const { restaurantId, listingType, userId, productId, durationDays, type } = metadata;
-      
-      // Handle featured subscription purchase (NEW)
-      if (type === "featured_subscription" && metadata.slot_id && restaurantId) {
+
+      // Handle micro-payment verification
+      if (type === "micro_payment_verification" && metadata.claimId && metadata.restaurantId) {
+        logStep("Processing micro-payment verification", { claimId: metadata.claimId, restaurantId: metadata.restaurantId });
+
+        // Update claim to verified
+        const { error: claimError } = await supabaseAdmin
+          .from("restaurant_claims")
+          .update({
+            status: "verified",
+            verification_method: "micro_payment",
+            verification_completed_at: new Date().toISOString(),
+            verification_proof: { method: "micro_payment", stripe_session_id: session.id, payment_intent: session.payment_intent },
+            is_primary: true,
+          })
+          .eq("id", metadata.claimId);
+
+        if (claimError) {
+          logStep("Claim update error", { error: claimError.message });
+        } else {
+          // Update restaurant status
+          await supabaseAdmin
+            .from("restaurants")
+            .update({ claim_status: "verified_owner" })
+            .eq("id", metadata.restaurantId);
+
+          // Add user as primary owner
+          await supabaseAdmin
+            .from("restaurant_managers")
+            .upsert({
+              restaurant_id: metadata.restaurantId,
+              user_id: metadata.userId,
+              role: "primary_owner",
+              accepted_at: new Date().toISOString(),
+            }, { onConflict: "restaurant_id,user_id" });
+
+          // Give user owner role
+          const { data: existingRole } = await supabaseAdmin
+            .from("user_roles")
+            .select("id")
+            .eq("user_id", metadata.userId)
+            .eq("role", "owner")
+            .maybeSingle();
+
+          if (!existingRole) {
+            await supabaseAdmin
+              .from("user_roles")
+              .insert({ user_id: metadata.userId, role: "owner" });
+          }
+
+          // Supersede other claims
+          await supabaseAdmin
+            .from("restaurant_claims")
+            .update({ status: "superseded" })
+            .eq("restaurant_id", metadata.restaurantId)
+            .neq("id", metadata.claimId);
+
+          logStep("Micro-payment verification completed successfully");
+        }
+      }
+      // Handle featured subscription purchase
+      else if (type === "featured_subscription" && metadata.slot_id && restaurantId) {
         const durationMonths = parseInt(metadata.duration_months || "1");
         const monthlyPrice = parseFloat(metadata.monthly_price || "0");
         const ambianceAddonPrice = parseFloat(metadata.ambiance_addon_price || "0");
