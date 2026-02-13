@@ -83,8 +83,15 @@ export function VerificationRequiredDialog({
   const [paymentLoading, setPaymentLoading] = useState(false);
 
   const handleSelectMethod = async (method: VerificationMethod) => {
+    if (!claimId && ['dns_txt', 'html_file'].includes(method)) {
+      toast.error('Geen actieve claim gevonden. Dien eerst een claim in.');
+      return;
+    }
     setSelectedMethod(method);
-    await startVerification(claimId, method);
+    
+    if (claimId) {
+      await startVerification(claimId, method);
+    }
 
     if (method === 'dns_txt') {
       const details = await getDnsVerificationDetails(restaurantId);
@@ -96,6 +103,10 @@ export function VerificationRequiredDialog({
   };
 
   const handleVerify = async () => {
+    if (!claimId) {
+      toast.error('Geen actieve claim gevonden.');
+      return;
+    }
     setVerifying(true);
     let success = false;
 
@@ -104,13 +115,6 @@ export function VerificationRequiredDialog({
         success = await verifyDnsRecord(claimId, dnsDetails.domain);
       } else if (selectedMethod === 'html_file' && restaurantWebsite) {
         success = await verifyHtmlFile(claimId, restaurantWebsite);
-      } else if (selectedMethod === 'micro_payment') {
-        // In production, this would initiate a Stripe payment flow
-        toast.info('Micro-betaling verificatie wordt binnenkort beschikbaar');
-        success = false;
-      } else if (selectedMethod === 'google_business') {
-        toast.info('Google Business verificatie wordt binnenkort beschikbaar');
-        success = false;
       }
 
       if (success) {
