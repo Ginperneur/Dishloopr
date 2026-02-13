@@ -453,7 +453,7 @@ export function FeaturedMarketplace({
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Ambiance tags</Label>
                 <Badge variant="outline" className="text-xs">
-                  1 inbegrepen, extra = €/maand
+                  1e gratis, extra = €/maand
                 </Badge>
               </div>
               <div className="grid grid-cols-2 gap-2">
