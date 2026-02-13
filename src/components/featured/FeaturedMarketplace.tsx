@@ -442,7 +442,7 @@ export function FeaturedMarketplace({
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Maximum 3 maanden aaneengesloten, daarna verplichte pauze
+                Maximum 3 maanden aaneengesloten, daarna verplichte pauze van een maand
               </p>
             </div>
 
