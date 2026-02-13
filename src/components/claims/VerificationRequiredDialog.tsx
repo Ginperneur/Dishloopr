@@ -176,64 +176,6 @@ export function VerificationRequiredDialog({
                 <h3 className="font-semibold">Kies een verificatiemethode</h3>
 
                 <div className="grid gap-3">
-                  {/* Micro-payment */}
-                  <button
-                    onClick={() => handleSelectMethod('micro_payment')}
-                    className="flex items-start gap-4 p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-colors text-left"
-                  >
-                    <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                      <CreditCard className="h-5 w-5 text-green-600" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">Micro-betaling</span>
-                        <Badge variant="secondary" className="text-xs">Snelst</Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Betaal €1 (wordt teruggestort als tegoed). Directe verificatie.
-                      </p>
-                    </div>
-                    <ArrowRight className="h-5 w-5 text-muted-foreground" />
-                  </button>
-
-                  {/* DNS Verification */}
-                  {restaurantWebsite && (
-                    <button
-                      onClick={() => handleSelectMethod('dns_txt')}
-                      className="flex items-start gap-4 p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-colors text-left"
-                    >
-                      <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
-                        <Globe className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div className="flex-1">
-                        <span className="font-medium">DNS TXT Record</span>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Voeg een TXT record toe aan je domein. Vereist DNS toegang.
-                        </p>
-                      </div>
-                      <ArrowRight className="h-5 w-5 text-muted-foreground" />
-                    </button>
-                  )}
-
-                  {/* HTML File */}
-                  {restaurantWebsite && (
-                    <button
-                      onClick={() => handleSelectMethod('html_file')}
-                      className="flex items-start gap-4 p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-colors text-left"
-                    >
-                      <div className="h-10 w-10 rounded-full bg-purple-500/10 flex items-center justify-center flex-shrink-0">
-                        <FileCode className="h-5 w-5 text-purple-600" />
-                      </div>
-                      <div className="flex-1">
-                        <span className="font-medium">HTML Bestand</span>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Upload een verificatiebestand naar je website root.
-                        </p>
-                      </div>
-                      <ArrowRight className="h-5 w-5 text-muted-foreground" />
-                    </button>
-                  )}
-
                   {/* Domain Email */}
                   {restaurantWebsite && (
                     <button
@@ -272,6 +214,64 @@ export function VerificationRequiredDialog({
                     </div>
                     <ArrowRight className="h-5 w-5 text-muted-foreground" />
                   </button>
+
+                  {/* Micro-payment */}
+                  <button
+                    onClick={() => handleSelectMethod('micro_payment')}
+                    className="flex items-start gap-4 p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-colors text-left"
+                  >
+                    <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                      <CreditCard className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">Micro-betaling</span>
+                        <Badge variant="secondary" className="text-xs">Snelst</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Betaal €1 (wordt teruggestort als tegoed). Directe verificatie.
+                      </p>
+                    </div>
+                    <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                  </button>
+
+                  {/* HTML File */}
+                  {restaurantWebsite && (
+                    <button
+                      onClick={() => handleSelectMethod('html_file')}
+                      className="flex items-start gap-4 p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-colors text-left"
+                    >
+                      <div className="h-10 w-10 rounded-full bg-purple-500/10 flex items-center justify-center flex-shrink-0">
+                        <FileCode className="h-5 w-5 text-purple-600" />
+                      </div>
+                      <div className="flex-1">
+                        <span className="font-medium">HTML Bestand</span>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Upload een verificatiebestand naar je website root.
+                        </p>
+                      </div>
+                      <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                    </button>
+                  )}
+
+                  {/* DNS Verification */}
+                  {restaurantWebsite && (
+                    <button
+                      onClick={() => handleSelectMethod('dns_txt')}
+                      className="flex items-start gap-4 p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-colors text-left"
+                    >
+                      <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                        <Globe className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div className="flex-1">
+                        <span className="font-medium">DNS TXT Record</span>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Voeg een TXT record toe aan je domein. Vereist DNS toegang.
+                        </p>
+                      </div>
+                      <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                    </button>
+                  )}
                 </div>
               </motion.div>
             ) : selectedMethod === 'dns_txt' && dnsDetails ? (
