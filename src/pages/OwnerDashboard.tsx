@@ -402,10 +402,15 @@ export default function OwnerDashboard() {
     respondToReview
   } = useOwnerDashboard();
 
-  const { getPermissions } = useRestaurantClaims();
+  const { getPermissions, userClaims } = useRestaurantClaims();
   const [permissions, setPermissions] = useState<ClaimPermissions | null>(null);
   const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
+
+  // Find active claim for current restaurant
+  const activeClaimId = selectedRestaurant 
+    ? userClaims.find(c => c.restaurant_id === selectedRestaurant.id && !['superseded', 'rejected'].includes(c.status))?.id 
+    : undefined;
 
   useEffect(() => {
     if (selectedRestaurant) {
@@ -895,6 +900,7 @@ export default function OwnerDashboard() {
         <VerificationRequiredDialog
           open={verificationDialogOpen}
           onOpenChange={setVerificationDialogOpen}
+          claimId={activeClaimId}
           restaurantId={selectedRestaurant.id}
           restaurantName={selectedRestaurant.name}
           restaurantWebsite={selectedRestaurant.website_url}
