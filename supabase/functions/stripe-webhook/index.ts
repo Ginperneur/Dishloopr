@@ -57,59 +57,114 @@ serve(async (req) => {
       if (type === "micro_payment_verification" && metadata.claimId && metadata.restaurantId) {
         logStep("Processing micro-payment verification", { claimId: metadata.claimId, restaurantId: metadata.restaurantId });
 
-        // Update claim to verified
-        const { error: claimError } = await supabaseAdmin
-          .from("restaurant_claims")
-          .update({
-            status: "verified",
-            verification_method: "micro_payment",
-            verification_completed_at: new Date().toISOString(),
-            verification_proof: { method: "micro_payment", stripe_session_id: session.id, payment_intent: session.payment_intent },
-            is_primary: true,
-          })
-          .eq("id", metadata.claimId);
+        // Get the restaurant name for name matching
+        const { data: restaurant } = await supabaseAdmin
+          .from("restaurants")
+          .select("name")
+          .eq("id", metadata.restaurantId)
+          .single();
 
-        if (claimError) {
-          logStep("Claim update error", { error: claimError.message });
-        } else {
-          // Update restaurant status
-          await supabaseAdmin
-            .from("restaurants")
-            .update({ claim_status: "verified_owner" })
-            .eq("id", metadata.restaurantId);
+        const restaurantName = restaurant?.name?.toLowerCase().trim() || "";
 
-          // Add user as primary owner
-          await supabaseAdmin
-            .from("restaurant_managers")
-            .upsert({
-              restaurant_id: metadata.restaurantId,
-              user_id: metadata.userId,
-              role: "primary_owner",
-              accepted_at: new Date().toISOString(),
-            }, { onConflict: "restaurant_id,user_id" });
-
-          // Give user owner role
-          const { data: existingRole } = await supabaseAdmin
-            .from("user_roles")
-            .select("id")
-            .eq("user_id", metadata.userId)
-            .eq("role", "owner")
-            .maybeSingle();
-
-          if (!existingRole) {
-            await supabaseAdmin
-              .from("user_roles")
-              .insert({ user_id: metadata.userId, role: "owner" });
+        // Get payer name from Stripe session
+        let payerName = "";
+        if (session.customer_details?.name) {
+          payerName = session.customer_details.name.toLowerCase().trim();
+        } else if (session.customer) {
+          const customer = await stripe.customers.retrieve(session.customer as string);
+          if (customer && !customer.deleted && customer.name) {
+            payerName = customer.name.toLowerCase().trim();
           }
+        }
 
-          // Supersede other claims
-          await supabaseAdmin
+        logStep("Name matching", { payerName, restaurantName });
+
+        // Check if payer name matches restaurant name (fuzzy: one contains the other or significant overlap)
+        const nameMatches = payerName.length > 0 && restaurantName.length > 0 && (
+          restaurantName.includes(payerName) ||
+          payerName.includes(restaurantName) ||
+          // Check if any word (3+ chars) from payer name appears in restaurant name
+          payerName.split(/\s+/).some((word: string) => word.length >= 3 && restaurantName.includes(word)) ||
+          restaurantName.split(/\s+/).some((word: string) => word.length >= 3 && payerName.includes(word))
+        );
+
+        if (nameMatches) {
+          logStep("Name match succeeded, auto-verifying");
+
+          // Update claim to verified
+          const { error: claimError } = await supabaseAdmin
             .from("restaurant_claims")
-            .update({ status: "superseded" })
-            .eq("restaurant_id", metadata.restaurantId)
-            .neq("id", metadata.claimId);
+            .update({
+              status: "verified",
+              verification_method: "micro_payment",
+              verification_completed_at: new Date().toISOString(),
+              verification_proof: { method: "micro_payment", stripe_session_id: session.id, payment_intent: session.payment_intent, name_match: true, payer_name: payerName },
+              is_primary: true,
+            })
+            .eq("id", metadata.claimId);
 
-          logStep("Micro-payment verification completed successfully");
+          if (claimError) {
+            logStep("Claim update error", { error: claimError.message });
+          } else {
+            // Update restaurant status
+            await supabaseAdmin
+              .from("restaurants")
+              .update({ claim_status: "verified_owner" })
+              .eq("id", metadata.restaurantId);
+
+            // Add user as primary owner
+            await supabaseAdmin
+              .from("restaurant_managers")
+              .upsert({
+                restaurant_id: metadata.restaurantId,
+                user_id: metadata.userId,
+                role: "primary_owner",
+                accepted_at: new Date().toISOString(),
+              }, { onConflict: "restaurant_id,user_id" });
+
+            // Give user owner role
+            const { data: existingRole } = await supabaseAdmin
+              .from("user_roles")
+              .select("id")
+              .eq("user_id", metadata.userId)
+              .eq("role", "owner")
+              .maybeSingle();
+
+            if (!existingRole) {
+              await supabaseAdmin
+                .from("user_roles")
+                .insert({ user_id: metadata.userId, role: "owner" });
+            }
+
+            // Supersede other claims
+            await supabaseAdmin
+              .from("restaurant_claims")
+              .update({ status: "superseded" })
+              .eq("restaurant_id", metadata.restaurantId)
+              .neq("id", metadata.claimId);
+
+            logStep("Micro-payment verification completed successfully (name matched)");
+          }
+        } else {
+          logStep("Name mismatch, setting to pending_admin_review", { payerName, restaurantName });
+
+          // Name doesn't match - require admin review
+          const { error: claimError } = await supabaseAdmin
+            .from("restaurant_claims")
+            .update({
+              status: "pending_admin_review",
+              verification_method: "micro_payment",
+              verification_completed_at: new Date().toISOString(),
+              verification_proof: { method: "micro_payment", stripe_session_id: session.id, payment_intent: session.payment_intent, name_match: false, payer_name: payerName, restaurant_name: restaurantName },
+              admin_notes: `Automatische naam-controle mislukt. Betaler: "${payerName}", Restaurant: "${restaurantName}". Handmatige review nodig.`,
+            })
+            .eq("id", metadata.claimId);
+
+          if (claimError) {
+            logStep("Claim update error", { error: claimError.message });
+          } else {
+            logStep("Claim set to pending_admin_review due to name mismatch");
+          }
         }
       }
       // Handle featured subscription purchase

@@ -72,6 +72,7 @@ const statusConfig = {
   verified: { label: 'Geverifieerd', color: 'bg-green-500/10 text-green-600', icon: CheckCircle },
   rejected: { label: 'Afgewezen', color: 'bg-red-500/10 text-red-600', icon: XCircle },
   disputed: { label: 'Betwist', color: 'bg-orange-500/10 text-orange-600', icon: AlertTriangle },
+  pending_admin_review: { label: 'Admin review nodig', color: 'bg-purple-500/10 text-purple-600', icon: AlertTriangle },
 };
 
 const restaurantStatusConfig = {
@@ -497,6 +498,7 @@ export function ClaimsVerificationManager() {
                     <SelectItem value="verified">Geverifieerd</SelectItem>
                     <SelectItem value="rejected">Afgewezen</SelectItem>
                     <SelectItem value="disputed">Betwist</SelectItem>
+                    <SelectItem value="pending_admin_review">Admin review nodig</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
