@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { 
   Eye, 
   MousePointer, 
+  Clock,
   Phone, 
   Globe, 
   Calendar,
@@ -392,6 +393,7 @@ function PromotionsSection({ restaurant, onRefresh, canPurchase }: {
 export default function OwnerDashboard() {
   const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
+  const [searchParams] = useSearchParams();
   const {
     restaurants,
     selectedRestaurant,
@@ -402,15 +404,43 @@ export default function OwnerDashboard() {
     respondToReview
   } = useOwnerDashboard();
 
-  const { getPermissions, userClaims } = useRestaurantClaims();
+  const { getPermissions, userClaims, refetch: refreshClaims } = useRestaurantClaims();
   const [permissions, setPermissions] = useState<ClaimPermissions | null>(null);
   const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
 
   // Find active claim for current restaurant
-  const activeClaimId = selectedRestaurant 
-    ? userClaims.find(c => c.restaurant_id === selectedRestaurant.id && !['superseded', 'rejected'].includes(c.status))?.id 
+  const activeClaim = selectedRestaurant 
+    ? userClaims.find(c => c.restaurant_id === selectedRestaurant.id && !['superseded', 'rejected'].includes(c.status))
     : undefined;
+  const activeClaimId = activeClaim?.id;
+  const isPendingAdminReview = activeClaim?.status === 'pending_admin_review';
+
+  // Handle verification redirect from Stripe
+  useEffect(() => {
+    const verification = searchParams.get('verification');
+    const claimId = searchParams.get('claimId');
+    
+    if (verification === 'success' && claimId) {
+      // Refresh claims to get updated status
+      refreshClaims?.();
+      // Show appropriate toast after a short delay to let claims refresh
+      setTimeout(() => {
+        const claim = userClaims.find(c => c.id === claimId);
+        if (claim?.status === 'pending_admin_review') {
+          toast.info('Betaling ontvangen! Je naam komt niet overeen met het restaurant. Een admin zal je aanvraag handmatig beoordelen.');
+        } else if (claim?.status === 'verified') {
+          toast.success('Verificatie geslaagd! Je bent nu geverifieerde eigenaar.');
+        } else {
+          toast.info('Betaling ontvangen! Je verificatie wordt verwerkt.');
+        }
+      }, 2000);
+      window.history.replaceState({}, '', '/owner-dashboard');
+    } else if (verification === 'cancelled') {
+      toast.error('Verificatie betaling geannuleerd.');
+      window.history.replaceState({}, '', '/owner-dashboard');
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (selectedRestaurant) {
@@ -536,27 +566,54 @@ export default function OwnerDashboard() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-6"
           >
-            <Card className="border-yellow-500/30 bg-yellow-500/5">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <h3 className="font-medium text-yellow-700">Beperkte toegang</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Je claim is nog niet geverifieerd. Sommige functies zijn vergrendeld tot je eigendom bewijst.
-                    </p>
-                    <Button 
-                      size="sm" 
-                      className="mt-3"
-                      onClick={() => setVerificationDialogOpen(true)}
-                    >
-                      <Shield className="h-4 w-4 mr-2" />
-                      Start verificatie
-                    </Button>
+            {isPendingAdminReview ? (
+              <Card className="border-blue-500/30 bg-blue-500/5">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <Clock className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h3 className="font-medium text-blue-700">In afwachting van admin review</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Je betaling is ontvangen, maar de naam op de betaling komt niet overeen met het restaurant. 
+                        Een admin zal je aanvraag handmatig beoordelen. Je kunt ook contact opnemen via de contactpagina.
+                      </p>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="mt-3"
+                        asChild
+                      >
+                        <Link to="/contact">
+                          Neem contact op
+                        </Link>
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="border-yellow-500/30 bg-yellow-500/5">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h3 className="font-medium text-yellow-700">Beperkte toegang</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Je claim is nog niet geverifieerd. Sommige functies zijn vergrendeld tot je eigendom bewijst.
+                      </p>
+                      <Button 
+                        size="sm" 
+                        className="mt-3"
+                        onClick={() => setVerificationDialogOpen(true)}
+                      >
+                        <Shield className="h-4 w-4 mr-2" />
+                        Start verificatie
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </motion.div>
         )}
 

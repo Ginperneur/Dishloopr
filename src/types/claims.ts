@@ -5,7 +5,7 @@ export type VerificationMethod = 'micro_payment' | 'dns_txt' | 'html_file' | 'go
 
 export type ManagerRole = 'viewer' | 'editor' | 'finance' | 'primary_owner';
 
-export type ClaimStatus = 'pending' | 'email_verified' | 'phone_verified' | 'verified' | 'rejected' | 'superseded';
+export type ClaimStatus = 'pending' | 'email_verified' | 'phone_verified' | 'verified' | 'rejected' | 'superseded' | 'pending_admin_review';
 
 export interface RestaurantClaim {
   id: string;
