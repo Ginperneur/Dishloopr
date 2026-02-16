@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, LogOut, User, Store, Shield, Heart, Search, BarChart3, Utensils } from 'lucide-react';
+import { Menu, X, LogOut, User, Store, Shield, Heart, Search, BarChart3, Utensils, BookOpen } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -227,6 +227,10 @@ export function Header() {
                 <Search className="h-5 w-5 text-muted-foreground" />
                 <span className="font-medium">{t('nav.discover')}</span>
               </Link>
+              <Link to="/collections" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                <BookOpen className="h-5 w-5 text-muted-foreground" />
+                <span className="font-medium">{t('nav.collections')}</span>
+              </Link>
 
               {user && (
                 <>
@@ -273,6 +277,11 @@ export function Header() {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div className="flex items-center justify-between px-3 py-2">
+                <span className="text-xs text-muted-foreground">{t('common.theme', 'Thema')}</span>
+                <ThemeToggle />
               </div>
 
               <div className="border-t border-border my-2" />
