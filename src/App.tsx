@@ -15,6 +15,7 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import EmailConfirmPage from "./pages/EmailConfirmPage";
 import OwnerDashboard from "./pages/OwnerDashboard";
+import FoodieDashboard from "./pages/FoodieDashboard";
 import AdminPanel from "./pages/AdminPanel";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
@@ -55,6 +56,7 @@ const App = () => (
                 <Route path="/owner" element={<OwnerDashboard />} />
                 <Route path="/dashboard" element={<OwnerDashboard />} />
                 <Route path="/owner-dashboard" element={<OwnerDashboard />} />
+                <Route path="/my-dashboard" element={<FoodieDashboard />} />
                 <Route path="/admin" element={<AdminPanel />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/contact" element={<ContactPage />} />
