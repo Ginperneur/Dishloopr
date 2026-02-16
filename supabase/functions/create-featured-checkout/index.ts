@@ -168,6 +168,7 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email!,
+      payment_method_types: ["card", "ideal", "bancontact"],
       line_items: lineItems,
       mode: 'payment',
       success_url: `${req.headers.get("origin")}/owner-dashboard?payment=success&type=featured`,
