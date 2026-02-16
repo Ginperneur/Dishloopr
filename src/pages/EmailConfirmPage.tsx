@@ -32,9 +32,11 @@ export default function EmailConfirmPage() {
     // If user is authenticated after callback, confirmation was successful
     if (user) {
       setStatus('success');
-      // Auto-redirect after 3 seconds
+      // Determine redirect based on account type
+      const accountType = user.user_metadata?.account_type;
+      const redirectTo = accountType === 'restaurant' ? '/for-restaurants' : '/my-dashboard';
       const timer = setTimeout(() => {
-        navigate('/');
+        navigate(redirectTo);
       }, 3000);
       return () => clearTimeout(timer);
     }
@@ -76,16 +78,20 @@ export default function EmailConfirmPage() {
 
             {status === 'success' && (
               <div className="text-center py-4">
-                <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+                <CheckCircle className="h-16 w-16 text-primary mx-auto mb-4" />
                 <h2 className="text-xl font-semibold mb-2">E-mail bevestigd!</h2>
                 <p className="text-muted-foreground mb-6">
-                  Je account is nu actief. Welkom bij Dishloopr!
+                  {user?.user_metadata?.account_type === 'restaurant'
+                    ? 'Je account is actief. We sturen je door om je restaurant te claimen!'
+                    : 'Je account is nu actief. Welkom bij Dishloopr!'}
                 </p>
                 <p className="text-sm text-muted-foreground mb-6">
                   Je wordt automatisch doorgestuurd...
                 </p>
                 <Button asChild className="w-full">
-                  <Link to="/">Naar de homepage</Link>
+                  <Link to={user?.user_metadata?.account_type === 'restaurant' ? '/for-restaurants' : '/my-dashboard'}>
+                    {user?.user_metadata?.account_type === 'restaurant' ? 'Restaurant claimen' : 'Naar mijn dashboard'}
+                  </Link>
                 </Button>
               </div>
             )}

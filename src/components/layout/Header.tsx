@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, LogOut, User, Store, Shield, Heart, Search, BarChart3 } from 'lucide-react';
+import { Menu, X, LogOut, User, Store, Shield, Heart, Search, BarChart3, Utensils } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,6 +23,7 @@ export function Header() {
   const { user, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -33,8 +34,18 @@ export function Header() {
       // Fetch avatar
       supabase.from('profiles').select('avatar_url').eq('id', user.id).single()
         .then(({ data }) => setAvatarUrl(data?.avatar_url || null));
+
+      // Check if user is a restaurant owner (has any restaurant_managers entry or account_type)
+      const accountType = user.user_metadata?.account_type;
+      if (accountType === 'restaurant') {
+        setIsOwner(true);
+      } else {
+        supabase.from('restaurant_managers').select('id').eq('user_id', user.id).limit(1)
+          .then(({ data }) => setIsOwner((data?.length || 0) > 0));
+      }
     } else {
       setIsAdmin(false);
+      setIsOwner(false);
       setAvatarUrl(null);
     }
   }, [user]);
@@ -48,6 +59,11 @@ export function Header() {
     setMobileMenuOpen(false);
   };
 
+  // Determine dashboard link based on account type
+  const dashboardLink = isOwner ? '/dashboard' : '/my-dashboard';
+  const dashboardLabel = isOwner ? 'Restaurant Dashboard' : 'Mijn Dashboard';
+  const DashboardIcon = isOwner ? Store : Utensils;
+
   return (
     <motion.header
       initial={{ y: -20, opacity: 0 }}
@@ -58,57 +74,28 @@ export function Header() {
       <div className="container flex h-14 md:h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link to="/" className="flex items-center shrink-0" aria-label="Ga naar home">
-          <img
-            src={logo}
-            alt="Dishloopr"
-            className="h-8 md:h-10 w-auto"
-            loading="eager"
-            decoding="async"
-          />
+          <img src={logo} alt="Dishloopr" className="h-8 md:h-10 w-auto" loading="eager" decoding="async" />
         </Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-4 lg:gap-6">
-          <Link
-            to="/search"
-            className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
-          >
+          <Link to="/search" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
             {t('nav.discover')}
           </Link>
-          <Link
-            to="/collections"
-            className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
-          >
+          <Link to="/collections" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
             {t('nav.collections')}
           </Link>
-          <Link
-            to="/search?featured=true"
-            className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
-          >
+          <Link to="/search?featured=true" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
             {t('nav.featured')}
           </Link>
           {user && (
-            <Link
-              to="/favorites"
-              className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1.5"
-            >
+            <Link to="/favorites" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1.5">
               <Heart className="h-4 w-4" />
               {t('nav.favorites')}
             </Link>
           )}
-          {user && (
-            <Link
-              to="/dashboard"
-              className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
-            >
-              Dashboard
-            </Link>
-          )}
           {isAdmin && (
-            <Link
-              to="/admin"
-              className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1.5"
-            >
+            <Link to="/admin" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1.5">
               <Shield className="h-4 w-4" />
               Admin
             </Link>
@@ -131,7 +118,6 @@ export function Header() {
             ))}
           </div>
 
-          {/* Theme Toggle */}
           <ThemeToggle />
 
           {user ? (
@@ -155,6 +141,12 @@ export function Header() {
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
+                  <Link to={dashboardLink} className="cursor-pointer">
+                    <DashboardIcon className="mr-2 h-4 w-4" />
+                    {dashboardLabel}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link to="/profile" className="cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
                     {t('home.myProfile')}
@@ -172,19 +164,17 @@ export function Header() {
                     Inzichten
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/for-restaurants" className="cursor-pointer">
-                    <Store className="mr-2 h-4 w-4" />
-                    {t('footer.forRestaurants')}
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/dashboard" className="cursor-pointer">
-                    <Store className="mr-2 h-4 w-4" />
-                    {t('nav.dashboard')}
-                  </Link>
-                </DropdownMenuItem>
+                {!isOwner && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/for-restaurants" className="cursor-pointer">
+                        <Store className="mr-2 h-4 w-4" />
+                        {t('footer.forRestaurants')}
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
                 {isAdmin && (
                   <DropdownMenuItem asChild>
                     <Link to="/admin" className="cursor-pointer">
@@ -233,55 +223,31 @@ export function Header() {
             className="md:hidden border-t border-border bg-background overflow-hidden"
           >
             <nav className="container py-4 flex flex-col gap-2 px-4">
-              <Link
-                to="/search"
-                className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
+              <Link to="/search" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors" onClick={() => setMobileMenuOpen(false)}>
                 <Search className="h-5 w-5 text-muted-foreground" />
                 <span className="font-medium">{t('nav.discover')}</span>
               </Link>
 
               {user && (
                 <>
-                  <Link
-                    to="/favorites"
-                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
+                  <Link to={dashboardLink} className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                    <DashboardIcon className="h-5 w-5 text-muted-foreground" />
+                    <span className="font-medium">{dashboardLabel}</span>
+                  </Link>
+                  <Link to="/favorites" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors" onClick={() => setMobileMenuOpen(false)}>
                     <Heart className="h-5 w-5 text-muted-foreground" />
                     <span className="font-medium">{t('nav.favorites')}</span>
                   </Link>
-                  <Link
-                    to="/profile"
-                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
+                  <Link to="/profile" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors" onClick={() => setMobileMenuOpen(false)}>
                     <User className="h-5 w-5 text-muted-foreground" />
                     <span className="font-medium">{t('home.myProfile')}</span>
                   </Link>
-                  <Link
-                    to="/insights"
-                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
+                  <Link to="/insights" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors" onClick={() => setMobileMenuOpen(false)}>
                     <BarChart3 className="h-5 w-5 text-muted-foreground" />
                     <span className="font-medium">{t('nav.insights')}</span>
                   </Link>
-                  <Link
-                    to="/dashboard"
-                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Store className="h-5 w-5 text-muted-foreground" />
-                    <span className="font-medium">{t('nav.dashboard')}</span>
-                  </Link>
                   {isAdmin && (
-                    <Link
-                      to="/admin"
-                      className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
+                    <Link to="/admin" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors" onClick={() => setMobileMenuOpen(false)}>
                       <Shield className="h-5 w-5 text-muted-foreground" />
                       <span className="font-medium">Admin Panel</span>
                     </Link>
@@ -296,9 +262,7 @@ export function Header() {
                   {LANGUAGES.map((lang) => (
                     <button
                       key={lang.code}
-                      onClick={() => {
-                        i18n.changeLanguage(lang.code);
-                      }}
+                      onClick={() => i18n.changeLanguage(lang.code)}
                       className={`px-3 py-1.5 text-sm font-semibold rounded-lg transition-colors ${
                         i18n.language === lang.code
                           ? 'bg-primary text-primary-foreground'
@@ -318,9 +282,7 @@ export function Header() {
                   <div className="flex items-center gap-3 px-3 py-2 bg-muted rounded-lg">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={avatarUrl || undefined} />
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        {userInitials}
-                      </AvatarFallback>
+                      <AvatarFallback className="bg-primary text-primary-foreground">{userInitials}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{user.user_metadata?.name || t('home.user')}</p>
@@ -335,14 +297,10 @@ export function Header() {
               ) : (
                 <div className="flex gap-3">
                   <Button variant="outline" className="flex-1" asChild>
-                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                      {t('nav.login')}
-                    </Link>
+                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>{t('nav.login')}</Link>
                   </Button>
                   <Button className="flex-1" asChild>
-                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                      {t('nav.signup')}
-                    </Link>
+                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>{t('nav.signup')}</Link>
                   </Button>
                 </div>
               )}
