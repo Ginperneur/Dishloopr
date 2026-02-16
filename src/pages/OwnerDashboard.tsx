@@ -21,7 +21,9 @@ import {
   AlertTriangle,
   Check,
   Image,
-  Clock
+  Clock,
+  TrendingUp,
+  BarChart3
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -50,7 +52,11 @@ import { DishConfirmation } from '@/components/owner/DishConfirmation';
 import { RestaurantImageUpload } from '@/components/admin/RestaurantImageUpload';
 import { ActionCards } from '@/components/owner/ActionCards';
 import { ReviewIntelligence } from '@/components/owner/ReviewIntelligence';
+import { NeighborhoodAnalysis } from '@/components/owner/NeighborhoodAnalysis';
+import { PeakHoursInsight } from '@/components/owner/PeakHoursInsight';
+import { PromotionROI } from '@/components/owner/PromotionROI';
 import { useOptimizationInsights } from '@/hooks/useOptimizationInsights';
+import { useMarketInsights } from '@/hooks/useMarketInsights';
 import { useRestaurantDishes } from '@/hooks/useRestaurantDishes';
 import { type ClaimPermissions } from '@/types/claims';
 
@@ -78,6 +84,11 @@ export default function OwnerDashboard() {
   // Fetch optimization data for action cards
   const { data: optimizationData } = useOptimizationInsights(selectedRestaurant?.id);
   const { dishes: restaurantDishes } = useRestaurantDishes({ restaurantId: selectedRestaurant?.id || '' });
+  const { competitors, peakHours, peakDays, promotionROI } = useMarketInsights(
+    selectedRestaurant?.id,
+    selectedRestaurant?.city_id,
+    selectedRestaurant?.cuisines || []
+  );
 
   const unansweredReviews = reviews.filter(r => !r.owner_response).length;
   const suggestedDishCount = restaurantDishes.filter(d => d.status === 'suggested').length;
@@ -374,6 +385,11 @@ export default function OwnerDashboard() {
               Optimalisatie
               {!isVerified && <Lock className="h-3 w-3 ml-1" />}
             </TabsTrigger>
+            <TabsTrigger value="market" disabled={!isVerified}>
+              <TrendingUp className="h-4 w-4 mr-1" />
+              Markt
+              {!isVerified && <Lock className="h-3 w-3 ml-1" />}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="reviews" className="space-y-6">
@@ -542,6 +558,47 @@ export default function OwnerDashboard() {
               />
             )}
           </TabsContent>
+          <TabsContent value="market">
+            {isVerified && selectedRestaurant ? (
+              <div className="space-y-8">
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-primary" />
+                    Buurtanalyse
+                  </h3>
+                  <NeighborhoodAnalysis
+                    competitors={competitors}
+                    myRating={selectedRestaurant.rating}
+                    myReviewCount={selectedRestaurant.review_count}
+                    myName={selectedRestaurant.name}
+                  />
+                </div>
+
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-primary" />
+                    Piekuren-inzicht
+                  </h3>
+                  <PeakHoursInsight peakHours={peakHours} peakDays={peakDays} />
+                </div>
+
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <Crown className="h-5 w-5 text-primary" />
+                    Promotie ROI
+                  </h3>
+                  <PromotionROI promotions={promotionROI} />
+                </div>
+              </div>
+            ) : (
+              <LockedFeatureOverlay 
+                featureName="Markt & Concurrentie"
+                description="Vergelijk je prestaties met concurrenten en bekijk het rendement van je promoties."
+                onRequestVerification={() => setVerificationDialogOpen(true)}
+              />
+            )}
+          </TabsContent>
+
         </Tabs>
       </div>
 
