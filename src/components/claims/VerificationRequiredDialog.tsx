@@ -233,7 +233,7 @@ export function VerificationRequiredDialog({
                         <Badge variant="secondary" className="text-xs">Snelst</Badge>
                       </div>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Betaal €1 (wordt teruggestort als tegoed). Directe verificatie.
+                        Betaal €1 — wordt verrekend bij je eerste aankoop.
                       </p>
                     </div>
                     <ArrowRight className="h-5 w-5 text-muted-foreground" />
@@ -429,14 +429,14 @@ export function VerificationRequiredDialog({
                     <div>
                       <p className="font-medium">€1,00 verificatiebetaling</p>
                       <p className="text-sm text-muted-foreground">
-                        Dit bedrag wordt na verificatie als tegoed op je account gestort.
+                        Dit bedrag wordt verrekend bij je eerste aankoop.
                       </p>
                     </div>
                   </div>
                   <ul className="text-sm text-muted-foreground space-y-1 ml-13">
-                    <li>✓ Directe verificatie na betaling</li>
-                    <li>✓ Veilig via Stripe</li>
-                    <li>✓ €1 wordt teruggestort als tegoed</li>
+                    <li>✓ Veilig betalen via Stripe</li>
+                    <li>✓ Verificatie bij naamovereenkomst met het restaurant</li>
+                    <li>✓ €1 wordt verrekend bij je eerste aankoop</li>
                   </ul>
                 </div>
 
