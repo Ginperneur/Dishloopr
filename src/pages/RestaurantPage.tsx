@@ -233,10 +233,10 @@ export default function RestaurantPage() {
         </div>
       </div>
 
-      <div className="container px-4 md:px-6 py-6 md:py-8">
+      <div className="container px-4 md:px-6 py-6 md:py-8 overflow-hidden">
         <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6 md:space-y-8">
+          <div className="lg:col-span-2 space-y-6 md:space-y-8 min-w-0">
             {/* Header - Two column layout with info and opening hours */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -269,9 +269,9 @@ export default function RestaurantPage() {
                   </div>
 
                   {/* Location */}
-                  <div className="flex items-center gap-2 text-sm md:text-base text-muted-foreground mb-3">
+                  <div className="flex items-center gap-2 text-sm md:text-base text-muted-foreground mb-3 min-w-0">
                     <MapPin className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{restaurant.address}, {restaurant.postal_code} {restaurant.city?.name}</span>
+                    <span className="truncate block min-w-0">{restaurant.address}, {restaurant.postal_code} {restaurant.city?.name}</span>
                   </div>
 
                   {/* Open Status & Busy Level */}
@@ -398,10 +398,7 @@ export default function RestaurantPage() {
               {/* Opening Hours Compact */}
               <OpeningHoursDisplay 
                 openingHours={openingHours}
-                phone={restaurant.phone}
-                geoLat={restaurant.geo_lat ? Number(restaurant.geo_lat) : undefined}
-                geoLng={restaurant.geo_lng ? Number(restaurant.geo_lng) : undefined}
-                restaurantName={restaurant.name}
+                className="w-full"
               />
             </div>
 

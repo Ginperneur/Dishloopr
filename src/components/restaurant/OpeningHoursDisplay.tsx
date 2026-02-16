@@ -204,9 +204,9 @@ export function OpeningHoursDisplay({ openingHours: rawOpeningHours, phone, geoL
   // Mobile view - accordion with call button
   const MobileView = () => (
     <div className={cn("md:hidden", className)}>
-      <div className="flex gap-2">
+      <div className="flex gap-2 min-w-0">
         {/* Opening hours accordion */}
-        <Accordion type="single" collapsible className="flex-1">
+        <Accordion type="single" collapsible className="flex-1 min-w-0 overflow-hidden">
           <AccordionItem value="opening-hours" className="border border-border rounded-2xl bg-card overflow-hidden">
             <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/50 [&[data-state=open]>svg]:rotate-180">
               <div className="flex items-center justify-between w-full pr-2 min-w-0">
