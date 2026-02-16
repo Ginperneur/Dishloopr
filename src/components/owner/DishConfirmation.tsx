@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -11,6 +12,7 @@ import { Check, X, Plus, Loader2, ChefHat, AlertCircle, Search } from 'lucide-re
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { cn, formatDishName } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface DishConfirmationProps {
   restaurantId: string;
@@ -35,6 +37,10 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
   const [selectedDishId, setSelectedDishId] = useState<string>('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showNewDishForm, setShowNewDishForm] = useState(false);
+  const [newDishName, setNewDishName] = useState('');
+  const [newDishNameEn, setNewDishNameEn] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
 
   const suggestedDishes = dishes.filter((d) => d.status === 'suggested');
   const confirmedDishes = dishes.filter((d) => 
@@ -70,6 +76,54 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
     await rejectDish(id, 'Afgewezen door eigenaar');
   };
 
+  const generateSlug = (name: string) => {
+    return name.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  };
+
+  const handleCreateAndAddDish = async () => {
+    if (!newDishName.trim()) {
+      toast.error(isNL ? 'Vul een gerechtnaam in' : 'Enter a dish name');
+      return;
+    }
+    setIsCreating(true);
+    try {
+      const slug = generateSlug(newDishName);
+      const { data: newDish, error } = await supabase
+        .from('dishes')
+        .insert({
+          name: newDishName.trim(),
+          name_en: newDishNameEn.trim() || null,
+          slug,
+          is_active: true,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        if (error.code === '23505') {
+          toast.error(isNL ? 'Dit gerecht bestaat al' : 'This dish already exists');
+        } else {
+          toast.error(isNL ? 'Kon gerecht niet aanmaken' : 'Could not create dish');
+        }
+        return;
+      }
+
+      await suggestDish(restaurantId, newDish.id, 1.0, 'owner');
+      setAddDishOpen(false);
+      setNewDishName('');
+      setNewDishNameEn('');
+      setShowNewDishForm(false);
+      toast.success(isNL ? 'Nieuw gerecht aangemaakt en toegevoegd' : 'New dish created and added');
+    } catch {
+      toast.error(isNL ? 'Er ging iets mis' : 'Something went wrong');
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   const handleAddDish = async () => {
     if (!selectedDishId) {
       toast.error('Selecteer een gerecht');
@@ -77,7 +131,6 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
     }
     
     await suggestDish(restaurantId, selectedDishId, 1.0, 'owner');
-    // Auto-verify since owner is adding it
     const newDish = dishes.find((d) => d.dish_id === selectedDishId);
     if (newDish) {
       await verifyDish(newDish.id);
@@ -225,78 +278,129 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
       </Card>
 
       {/* Add Dish Dialog */}
-      <Dialog open={addDishOpen} onOpenChange={setAddDishOpen}>
+      <Dialog open={addDishOpen} onOpenChange={(open) => {
+        setAddDishOpen(open);
+        if (!open) { setShowNewDishForm(false); setNewDishName(''); setNewDishNameEn(''); setSelectedDishId(''); }
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
               {isNL ? 'Gerecht Toevoegen' : 'Add Dish'}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <Popover open={searchOpen} onOpenChange={setSearchOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={searchOpen}
-                  className="w-full justify-between"
-                >
-                  {selectedDishId
-                    ? getDishName(availableDishes.find((d) => d.id === selectedDishId))
-                    : isNL ? 'Selecteer gerecht...' : 'Select dish...'}
-                  <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0" align="start">
-                <Command>
-                  <CommandInput
-                    placeholder={isNL ? 'Zoek gerecht...' : 'Search dish...'}
-                    value={searchQuery}
-                    onValueChange={setSearchQuery}
-                  />
-                  <CommandList>
-                    <CommandEmpty>
-                      {isNL ? 'Geen gerechten gevonden' : 'No dishes found'}
-                    </CommandEmpty>
-                    <CommandGroup>
-                      {filteredDishes.slice(0, 50).map((dish) => (
-                        <CommandItem
-                          key={dish.id}
-                          value={dish.id}
-                          onSelect={() => {
-                            setSelectedDishId(dish.id);
-                            setSearchOpen(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              'mr-2 h-4 w-4',
-                              selectedDishId === dish.id ? 'opacity-100' : 'opacity-0'
-                            )}
-                          />
-                          <div>
-                            <div>{getDishName(dish)}</div>
-                            {dish.name_en && isNL && (
-                              <div className="text-xs text-muted-foreground">
-                                {dish.name_en}
-                              </div>
-                            )}
-                          </div>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
+
+          {!showNewDishForm ? (
+            <div className="space-y-4">
+              <Popover open={searchOpen} onOpenChange={setSearchOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={searchOpen}
+                    className="w-full justify-between"
+                  >
+                    {selectedDishId
+                      ? getDishName(availableDishes.find((d) => d.id === selectedDishId))
+                      : isNL ? 'Selecteer gerecht...' : 'Select dish...'}
+                    <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0" align="start">
+                  <Command>
+                    <CommandInput
+                      placeholder={isNL ? 'Zoek gerecht...' : 'Search dish...'}
+                      value={searchQuery}
+                      onValueChange={setSearchQuery}
+                    />
+                    <CommandList>
+                      <CommandEmpty>
+                        {isNL ? 'Geen gerechten gevonden' : 'No dishes found'}
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {filteredDishes.slice(0, 50).map((dish) => (
+                          <CommandItem
+                            key={dish.id}
+                            value={dish.id}
+                            onSelect={() => {
+                              setSelectedDishId(dish.id);
+                              setSearchOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                'mr-2 h-4 w-4',
+                                selectedDishId === dish.id ? 'opacity-100' : 'opacity-0'
+                              )}
+                            />
+                            <div>
+                              <div>{getDishName(dish)}</div>
+                              {dish.name_en && isNL && (
+                                <div className="text-xs text-muted-foreground">
+                                  {dish.name_en}
+                                </div>
+                              )}
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+
+              <Button
+                variant="ghost"
+                className="w-full text-primary"
+                onClick={() => setShowNewDishForm(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                {isNL ? 'Nieuw gerecht aanmaken' : 'Create new dish'}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>{isNL ? 'Gerechtnaam (NL)' : 'Dish name (NL)'} *</Label>
+                <Input
+                  value={newDishName}
+                  onChange={(e) => setNewDishName(e.target.value)}
+                  placeholder={isNL ? 'Bijv. Rendang' : 'E.g. Rendang'}
+                  maxLength={200}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{isNL ? 'Engelse naam (optioneel)' : 'English name (optional)'}</Label>
+                <Input
+                  value={newDishNameEn}
+                  onChange={(e) => setNewDishNameEn(e.target.value)}
+                  placeholder={isNL ? 'Bijv. Rendang' : 'E.g. Rendang'}
+                  maxLength={200}
+                />
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowNewDishForm(false)}
+              >
+                {isNL ? '← Terug naar lijst' : '← Back to list'}
+              </Button>
+            </div>
+          )}
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddDishOpen(false)}>
               {isNL ? 'Annuleren' : 'Cancel'}
             </Button>
-            <Button onClick={handleAddDish} disabled={!selectedDishId}>
-              {isNL ? 'Toevoegen' : 'Add'}
-            </Button>
+            {showNewDishForm ? (
+              <Button onClick={handleCreateAndAddDish} disabled={!newDishName.trim() || isCreating}>
+                {isCreating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {isNL ? 'Aanmaken & Toevoegen' : 'Create & Add'}
+              </Button>
+            ) : (
+              <Button onClick={handleAddDish} disabled={!selectedDishId}>
+                {isNL ? 'Toevoegen' : 'Add'}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
