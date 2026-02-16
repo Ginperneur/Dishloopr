@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 // Price IDs from Stripe
@@ -94,6 +94,37 @@ serve(async (req) => {
       logStep("Found existing customer", { customerId });
     }
 
+    // Check for unredeemed verification credit
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    const { data: credit } = await supabaseAdmin
+      .from("verification_credits")
+      .select("id, amount")
+      .eq("user_id", user.id)
+      .eq("is_redeemed", false)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    logStep("Verification credit check", { hasCredit: !!credit, creditAmount: credit?.amount });
+
+    // Create Stripe coupon if credit exists
+    let discounts: { coupon: string }[] | undefined;
+    if (credit) {
+      const coupon = await stripe.coupons.create({
+        amount_off: Math.round((credit.amount || 1) * 100), // €1 = 100 cents
+        currency: "eur",
+        duration: "once",
+        name: "Verificatie tegoed",
+        max_redemptions: 1,
+      });
+      discounts = [{ coupon: coupon.id }];
+      logStep("Created coupon for verification credit", { couponId: coupon.id });
+    }
+
     // Create checkout session
     const priceId = PRICES[listingType as keyof typeof PRICES];
     const origin = req.headers.get("origin") || "https://dishloopr.com";
@@ -107,6 +138,7 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
+      ...(discounts ? { discounts } : {}),
       mode: "payment",
       success_url: `${origin}/owner-dashboard?payment=success&type=${listingType}&restaurant=${restaurantId}`,
       cancel_url: `${origin}/owner-dashboard?payment=cancelled`,
@@ -114,6 +146,7 @@ serve(async (req) => {
         restaurantId,
         listingType,
         userId: user.id,
+        verificationCreditId: credit?.id || "",
       },
     });
 

@@ -106,6 +106,18 @@ serve(async (req) => {
           if (claimError) {
             logStep("Claim update error", { error: claimError.message });
           } else {
+            // Store €1 verification credit for future purchase
+            await supabaseAdmin
+              .from("verification_credits")
+              .insert({
+                user_id: metadata.userId,
+                restaurant_id: metadata.restaurantId,
+                claim_id: metadata.claimId,
+                amount: 1.00,
+                stripe_payment_intent: session.payment_intent as string,
+              });
+            logStep("Verification credit stored for user", { userId: metadata.userId });
+
             // Update restaurant status
             await supabaseAdmin
               .from("restaurants")
@@ -291,6 +303,20 @@ serve(async (req) => {
         if (updateError) {
           logStep("Database update error", { error: updateError.message });
           return new Response(JSON.stringify({ error: updateError.message }), { status: 500 });
+        }
+
+        // Mark verification credit as redeemed if used
+        const verificationCreditId = metadata.verificationCreditId;
+        if (verificationCreditId) {
+          await supabaseAdmin
+            .from("verification_credits")
+            .update({
+              is_redeemed: true,
+              redeemed_at: new Date().toISOString(),
+              redeemed_on_checkout: session.id,
+            })
+            .eq("id", verificationCreditId);
+          logStep("Verification credit redeemed", { creditId: verificationCreditId });
         }
 
         logStep("Restaurant updated successfully", { restaurantId, listingType });
