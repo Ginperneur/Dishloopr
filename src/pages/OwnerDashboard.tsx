@@ -23,7 +23,13 @@ import {
   Image,
   Clock,
   TrendingUp,
-  BarChart3
+  BarChart3,
+  Megaphone,
+  LayoutDashboard,
+  FileText,
+  ChevronRight,
+  Rocket,
+  CheckCircle2
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -133,7 +139,6 @@ export default function OwnerDashboard() {
 
   // Calculate trend percentages (compare current 15d vs previous 15d)
   const calculateTrend = (currentValue: number): { value: number; label: string } => {
-    // Simple approximation: split 30-day data in half
     if (!analytics?.viewsByDay || analytics.viewsByDay.length < 2) {
       return { value: 0, label: 'vs vorige periode' };
     }
@@ -150,7 +155,7 @@ export default function OwnerDashboard() {
         <div className="container py-8">
           <div className="animate-pulse space-y-4">
             <div className="h-8 w-64 bg-muted rounded" />
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[1, 2, 3, 4].map(i => (
                 <div key={i} className="h-32 bg-muted rounded-lg" />
               ))}
@@ -182,19 +187,74 @@ export default function OwnerDashboard() {
 
   const isVerified = permissions?.isVerifiedOwner ?? false;
 
+  // Onboarding checklist for new owners
+  const onboardingSteps = [
+    { 
+      id: 'verify', 
+      label: 'Verifieer je eigendom', 
+      done: isVerified,
+      action: () => setVerificationDialogOpen(true),
+      tab: undefined
+    },
+    { 
+      id: 'dishes', 
+      label: 'Bevestig je gerechten', 
+      done: suggestedDishCount === 0 && restaurantDishes.length > 0,
+      action: () => setActiveTab('content'),
+      tab: 'content'
+    },
+    { 
+      id: 'photos', 
+      label: 'Voeg foto\'s toe', 
+      done: (selectedRestaurant?.images?.length || 0) >= 3,
+      action: () => setActiveTab('content'),
+      tab: 'content'
+    },
+    { 
+      id: 'menu', 
+      label: 'Upload je menu', 
+      done: false, // We don't easily know this, keep as suggestion
+      action: () => setActiveTab('content'),
+      tab: 'content'
+    },
+    { 
+      id: 'reviews', 
+      label: 'Reageer op reviews', 
+      done: unansweredReviews === 0 && reviews.length > 0,
+      action: () => setActiveTab('overview'),
+      tab: 'overview'
+    },
+  ];
+
+  const completedSteps = onboardingSteps.filter(s => s.done).length;
+  const isOnboardingComplete = completedSteps >= 4; // 4 out of 5 is good enough
+
   return (
     <Layout>
-      <div className="container py-8">
+      <div className="container py-6 md:py-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-6"
         >
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold mb-1">Owner Dashboard</h1>
-              <p className="text-muted-foreground">Beheer je restaurant en bekijk statistieken</p>
+              <h1 className="text-2xl md:text-3xl font-bold mb-1">
+                {selectedRestaurant?.name || 'Dashboard'}
+              </h1>
+              <div className="flex items-center gap-3 flex-wrap">
+                <ClaimStatusBadge 
+                  status={selectedRestaurant?.claim_status || 'unclaimed'} 
+                  size="sm" 
+                />
+                <Button variant="ghost" size="sm" className="h-7 text-xs" asChild>
+                  <Link to={`/restaurant/${selectedRestaurant?.slug}`}>
+                    <ExternalLink className="h-3 w-3 mr-1" />
+                    Bekijk pagina
+                  </Link>
+                </Button>
+              </div>
             </div>
 
             {restaurants.length > 1 && (
@@ -218,78 +278,43 @@ export default function OwnerDashboard() {
               </Select>
             )}
           </div>
-
-          {selectedRestaurant && (
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <Badge variant="outline" className="text-sm">
-                {selectedRestaurant.name}
-              </Badge>
-              <ClaimStatusBadge 
-                status={selectedRestaurant.claim_status || 'unclaimed'} 
-                size="sm" 
-              />
-              <Button variant="ghost" size="sm" asChild>
-                <Link to={`/restaurant/${selectedRestaurant.slug}`}>
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Bekijk pagina
-                </Link>
-              </Button>
-            </div>
-          )}
         </motion.div>
 
-        {/* Status Banner */}
-        {isVerified ? (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-            <Card className="border-green-500/30 bg-green-500/5">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-600 flex-shrink-0" />
-                  <div className="flex-1">
-                    <h3 className="font-medium text-green-700">Geverifieerde eigenaar</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Je hebt volledige toegang tot alle functies van het dashboard.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ) : (
+        {/* Status Banner - Compact */}
+        {!isVerified && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
             {isPendingAdminReview ? (
               <Card className="border-blue-500/30 bg-blue-500/5">
                 <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <Clock className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex items-center gap-3">
+                    <Clock className="h-5 w-5 text-blue-600 flex-shrink-0" />
                     <div className="flex-1">
-                      <h3 className="font-medium text-blue-700">In afwachting van admin review</h3>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Je betaling is ontvangen, maar de naam op de betaling komt niet overeen met het restaurant. 
-                        Een admin zal je aanvraag handmatig beoordelen.
+                      <p className="font-medium text-blue-700 text-sm">In afwachting van admin review</p>
+                      <p className="text-xs text-muted-foreground">
+                        Je betaling is ontvangen. Een admin zal je aanvraag beoordelen.
                       </p>
-                      <Button size="sm" variant="outline" className="mt-3" asChild>
-                        <Link to="/contact">Neem contact op</Link>
-                      </Button>
                     </div>
+                    <Button size="sm" variant="outline" asChild>
+                      <Link to="/contact">Contact</Link>
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
             ) : (
               <Card className="border-yellow-500/30 bg-yellow-500/5">
                 <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex items-center gap-3">
+                    <AlertTriangle className="h-5 w-5 text-yellow-600 flex-shrink-0" />
                     <div className="flex-1">
-                      <h3 className="font-medium text-yellow-700">Beperkte toegang</h3>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Je claim is nog niet geverifieerd. Sommige functies zijn vergrendeld tot je eigendom bewijst.
+                      <p className="font-medium text-yellow-700 text-sm">Beperkte toegang</p>
+                      <p className="text-xs text-muted-foreground">
+                        Verifieer je eigendom voor volledige dashboard-toegang.
                       </p>
-                      <Button size="sm" className="mt-3" onClick={() => setVerificationDialogOpen(true)}>
-                        <Shield className="h-4 w-4 mr-2" />
-                        Start verificatie
-                      </Button>
                     </div>
+                    <Button size="sm" onClick={() => setVerificationDialogOpen(true)}>
+                      <Shield className="h-3 w-3 mr-1" />
+                      Verifieer
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -297,12 +322,61 @@ export default function OwnerDashboard() {
           </motion.div>
         )}
 
-        {/* Stats Grid with Trends */}
+        {/* Onboarding Quickstart - show for new owners */}
+        {!isOnboardingComplete && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="mb-6"
+          >
+            <Card className="border-primary/20">
+              <CardContent className="p-4 md:p-5">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Rocket className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-sm">Aan de slag met je profiel</p>
+                    <p className="text-xs text-muted-foreground">{completedSteps} van {onboardingSteps.length} stappen voltooid</p>
+                  </div>
+                  <Badge variant="secondary" className="text-xs">
+                    {Math.round((completedSteps / onboardingSteps.length) * 100)}%
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+                  {onboardingSteps.map((step, i) => (
+                    <button
+                      key={step.id}
+                      onClick={step.action}
+                      className={`flex items-center gap-2 p-2.5 rounded-lg border text-left transition-colors text-sm ${
+                        step.done 
+                          ? 'border-primary/30 bg-primary/5 text-primary' 
+                          : 'border-border hover:border-primary/40 hover:bg-primary/5'
+                      }`}
+                    >
+                      {step.done ? (
+                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                      ) : (
+                        <span className="h-4 w-4 rounded-full border-2 border-muted-foreground/30 shrink-0" />
+                      )}
+                      <span className={`text-xs font-medium ${step.done ? 'line-through opacity-60' : ''}`}>
+                        {step.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Stats Grid */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
+          className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6"
         >
           <StatCard
             title="Profielweergaven"
@@ -336,233 +410,258 @@ export default function OwnerDashboard() {
           suggestedDishes={suggestedDishCount}
           optimizationScore={optimizationData?.overallScore ?? null}
           trendingMissingDishes={trendingMissingDishes}
-          onNavigateTab={(tab) => setActiveTab(tab)}
+          onNavigateTab={(tab) => {
+            // Map old tab names to new grouped tabs
+            const tabMap: Record<string, string> = {
+              'reviews': 'overview',
+              'dish-confirmation': 'content',
+              'optimization': 'insights',
+            };
+            setActiveTab(tabMap[tab] || tab);
+          }}
         />
 
-        {/* Tabs */}
-        <Tabs value={activeTab} defaultValue={isVerified ? "dish-confirmation" : "reviews"} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="flex-wrap h-auto gap-1">
-            <TabsTrigger value="reviews">
-              Reviews ({reviews.length})
+        {/* Main Tabs - Grouped into 5 clear sections */}
+        <Tabs value={activeTab} defaultValue="overview" onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="w-full grid grid-cols-5 h-auto p-1">
+            <TabsTrigger value="overview" className="flex flex-col sm:flex-row items-center gap-1 py-2.5 text-xs sm:text-sm">
+              <LayoutDashboard className="h-4 w-4" />
+              <span>Overzicht</span>
             </TabsTrigger>
-            <TabsTrigger value="photos" disabled={!isVerified}>
-              <Image className="h-4 w-4 mr-1" />
-              Foto's
-              {!isVerified && <Lock className="h-3 w-3 ml-1" />}
+            <TabsTrigger value="content" className="flex flex-col sm:flex-row items-center gap-1 py-2.5 text-xs sm:text-sm">
+              <FileText className="h-4 w-4" />
+              <span>Content</span>
             </TabsTrigger>
-            <TabsTrigger value="dish-confirmation">
-              <Check className="h-4 w-4 mr-1" />
-              Gerechten Bevestigen
+            <TabsTrigger value="insights" className="flex flex-col sm:flex-row items-center gap-1 py-2.5 text-xs sm:text-sm" disabled={!isVerified}>
+              <BarChart3 className="h-4 w-4" />
+              <span>Inzichten</span>
+              {!isVerified && <Lock className="h-3 w-3" />}
             </TabsTrigger>
-            <TabsTrigger value="menu">
-              <UtensilsCrossed className="h-4 w-4 mr-1" />
-              Menu
+            <TabsTrigger value="marketing" className="flex flex-col sm:flex-row items-center gap-1 py-2.5 text-xs sm:text-sm">
+              <Megaphone className="h-4 w-4" />
+              <span>Marketing</span>
             </TabsTrigger>
-            <TabsTrigger value="dish-analytics" disabled={!isVerified}>
-              <UtensilsCrossed className="h-4 w-4 mr-1" />
-              Gerechten Analytics
-              {!isVerified && <Lock className="h-3 w-3 ml-1" />}
-            </TabsTrigger>
-            <TabsTrigger value="analytics" disabled={!isVerified}>
-              Analytics
-              {!isVerified && <Lock className="h-3 w-3 ml-1" />}
-            </TabsTrigger>
-            <TabsTrigger value="sponsored">
-              <Sparkles className="h-4 w-4 mr-1" />
-              Sponsoring
-            </TabsTrigger>
-            <TabsTrigger value="promotions">
-              <Crown className="h-4 w-4 mr-1" />
-              Promoties
-            </TabsTrigger>
-            <TabsTrigger value="routing" disabled={!isVerified}>
-              <Zap className="h-4 w-4 mr-1" />
-              Vraag Routing
-              {!isVerified && <Lock className="h-3 w-3 ml-1" />}
-            </TabsTrigger>
-            <TabsTrigger value="optimization" disabled={!isVerified}>
-              <Gauge className="h-4 w-4 mr-1" />
-              Optimalisatie
-              {!isVerified && <Lock className="h-3 w-3 ml-1" />}
-            </TabsTrigger>
-            <TabsTrigger value="market" disabled={!isVerified}>
-              <TrendingUp className="h-4 w-4 mr-1" />
-              Markt
-              {!isVerified && <Lock className="h-3 w-3 ml-1" />}
+            <TabsTrigger value="market" className="flex flex-col sm:flex-row items-center gap-1 py-2.5 text-xs sm:text-sm" disabled={!isVerified}>
+              <TrendingUp className="h-4 w-4" />
+              <span>Markt</span>
+              {!isVerified && <Lock className="h-3 w-3" />}
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="reviews" className="space-y-6">
-            {reviews.length > 0 ? (
-              <>
-                {/* Review Intelligence */}
-                <ReviewIntelligence
-                  reviews={reviews}
-                  onApplyTemplate={(reviewId, text) => {
-                    respondToReview(reviewId, text);
-                  }}
-                />
+          {/* ===== OVERZICHT TAB ===== */}
+          <TabsContent value="overview" className="space-y-6">
+            {/* Reviews Section */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-primary" />
+                  Reviews
+                  {unansweredReviews > 0 && (
+                    <Badge variant="destructive" className="text-xs">{unansweredReviews} onbeantwoord</Badge>
+                  )}
+                </h3>
+              </div>
 
-                {/* Traditional Review List */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Alle Reviews</h3>
-                  {reviews.map(review => (
-                    <ReviewCard
-                      key={review.id}
-                      review={review}
-                      onRespond={respondToReview}
-                      canRespond={isVerified}
-                    />
-                  ))}
+              {reviews.length > 0 ? (
+                <div className="space-y-6">
+                  {/* Review Intelligence */}
+                  <ReviewIntelligence
+                    reviews={reviews}
+                    onApplyTemplate={(reviewId, text) => {
+                      respondToReview(reviewId, text);
+                    }}
+                  />
+
+                  {/* Review List */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Alle Reviews</h4>
+                    {reviews.slice(0, 5).map(review => (
+                      <ReviewCard
+                        key={review.id}
+                        review={review}
+                        onRespond={respondToReview}
+                        canRespond={isVerified}
+                      />
+                    ))}
+                    {reviews.length > 5 && (
+                      <p className="text-sm text-muted-foreground text-center py-2">
+                        En {reviews.length - 5} meer...
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </>
-            ) : (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">Nog geen reviews ontvangen</p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          <TabsContent value="photos">
-            {isVerified && selectedRestaurant ? (
-              <div className="space-y-4">
-                <Card className="border-primary/20 bg-primary/5">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <Image className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                      <div className="text-sm">
-                        <p className="font-medium mb-1">Foto's beheren</p>
-                        <p className="text-muted-foreground">
-                          Je foto's worden automatisch opgehaald van Google bij het aanmaken van je profiel. 
-                          Hier kun je ze vervangen of aanvullen met eigen foto's.
-                        </p>
-                      </div>
-                    </div>
+              ) : (
+                <Card>
+                  <CardContent className="py-8 text-center">
+                    <MessageSquare className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                    <p className="text-muted-foreground text-sm">Nog geen reviews ontvangen</p>
                   </CardContent>
                 </Card>
-                <RestaurantImageUpload
-                  restaurantId={selectedRestaurant.id}
-                  restaurantName={selectedRestaurant.name}
-                  existingImages={selectedRestaurant.images || []}
-                  onImagesUpdate={() => toast.success('Foto\'s opgeslagen')}
+              )}
+            </div>
+          </TabsContent>
+
+          {/* ===== CONTENT TAB ===== */}
+          <TabsContent value="content" className="space-y-8">
+            {/* Dishes Confirmation */}
+            <div>
+              <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                <UtensilsCrossed className="h-5 w-5 text-primary" />
+                Gerechten Bevestigen
+                {suggestedDishCount > 0 && (
+                  <Badge variant="secondary" className="text-xs">{suggestedDishCount} suggesties</Badge>
+                )}
+              </h3>
+              {selectedRestaurant ? (
+                <DishConfirmation restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
+              ) : (
+                <Card><CardContent className="py-8 text-center"><p className="text-muted-foreground text-sm">Selecteer een restaurant</p></CardContent></Card>
+              )}
+            </div>
+
+            {/* Menu */}
+            <div className="border-t pt-8">
+              <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                <UtensilsCrossed className="h-5 w-5 text-primary" />
+                Menu Beheren
+              </h3>
+              {selectedRestaurant ? (
+                <MenuItemsManager restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
+              ) : (
+                <Card><CardContent className="py-8 text-center"><p className="text-muted-foreground text-sm">Selecteer een restaurant</p></CardContent></Card>
+              )}
+            </div>
+
+            {/* Photos */}
+            <div className="border-t pt-8">
+              <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                <Image className="h-5 w-5 text-primary" />
+                Foto's Beheren
+              </h3>
+              {isVerified && selectedRestaurant ? (
+                <div className="space-y-4">
+                  <Card className="border-primary/20 bg-primary/5">
+                    <CardContent className="p-4">
+                      <p className="text-sm text-muted-foreground">
+                        Je foto's worden automatisch opgehaald van Google. Hier kun je ze vervangen of aanvullen.
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <RestaurantImageUpload
+                    restaurantId={selectedRestaurant.id}
+                    restaurantName={selectedRestaurant.name}
+                    existingImages={selectedRestaurant.images || []}
+                    onImagesUpdate={() => toast.success('Foto\'s opgeslagen')}
+                  />
+                </div>
+              ) : (
+                <LockedFeatureOverlay 
+                  featureName="Foto's Beheren"
+                  description="Vervang of voeg nieuwe foto's toe aan je restaurantprofiel."
+                  onRequestVerification={() => setVerificationDialogOpen(true)}
                 />
-              </div>
-            ) : (
-              <LockedFeatureOverlay 
-                featureName="Foto's Beheren"
-                description="Vervang of voeg nieuwe foto's toe aan je restaurantprofiel."
-                onRequestVerification={() => setVerificationDialogOpen(true)}
-              />
-            )}
+              )}
+            </div>
           </TabsContent>
 
-          <TabsContent value="dish-confirmation">
-            {selectedRestaurant ? (
-              <DishConfirmation restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
-            ) : (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <UtensilsCrossed className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">Selecteer een restaurant</p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          <TabsContent value="menu">
-            {selectedRestaurant ? (
-              <MenuItemsManager restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
-            ) : (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <UtensilsCrossed className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">Selecteer een restaurant</p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          <TabsContent value="dish-analytics">
+          {/* ===== INZICHTEN TAB ===== */}
+          <TabsContent value="insights">
             {isVerified && selectedRestaurant ? (
-              <DishAnalytics restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
-            ) : (
-              <LockedFeatureOverlay 
-                featureName="Gerechten Analytics"
-                description="Bekijk welke gerechten het populairst zijn en hoe ze presteren."
-                onRequestVerification={() => setVerificationDialogOpen(true)}
-              />
-            )}
-          </TabsContent>
-
-          <TabsContent value="analytics">
-            {isVerified ? (
-              <AnalyticsTab analytics={analytics} restaurant={selectedRestaurant} reviews={reviews} />
-            ) : (
-              <LockedFeatureOverlay 
-                featureName="Gedetailleerde Analytics"
-                description="Bekijk uitgebreide statistieken over je restaurant prestaties."
-                onRequestVerification={() => setVerificationDialogOpen(true)}
-              />
-            )}
-          </TabsContent>
-
-          <TabsContent value="sponsored">
-            {selectedRestaurant && (
               <div className="space-y-8">
-                <FeaturedMarketplace 
-                  restaurantId={selectedRestaurant.id} 
-                  restaurantName={selectedRestaurant.name}
-                  restaurantCuisines={selectedRestaurant.cuisines || []}
-                  cityId={selectedRestaurant.city_id}
-                  cityName={cityName || 'Stad'}
-                />
-                <div className="pt-6 border-t">
-                  <h3 className="text-lg font-semibold mb-4 text-muted-foreground">Gerecht-specifieke promoties</h3>
-                  <SponsoredMarketplace restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
+                {/* Analytics */}
+                <div>
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <BarChart3 className="h-5 w-5 text-primary" />
+                    Prestatie Analytics
+                  </h3>
+                  <AnalyticsTab analytics={analytics} restaurant={selectedRestaurant} reviews={reviews} />
+                </div>
+
+                {/* Dish Analytics */}
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <UtensilsCrossed className="h-5 w-5 text-primary" />
+                    Gerechten Analytics
+                  </h3>
+                  <DishAnalytics restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
+                </div>
+
+                {/* Optimization */}
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <Gauge className="h-5 w-5 text-primary" />
+                    Optimalisatie
+                  </h3>
+                  <OptimizationDashboard restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
                 </div>
               </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="promotions">
-            <PromotionsSection 
-              restaurant={selectedRestaurant} 
-              onRefresh={() => window.location.reload()}
-              canPurchase={isVerified}
-            />
-          </TabsContent>
-
-          <TabsContent value="routing">
-            {isVerified && selectedRestaurant ? (
-              <DemandRoutingSettings restaurant={selectedRestaurant} />
             ) : (
               <LockedFeatureOverlay 
-                featureName="Vraag Routing"
-                description="Ontvang klanten die op zoek zijn naar gerechten die jij aanbiedt."
+                featureName="Inzichten & Analytics"
+                description="Bekijk uitgebreide statistieken, gerechten analytics en optimalisatie-tips."
                 onRequestVerification={() => setVerificationDialogOpen(true)}
               />
             )}
           </TabsContent>
 
-          <TabsContent value="optimization">
-            {isVerified && selectedRestaurant ? (
-              <OptimizationDashboard restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
-            ) : (
-              <LockedFeatureOverlay 
-                featureName="Optimalisatie Dashboard"
-                description="Krijg inzichten en tips om je zichtbaarheid te verbeteren."
-                onRequestVerification={() => setVerificationDialogOpen(true)}
-              />
+          {/* ===== MARKETING TAB ===== */}
+          <TabsContent value="marketing" className="space-y-8">
+            {/* Featured / Premium */}
+            {selectedRestaurant && (
+              <>
+                <div>
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    Premium Zichtbaarheid
+                  </h3>
+                  <FeaturedMarketplace 
+                    restaurantId={selectedRestaurant.id} 
+                    restaurantName={selectedRestaurant.name}
+                    restaurantCuisines={selectedRestaurant.cuisines || []}
+                    cityId={selectedRestaurant.city_id}
+                    cityName={cityName || 'Stad'}
+                  />
+                </div>
+
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <Crown className="h-5 w-5 text-primary" />
+                    Promoties & Listings
+                  </h3>
+                  <PromotionsSection 
+                    restaurant={selectedRestaurant} 
+                    onRefresh={() => window.location.reload()}
+                    canPurchase={isVerified}
+                  />
+                </div>
+
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <Megaphone className="h-5 w-5 text-primary" />
+                    Gerecht-specifieke Sponsoring
+                  </h3>
+                  <SponsoredMarketplace restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
+                </div>
+
+                {isVerified && (
+                  <div className="border-t pt-8">
+                    <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                      <Zap className="h-5 w-5 text-primary" />
+                      Vraag Routing
+                    </h3>
+                    <DemandRoutingSettings restaurant={selectedRestaurant} />
+                  </div>
+                )}
+              </>
             )}
           </TabsContent>
+
+          {/* ===== MARKT TAB ===== */}
           <TabsContent value="market">
             {isVerified && selectedRestaurant ? (
               <div className="space-y-8">
                 <div>
-                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
                     <BarChart3 className="h-5 w-5 text-primary" />
                     Buurtanalyse
                   </h3>
@@ -575,7 +674,7 @@ export default function OwnerDashboard() {
                 </div>
 
                 <div className="border-t pt-8">
-                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
                     <Clock className="h-5 w-5 text-primary" />
                     Piekuren-inzicht
                   </h3>
@@ -583,7 +682,7 @@ export default function OwnerDashboard() {
                 </div>
 
                 <div className="border-t pt-8">
-                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
                     <Crown className="h-5 w-5 text-primary" />
                     Promotie ROI
                   </h3>
