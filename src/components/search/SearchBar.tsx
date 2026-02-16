@@ -111,6 +111,9 @@ export function SearchBar({
     if (query.trim()) {
       addSearch(query.trim());
     }
+    inputRef.current?.blur();
+    setShowSuggestions(false);
+    setShowCityDropdown(false);
     if (onSearch) {
       onSearch(query, cityId);
     } else {
@@ -119,13 +122,12 @@ export function SearchBar({
       if (cityId && cityId !== 'all') params.set('city', cityId);
       navigate(`/search?${params.toString()}`);
     }
-    setShowSuggestions(false);
-    setShowCityDropdown(false);
   };
 
   const handleSuggestionClick = (value: string) => {
     setQuery(value);
     addSearch(value);
+    inputRef.current?.blur();
     setShowSuggestions(false);
     setShowCityDropdown(false);
     if (onSearch) {
@@ -139,6 +141,7 @@ export function SearchBar({
   };
 
   const handleRestaurantClick = (slug: string) => {
+    inputRef.current?.blur();
     setShowSuggestions(false);
     setShowCityDropdown(false);
     navigate(`/restaurant/${slug}`);
