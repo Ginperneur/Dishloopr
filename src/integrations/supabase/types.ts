@@ -2271,6 +2271,10 @@ export type Database = {
         Args: { p_restaurant_id: string; p_slot_id: string }
         Returns: boolean
       }
+      is_primary_owner: {
+        Args: { _restaurant_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_verified_owner: {
         Args: { _restaurant_id: string; _user_id: string }
         Returns: boolean
