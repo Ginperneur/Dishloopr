@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, UtensilsCrossed, UserCircle } from 'lucide-react';
 import { z } from 'zod';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -39,6 +39,7 @@ export default function LoginPage() {
   const [signupName, setSignupName] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
+  const [accountType, setAccountType] = useState<'user' | 'restaurant'>('user');
 
   // Redirect if already logged in
   useEffect(() => {
@@ -103,7 +104,7 @@ export default function LoginPage() {
     }
 
     setIsLoading(true);
-    const { error } = await signUp(signupEmail, signupPassword, signupName);
+    const { error } = await signUp(signupEmail, signupPassword, signupName, accountType);
     setIsLoading(false);
 
     if (error) {
@@ -117,15 +118,18 @@ export default function LoginPage() {
         description: message,
       });
     } else {
+      const isRestaurant = accountType === 'restaurant';
       toast({
         title: 'Bijna klaar!',
-        description: 'Check je e-mail om je account te bevestigen.',
+        description: isRestaurant
+          ? 'Check je e-mail om je account te bevestigen. Daarna kun je je restaurant claimen.'
+          : 'Check je e-mail om je account te bevestigen.',
         duration: 10000,
       });
-      // Clear form
       setSignupName('');
       setSignupEmail('');
       setSignupPassword('');
+      setAccountType('user');
     }
   };
 
@@ -223,6 +227,43 @@ export default function LoginPage() {
 
               <TabsContent value="signup">
                 <form onSubmit={handleSignup} className="space-y-4">
+                  {/* Account Type Selector */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">Ik ben een...</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setAccountType('user')}
+                        className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                          accountType === 'user'
+                            ? 'border-primary bg-primary/5 shadow-sm'
+                            : 'border-border hover:border-muted-foreground/30'
+                        }`}
+                      >
+                        <UserCircle className={`h-7 w-7 ${accountType === 'user' ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <div className="text-center">
+                          <p className={`text-sm font-medium ${accountType === 'user' ? 'text-foreground' : 'text-muted-foreground'}`}>Foodie</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Ontdek & review</p>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAccountType('restaurant')}
+                        className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                          accountType === 'restaurant'
+                            ? 'border-primary bg-primary/5 shadow-sm'
+                            : 'border-border hover:border-muted-foreground/30'
+                        }`}
+                      >
+                        <UtensilsCrossed className={`h-7 w-7 ${accountType === 'restaurant' ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <div className="text-center">
+                          <p className={`text-sm font-medium ${accountType === 'restaurant' ? 'text-foreground' : 'text-muted-foreground'}`}>Eigenaar</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Beheer je restaurant</p>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="signup-name" className="text-sm">Naam</Label>
                     <div className="relative">
