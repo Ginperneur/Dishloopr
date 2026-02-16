@@ -362,6 +362,49 @@ export default function RestaurantPage() {
               </div>
             </motion.div>
 
+            {/* Mobile-only: Contact, Opening Hours & Reservation */}
+            <div className="lg:hidden space-y-4">
+              {/* CTA Buttons */}
+              <div className="flex gap-2">
+                {restaurant.reservation_url || restaurant.zenchef_id ? (
+                  <Button className="flex-1" asChild>
+                    <a href={restaurant.reservation_url || '#'} target="_blank" rel="noopener noreferrer">
+                      {t('restaurant.reserve')}
+                    </a>
+                  </Button>
+                ) : null}
+                {restaurant.phone && (
+                  <Button variant="outline" className="flex-1" asChild>
+                    <a href={`tel:${restaurant.phone}`}>
+                      <Phone className="h-4 w-4 mr-2" />
+                      {t('openingHours.callNow')}
+                    </a>
+                  </Button>
+                )}
+                {restaurant.geo_lat && restaurant.geo_lng && (
+                  <Button variant="outline" className="flex-1" asChild>
+                    <a 
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${restaurant.geo_lat},${restaurant.geo_lng}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Navigation className="h-4 w-4 mr-2" />
+                      {t('restaurant.directions')}
+                    </a>
+                  </Button>
+                )}
+              </div>
+
+              {/* Opening Hours Compact */}
+              <OpeningHoursDisplay 
+                openingHours={openingHours}
+                phone={restaurant.phone}
+                geoLat={restaurant.geo_lat ? Number(restaurant.geo_lat) : undefined}
+                geoLng={restaurant.geo_lng ? Number(restaurant.geo_lng) : undefined}
+                restaurantName={restaurant.name}
+              />
+            </div>
+
             <Separator />
 
             {/* Known For - Signature dishes that boost search ranking */}
@@ -395,7 +438,7 @@ export default function RestaurantPage() {
 
             <Separator />
 
-            {/* Closed message + Alternative Restaurants - shown when restaurant is closed */}
+            {/* Alternative Restaurants - shown when restaurant is closed/busy */}
             {!isCurrentlyOpen && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -403,16 +446,6 @@ export default function RestaurantPage() {
                 transition={{ delay: 0.15 }}
                 className="space-y-6"
               >
-                {/* Closed notice */}
-                <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border">
-                  <Clock className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium text-foreground">Dit restaurant is momenteel gesloten</p>
-                    <p className="text-sm text-muted-foreground">Bekijk vergelijkbare restaurants die nu wel open zijn</p>
-                  </div>
-                </div>
-
-                {/* Alternative restaurants */}
                 <AlternativeRestaurants
                   alternatives={alternatives}
                   loading={alternativesLoading}
