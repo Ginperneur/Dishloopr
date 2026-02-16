@@ -381,7 +381,7 @@ function PromotionsSection({ restaurant, onRefresh, canPurchase }: {
           <div>
             <h4 className="font-medium mb-1">Hoe betaal ik?</h4>
             <p className="text-sm text-muted-foreground">
-              We accepteren alle gangbare betaalmethoden via onze beveiligde betaalomgeving (Stripe).
+              We accepteren iDEAL, creditcard en Bancontact via onze beveiligde betaalomgeving.
             </p>
           </div>
         </CardContent>
@@ -401,7 +401,8 @@ export default function OwnerDashboard() {
     reviews,
     analytics,
     loading,
-    respondToReview
+    respondToReview,
+    cityName
   } = useOwnerDashboard();
 
   const { getPermissions, userClaims, refetch: refreshClaims } = useRestaurantClaims();
@@ -424,17 +425,12 @@ export default function OwnerDashboard() {
     if (verification === 'success' && claimId) {
       // Refresh claims to get updated status
       refreshClaims?.();
-      // Show appropriate toast after a short delay to let claims refresh
+      // Reload permissions after a short delay
       setTimeout(() => {
-        const claim = userClaims.find(c => c.id === claimId);
-        if (claim?.status === 'pending_admin_review') {
-          toast.info('Betaling ontvangen! Je naam komt niet overeen met het restaurant. Een admin zal je aanvraag handmatig beoordelen.');
-        } else if (claim?.status === 'verified') {
-          toast.success('Verificatie geslaagd! Je bent nu geverifieerde eigenaar.');
-        } else {
-          toast.info('Betaling ontvangen! Je verificatie wordt verwerkt.');
-        }
+        loadPermissions();
+        refreshClaims?.();
       }, 2000);
+      toast.info('Betaling ontvangen! Je verificatie wordt verwerkt.');
       window.history.replaceState({}, '', '/owner-dashboard');
     } else if (verification === 'cancelled') {
       toast.error('Verificatie betaling geannuleerd.');
@@ -559,8 +555,28 @@ export default function OwnerDashboard() {
           )}
         </motion.div>
 
-        {/* Verification Banner */}
-        {!isVerified && (
+        {/* Status Banner */}
+        {isVerified ? (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <Card className="border-green-500/30 bg-green-500/5">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-green-600 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="font-medium text-green-700">Geverifieerde eigenaar</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Je hebt volledige toegang tot alle functies van het dashboard.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ) : (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -681,6 +697,10 @@ export default function OwnerDashboard() {
               <Sparkles className="h-4 w-4 mr-1" />
               Sponsoring
             </TabsTrigger>
+            <TabsTrigger value="promotions">
+              <Crown className="h-4 w-4 mr-1" />
+              Promoties
+            </TabsTrigger>
             <TabsTrigger value="routing" disabled={!isVerified}>
               <Zap className="h-4 w-4 mr-1" />
               Vraag Routing
@@ -690,9 +710,6 @@ export default function OwnerDashboard() {
               <Gauge className="h-4 w-4 mr-1" />
               Optimalisatie
               {!isVerified && <Lock className="h-3 w-3 ml-1" />}
-            </TabsTrigger>
-            <TabsTrigger value="settings">
-              Instellingen
             </TabsTrigger>
           </TabsList>
 
@@ -898,7 +915,7 @@ export default function OwnerDashboard() {
                   restaurantName={selectedRestaurant.name}
                   restaurantCuisines={selectedRestaurant.cuisines || []}
                   cityId={selectedRestaurant.city_id}
-                  cityName="Stad"
+                  cityName={cityName || 'Stad'}
                 />
                 
                 {/* Legacy Sponsored Marketplace */}
@@ -942,7 +959,7 @@ export default function OwnerDashboard() {
             )}
           </TabsContent>
 
-          <TabsContent value="settings">
+          <TabsContent value="promotions">
             <PromotionsSection 
               restaurant={selectedRestaurant} 
               onRefresh={() => window.location.reload()}

@@ -26,6 +26,7 @@ export function useOwnerDashboard() {
   const [reviews, setReviews] = useState<ReviewWithProfile[]>([]);
   const [analytics, setAnalytics] = useState<OwnerAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cityName, setCityName] = useState<string>('');
 
   useEffect(() => {
     if (user) {
@@ -36,22 +37,57 @@ export function useOwnerDashboard() {
   useEffect(() => {
     if (selectedRestaurant) {
       fetchRestaurantData(selectedRestaurant.id);
+      fetchCityName(selectedRestaurant.city_id);
     }
   }, [selectedRestaurant]);
+
+  const fetchCityName = async (cityId: string) => {
+    const { data } = await supabase
+      .from('cities')
+      .select('name')
+      .eq('id', cityId)
+      .single();
+    setCityName(data?.name || '');
+  };
 
   const fetchOwnerRestaurants = async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
+    // Fetch via claimed_by_owner_id
+    const { data: claimedData } = await supabase
       .from('restaurants')
       .select('*')
       .eq('claimed_by_owner_id', user.id);
 
-    if (error) {
-      console.error('Error fetching owner restaurants:', error);
-    } else if (data && data.length > 0) {
-      setRestaurants(data);
-      setSelectedRestaurant(data[0]);
+    // Also fetch via restaurant_managers for users with manager roles
+    const { data: managerData } = await supabase
+      .from('restaurant_managers')
+      .select('restaurant_id')
+      .eq('user_id', user.id);
+
+    let allRestaurants = claimedData || [];
+
+    // Fetch restaurants from manager assignments that aren't already in the list
+    if (managerData && managerData.length > 0) {
+      const managerRestaurantIds = managerData
+        .map(m => m.restaurant_id)
+        .filter(id => !allRestaurants.some(r => r.id === id));
+
+      if (managerRestaurantIds.length > 0) {
+        const { data: extraRestaurants } = await supabase
+          .from('restaurants')
+          .select('*')
+          .in('id', managerRestaurantIds);
+
+        if (extraRestaurants) {
+          allRestaurants = [...allRestaurants, ...extraRestaurants];
+        }
+      }
+    }
+
+    if (allRestaurants.length > 0) {
+      setRestaurants(allRestaurants);
+      setSelectedRestaurant(allRestaurants[0]);
     }
     setLoading(false);
   };
@@ -65,10 +101,10 @@ export function useOwnerDashboard() {
       .order('created_at', { ascending: false });
 
     if (reviewData) {
-      // Fetch profiles for reviews
+      // Fetch profiles using public_profiles view (no RLS restrictions)
       const userIds = [...new Set(reviewData.map(r => r.user_id))];
       const { data: profiles } = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('id, name')
         .in('id', userIds);
       
@@ -154,6 +190,7 @@ export function useOwnerDashboard() {
     reviews,
     analytics,
     loading,
-    respondToReview
+    respondToReview,
+    cityName
   };
 }
