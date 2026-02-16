@@ -49,6 +49,7 @@ import { VerificationRequiredDialog } from '@/components/claims/VerificationRequ
 import { DishConfirmation } from '@/components/owner/DishConfirmation';
 import { RestaurantImageUpload } from '@/components/admin/RestaurantImageUpload';
 import { ActionCards } from '@/components/owner/ActionCards';
+import { ReviewIntelligence } from '@/components/owner/ReviewIntelligence';
 import { useOptimizationInsights } from '@/hooks/useOptimizationInsights';
 import { useRestaurantDishes } from '@/hooks/useRestaurantDishes';
 import { type ClaimPermissions } from '@/types/claims';
@@ -375,16 +376,30 @@ export default function OwnerDashboard() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="reviews" className="space-y-4">
+          <TabsContent value="reviews" className="space-y-6">
             {reviews.length > 0 ? (
-              reviews.map(review => (
-                <ReviewCard
-                  key={review.id}
-                  review={review}
-                  onRespond={respondToReview}
-                  canRespond={isVerified}
+              <>
+                {/* Review Intelligence */}
+                <ReviewIntelligence
+                  reviews={reviews}
+                  onApplyTemplate={(reviewId, text) => {
+                    respondToReview(reviewId, text);
+                  }}
                 />
-              ))
+
+                {/* Traditional Review List */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Alle Reviews</h3>
+                  {reviews.map(review => (
+                    <ReviewCard
+                      key={review.id}
+                      review={review}
+                      onRespond={respondToReview}
+                      canRespond={isVerified}
+                    />
+                  ))}
+                </div>
+              </>
             ) : (
               <Card>
                 <CardContent className="py-12 text-center">
