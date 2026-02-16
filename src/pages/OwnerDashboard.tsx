@@ -48,6 +48,9 @@ import { LockedFeatureOverlay } from '@/components/claims/LockedFeatureOverlay';
 import { VerificationRequiredDialog } from '@/components/claims/VerificationRequiredDialog';
 import { DishConfirmation } from '@/components/owner/DishConfirmation';
 import { RestaurantImageUpload } from '@/components/admin/RestaurantImageUpload';
+import { ActionCards } from '@/components/owner/ActionCards';
+import { useOptimizationInsights } from '@/hooks/useOptimizationInsights';
+import { useRestaurantDishes } from '@/hooks/useRestaurantDishes';
 import { type ClaimPermissions } from '@/types/claims';
 
 export default function OwnerDashboard() {
@@ -69,6 +72,15 @@ export default function OwnerDashboard() {
   const [permissions, setPermissions] = useState<ClaimPermissions | null>(null);
   const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string | undefined>(undefined);
+
+  // Fetch optimization data for action cards
+  const { data: optimizationData } = useOptimizationInsights(selectedRestaurant?.id);
+  const { dishes: restaurantDishes } = useRestaurantDishes({ restaurantId: selectedRestaurant?.id || '' });
+
+  const unansweredReviews = reviews.filter(r => !r.owner_response).length;
+  const suggestedDishCount = restaurantDishes.filter(d => d.status === 'suggested').length;
+  const trendingMissingDishes = optimizationData?.suggestions.filter(s => s.type === 'missing_dish').length || 0;
 
   const activeClaim = selectedRestaurant 
     ? userClaims.find(c => c.restaurant_id === selectedRestaurant.id && !['superseded', 'rejected'].includes(c.status))
@@ -306,8 +318,17 @@ export default function OwnerDashboard() {
           />
         </motion.div>
 
+        {/* Action Cards */}
+        <ActionCards
+          unansweredReviews={unansweredReviews}
+          suggestedDishes={suggestedDishCount}
+          optimizationScore={optimizationData?.overallScore ?? null}
+          trendingMissingDishes={trendingMissingDishes}
+          onNavigateTab={(tab) => setActiveTab(tab)}
+        />
+
         {/* Tabs */}
-        <Tabs defaultValue={isVerified ? "dish-confirmation" : "reviews"} className="space-y-6">
+        <Tabs value={activeTab} defaultValue={isVerified ? "dish-confirmation" : "reviews"} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="flex-wrap h-auto gap-1">
             <TabsTrigger value="reviews">
               Reviews ({reviews.length})
