@@ -942,11 +942,15 @@ export type Database = {
           food_photos: string[] | null
           helpful_votes: number | null
           id: string
+          instagram_url: string | null
           name: string | null
           preferred_language: string | null
           reviewer_level: string | null
+          tiktok_url: string | null
           total_reviews: number | null
+          twitter_url: string | null
           updated_at: string
+          website_url: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -956,11 +960,15 @@ export type Database = {
           food_photos?: string[] | null
           helpful_votes?: number | null
           id: string
+          instagram_url?: string | null
           name?: string | null
           preferred_language?: string | null
           reviewer_level?: string | null
+          tiktok_url?: string | null
           total_reviews?: number | null
+          twitter_url?: string | null
           updated_at?: string
+          website_url?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -970,11 +978,15 @@ export type Database = {
           food_photos?: string[] | null
           helpful_votes?: number | null
           id?: string
+          instagram_url?: string | null
           name?: string | null
           preferred_language?: string | null
           reviewer_level?: string | null
+          tiktok_url?: string | null
           total_reviews?: number | null
+          twitter_url?: string | null
           updated_at?: string
+          website_url?: string | null
         }
         Relationships: []
       }
