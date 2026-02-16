@@ -146,13 +146,37 @@ export function createRestaurantSchema(restaurant: {
   rating?: number;
   reviewCount?: number;
   geo?: { lat: number; lng: number };
+  openingHours?: { [key: string]: string };
+  slug?: string;
 }) {
+  const dayMap: { [key: string]: string } = {
+    mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday',
+    thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday',
+  };
+
+  const openingHoursSpec = restaurant.openingHours
+    ? Object.entries(restaurant.openingHours)
+        .filter(([, hours]) => hours && hours !== 'closed')
+        .map(([day, hours]) => {
+          const match = hours.match(/(\d{1,2}):?(\d{2})?\s*[-–]\s*(\d{1,2}):?(\d{2})?/);
+          if (!match) return null;
+          return {
+            '@type': 'OpeningHoursSpecification',
+            dayOfWeek: dayMap[day] || day,
+            opens: `${match[1].padStart(2, '0')}:${match[2] || '00'}`,
+            closes: `${match[3].padStart(2, '0')}:${match[4] || '00'}`,
+          };
+        })
+        .filter(Boolean)
+    : undefined;
+
   return {
     '@context': 'https://schema.org',
     '@type': 'Restaurant',
     name: restaurant.name,
     description: restaurant.description,
     image: restaurant.image,
+    url: `https://dishloopr.com/restaurant/${restaurant.slug}`,
     address: {
       '@type': 'PostalAddress',
       streetAddress: restaurant.address,
@@ -161,7 +185,7 @@ export function createRestaurantSchema(restaurant: {
       addressCountry: 'NL',
     },
     telephone: restaurant.phone,
-    url: restaurant.website,
+    sameAs: restaurant.website ? [restaurant.website] : undefined,
     servesCuisine: restaurant.cuisines,
     priceRange: restaurant.priceRange,
     aggregateRating: restaurant.rating ? {
@@ -176,6 +200,7 @@ export function createRestaurantSchema(restaurant: {
       latitude: restaurant.geo.lat,
       longitude: restaurant.geo.lng,
     } : undefined,
+    openingHoursSpecification: openingHoursSpec,
   };
 }
 

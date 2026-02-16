@@ -178,7 +178,9 @@ export default function RestaurantPage() {
     geo: restaurant.geo_lat && restaurant.geo_lng ? {
       lat: Number(restaurant.geo_lat),
       lng: Number(restaurant.geo_lng)
-    } : undefined
+    } : undefined,
+    openingHours: openingHours,
+    slug: restaurant.slug,
   });
 
   const breadcrumbSchema = createBreadcrumbSchema([
@@ -192,6 +194,7 @@ export default function RestaurantPage() {
       <SEOHead
         title={`${restaurant.name} - ${restaurant.cuisines?.slice(0, 2).join(' & ') || 'Restaurant'} | Dishloopr`}
         description={`Bekijk ${restaurant.name} in ${restaurant.city?.name || 'Nederland'}. ${restaurant.cuisines?.join(', ') || 'Heerlijk eten'} met ${restaurant.review_count} reviews en een ${Number(restaurant.rating).toFixed(1)} rating.`}
+        canonical={`https://dishloopr.com/restaurant/${restaurant.slug}`}
         ogType="restaurant"
         ogImage={restaurant.images?.[0]}
         ogImageAlt={`${restaurant.name} restaurant`}
