@@ -2004,6 +2004,60 @@ export type Database = {
         }
         Relationships: []
       }
+      verification_credits: {
+        Row: {
+          amount: number
+          claim_id: string
+          created_at: string
+          id: string
+          is_redeemed: boolean
+          redeemed_at: string | null
+          redeemed_on_checkout: string | null
+          restaurant_id: string
+          stripe_payment_intent: string | null
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          claim_id: string
+          created_at?: string
+          id?: string
+          is_redeemed?: boolean
+          redeemed_at?: string | null
+          redeemed_on_checkout?: string | null
+          restaurant_id: string
+          stripe_payment_intent?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          claim_id?: string
+          created_at?: string
+          id?: string
+          is_redeemed?: boolean
+          redeemed_at?: string | null
+          redeemed_on_checkout?: string | null
+          restaurant_id?: string
+          stripe_payment_intent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verification_credits_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_claims"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "verification_credits_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       yearly_wrapped: {
         Row: {
           cities_list: string[] | null
