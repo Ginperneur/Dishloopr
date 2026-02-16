@@ -363,32 +363,32 @@ export default function RestaurantPage() {
             </motion.div>
 
             {/* Mobile-only: Contact, Opening Hours & Reservation */}
-            <div className="lg:hidden space-y-4">
-              {/* CTA Buttons */}
-              <div className="flex gap-2">
-                {restaurant.reservation_url || restaurant.zenchef_id ? (
-                  <Button className="flex-1" asChild>
-                    <a href={restaurant.reservation_url || '#'} target="_blank" rel="noopener noreferrer">
+            <div className="lg:hidden space-y-3">
+              {/* CTA Buttons - wrap on small screens */}
+              <div className="grid grid-cols-2 gap-2">
+                {(restaurant.reservation_url || restaurant.zenchef_id) && (
+                  <Button className="col-span-2" size="lg" asChild>
+                    <a href={restaurant.reservation_url || `https://widget.zenchef.com/reservation/${restaurant.zenchef_id}`} target="_blank" rel="noopener noreferrer">
                       {t('restaurant.reserve')}
                     </a>
                   </Button>
-                ) : null}
+                )}
                 {restaurant.phone && (
-                  <Button variant="outline" className="flex-1" asChild>
+                  <Button variant="outline" size="default" asChild>
                     <a href={`tel:${restaurant.phone}`}>
-                      <Phone className="h-4 w-4 mr-2" />
+                      <Phone className="h-4 w-4 mr-1.5" />
                       {t('openingHours.callNow')}
                     </a>
                   </Button>
                 )}
                 {restaurant.geo_lat && restaurant.geo_lng && (
-                  <Button variant="outline" className="flex-1" asChild>
+                  <Button variant="outline" size="default" asChild>
                     <a 
                       href={`https://www.google.com/maps/dir/?api=1&destination=${restaurant.geo_lat},${restaurant.geo_lng}`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <Navigation className="h-4 w-4 mr-2" />
+                      <Navigation className="h-4 w-4 mr-1.5" />
                       {t('restaurant.directions')}
                     </a>
                   </Button>

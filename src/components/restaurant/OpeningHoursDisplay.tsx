@@ -209,22 +209,22 @@ export function OpeningHoursDisplay({ openingHours: rawOpeningHours, phone, geoL
         <Accordion type="single" collapsible className="flex-1">
           <AccordionItem value="opening-hours" className="border border-border rounded-2xl bg-card overflow-hidden">
             <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/50 [&[data-state=open]>svg]:rotate-180">
-              <div className="flex items-center justify-between w-full pr-2">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between w-full pr-2 min-w-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <Clock className="h-4 w-4 text-primary" />
                   <span className="font-semibold text-sm">{t('openingHours.title')}</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 ml-2 min-w-0">
                   {isOpen ? (
-                    <span className="text-xs font-medium text-tag-family bg-tag-family/10 px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-medium text-tag-family bg-tag-family/10 px-2 py-0.5 rounded-full whitespace-nowrap">
                       {t('openingHours.openNow')}
                     </span>
                   ) : (
-                    <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full whitespace-nowrap">
                       {t('openingHours.closed')}
                     </span>
                   )}
-                  <span className="text-sm text-muted-foreground">{todayHours}</span>
+                  <span className="text-xs text-muted-foreground truncate max-w-[80px]">{todayHours}</span>
                 </div>
               </div>
             </AccordionTrigger>
