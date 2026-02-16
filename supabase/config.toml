@@ -65,3 +65,6 @@ verify_jwt = false
 
 [functions.create-verification-checkout]
 verify_jwt = false
+
+[functions.analyze-reviews]
+verify_jwt = false
