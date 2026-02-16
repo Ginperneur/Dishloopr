@@ -1,6 +1,6 @@
 import { Layout } from '@/components/layout/Layout';
 import { motion } from 'framer-motion';
-import { Camera, User, Mail, Globe, Plus, X } from 'lucide-react';
+import { Camera, User, Mail, Globe, Plus, X, Instagram, Link as LinkIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -32,6 +32,10 @@ interface Profile {
   bio: string | null;
   preferred_language: string | null;
   food_photos: string[] | null;
+  instagram_url: string | null;
+  tiktok_url: string | null;
+  twitter_url: string | null;
+  website_url: string | null;
 }
 
 export default function ProfilePage() {
@@ -49,6 +53,10 @@ export default function ProfilePage() {
     name: '',
     bio: '',
     preferred_language: 'nl',
+    instagram_url: '',
+    tiktok_url: '',
+    twitter_url: '',
+    website_url: '',
   });
 
   useEffect(() => {
@@ -74,6 +82,10 @@ export default function ProfilePage() {
         name: data.name || '',
         bio: data.bio || '',
         preferred_language: data.preferred_language || 'nl',
+        instagram_url: data.instagram_url || '',
+        tiktok_url: data.tiktok_url || '',
+        twitter_url: data.twitter_url || '',
+        website_url: data.website_url || '',
       });
     }
     setLoading(false);
@@ -189,6 +201,10 @@ export default function ProfilePage() {
         name: validation.data.name || null,
         bio: validation.data.bio || null,
         preferred_language: validation.data.preferred_language || 'nl',
+        instagram_url: formData.instagram_url?.trim() || null,
+        tiktok_url: formData.tiktok_url?.trim() || null,
+        twitter_url: formData.twitter_url?.trim() || null,
+        website_url: formData.website_url?.trim() || null,
       })
       .eq('id', user.id);
 
@@ -365,6 +381,79 @@ export default function ProfilePage() {
 
             <Button onClick={handleSave} disabled={saving} className="w-full md:w-auto">
               {saving ? 'Opslaan...' : 'Wijzigingen opslaan'}
+            </Button>
+          </div>
+
+          {/* Social Media */}
+          <div className="bg-card border border-border rounded-xl p-6 mb-6 space-y-4">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <LinkIcon className="w-5 h-5" />
+              Social Media
+            </h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Koppel je social media accounts zodat anderen je kunnen vinden.
+            </p>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="instagram">Instagram</Label>
+                <div className="relative">
+                  <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="instagram"
+                    value={formData.instagram_url}
+                    onChange={(e) => setFormData(prev => ({ ...prev, instagram_url: e.target.value }))}
+                    placeholder="https://instagram.com/jouw_naam"
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="tiktok">TikTok</Label>
+                <div className="relative">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3.15 15a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.75a8.18 8.18 0 0 0 4.76 1.52V6.84a4.84 4.84 0 0 1-1-.15z"/></svg>
+                  <Input
+                    id="tiktok"
+                    value={formData.tiktok_url}
+                    onChange={(e) => setFormData(prev => ({ ...prev, tiktok_url: e.target.value }))}
+                    placeholder="https://tiktok.com/@jouw_naam"
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="twitter">X / Twitter</Label>
+                <div className="relative">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                  <Input
+                    id="twitter"
+                    value={formData.twitter_url}
+                    onChange={(e) => setFormData(prev => ({ ...prev, twitter_url: e.target.value }))}
+                    placeholder="https://x.com/jouw_naam"
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="website">Website</Label>
+                <div className="relative">
+                  <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="website"
+                    value={formData.website_url}
+                    onChange={(e) => setFormData(prev => ({ ...prev, website_url: e.target.value }))}
+                    placeholder="https://jouwwebsite.nl"
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <Button onClick={handleSave} disabled={saving} className="w-full md:w-auto">
+              {saving ? 'Opslaan...' : 'Social media opslaan'}
             </Button>
           </div>
 
