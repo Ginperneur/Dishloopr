@@ -1,6 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import {
+  scoreRestaurant,
+  sortResults,
+  rebalanceSponsoredResults,
+  bayesianRating,
+  type ScoringContext,
+  type DishMatchInfo,
+} from '@/lib/ranking';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type Dish = Database['public']['Tables']['dishes']['Row'];
@@ -10,6 +18,7 @@ export interface SearchResult extends Restaurant {
   cityName?: string;
   matchedDishes?: string[];
   matchScore: number;
+  bayesianRating: number;
   isSponsored?: boolean;
   hasDishMatch?: boolean;
   chainName?: string;
@@ -24,6 +33,9 @@ interface SearchFilters {
   mealTypes?: string[];
   experiences?: string[];
 }
+
+// Performance: DB result limit to prevent fetching entire table
+const DB_RESULT_LIMIT = 500;
 
 export function useSearch() {
   const [loading, setLoading] = useState(false);
@@ -48,6 +60,8 @@ export function useSearch() {
     setLoading(true);
     
     const queryLower = query.toLowerCase().trim();
+    const now = new Date();
+    const ctx: ScoringContext = { queryLower, now };
     
     // Fetch dishes directly if not already loaded (prevents race condition)
     let dishesToSearch = dishes;
@@ -60,7 +74,6 @@ export function useSearch() {
       ]);
       dishesToSearch = dishesRes.data || [];
       citiesToUse = citiesRes.data || [];
-      // Update state for future searches
       if (dishesToSearch.length > 0) setDishes(dishesToSearch);
       if (citiesToUse.length > 0) setCities(citiesToUse);
     }
@@ -72,129 +85,93 @@ export function useSearch() {
       return nameMatch || synonymMatch;
     });
 
-    // Find if query matches a cuisine
-    const cuisineMatch = queryLower.length > 0;
-
-    // Build restaurant query
+    // Build restaurant query with DB-side limit
     let restaurantQuery = supabase
       .from('restaurants')
       .select('*')
-      .eq('is_active', true);
+      .eq('is_active', true)
+      .limit(DB_RESULT_LIMIT);
 
-    // Filter for featured/top listing restaurants only
     if (featuredOnly) {
       restaurantQuery = restaurantQuery.or('is_featured.eq.true,is_top_listing.eq.true');
     }
 
-    // Filter by city
     if (cityId && cityId !== 'all') {
       restaurantQuery = restaurantQuery.eq('city_id', cityId);
     }
 
-    // Apply price level filter
+    // Apply filters
     if (filters?.priceLevel && filters.priceLevel.length > 0) {
       restaurantQuery = restaurantQuery.in('price_level', filters.priceLevel);
     }
-
-    // Apply ambience filter
     if (filters?.ambienceTags && filters.ambienceTags.length > 0) {
       restaurantQuery = restaurantQuery.overlaps('ambience_tags', filters.ambienceTags);
     }
-
-    // Apply cuisine filter
     if (filters?.cuisines && filters.cuisines.length > 0) {
       restaurantQuery = restaurantQuery.overlaps('cuisines', filters.cuisines);
     }
-
-    // Apply concept filter
     if (filters?.concepts && filters.concepts.length > 0) {
       restaurantQuery = restaurantQuery.overlaps('concepts', filters.concepts);
     }
-
-    // Apply meal type filter
     if (filters?.mealTypes && filters.mealTypes.length > 0) {
       restaurantQuery = restaurantQuery.overlaps('meal_types', filters.mealTypes);
     }
-
-    // Apply experience filter
     if (filters?.experiences && filters.experiences.length > 0) {
       restaurantQuery = restaurantQuery.overlaps('experiences', filters.experiences);
     }
 
     const { data: restaurants, error } = await restaurantQuery;
 
-    if (error) {
-      console.error('Search error:', error);
+    if (error || !restaurants) {
+      if (error) console.error('Search error:', error);
       setResults([]);
       setLoading(false);
       return;
     }
 
-    if (!restaurants) {
-      setResults([]);
-      setLoading(false);
-      return;
-    }
-
-    // Enrich chain info (chain name + number of locations)
-    const chainIds = Array.from(
-      new Set(restaurants.map(r => r.chain_id).filter(Boolean))
-    ) as string[];
-
+    // Batch fetch chain info (single query, not N+1)
+    const chainIds = [...new Set(restaurants.map(r => r.chain_id).filter(Boolean))] as string[];
     const chainNameById = new Map<string, string>();
     const chainCountById = new Map<string, number>();
 
     if (chainIds.length > 0) {
       const [chainsRes, chainRestaurantsRes] = await Promise.all([
         supabase.from('restaurant_chains').select('id,name').in('id', chainIds),
-        supabase
-          .from('restaurants')
-          .select('id,chain_id')
-          .eq('is_active', true)
-          .in('chain_id', chainIds),
+        supabase.from('restaurants').select('id,chain_id').eq('is_active', true).in('chain_id', chainIds),
       ]);
-
-      (chainsRes.data || []).forEach((c: any) => {
-        chainNameById.set(c.id, c.name);
-      });
-
+      (chainsRes.data || []).forEach((c: any) => chainNameById.set(c.id, c.name));
       (chainRestaurantsRes.data || []).forEach((r: any) => {
-        if (!r.chain_id) return;
-        chainCountById.set(r.chain_id, (chainCountById.get(r.chain_id) || 0) + 1);
+        if (r.chain_id) chainCountById.set(r.chain_id, (chainCountById.get(r.chain_id) || 0) + 1);
       });
     }
 
-    // If no search query, return all restaurants
+    const cityMap = new Map(citiesToUse.map(c => [c.id, c.name]));
+
+    // No query: return all with Bayesian rating sort
     if (!queryLower) {
-      const cityMap = new Map(citiesToUse.map(c => [c.id, c.name]));
-      const scoredResults = restaurants.map(r => ({
+      const scoredResults: SearchResult[] = restaurants.map(r => ({
         ...r,
         cityName: cityMap.get(r.city_id),
         chainName: r.chain_id ? chainNameById.get(r.chain_id) : undefined,
         chainLocationsCount: r.chain_id ? chainCountById.get(r.chain_id) : undefined,
-        matchScore: r.is_featured ? 2 : r.is_top_listing ? 1 : 0
+        matchScore: r.is_featured ? 2 : r.is_top_listing ? 1 : 0,
+        bayesianRating: bayesianRating(Number(r.rating), r.review_count),
       }));
       
-      // Sort by featured, top listing, then rating
-      scoredResults.sort((a, b) => {
-        if (b.matchScore !== a.matchScore) return b.matchScore - a.matchScore;
-        return Number(b.rating) - Number(a.rating);
-      });
-      
-      setResults(scoredResults);
+      const sorted = sortResults(scoredResults);
+      setResults(sorted);
       setLoading(false);
       return;
     }
 
-    // Get restaurant-dish links for matching dishes (including signature status)
-    let restaurantDishMap: Map<string, { name: string; isSignature: boolean }[]> = new Map();
+    // Fetch dish links with confidence_score (single batch query)
+    let restaurantDishMap = new Map<string, DishMatchInfo[]>();
     
     if (matchingDishes.length > 0) {
       const dishIds = matchingDishes.map(d => d.id);
-      // Include all statuses except 'rejected' - suggested dishes should still be searchable
       const { data: links } = await supabase
         .from('restaurant_dishes')
-        .select('restaurant_id, dish_id, status, is_signature')
+        .select('restaurant_id, dish_id, status, is_signature, confidence_score')
         .in('dish_id', dishIds)
         .neq('status', 'rejected');
 
@@ -203,24 +180,28 @@ export function useSearch() {
           const dishName = matchingDishes.find(d => d.id === link.dish_id)?.name;
           if (dishName) {
             const existing = restaurantDishMap.get(link.restaurant_id) || [];
-            restaurantDishMap.set(link.restaurant_id, [...existing, { name: dishName, isSignature: link.is_signature || false }]);
+            restaurantDishMap.set(link.restaurant_id, [
+              ...existing,
+              {
+                name: dishName,
+                isSignature: link.is_signature || false,
+                confidenceScore: Number(link.confidence_score) || 0.5,
+              },
+            ]);
           }
         });
       }
     }
 
-    // Get active sponsored purchases for relevant dishes/cities
+    // Sponsored check (single batch query)
     const sponsoredRestaurants = new Set<string>();
     if (matchingDishes.length > 0 && cityId && cityId !== 'all') {
       const dishIds = matchingDishes.map(d => d.id);
       const { data: sponsoredData } = await supabase
         .from('sponsored_purchases')
-        .select(`
-          restaurant_id,
-          sponsored_products!inner(dish_id, city_id)
-        `)
+        .select('restaurant_id, sponsored_products!inner(dish_id, city_id)')
         .eq('is_active', true)
-        .gt('expires_at', new Date().toISOString());
+        .gt('expires_at', now.toISOString());
 
       if (sponsoredData) {
         sponsoredData.forEach((sp: any) => {
@@ -232,134 +213,49 @@ export function useSearch() {
       }
     }
 
-    // Score and filter restaurants
-    const cityMap = new Map(citiesToUse.map(c => [c.id, c.name]));
+    // Score all restaurants using ranking engine
     const scoredResults: SearchResult[] = [];
 
     for (const restaurant of restaurants) {
-      let matchScore = 0;
-      const matchedDishes: string[] = [];
-      const isSponsored = sponsoredRestaurants.has(restaurant.id);
+      const scored = scoreRestaurant(
+        {
+          id: restaurant.id,
+          name: restaurant.name,
+          rating: Number(restaurant.rating),
+          review_count: restaurant.review_count,
+          cuisines: restaurant.cuisines,
+          is_featured: restaurant.is_featured,
+          is_top_listing: restaurant.is_top_listing,
+          chain_id: restaurant.chain_id,
+          created_at: restaurant.created_at,
+          linkedDishes: restaurantDishMap.get(restaurant.id) || null,
+          isSponsored: sponsoredRestaurants.has(restaurant.id),
+        },
+        ctx
+      );
 
-      // Check dish matches - PRIMARY RANKING FACTOR
-      const linkedDishes = restaurantDishMap.get(restaurant.id);
-      const hasDishMatch = linkedDishes && linkedDishes.length > 0;
-      
-      if (hasDishMatch) {
-        // Base score of 100 for any dish match, plus 20 per additional dish
-        matchScore += 100 + (linkedDishes.length - 1) * 20;
-        
-        // SIGNATURE BOOST: Extra 50 points for each matched signature dish
-        const signatureMatches = linkedDishes.filter(d => d.isSignature).length;
-        if (signatureMatches > 0) {
-          matchScore += signatureMatches * 50;
-        }
-        
-        matchedDishes.push(...linkedDishes.map(d => d.name));
-      }
-
-      // Check cuisine match (secondary factor)
-      if (restaurant.cuisines?.some(c => c.toLowerCase().includes(queryLower))) {
-        matchScore += 5;
-      }
-
-      // Check name match (secondary factor)
-      if (restaurant.name.toLowerCase().includes(queryLower)) {
-        matchScore += 3;
-      }
-
-      // Boost for featured/top listing (smaller boost to not dominate)
-      if (restaurant.is_featured) matchScore += 2;
-      if (restaurant.is_top_listing) matchScore += 1;
-      
-      // Sponsored boost (contextually relevant only - must have dish match)
-      if (isSponsored && hasDishMatch) {
-        matchScore += 15; // Boost within dish-matched restaurants
-      }
-
-      // Only include restaurants with actual relevance to the query
-      if (matchScore > 0 || queryLower === '') {
+      if (scored.matchScore > 0 || queryLower === '') {
         scoredResults.push({
           ...restaurant,
           cityName: cityMap.get(restaurant.city_id),
           chainName: restaurant.chain_id ? chainNameById.get(restaurant.chain_id) : undefined,
           chainLocationsCount: restaurant.chain_id ? chainCountById.get(restaurant.chain_id) : undefined,
-          matchedDishes,
-          matchScore,
-          isSponsored,
-          hasDishMatch // Include for sorting clarity
+          matchedDishes: scored.matchedDishes,
+          matchScore: scored.matchScore,
+          bayesianRating: scored.bayesianRating,
+          isSponsored: scored.isSponsored,
+          hasDishMatch: scored.hasDishMatch,
         });
       }
     }
 
-    // Sort by match score, then rating
-    // Ensure sponsored never fully dominate: max 2 sponsored in top 5
-    scoredResults.sort((a, b) => {
-      if (b.matchScore !== a.matchScore) return b.matchScore - a.matchScore;
-      return Number(b.rating) - Number(a.rating);
-    });
-
-    // Rebalance to prevent sponsored domination
-    const rebalanced = rebalanceSponsoredResults(scoredResults);
+    // Sort → rebalance sponsored → enforce chain diversity
+    const sorted = sortResults(scoredResults);
+    const rebalanced = rebalanceSponsoredResults(sorted);
 
     setResults(rebalanced);
     setLoading(false);
   }, [dishes, cities]);
 
-  return { 
-    search, 
-    results, 
-    loading, 
-    dishes, 
-    cities 
-  };
-}
-
-// Helper function to ensure sponsored listings don't dominate top results
-function rebalanceSponsoredResults(results: SearchResult[]): SearchResult[] {
-  if (results.length <= 5) return results;
-
-  const sponsored = results.filter(r => r.isSponsored);
-  const organic = results.filter(r => !r.isSponsored);
-
-  // Allow max 2 sponsored in top 5 positions
-  const maxSponsoredInTop5 = 2;
-  const finalResults: SearchResult[] = [];
-  let sponsoredCount = 0;
-  let organicIndex = 0;
-  let sponsoredIndex = 0;
-
-  for (let i = 0; i < results.length; i++) {
-    if (i < 5) {
-      // Within top 5: limit sponsored
-      if (sponsoredCount < maxSponsoredInTop5 && sponsoredIndex < sponsored.length) {
-        // Check if next sponsored has higher score than next organic
-        const nextSponsored = sponsored[sponsoredIndex];
-        const nextOrganic = organic[organicIndex];
-        
-        if (!nextOrganic || (nextSponsored && nextSponsored.matchScore >= nextOrganic.matchScore)) {
-          finalResults.push(nextSponsored);
-          sponsoredIndex++;
-          sponsoredCount++;
-          continue;
-        }
-      }
-      
-      if (organicIndex < organic.length) {
-        finalResults.push(organic[organicIndex]);
-        organicIndex++;
-      } else if (sponsoredIndex < sponsored.length) {
-        finalResults.push(sponsored[sponsoredIndex]);
-        sponsoredIndex++;
-      }
-    } else {
-      // After top 5: normal ordering
-      const remaining = [...sponsored.slice(sponsoredIndex), ...organic.slice(organicIndex)];
-      remaining.sort((a, b) => b.matchScore - a.matchScore);
-      finalResults.push(...remaining);
-      break;
-    }
-  }
-
-  return finalResults;
+  return { search, results, loading, dishes, cities };
 }
