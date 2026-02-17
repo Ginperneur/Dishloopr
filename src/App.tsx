@@ -30,6 +30,9 @@ import CollectionsPage from "./pages/CollectionsPage";
 import CollectionPage from "./pages/CollectionPage";
 import DishCityPage from "./pages/DishCityPage";
 import DishCityIndexPage from "./pages/DishCityIndexPage";
+import DishPillarPage from "./pages/DishPillarPage";
+import CityIndexPage from "./pages/CityIndexPage";
+import CityDetailPage from "./pages/CityDetailPage";
 import NotFound from "./pages/NotFound";
 import ForRestaurantsPage from "./pages/ForRestaurantsPage";
 import AddRestaurantPage from "./pages/AddRestaurantPage";
@@ -72,7 +75,10 @@ const App = () => (
                 <Route path="/collections" element={<CollectionsPage />} />
                 <Route path="/collection/:slug" element={<CollectionPage />} />
                 <Route path="/eten" element={<DishCityIndexPage />} />
+                <Route path="/eten/gerecht/:dishSlug" element={<DishPillarPage />} />
                 <Route path="/eten/:slug" element={<DishCityPage />} />
+                <Route path="/steden" element={<CityIndexPage />} />
+                <Route path="/steden/:citySlug" element={<CityDetailPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

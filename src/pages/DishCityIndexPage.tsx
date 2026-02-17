@@ -23,6 +23,7 @@ export default function DishCityIndexPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [cities, setCities] = useState<{ id: string; name: string }[]>([]);
+  const [uniqueDishes, setUniqueDishes] = useState<{ name: string; slug: string }[]>([]);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
 
   useEffect(() => {
@@ -224,6 +225,44 @@ export default function DishCityIndexPage() {
             </Button>
           </div>
         )}
+      </section>
+
+      {/* Dish Pillar Links */}
+      {uniqueDishes.length > 0 && (
+        <section className="container px-4 md:px-6 py-8 border-t border-border">
+          <h2 className="text-xl font-bold mb-4">Zoek per gerecht</h2>
+          <div className="flex flex-wrap gap-2">
+            {uniqueDishes.map(dish => (
+              <Link
+                key={dish.slug}
+                to={`/eten/gerecht/${dish.slug}`}
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-full border border-border hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
+              >
+                {dish.name}
+                <ChevronRight className="h-3 w-3" />
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* City Links */}
+      <section className="container px-4 md:px-6 py-8 border-t border-border">
+        <h2 className="text-xl font-bold mb-4">Steden</h2>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/steden" className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-full border border-border hover:bg-primary/10 transition-colors">
+            Alle steden <ChevronRight className="h-3 w-3" />
+          </Link>
+          {cities.map(city => (
+            <Link
+              key={city.id}
+              to={`/steden/${city.name.toLowerCase()}`}
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-full border border-border hover:bg-primary/10 transition-colors"
+            >
+              {city.name}
+            </Link>
+          ))}
+        </div>
       </section>
     </Layout>
   );

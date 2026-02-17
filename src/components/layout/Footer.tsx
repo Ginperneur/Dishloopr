@@ -1,16 +1,33 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Instagram, Mail, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import logo from '@/assets/dishloopr-logo.png';
 
 export function Footer() {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [seoLinks, setSeoLinks] = useState<{ slug: string; label: string }[]>([]);
+
+  useEffect(() => {
+    async function fetchTopPages() {
+      const { data } = await supabase
+        .from('seo_landing_pages')
+        .select('slug, h1_title')
+        .eq('is_active', true)
+        .limit(12);
+      
+      if (data) {
+        setSeoLinks(data.map(p => ({ slug: p.slug, label: p.h1_title })));
+      }
+    }
+    fetchTopPages();
+  }, []);
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,7 +139,35 @@ export function Footer() {
               <li><Link to="/privacy" className="hover:text-foreground transition-colors">{t('footer.privacy')}</Link></li>
             </ul>
           </div>
+
+          {/* Steden */}
+          <div>
+            <h4 className="font-semibold mb-3 md:mb-4 text-sm md:text-base">Steden</h4>
+            <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
+              <li><Link to="/steden" className="hover:text-foreground transition-colors">Alle steden</Link></li>
+              <li><Link to="/steden/amsterdam" className="hover:text-foreground transition-colors">Amsterdam</Link></li>
+              <li><Link to="/steden/rotterdam" className="hover:text-foreground transition-colors">Rotterdam</Link></li>
+            </ul>
+          </div>
         </div>
+
+        {/* SEO Links Section */}
+        {seoLinks.length > 0 && (
+          <div className="mt-8 md:mt-10 pt-6 md:pt-8 border-t border-border">
+            <h4 className="font-semibold mb-3 text-sm md:text-base">Populaire gerechten per stad</h4>
+            <div className="flex flex-wrap gap-2">
+              {seoLinks.map(link => (
+                <Link
+                  key={link.slug}
+                  to={`/eten/${link.slug}`}
+                  className="text-xs px-2.5 py-1 rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="border-t border-border mt-8 md:mt-10 pt-6 md:pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs md:text-sm text-muted-foreground">
           <p>© {new Date().getFullYear()} Dishloopr. {t('footer.allRights', 'Alle rechten voorbehouden.')}</p>
