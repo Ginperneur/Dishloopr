@@ -208,10 +208,10 @@ export function createRestaurantSchema(restaurant: {
     sameAs: restaurant.website ? [restaurant.website] : undefined,
     servesCuisine: restaurant.cuisines,
     priceRange: restaurant.priceRange,
-    aggregateRating: restaurant.rating ? {
+    aggregateRating: restaurant.rating && restaurant.reviewCount && restaurant.reviewCount > 0 ? {
       '@type': 'AggregateRating',
       ratingValue: restaurant.rating,
-      reviewCount: restaurant.reviewCount || 0,
+      reviewCount: restaurant.reviewCount,
       bestRating: 5,
       worstRating: 1,
     } : undefined,
