@@ -19,6 +19,7 @@ interface Filters {
   concepts: string[];
   mealTypes: string[];
   experiences: string[];
+  dietaryOptions: string[];
 }
 
 interface FilterPopoverProps {
@@ -66,6 +67,13 @@ const EXPERIENCE_OPTIONS = [
   { value: 'celebration', key: 'filters.celebration' },
 ];
 
+const DIETARY_OPTIONS = [
+  { value: 'vegan', key: 'filters.vegan', emoji: '🌱' },
+  { value: 'gluten-free', key: 'filters.glutenFree', emoji: '🌾' },
+  { value: 'halal', key: 'filters.halal', emoji: '☪️' },
+  { value: 'lactose-free', key: 'filters.lactoseFree', emoji: '🥛' },
+];
+
 // Popular cuisine options for featured restaurants filter
 const CUISINE_OPTIONS = [
   { value: 'japanese', key: 'cuisines.japanese' },
@@ -105,7 +113,8 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
     filters.cuisines.length +
     filters.concepts.length +
     filters.mealTypes.length +
-    filters.experiences.length;
+    filters.experiences.length +
+    filters.dietaryOptions.length;
 
   const toggleFilter = (type: keyof Filters, value: string | number) => {
     const current = filters[type] as (string | number)[];
@@ -123,6 +132,7 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
       concepts: [],
       mealTypes: [],
       experiences: [],
+      dietaryOptions: [],
     });
   };
 
@@ -148,6 +158,26 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
                 {t('filters.clearAll')}
               </Button>
             )}
+          </div>
+          {/* Primary dietary filters as quick-toggle chips */}
+          <div className="flex flex-wrap gap-2 mt-3">
+            {DIETARY_OPTIONS.map((option) => {
+              const isActive = filters.dietaryOptions.includes(option.value);
+              return (
+                <button
+                  key={option.value}
+                  onClick={() => toggleFilter('dietaryOptions', option.value)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
+                    isActive
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted'
+                  }`}
+                >
+                  <span>{option.emoji}</span>
+                  <span>{t(option.key)}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
         
