@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SEOHead, createBreadcrumbSchema } from '@/components/seo/SEOHead';
+import { SEOHead, createBreadcrumbSchema, createItemListSchema } from '@/components/seo/SEOHead';
 import { useCollection, CollectionRestaurant } from '@/hooks/useCollections';
 
 function RestaurantCard({ item, index }: { item: CollectionRestaurant; index: number }) {
@@ -143,6 +143,15 @@ export default function CollectionPage() {
     { name: collection.title, url: `https://dishloopr.com/collection/${collection.slug}` }
   ]);
 
+  const itemListSchema = createItemListSchema(
+    restaurants.map((item, index) => ({
+      name: item.restaurant.name,
+      url: `https://dishloopr.com/restaurant/${item.restaurant.slug}`,
+      image: item.restaurant.images?.[0],
+      position: index + 1,
+    }))
+  );
+
   return (
     <Layout>
       <SEOHead
@@ -150,6 +159,7 @@ export default function CollectionPage() {
         description={collection.seo_description || collection.description || `Ontdek de beste restaurants in onze ${collection.title} collectie.`}
         ogType="article"
         ogImage={collection.cover_image || undefined}
+        canonical={`https://dishloopr.com/collection/${collection.slug}`}
         keywords={[
           collection.title,
           collection.city?.name || '',
@@ -159,7 +169,10 @@ export default function CollectionPage() {
           'eten',
           'Nederland'
         ].filter(Boolean)}
-        structuredData={breadcrumbSchema}
+        structuredData={{
+          '@context': 'https://schema.org',
+          '@graph': [breadcrumbSchema, itemListSchema]
+        }}
       />
 
       {/* Hero */}

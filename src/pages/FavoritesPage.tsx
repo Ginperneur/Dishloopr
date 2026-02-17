@@ -1,3 +1,4 @@
+import { SEOHead } from '@/components/seo/SEOHead';
 import { Layout } from '@/components/layout/Layout';
 import { motion } from 'framer-motion';
 import { Heart, Search } from 'lucide-react';
@@ -69,6 +70,11 @@ export default function FavoritesPage() {
 
   return (
     <Layout>
+      <SEOHead
+        title="Mijn Favorieten | Dishloopr"
+        description="Bekijk en beheer je favoriete restaurants op Dishloopr."
+        noindex={true}
+      />
       <div className="container py-6 md:py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

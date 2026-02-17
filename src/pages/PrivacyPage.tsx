@@ -1,6 +1,6 @@
 import { Layout } from '@/components/layout/Layout';
 import { motion } from 'framer-motion';
-import { SEOHead } from '@/components/seo/SEOHead';
+import { SEOHead, createBreadcrumbSchema } from '@/components/seo/SEOHead';
 
 export default function PrivacyPage() {
   return (
@@ -9,6 +9,11 @@ export default function PrivacyPage() {
         title="Privacybeleid | Dishloopr"
         description="Lees ons privacybeleid en ontdek hoe Dishloopr omgaat met je persoonsgegevens. Wij respecteren je privacy en voldoen aan de AVG."
         keywords={['privacy', 'privacybeleid', 'AVG', 'GDPR', 'persoonsgegevens']}
+        canonical="https://dishloopr.com/privacy"
+        structuredData={createBreadcrumbSchema([
+          { name: 'Home', url: 'https://dishloopr.com' },
+          { name: 'Privacybeleid', url: 'https://dishloopr.com/privacy' },
+        ])}
       />
       <div className="container py-16">
         <motion.div
