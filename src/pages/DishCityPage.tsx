@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { ChevronRight, MapPin, Search, Star } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
-import { SEOHead, createFAQSchema, createBreadcrumbSchema } from '@/components/seo/SEOHead';
+import { SEOHead, createFAQSchema, createBreadcrumbSchema, createItemListSchema } from '@/components/seo/SEOHead';
 import { DatabaseRestaurantCard } from '@/components/restaurant/DatabaseRestaurantCard';
 import { SkeletonCard } from '@/components/ui/skeleton-card';
 import { Button } from '@/components/ui/button';
@@ -56,12 +56,21 @@ export default function DishCityPage() {
     { name: page.h1_title, url: `https://dishloopr.com/eten/${page.slug}` },
   ];
 
+  const restaurantItemList = restaurants.length > 0 ? createItemListSchema(
+    restaurants.map((r, i) => ({
+      name: r.name,
+      url: `https://dishloopr.com/restaurant/${r.slug}`,
+      position: i + 1,
+    }))
+  ) : null;
+
   const structuredData = [
     createBreadcrumbSchema(breadcrumbs),
     ...(page.faq_content.length > 0 
       ? [createFAQSchema(page.faq_content.map(faq => ({ question: faq.question, answer: faq.answer })))]
       : []
     ),
+    ...(restaurantItemList ? [restaurantItemList] : []),
   ];
 
   return (
