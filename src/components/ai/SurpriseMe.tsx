@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, X, ChefHat, Utensils, RefreshCw, MapPin, Leaf, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAIRecommendations } from '@/hooks/useAIRecommendations';
+import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -38,10 +39,23 @@ export function SurpriseMe({ variant = 'button', className = '', city }: Surpris
     });
   };
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (surprise?.dish) {
-      const params = new URLSearchParams({ q: surprise.dish });
-      if (cityInput) params.set('city', cityInput);
+      // Look up the city ID if user typed a city name
+      let resolvedCityId = '';
+      if (cityInput) {
+        const { data: cityData } = await supabase
+          .from('cities')
+          .select('id')
+          .ilike('name', cityInput.trim())
+          .limit(1);
+        if (cityData && cityData.length > 0) {
+          resolvedCityId = cityData[0].id;
+        }
+      }
+
+      const params = new URLSearchParams({ dish: surprise.dish });
+      if (resolvedCityId) params.set('city', resolvedCityId);
       navigate(`/search?${params.toString()}`);
       setIsOpen(false);
       clearRecommendations();
