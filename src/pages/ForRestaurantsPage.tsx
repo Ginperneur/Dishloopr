@@ -1,5 +1,5 @@
 import { Layout } from '@/components/layout/Layout';
-import { SEOHead } from '@/components/seo/SEOHead';
+import { SEOHead, createBreadcrumbSchema } from '@/components/seo/SEOHead';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -67,6 +67,12 @@ export default function ForRestaurantsPage() {
       <SEOHead
         title={`${t('forRestaurants.forOwners')} | Dishloopr`}
         description={t('forRestaurants.pageDescription')}
+        canonical="https://dishloopr.com/for-restaurants"
+        keywords={['restaurant eigenaar', 'restaurant claimen', 'dishloopr voor restaurants', 'restaurant marketing', 'restaurant zichtbaarheid']}
+        structuredData={createBreadcrumbSchema([
+          { name: 'Home', url: 'https://dishloopr.com' },
+          { name: t('forRestaurants.forOwners'), url: 'https://dishloopr.com/for-restaurants' },
+        ])}
       />
       
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">

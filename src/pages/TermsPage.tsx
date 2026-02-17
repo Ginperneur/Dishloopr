@@ -1,6 +1,6 @@
 import { Layout } from '@/components/layout/Layout';
 import { motion } from 'framer-motion';
-import { SEOHead } from '@/components/seo/SEOHead';
+import { SEOHead, createBreadcrumbSchema } from '@/components/seo/SEOHead';
 
 export default function TermsPage() {
   return (
@@ -9,6 +9,11 @@ export default function TermsPage() {
         title="Algemene Voorwaarden | Dishloopr"
         description="Lees de algemene voorwaarden van Dishloopr. Deze voorwaarden zijn van toepassing op het gebruik van onze website en diensten."
         keywords={['algemene voorwaarden', 'terms', 'gebruiksvoorwaarden', 'dishloopr']}
+        canonical="https://dishloopr.com/terms"
+        structuredData={createBreadcrumbSchema([
+          { name: 'Home', url: 'https://dishloopr.com' },
+          { name: 'Algemene Voorwaarden', url: 'https://dishloopr.com/terms' },
+        ])}
       />
       <div className="container py-16">
         <motion.div

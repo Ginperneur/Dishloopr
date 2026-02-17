@@ -45,6 +45,13 @@ serve(async (req) => {
       .select('slug, updated_at')
       .eq('is_active', true);
 
+    // Get all active collections
+    const { data: collections } = await supabase
+      .from('collections')
+      .select('slug, updated_at')
+      .eq('is_active', true)
+      .order('sort_order');
+
     const now = new Date().toISOString().split('T')[0];
 
     // Build sitemap XML
@@ -98,8 +105,19 @@ serve(async (req) => {
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
+  <url>
+    <loc>${SITE_URL}/for-restaurants</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>${SITE_URL}/collections</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
 `;
-
     // SEO Landing Pages (/eten/[slug]) - High priority for SEO
     if (seoLandingPages) {
       for (const page of seoLandingPages) {
@@ -110,6 +128,20 @@ serve(async (req) => {
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
+  </url>`;
+      }
+    }
+
+    // Collection pages
+    if (collections) {
+      for (const collection of collections) {
+        const lastmod = collection.updated_at?.split('T')[0] || now;
+        sitemap += `
+  <url>
+    <loc>${SITE_URL}/collection/${collection.slug}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>`;
       }
     }
@@ -172,7 +204,7 @@ serve(async (req) => {
     sitemap += `
 </urlset>`;
 
-    console.log(`Sitemap generated: ${restaurants?.length || 0} restaurants, ${seoLandingPages?.length || 0} SEO pages, ${cities?.length || 0} cities, ${dishes?.length || 0} dishes`);
+    console.log(`Sitemap generated: ${restaurants?.length || 0} restaurants, ${collections?.length || 0} collections, ${seoLandingPages?.length || 0} SEO pages, ${cities?.length || 0} cities, ${dishes?.length || 0} dishes`);
 
     return new Response(sitemap, {
       status: 200,

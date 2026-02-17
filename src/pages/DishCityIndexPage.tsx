@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { ChevronRight, Utensils, MapPin, Search } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
-import { SEOHead } from '@/components/seo/SEOHead';
+import { SEOHead, createBreadcrumbSchema } from '@/components/seo/SEOHead';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -92,6 +92,11 @@ export default function DishCityIndexPage() {
         title="Eten in Nederland | Alle Gerechten per Stad | Dishloopr"
         description="Ontdek de beste restaurants per gerecht en stad. Van ramen in Amsterdam tot pizza in Rotterdam - vind jouw perfecte eetplek."
         keywords={['restaurants', 'eten', 'Nederland', 'gerechten', 'Amsterdam', 'Rotterdam']}
+        canonical="https://dishloopr.com/eten"
+        structuredData={createBreadcrumbSchema([
+          { name: 'Home', url: 'https://dishloopr.com' },
+          { name: 'Eten', url: 'https://dishloopr.com/eten' },
+        ])}
       />
 
       {/* Breadcrumb */}

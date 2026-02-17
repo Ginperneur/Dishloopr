@@ -41,6 +41,24 @@ export function SEOHead({
     // Update document title
     document.title = fullTitle;
 
+    // hreflang tags for multilingual support
+    const supportedLangs = ['nl', 'en', 'de', 'fr', 'es'];
+    const existingHreflangs = document.querySelectorAll('link[hreflang]');
+    existingHreflangs.forEach(el => el.remove());
+    
+    supportedLangs.forEach(lang => {
+      const link = document.createElement('link');
+      link.setAttribute('rel', 'alternate');
+      link.setAttribute('hreflang', lang);
+      link.setAttribute('href', `${canonicalUrl}${canonicalUrl.includes('?') ? '&' : '?'}lang=${lang}`);
+      document.head.appendChild(link);
+    });
+    // x-default hreflang
+    const xDefault = document.createElement('link');
+    xDefault.setAttribute('rel', 'alternate');
+    xDefault.setAttribute('hreflang', 'x-default');
+    xDefault.setAttribute('href', canonicalUrl);
+    document.head.appendChild(xDefault);
     // Helper to update or create meta tag
     const updateMeta = (property: string, content: string, isName = false) => {
       const attr = isName ? 'name' : 'property';
@@ -125,6 +143,8 @@ export function SEOHead({
       if (structuredScript) {
         structuredScript.remove();
       }
+      const hreflangs = document.querySelectorAll('link[hreflang]');
+      hreflangs.forEach(el => el.remove());
     };
   }, [fullTitle, description, canonicalUrl, ogType, fullOgImage, ogImageAlt, twitterCard, keywords, author, publishedTime, modifiedTime, noindex, structuredData]);
 
@@ -247,6 +267,20 @@ export function createWebsiteSchema() {
       },
       'query-input': 'required name=search_term_string',
     },
+  };
+}
+
+export function createItemListSchema(items: { name: string; url: string; image?: string; position: number }[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: items.map(item => ({
+      '@type': 'ListItem',
+      position: item.position,
+      name: item.name,
+      url: item.url,
+      ...(item.image ? { image: item.image } : {}),
+    })),
   };
 }
 

@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { SEOHead } from '@/components/seo/SEOHead';
+import { SEOHead, createBreadcrumbSchema } from '@/components/seo/SEOHead';
 
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,6 +30,11 @@ export default function ContactPage() {
         title="Contact | Dishloopr"
         description="Neem contact op met Dishloopr. Heb je vragen, feedback of wil je samenwerken? We horen graag van je!"
         keywords={['contact', 'dishloopr', 'vragen', 'feedback', 'samenwerken']}
+        canonical="https://dishloopr.com/contact"
+        structuredData={createBreadcrumbSchema([
+          { name: 'Home', url: 'https://dishloopr.com' },
+          { name: 'Contact', url: 'https://dishloopr.com/contact' },
+        ])}
       />
       <div className="container py-16">
         <motion.div

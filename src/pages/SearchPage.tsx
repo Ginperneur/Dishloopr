@@ -11,7 +11,7 @@ import { SeoLandingLinks } from '@/components/search/SeoLandingLinks';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { SkeletonCard } from '@/components/ui/skeleton-card';
-import { SEOHead } from '@/components/seo/SEOHead';
+import { SEOHead, createBreadcrumbSchema } from '@/components/seo/SEOHead';
 import {
   Select,
   SelectContent,
@@ -212,6 +212,11 @@ export default function SearchPage() {
         title={`${pageTitle} | Dishloopr`}
         description={`Vind de beste ${dishQuery || 'restaurants'}${selectedCityId && selectedCityId !== 'all' ? ` in ${cities.find(c => c.id === selectedCityId)?.name || 'Nederland'}` : ' in Nederland'}. Bekijk reviews, menu's en reserveer direct.`}
         keywords={[dishQuery || 'restaurants', 'eten', 'uit eten', 'Nederland', 'reviews'].filter(Boolean) as string[]}
+        canonical={`https://dishloopr.com/search${dishQuery ? `?dish=${encodeURIComponent(dishQuery)}` : ''}${selectedCityId && selectedCityId !== 'all' ? `${dishQuery ? '&' : '?'}city=${selectedCityId}` : ''}`}
+        structuredData={createBreadcrumbSchema([
+          { name: 'Home', url: 'https://dishloopr.com' },
+          { name: pageTitle, url: `https://dishloopr.com/search` },
+        ])}
       />
       {/* Search Header */}
       <div className="sticky top-14 md:top-16 z-40 bg-background border-b border-border py-3 md:py-4">
