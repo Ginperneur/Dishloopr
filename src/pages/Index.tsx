@@ -47,7 +47,7 @@ const Index = () => {
         structuredData={createWebsiteSchema()}
       />
       {/* Hero Section */}
-      <section className="relative py-10 md:py-16 lg:py-20 pb-8 md:pb-12 lg:pb-16 overflow-hidden z-10">
+      <section className="relative py-6 sm:py-8 md:py-14 lg:py-18 pb-6 sm:pb-8 md:pb-10 lg:pb-14 overflow-hidden z-10">
         {/* Background gradient */}
         <div 
           className="absolute inset-0 -z-10"
@@ -58,17 +58,17 @@ const Index = () => {
         
         <div className="container relative px-4 md:px-6">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-6 md:mb-14"
+            transition={{ duration: 0.5 }}
+            className="text-center mb-5 md:mb-10"
           >
-            <h1 className="text-2xl sm:text-3xl md:text-6xl lg:text-7xl font-extrabold mb-2 md:mb-4 leading-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold mb-2 md:mb-3 leading-tight">
               {t('hero.title')}
               <br />
               <span className="text-gradient">{t('hero.titleAccent')}</span>
             </h1>
-            <p className="text-sm sm:text-base md:text-xl text-muted-foreground max-w-2xl mx-auto px-2">
+            <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-xl mx-auto px-2">
               {t('hero.subtitle')}
             </p>
           </motion.div>
@@ -77,19 +77,19 @@ const Index = () => {
 
           {/* Popular Cuisines Quick Links */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
-            className="flex flex-wrap justify-center gap-2 mt-4 md:mt-6 max-w-3xl mx-auto"
+            transition={{ delay: 0.3, duration: 0.4 }}
+            className="flex flex-wrap justify-center gap-1.5 sm:gap-2 mt-3 md:mt-5 max-w-3xl mx-auto"
           >
-            <span className="text-sm text-muted-foreground mr-1 hidden sm:inline self-center">
+            <span className="text-xs sm:text-sm text-muted-foreground mr-1 hidden sm:inline self-center">
               {t('home.popular', 'Populair')}:
             </span>
             {POPULAR_CUISINES.map((cuisine) => (
               <button
                 key={cuisine.value}
                 onClick={() => handleCuisineClick(cuisine.value)}
-                className="px-3 py-1.5 text-sm font-medium rounded-full bg-card border border-border hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
+                className="px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-full bg-card border border-border hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
               >
                 {cuisine.label}
               </button>
@@ -98,41 +98,42 @@ const Index = () => {
           
           {/* AI Surprise Button */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-            className="flex justify-center mt-4 md:mt-6"
+            transition={{ delay: 0.4, duration: 0.4 }}
+            className="flex justify-center mt-3 md:mt-5"
           >
             <SurpriseMe />
           </motion.div>
         </div>
       </section>
 
-      {/* Featured Restaurants - Direct onder Surprise Me */}
-      <section className="relative py-8 md:py-12 lg:py-16 bg-muted/30">
+      {/* Featured Restaurants */}
+      <section className="relative py-6 md:py-10 lg:py-14 bg-muted/30">
         <div className="container px-4 md:px-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="flex items-center justify-between mb-6 md:mb-10"
+            className="flex items-center justify-between mb-4 md:mb-8"
           >
-            <h2 className="text-xl sm:text-2xl md:text-4xl font-bold">
+            <h2 className="text-lg sm:text-xl md:text-3xl font-bold">
               {t('home.featuredRestaurants')}
             </h2>
-            <Button variant="ghost" size="sm" asChild className="text-sm">
+            <Button variant="ghost" size="sm" asChild className="text-xs sm:text-sm">
               <Link to="/search?featured=true" className="flex items-center gap-1 md:gap-2">
                 {t('home.viewAll')}
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </Link>
             </Button>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          {/* Mobile: horizontal scroll. Tablet+: grid */}
+          <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
             {featuredLoading ? (
               <>
                 <SkeletonCard />
-                <SkeletonCard className="hidden sm:block" />
+                <SkeletonCard />
                 <SkeletonCard className="hidden lg:block" />
               </>
             ) : (
@@ -144,6 +145,27 @@ const Index = () => {
                 />
               ))
             )}
+          </div>
+          
+          {/* Mobile: horizontal scrollable cards */}
+          <div className="sm:hidden -mx-4 px-4">
+            <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
+              {featuredLoading ? (
+                <>
+                  <div className="min-w-[280px] snap-start"><SkeletonCard /></div>
+                  <div className="min-w-[280px] snap-start"><SkeletonCard /></div>
+                </>
+              ) : (
+                featuredRestaurants.map((restaurant, index) => (
+                  <div key={restaurant.id} className="min-w-[280px] max-w-[300px] snap-start">
+                    <DatabaseRestaurantCard
+                      restaurant={restaurant}
+                      index={index}
+                    />
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </section>
