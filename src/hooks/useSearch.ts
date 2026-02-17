@@ -32,6 +32,7 @@ interface SearchFilters {
   concepts?: string[];
   mealTypes?: string[];
   experiences?: string[];
+  dietaryOptions?: string[];
 }
 
 // Performance: DB result limit to prevent fetching entire table
@@ -118,6 +119,9 @@ export function useSearch() {
     }
     if (filters?.experiences && filters.experiences.length > 0) {
       restaurantQuery = restaurantQuery.overlaps('experiences', filters.experiences);
+    }
+    if (filters?.dietaryOptions && filters.dietaryOptions.length > 0) {
+      restaurantQuery = restaurantQuery.overlaps('dietary_options', filters.dietaryOptions);
     }
 
     const { data: restaurants, error } = await restaurantQuery;

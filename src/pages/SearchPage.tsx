@@ -36,6 +36,7 @@ interface Filters {
   concepts: string[];
   mealTypes: string[];
   experiences: string[];
+  dietaryOptions: string[];
 }
 
 export default function SearchPage() {
@@ -55,6 +56,7 @@ export default function SearchPage() {
     concepts: [],
     mealTypes: [],
     experiences: [],
+    dietaryOptions: [],
   });
   const [sortBy, setSortBy] = useState<SortOption>('bestMatch');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -185,6 +187,7 @@ export default function SearchPage() {
       concepts: [],
       mealTypes: [],
       experiences: [],
+      dietaryOptions: [],
     });
   };
 
