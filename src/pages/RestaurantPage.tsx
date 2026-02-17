@@ -33,6 +33,7 @@ import { SocialShare } from '@/components/social/SocialShare';
 import { OpeningHoursDisplay } from '@/components/restaurant/OpeningHoursDisplay';
 import { ImageGallery } from '@/components/restaurant/ImageGallery';
 import { FeaturedRestaurantsCarousel } from '@/components/restaurant/FeaturedRestaurantsCarousel';
+import { RelatedLinks } from '@/components/restaurant/RelatedLinks';
 import { SEOHead, createRestaurantSchema, createBreadcrumbSchema } from '@/components/seo/SEOHead';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useReviews } from '@/hooks/useReviews';
@@ -501,6 +502,15 @@ export default function RestaurantPage() {
                 />
               </div>
             </motion.div>
+
+            {/* Related Internal Links for SEO */}
+            <RelatedLinks
+              restaurantName={restaurant.name}
+              cityName={restaurant.city?.name}
+              cityId={restaurant.city_id}
+              cuisines={restaurant.cuisines || []}
+              dishes={restaurant.dishes || []}
+            />
           </div>
 
           {/* Sidebar */}
