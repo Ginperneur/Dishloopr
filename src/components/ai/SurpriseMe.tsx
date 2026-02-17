@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, X, ChefHat, Utensils, RefreshCw } from 'lucide-react';
+import { Sparkles, X, ChefHat, Utensils, RefreshCw, MapPin, Leaf, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAIRecommendations } from '@/hooks/useAIRecommendations';
 import { useNavigate } from 'react-router-dom';
@@ -12,28 +12,37 @@ const moods = [
   { id: 'healthy', label: 'Gezond', emoji: '🥗' },
   { id: 'spicy', label: 'Pittig', emoji: '🌶️' },
   { id: 'sweet', label: 'Zoet', emoji: '🍰' },
-  { id: 'quick', label: 'Snel', emoji: '⚡' },
+  { id: 'quick', label: 'Snel & lekker', emoji: '⚡' },
+  { id: 'date', label: 'Date night', emoji: '🕯️' },
+  { id: 'sharing', label: 'Samen delen', emoji: '🍽️' },
 ];
 
 interface SurpriseMeProps {
   variant?: 'button' | 'card';
   className?: string;
+  city?: string;
 }
 
-export function SurpriseMe({ variant = 'button', className = '' }: SurpriseMeProps) {
+export function SurpriseMe({ variant = 'button', className = '', city }: SurpriseMeProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
+  const [cityInput, setCityInput] = useState(city || '');
   const { surprise, loading, getSurpriseRecommendation, clearRecommendations } = useAIRecommendations();
 
   const handleSurprise = async () => {
-    await getSurpriseRecommendation(selectedMood || undefined);
+    await getSurpriseRecommendation({
+      mood: selectedMood || undefined,
+      city: cityInput || undefined,
+    });
   };
 
   const handleSearch = () => {
     if (surprise?.dish) {
-      navigate(`/search?q=${encodeURIComponent(surprise.dish)}`);
+      const params = new URLSearchParams({ q: surprise.dish });
+      if (cityInput) params.set('city', cityInput);
+      navigate(`/search?${params.toString()}`);
       setIsOpen(false);
       clearRecommendations();
     }
@@ -69,17 +78,17 @@ export function SurpriseMe({ variant = 'button', className = '' }: SurpriseMePro
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-card rounded-2xl p-6 max-w-md w-full shadow-2xl"
+                className="bg-card rounded-2xl p-6 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between mb-5">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-r from-primary to-orange-500 flex items-center justify-center">
                       <ChefHat className="w-6 h-6 text-white" />
                     </div>
                     <div>
                       <h3 className="font-bold text-lg">{t('ai.surpriseTitle', 'AI Dish Discovery')}</h3>
-                      <p className="text-sm text-muted-foreground">{t('ai.surpriseSubtitle', 'Laat je verrassen')}</p>
+                      <p className="text-sm text-muted-foreground">{t('ai.surpriseSubtitle', 'Jouw persoonlijke culinaire gids')}</p>
                     </div>
                   </div>
                   <Button variant="ghost" size="icon" onClick={handleClose}>
@@ -89,23 +98,38 @@ export function SurpriseMe({ variant = 'button', className = '' }: SurpriseMePro
 
                 {!surprise ? (
                   <>
-                    <p className="text-muted-foreground mb-4">
+                    {/* City input */}
+                    <div className="mb-4">
+                      <label className="text-sm font-medium text-muted-foreground mb-1.5 block">
+                        <MapPin className="w-3.5 h-3.5 inline mr-1" />
+                        {t('ai.whereAreYou', 'Waar ben je?')}
+                      </label>
+                      <input
+                        type="text"
+                        value={cityInput}
+                        onChange={(e) => setCityInput(e.target.value)}
+                        placeholder="bijv. Amsterdam, Rotterdam..."
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      />
+                    </div>
+
+                    <p className="text-muted-foreground text-sm mb-3">
                       {t('ai.moodQuestion', 'Waar heb je zin in vandaag?')}
                     </p>
                     
-                    <div className="grid grid-cols-3 gap-2 mb-6">
+                    <div className="grid grid-cols-4 gap-1.5 mb-5">
                       {moods.map((mood) => (
                         <button
                           key={mood.id}
                           onClick={() => setSelectedMood(mood.id === selectedMood ? null : mood.id)}
-                          className={`p-3 rounded-xl border-2 transition-all duration-200 ${
+                          className={`p-2.5 rounded-xl border-2 transition-all duration-200 ${
                             selectedMood === mood.id
-                              ? 'border-primary bg-primary/10'
+                              ? 'border-primary bg-primary/10 scale-105'
                               : 'border-border hover:border-primary/50'
                           }`}
                         >
-                          <span className="text-2xl block mb-1">{mood.emoji}</span>
-                          <span className="text-xs font-medium">{mood.label}</span>
+                          <span className="text-xl block mb-0.5">{mood.emoji}</span>
+                          <span className="text-[10px] font-medium leading-tight block">{mood.label}</span>
                         </button>
                       ))}
                     </div>
@@ -118,12 +142,12 @@ export function SurpriseMe({ variant = 'button', className = '' }: SurpriseMePro
                       {loading ? (
                         <>
                           <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                          {t('ai.thinking', 'Even denken...')}
+                          {t('ai.thinking', 'Even nadenken...')}
                         </>
                       ) : (
                         <>
                           <Sparkles className="w-4 h-4 mr-2" />
-                          {t('ai.generateSurprise', 'Verras mij!')}
+                          {t('ai.generateSurprise', 'Ontdek mijn gerecht!')}
                         </>
                       )}
                     </Button>
@@ -134,7 +158,7 @@ export function SurpriseMe({ variant = 'button', className = '' }: SurpriseMePro
                     animate={{ opacity: 1, y: 0 }}
                     className="space-y-4"
                   >
-                    <div className="text-center py-4">
+                    <div className="text-center py-3">
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
@@ -143,16 +167,31 @@ export function SurpriseMe({ variant = 'button', className = '' }: SurpriseMePro
                       >
                         🎉
                       </motion.div>
-                      <h4 className="text-2xl font-bold text-primary mb-2">{surprise.dish}</h4>
+                      <h4 className="text-2xl font-bold text-primary mb-1">{surprise.dish}</h4>
                       <p className="text-muted-foreground text-sm">{surprise.reason}</p>
                     </div>
 
                     <div className="bg-muted/50 rounded-xl p-4 space-y-3">
                       <p className="text-sm">{surprise.description}</p>
+                      
                       <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                        <Utensils className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                        <span>{surprise.pairingTip}</span>
+                        <Utensils className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
+                        <span><strong>Tip:</strong> {surprise.pairingTip}</span>
                       </div>
+
+                      {surprise.discoveryAngle && (
+                        <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                          <Leaf className="w-4 h-4 mt-0.5 flex-shrink-0 text-green-500" />
+                          <span>{surprise.discoveryAngle}</span>
+                        </div>
+                      )}
+
+                      {surprise.confidence && surprise.confidence > 80 && (
+                        <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
+                          <Info className="w-3.5 h-3.5" />
+                          {surprise.confidence}% match met jouw profiel
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex gap-2">
@@ -166,7 +205,7 @@ export function SurpriseMe({ variant = 'button', className = '' }: SurpriseMePro
                         className="flex-1"
                       >
                         <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                        {t('ai.tryAnother', 'Probeer opnieuw')}
+                        {t('ai.tryAnother', 'Opnieuw')}
                       </Button>
                       <Button
                         onClick={handleSearch}
