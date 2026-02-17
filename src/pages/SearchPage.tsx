@@ -334,14 +334,14 @@ export default function SearchPage() {
                 </SelectContent>
               </Select>
               
-              {/* Filter Button - only show here for non-featured pages */}
-              {!featuredOnly && <div className="hidden md:block">
+              {/* Filter Button - show on all viewports for non-featured pages */}
+              {!featuredOnly && (
                 <FilterPopover 
                   filters={filters}
                   onFiltersChange={setFilters}
                   availableCuisines={availableCuisines}
                 />
-              </div>}
+              )}
             </div>
           </div>
         </div>

@@ -53,7 +53,7 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
         }`}
       >
         {/* Image */}
-        <div className="relative aspect-[16/10] overflow-hidden bg-muted">
+        <div className="relative aspect-[16/10] sm:aspect-[16/9] overflow-hidden bg-muted">
           {hasImage ? (
             <img
               src={restaurant.images![0]}
@@ -112,23 +112,23 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
         </div>
 
         {/* Content */}
-        <div className="p-4">
+        <div className="p-3 sm:p-4">
           {/* Header */}
-          <div className="flex items-start justify-between gap-2 mb-2">
-            <h3 className="font-bold text-lg leading-tight group-hover:text-primary transition-colors line-clamp-1">
+          <div className="flex items-start justify-between gap-2 mb-1.5 sm:mb-2">
+            <h3 className="font-bold text-base sm:text-lg leading-tight group-hover:text-primary transition-colors line-clamp-1">
               {restaurant.name}
             </h3>
             <div className="flex items-center gap-1 shrink-0">
-              <Star className="h-4 w-4 fill-rating text-rating" />
-              <span className="font-semibold">{Number(restaurant.rating).toFixed(1)}</span>
-              <span className="text-muted-foreground text-sm">
+              <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-rating text-rating" />
+              <span className="font-semibold text-sm sm:text-base">{Number(restaurant.rating).toFixed(1)}</span>
+              <span className="text-muted-foreground text-xs sm:text-sm">
                 ({restaurant.review_count})
               </span>
             </div>
           </div>
 
           {/* Chain + Location */}
-          <div className="space-y-1 mb-3">
+          <div className="space-y-0.5 sm:space-y-1 mb-2 sm:mb-3">
             {(restaurant.chainName || restaurant.chainLocationsCount) && (
               <div className="text-xs text-muted-foreground line-clamp-1">
                 {restaurant.chainName ? (
@@ -141,17 +141,17 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
               </div>
             )}
 
-            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-              <MapPin className="h-3.5 w-3.5 shrink-0" />
+            <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
+              <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
               <span className="line-clamp-1">{restaurant.address}</span>
             </div>
           </div>
 
           {/* Cuisines */}
           {restaurant.cuisines && restaurant.cuisines.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {restaurant.cuisines.slice(0, 3).map((cuisine) => (
-                <Badge key={cuisine} variant="secondary" className="text-xs capitalize">
+            <div className="flex flex-wrap gap-1 sm:gap-1.5 mb-2 sm:mb-3">
+              {restaurant.cuisines.slice(0, 2).map((cuisine) => (
+                <Badge key={cuisine} variant="secondary" className="text-[10px] sm:text-xs capitalize">
                   {cuisine}
                 </Badge>
               ))}
@@ -160,11 +160,11 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
 
           {/* Ambience Tags */}
           {restaurant.ambience_tags && restaurant.ambience_tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {restaurant.ambience_tags.slice(0, 3).map((tag) => (
+            <div className="flex flex-wrap gap-1 sm:gap-1.5">
+              {restaurant.ambience_tags.slice(0, 2).map((tag) => (
                 <span
                   key={tag}
-                  className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                  className={`px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-medium rounded-full ${
                     AMBIENCE_TAG_STYLES[tag] || 'bg-muted text-muted-foreground'
                   }`}
                 >
