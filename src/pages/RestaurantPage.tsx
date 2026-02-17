@@ -13,7 +13,8 @@ import {
   Sparkles,
   Trophy,
   ChevronLeft,
-  Instagram
+  Instagram,
+  Calendar
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -190,6 +191,9 @@ export default function RestaurantPage() {
     { name: restaurant.name, url: `https://dishloopr.com/restaurant/${restaurant.slug}` }
   ]);
 
+  const hasReservation = !!(restaurant.reservation_url || restaurant.zenchef_id);
+  const reservationHref = restaurant.reservation_url || `https://widget.zenchef.com/reservation/${restaurant.zenchef_id}`;
+
   return (
     <Layout>
       <SEOHead
@@ -237,7 +241,7 @@ export default function RestaurantPage() {
         </div>
       </div>
 
-      <div className="container px-4 md:px-6 py-6 md:py-8 overflow-hidden">
+      <div className={`container px-4 md:px-6 py-6 md:py-8 overflow-hidden ${hasReservation ? 'pb-24 lg:pb-8' : ''}`}>
         <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6 md:space-y-8 min-w-0">
@@ -368,11 +372,12 @@ export default function RestaurantPage() {
 
             {/* Mobile-only: Contact, Opening Hours & Reservation */}
             <div className="lg:hidden space-y-3">
-              {/* CTA Buttons - wrap on small screens */}
+              {/* CTA Buttons */}
               <div className="grid grid-cols-2 gap-2">
-                {(restaurant.reservation_url || restaurant.zenchef_id) && (
-                  <Button className="col-span-2" size="lg" asChild>
-                    <a href={restaurant.reservation_url || `https://widget.zenchef.com/reservation/${restaurant.zenchef_id}`} target="_blank" rel="noopener noreferrer">
+                {hasReservation && (
+                  <Button className="col-span-2 bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" asChild>
+                    <a href={reservationHref} target="_blank" rel="noopener noreferrer" className="gap-2">
+                      <Calendar className="h-5 w-5" />
                       {t('restaurant.reserve')}
                     </a>
                   </Button>
@@ -607,6 +612,18 @@ export default function RestaurantPage() {
           </div>
         </div>
       </div>
+
+      {/* Sticky mobile reservation bar */}
+      {hasReservation && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-background/95 backdrop-blur border-t border-border p-3 safe-area-bottom">
+          <Button className="w-full bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" asChild>
+            <a href={reservationHref} target="_blank" rel="noopener noreferrer" className="gap-2">
+              <Calendar className="h-5 w-5" />
+              {t('restaurant.reserve')}
+            </a>
+          </Button>
+        </div>
+      )}
     </Layout>
   );
 }
