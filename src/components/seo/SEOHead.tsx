@@ -176,9 +176,10 @@ export function createRestaurantSchema(restaurant: {
 
   const openingHoursSpec = restaurant.openingHours
     ? Object.entries(restaurant.openingHours)
-        .filter(([, hours]) => hours && hours !== 'closed')
+        .filter(([, hours]) => hours && typeof hours === 'string' && hours !== 'closed')
         .map(([day, hours]) => {
-          const match = hours.match(/(\d{1,2}):?(\d{2})?\s*[-–]\s*(\d{1,2}):?(\d{2})?/);
+          const hoursStr = String(hours);
+          const match = hoursStr.match(/(\d{1,2}):?(\d{2})?\s*[-–]\s*(\d{1,2}):?(\d{2})?/);
           if (!match) return null;
           return {
             '@type': 'OpeningHoursSpecification',
