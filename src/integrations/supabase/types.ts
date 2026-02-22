@@ -561,6 +561,63 @@ export type Database = {
         }
         Relationships: []
       }
+      email_campaigns: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          custom_filter: Json | null
+          failed_count: number | null
+          html_content: string
+          id: string
+          last_cursor: string | null
+          segment: string
+          sent_count: number | null
+          started_at: string | null
+          status: string
+          subject: string
+          title: string
+          total_recipients: number | null
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          custom_filter?: Json | null
+          failed_count?: number | null
+          html_content: string
+          id?: string
+          last_cursor?: string | null
+          segment?: string
+          sent_count?: number | null
+          started_at?: string | null
+          status?: string
+          subject: string
+          title: string
+          total_recipients?: number | null
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          custom_filter?: Json | null
+          failed_count?: number | null
+          html_content?: string
+          id?: string
+          last_cursor?: string | null
+          segment?: string
+          sent_count?: number | null
+          started_at?: string | null
+          status?: string
+          subject?: string
+          title?: string
+          total_recipients?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string
