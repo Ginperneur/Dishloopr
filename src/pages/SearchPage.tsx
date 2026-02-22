@@ -37,6 +37,7 @@ interface Filters {
   mealTypes: string[];
   experiences: string[];
   dietaryOptions: string[];
+  hasTerrace?: boolean;
 }
 
 export default function SearchPage() {

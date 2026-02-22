@@ -20,6 +20,7 @@ interface Filters {
   mealTypes: string[];
   experiences: string[];
   dietaryOptions: string[];
+  hasTerrace?: boolean;
 }
 
 interface FilterPopoverProps {
@@ -114,7 +115,8 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
     filters.concepts.length +
     filters.mealTypes.length +
     filters.experiences.length +
-    filters.dietaryOptions.length;
+    filters.dietaryOptions.length +
+    (filters.hasTerrace ? 1 : 0);
 
   const toggleFilter = (type: keyof Filters, value: string | number) => {
     const current = filters[type] as (string | number)[];
@@ -133,6 +135,7 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
       mealTypes: [],
       experiences: [],
       dietaryOptions: [],
+      hasTerrace: undefined,
     });
   };
 
@@ -159,8 +162,20 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
               </Button>
             )}
           </div>
-          {/* Primary dietary filters as quick-toggle chips */}
+          {/* Primary quick-toggle chips: dietary + terrace */}
           <div className="flex flex-wrap gap-2 mt-3">
+            {/* Terrace filter */}
+            <button
+              onClick={() => onFiltersChange({ ...filters, hasTerrace: filters.hasTerrace ? undefined : true })}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
+                filters.hasTerrace
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted'
+              }`}
+            >
+              <span>☀️</span>
+              <span>{t('filters.terrace', 'Terras')}</span>
+            </button>
             {DIETARY_OPTIONS.map((option) => {
               const isActive = filters.dietaryOptions.includes(option.value);
               return (
