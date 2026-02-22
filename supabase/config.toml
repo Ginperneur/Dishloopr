@@ -68,3 +68,6 @@ verify_jwt = false
 
 [functions.analyze-reviews]
 verify_jwt = false
+
+[functions.create-newsletter-checkout]
+verify_jwt = false

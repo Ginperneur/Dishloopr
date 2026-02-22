@@ -320,6 +320,25 @@ serve(async (req) => {
         }
 
         logStep("Restaurant updated successfully", { restaurantId, listingType });
+    }
+      // Handle newsletter placement payment
+      else if (type === "newsletter_placement" && metadata.placementId) {
+        logStep("Processing newsletter placement payment", { placementId: metadata.placementId });
+
+        const { error: updateError } = await supabaseAdmin
+          .from("newsletter_placements")
+          .update({
+            status: "paid",
+            stripe_payment_id: session.payment_intent as string,
+          })
+          .eq("id", metadata.placementId);
+
+        if (updateError) {
+          logStep("Newsletter placement update error", { error: updateError.message });
+          return new Response(JSON.stringify({ error: updateError.message }), { status: 500 });
+        }
+
+        logStep("Newsletter placement paid successfully", { placementId: metadata.placementId });
       } else {
         logStep("Missing metadata for purchase", { metadata: session.metadata });
       }

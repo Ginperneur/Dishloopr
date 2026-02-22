@@ -59,6 +59,7 @@ import { FeaturedSlotsManager } from '@/components/admin/FeaturedSlotsManager';
 import { AmbiancePricingManager } from '@/components/admin/AmbiancePricingManager';
 import { useActivityLog } from '@/hooks/useActivityLog';
 import { AdminNotifications } from '@/components/admin/AdminNotifications';
+import { NewsletterManager } from '@/components/admin/NewsletterManager';
 
 interface Stats {
   totalUsers: number;
@@ -515,6 +516,10 @@ export default function AdminPanel() {
             <TabsTrigger value="photos" className="gap-1.5">
               <Image className="h-4 w-4" />
               <span className="hidden sm:inline">Foto's</span>
+            </TabsTrigger>
+            <TabsTrigger value="newsletter" className="gap-1.5">
+              <FileText className="h-4 w-4" />
+              <span className="hidden sm:inline">Nieuwsbrief</span>
             </TabsTrigger>
           </TabsList>
 
@@ -975,6 +980,21 @@ export default function AdminPanel() {
 
           <TabsContent value="photos">
             <PhotosManager />
+          </TabsContent>
+
+          <TabsContent value="newsletter">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Nieuwsbrief Beheer
+                </CardTitle>
+                <CardDescription>Beheer edities, bekijk betaalde plaatsingen en stel nieuwsbrieven samen</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <NewsletterManager />
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
 
