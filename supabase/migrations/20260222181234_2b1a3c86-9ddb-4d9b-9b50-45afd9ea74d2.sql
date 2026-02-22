@@ -1,0 +1,2 @@
+ALTER TABLE public.collections DROP CONSTRAINT collections_dish_id_fkey;
+ALTER TABLE public.collections ADD CONSTRAINT collections_dish_id_fkey FOREIGN KEY (dish_id) REFERENCES public.dishes(id) ON DELETE SET NULL;
