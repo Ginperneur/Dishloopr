@@ -1,0 +1,2 @@
+ALTER TABLE public.menu_items ALTER COLUMN price DROP NOT NULL;
+ALTER TABLE public.menu_items ALTER COLUMN price SET DEFAULT NULL;

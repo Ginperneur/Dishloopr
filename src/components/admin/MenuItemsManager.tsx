@@ -136,13 +136,13 @@ export function MenuItemsManager({ restaurantId, restaurantName, onUpdate, isAdm
   };
 
   const addItem = async () => {
-    if (!formData.name.trim() || !formData.category.trim() || !formData.price) {
+    if (!formData.name.trim() || !formData.category.trim()) {
       toast.error('Vul alle verplichte velden in');
       return;
     }
 
-    const price = parseFloat(formData.price);
-    if (isNaN(price) || price < 0) {
+    const price = formData.price ? parseFloat(formData.price) : null;
+    if (price !== null && (isNaN(price) || price < 0)) {
       toast.error('Ongeldige prijs');
       return;
     }
@@ -153,7 +153,7 @@ export function MenuItemsManager({ restaurantId, restaurantName, onUpdate, isAdm
         restaurant_id: restaurantId,
         name: formData.name.trim(),
         description: formData.description.trim() || null,
-        price,
+        price: price ?? 0,
         category: formData.category.trim(),
         allergens: formData.allergens,
         is_vegetarian: formData.is_vegetarian,
@@ -188,13 +188,13 @@ export function MenuItemsManager({ restaurantId, restaurantName, onUpdate, isAdm
   const updateItem = async () => {
     if (!editingItem) return;
 
-    if (!formData.name.trim() || !formData.category.trim() || !formData.price) {
+    if (!formData.name.trim() || !formData.category.trim()) {
       toast.error('Vul alle verplichte velden in');
       return;
     }
 
-    const price = parseFloat(formData.price);
-    if (isNaN(price) || price < 0) {
+    const price = formData.price ? parseFloat(formData.price) : null;
+    if (price !== null && (isNaN(price) || price < 0)) {
       toast.error('Ongeldige prijs');
       return;
     }
@@ -204,7 +204,7 @@ export function MenuItemsManager({ restaurantId, restaurantName, onUpdate, isAdm
       .update({
         name: formData.name.trim(),
         description: formData.description.trim() || null,
-        price,
+        price: price ?? 0,
         category: formData.category.trim(),
         allergens: formData.allergens,
         is_vegetarian: formData.is_vegetarian,
@@ -551,7 +551,7 @@ function MenuItemForm({ formData, setFormData, categories, allergenOptions }: Me
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label>Prijs (€) *</Label>
+          <Label>Prijs (€)</Label>
           <Input
             type="number"
             step="0.01"

@@ -909,7 +909,7 @@ export type Database = {
           is_vegan: boolean | null
           is_vegetarian: boolean | null
           name: string
-          price: number
+          price: number | null
           restaurant_id: string
           updated_at: string
         }
@@ -925,7 +925,7 @@ export type Database = {
           is_vegan?: boolean | null
           is_vegetarian?: boolean | null
           name: string
-          price: number
+          price?: number | null
           restaurant_id: string
           updated_at?: string
         }
@@ -941,7 +941,7 @@ export type Database = {
           is_vegan?: boolean | null
           is_vegetarian?: boolean | null
           name?: string
-          price?: number
+          price?: number | null
           restaurant_id?: string
           updated_at?: string
         }
