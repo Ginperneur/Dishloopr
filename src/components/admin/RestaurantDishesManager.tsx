@@ -26,6 +26,14 @@ interface Dish {
   slug: string;
 }
 
+const COURSE_TYPES = [
+  { value: 'voorgerecht', label: '🥗 Voorgerecht' },
+  { value: 'hoofdgerecht', label: '🍽️ Hoofdgerecht' },
+  { value: 'bijgerecht', label: '🥙 Bijgerecht' },
+  { value: 'dessert', label: '🍰 Dessert' },
+  { value: 'drank', label: '🥤 Drank' },
+];
+
 interface RestaurantDish {
   id: string;
   restaurant_id: string;
@@ -35,6 +43,7 @@ interface RestaurantDish {
   source: string | null;
   created_at: string;
   is_signature: boolean;
+  course_type: string;
   dishes?: Dish | null;
 }
 
@@ -95,13 +104,14 @@ export function RestaurantDishesManager() {
       .select('*, dishes:dish_id(id, name, name_en, slug)')
       .eq('restaurant_id', selectedRestaurant)
       .order('is_signature', { ascending: false })
+      .order('course_type')
       .order('created_at', { ascending: false });
 
     if (error) {
       toast.error('Fout bij laden restaurant gerechten');
       return;
     }
-    setRestaurantDishes(data || []);
+    setRestaurantDishes((data || []) as RestaurantDish[]);
   };
 
   const addDishToRestaurant = async () => {
@@ -193,6 +203,23 @@ export function RestaurantDishesManager() {
     toast.success(!currentValue ? 'Gerecht gemarkeerd als "Bekend om"' : '"Bekend om" verwijderd');
     setRestaurantDishes(prev => prev.map(rd => 
       rd.id === id ? { ...rd, is_signature: !currentValue } : rd
+    ));
+  };
+
+  const updateCourseType = async (id: string, courseType: string) => {
+    const { error } = await supabase
+      .from('restaurant_dishes')
+      .update({ course_type: courseType })
+      .eq('id', id);
+
+    if (error) {
+      toast.error('Fout bij bijwerken gangtype');
+      return;
+    }
+
+    toast.success('Gangtype bijgewerkt');
+    setRestaurantDishes(prev => prev.map(rd =>
+      rd.id === id ? { ...rd, course_type: courseType } : rd
     ));
   };
 
@@ -369,6 +396,7 @@ export function RestaurantDishesManager() {
                 <TableRow>
                   <TableHead className="w-[80px]">Bekend om</TableHead>
                   <TableHead>Gerecht</TableHead>
+                  <TableHead>Gang</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Bron</TableHead>
                   <TableHead className="w-[100px]">Acties</TableHead>
@@ -377,7 +405,7 @@ export function RestaurantDishesManager() {
               <TableBody>
                 {restaurantDishes.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                       Nog geen gerechten gekoppeld
                     </TableCell>
                   </TableRow>
@@ -405,6 +433,21 @@ export function RestaurantDishesManager() {
                             )}
                           </div>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={rd.course_type || 'hoofdgerecht'}
+                          onValueChange={(v) => updateCourseType(rd.id, v)}
+                        >
+                          <SelectTrigger className="w-36 h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {COURSE_TYPES.map(ct => (
+                              <SelectItem key={ct.value} value={ct.value}>{ct.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell>{getStatusBadge(rd.status)}</TableCell>
                       <TableCell>{getSourceBadge(rd.source)}</TableCell>

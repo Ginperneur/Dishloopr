@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Leaf, Wheat, AlertCircle, X, ZoomIn, ZoomOut, Star, Filter } from 'lucide-react';
+import { ChevronDown, Leaf, Wheat, AlertCircle, X, ZoomIn, ZoomOut, Star, Filter, UtensilsCrossed } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { useMenuItems } from '@/hooks/useMenuItems';
+import { useMenuItems, COURSE_TYPE_LABELS, type CourseType } from '@/hooks/useMenuItems';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Toggle } from '@/components/ui/toggle';
 import {
@@ -35,7 +35,7 @@ type FilterType = 'signature' | 'vegetarian' | 'glutenFree';
 
 export function MenuSection({ restaurantId }: MenuSectionProps) {
   const { t } = useTranslation();
-  const { menuItems, categories, loading, error } = useMenuItems(restaurantId);
+  const { menuItems, categories, courseTypes, loading, error } = useMenuItems(restaurantId);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [showAllergens, setShowAllergens] = useState<string | null>(null);
   const [lightboxImage, setLightboxImage] = useState<{ url: string; name: string } | null>(null);
@@ -65,11 +65,11 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
     });
   }, [menuItems, activeFilters]);
 
-  const filteredCategories = useMemo(() => {
-    return categories.filter(category => 
-      filteredMenuItems.some(item => item.category === category)
+  const filteredCourseTypes = useMemo(() => {
+    return courseTypes.filter(ct =>
+      filteredMenuItems.some(item => item.course_type === ct)
     );
-  }, [categories, filteredMenuItems]);
+  }, [courseTypes, filteredMenuItems]);
 
   // Count items per filter for badges
   const filterCounts = useMemo(() => ({
@@ -196,23 +196,23 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
       )}
       
       <div className="space-y-2">
-        {filteredCategories.map((category) => {
-          const categoryItems = filteredMenuItems.filter(item => item.category === category);
-          const isExpanded = expandedCategory === category;
+        {filteredCourseTypes.map((courseType) => {
+          const courseItems = filteredMenuItems.filter(item => item.course_type === courseType);
+          const isExpanded = expandedCategory === courseType;
 
           return (
             <div
-              key={category}
+              key={courseType}
               className="rounded-xl border border-border bg-card overflow-hidden"
             >
               <button
-                onClick={() => toggleCategory(category)}
+                onClick={() => toggleCategory(courseType)}
                 className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
               >
-                <span className="font-semibold capitalize">{category}</span>
+                <span className="font-semibold">{COURSE_TYPE_LABELS[courseType as CourseType] || courseType}</span>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">
-                    {categoryItems.length} items
+                    {courseItems.length} {courseItems.length === 1 ? 'gerecht' : 'gerechten'}
                   </span>
                   <ChevronDown 
                     className={`h-5 w-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
@@ -230,10 +230,9 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
                   >
                     <Separator />
                     <div className="p-4 space-y-4">
-                      {categoryItems.map((item) => (
+                      {courseItems.map((item) => (
                         <div key={item.id} className="space-y-2">
                           <div className="flex items-start gap-3">
-                            {/* Dish Image with Lightbox */}
                             {item.image_url && (
                               <button
                                 onClick={() => setLightboxImage({ url: item.image_url!, name: item.name })}
