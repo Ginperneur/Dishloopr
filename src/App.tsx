@@ -36,6 +36,7 @@ import CityDetailPage from "./pages/CityDetailPage";
 import NotFound from "./pages/NotFound";
 import ForRestaurantsPage from "./pages/ForRestaurantsPage";
 import AddRestaurantPage from "./pages/AddRestaurantPage";
+import EventsPage from "./pages/EventsPage";
 
 const queryClient = new QueryClient();
 
@@ -79,6 +80,7 @@ const App = () => (
                 <Route path="/eten/:slug" element={<DishCityPage />} />
                 <Route path="/steden" element={<CityIndexPage />} />
                 <Route path="/steden/:citySlug" element={<CityDetailPage />} />
+                <Route path="/events" element={<EventsPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
