@@ -52,6 +52,12 @@ export function UpcomingEvents() {
             <Calendar className="h-5 w-5 text-primary" />
             {t('events.upcoming', 'Aankomende evenementen')}
           </h2>
+          <Button variant="ghost" size="sm" asChild className="text-xs sm:text-sm">
+            <Link to="/events" className="flex items-center gap-1 md:gap-2">
+              {t('home.viewAll', 'Bekijk alles')}
+              <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            </Link>
+          </Button>
         </motion.div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
