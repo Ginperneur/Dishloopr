@@ -1,6 +1,18 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+export type CourseType = 'voorgerecht' | 'hoofdgerecht' | 'dessert' | 'bijgerecht' | 'drank';
+
+export const COURSE_TYPE_ORDER: CourseType[] = ['voorgerecht', 'hoofdgerecht', 'bijgerecht', 'dessert', 'drank'];
+
+export const COURSE_TYPE_LABELS: Record<CourseType, string> = {
+  voorgerecht: '🥗 Voorgerechten',
+  hoofdgerecht: '🍽️ Hoofdgerechten',
+  bijgerecht: '🥙 Bijgerechten',
+  dessert: '🍰 Desserts',
+  drank: '🥤 Dranken',
+};
+
 interface MenuItem {
   id: string;
   restaurant_id: string;
@@ -8,6 +20,7 @@ interface MenuItem {
   description: string | null;
   price: number;
   category: string;
+  course_type: CourseType;
   allergens: string[];
   is_vegetarian: boolean;
   is_vegan: boolean;
@@ -20,6 +33,7 @@ interface MenuItem {
 export function useMenuItems(restaurantId: string | undefined) {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  const [courseTypes, setCourseTypes] = useState<CourseType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +46,6 @@ export function useMenuItems(restaurantId: string | undefined) {
     const fetchMenuItems = async () => {
       setLoading(true);
       try {
-        // Fetch restaurant dishes (the actual dishes linked to the restaurant)
         const { data: restaurantDishes, error: dishesError } = await supabase
           .from('restaurant_dishes')
           .select(`
@@ -40,6 +53,7 @@ export function useMenuItems(restaurantId: string | undefined) {
             restaurant_id,
             is_signature,
             status,
+            course_type,
             dish:dishes(
               id,
               name,
@@ -51,20 +65,21 @@ export function useMenuItems(restaurantId: string | undefined) {
 
         if (dishesError) throw dishesError;
 
-        // Transform restaurant_dishes to MenuItem format
         const items: MenuItem[] = (restaurantDishes || [])
-          .filter(rd => rd.dish) // Ensure dish exists
+          .filter(rd => rd.dish)
           .map(rd => {
             const dish = rd.dish as { id: string; name: string; cuisine_tags: string[] | null };
             const cuisineTags = dish.cuisine_tags || [];
+            const courseType = (rd as any).course_type as CourseType || 'hoofdgerecht';
             
             return {
               id: rd.id,
               restaurant_id: rd.restaurant_id,
               name: dish.name,
-              description: null, // restaurant_dishes doesn't have descriptions
-              price: 0, // restaurant_dishes doesn't have prices
-              category: cuisineTags[0] || 'Gerechten', // Use first cuisine tag as category
+              description: null,
+              price: 0,
+              category: cuisineTags[0] || 'Gerechten',
+              course_type: courseType,
               allergens: [],
               is_vegetarian: cuisineTags.some(t => t.toLowerCase().includes('vegetar')),
               is_vegan: cuisineTags.some(t => t.toLowerCase().includes('vegan')),
@@ -80,6 +95,12 @@ export function useMenuItems(restaurantId: string | undefined) {
         // Extract unique categories
         const uniqueCategories = [...new Set(items.map(item => item.category))];
         setCategories(uniqueCategories);
+
+        // Extract course types in correct order
+        const presentCourseTypes = COURSE_TYPE_ORDER.filter(ct =>
+          items.some(item => item.course_type === ct)
+        );
+        setCourseTypes(presentCourseTypes);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load dishes');
       } finally {
@@ -90,5 +111,5 @@ export function useMenuItems(restaurantId: string | undefined) {
     fetchMenuItems();
   }, [restaurantId]);
 
-  return { menuItems, categories, loading, error };
+  return { menuItems, categories, courseTypes, loading, error };
 }

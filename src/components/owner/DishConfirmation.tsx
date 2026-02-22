@@ -8,11 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Check, X, Plus, Loader2, ChefHat, AlertCircle, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { cn, formatDishName } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { COURSE_TYPE_LABELS, COURSE_TYPE_ORDER, type CourseType } from '@/hooks/useMenuItems';
 
 interface DishConfirmationProps {
   restaurantId: string;
@@ -256,22 +258,53 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
               <p>{isNL ? 'Nog geen bevestigde gerechten' : 'No confirmed dishes yet'}</p>
             </div>
           ) : (
-            <div className="flex flex-wrap gap-2">
-              {confirmedDishes.map((item) => (
-                <Badge
-                  key={item.id}
-                  variant="secondary"
-                  className="px-3 py-2 text-sm flex items-center gap-2"
-                >
-                  {getDishName(item.dish)}
-                  <button
-                    onClick={() => deleteDish(item.id)}
-                    className="hover:text-destructive transition-colors"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </Badge>
-              ))}
+            <div className="space-y-4">
+              {COURSE_TYPE_ORDER.map(courseType => {
+                const courseDishes = confirmedDishes.filter(
+                  (d: any) => (d.course_type || 'hoofdgerecht') === courseType
+                );
+                if (courseDishes.length === 0) return null;
+                return (
+                  <div key={courseType}>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">
+                      {COURSE_TYPE_LABELS[courseType]}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {courseDishes.map((item) => (
+                        <div key={item.id} className="flex items-center gap-1 bg-secondary rounded-lg px-2 py-1">
+                          <Select
+                            value={(item as any).course_type || 'hoofdgerecht'}
+                            onValueChange={async (v) => {
+                              await supabase.from('restaurant_dishes').update({ course_type: v }).eq('id', item.id);
+                              toast.success('Gangtype bijgewerkt');
+                              // Trigger refetch
+                              window.location.reload();
+                            }}
+                          >
+                            <SelectTrigger className="h-6 w-6 p-0 border-0 bg-transparent [&>svg]:hidden">
+                              <span className="text-xs">
+                                {courseType === 'voorgerecht' ? '🥗' : courseType === 'hoofdgerecht' ? '🍽️' : courseType === 'dessert' ? '🍰' : courseType === 'bijgerecht' ? '🥙' : '🥤'}
+                              </span>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {COURSE_TYPE_ORDER.map(ct => (
+                                <SelectItem key={ct} value={ct}>{COURSE_TYPE_LABELS[ct]}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <span className="text-sm">{getDishName(item.dish)}</span>
+                          <button
+                            onClick={() => deleteDish(item.id)}
+                            className="hover:text-destructive transition-colors ml-1"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </CardContent>

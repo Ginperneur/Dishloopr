@@ -22,6 +22,7 @@ export interface RestaurantDish {
   rejected_reason: string | null;
   created_at: string;
   updated_at: string;
+  course_type: string;
   dish?: {
     id: string;
     name: string;

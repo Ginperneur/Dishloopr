@@ -1307,6 +1307,7 @@ export type Database = {
           approved_by: string | null
           clicks: number
           confidence_score: number
+          course_type: string | null
           created_at: string
           created_by: string | null
           dish_id: string
@@ -1325,6 +1326,7 @@ export type Database = {
           approved_by?: string | null
           clicks?: number
           confidence_score?: number
+          course_type?: string | null
           created_at?: string
           created_by?: string | null
           dish_id: string
@@ -1343,6 +1345,7 @@ export type Database = {
           approved_by?: string | null
           clicks?: number
           confidence_score?: number
+          course_type?: string | null
           created_at?: string
           created_by?: string | null
           dish_id?: string
