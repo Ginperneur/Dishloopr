@@ -42,6 +42,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useOwnerDashboard } from '@/hooks/useOwnerDashboard';
 import { useRestaurantClaims } from '@/hooks/useRestaurantClaims';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { StatCard } from '@/components/owner/StatCard';
 import { ReviewCard } from '@/components/owner/ReviewCard';
 import { AnalyticsTab } from '@/components/owner/AnalyticsTab';
@@ -505,6 +506,50 @@ export default function OwnerDashboard() {
 
           {/* ===== CONTENT TAB ===== */}
           <TabsContent value="content" className="space-y-8">
+            {/* Restaurant Details Quick Settings */}
+            {selectedRestaurant && (
+              <div>
+                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                  <Store className="h-5 w-5 text-primary" />
+                  Restaurant Details
+                </h3>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg">☀️</span>
+                        <div>
+                          <p className="font-medium text-sm">Terras beschikbaar</p>
+                          <p className="text-xs text-muted-foreground">Geef aan of gasten buiten kunnen zitten</p>
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={(selectedRestaurant as any).has_terrace ?? false}
+                          onChange={async (e) => {
+                            const newValue = e.target.checked;
+                            const { error } = await supabase
+                              .from('restaurants')
+                              .update({ has_terrace: newValue } as any)
+                              .eq('id', selectedRestaurant.id);
+                            if (error) {
+                              toast.error('Kon instelling niet opslaan');
+                            } else {
+                              toast.success(newValue ? 'Terras geactiveerd' : 'Terras gedeactiveerd');
+                              // Update local state
+                              setSelectedRestaurant({ ...selectedRestaurant, has_terrace: newValue } as any);
+                            }
+                          }}
+                        />
+                        <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:bg-primary transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-background after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
+                      </label>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
             {/* Dishes Confirmation */}
             <div>
               <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">

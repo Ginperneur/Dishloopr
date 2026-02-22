@@ -1352,6 +1352,7 @@ export type Database = {
           featured_until: string | null
           geo_lat: number | null
           geo_lng: number | null
+          has_terrace: boolean
           id: string
           images: string[] | null
           instagram_url: string | null
@@ -1393,6 +1394,7 @@ export type Database = {
           featured_until?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
+          has_terrace?: boolean
           id?: string
           images?: string[] | null
           instagram_url?: string | null
@@ -1434,6 +1436,7 @@ export type Database = {
           featured_until?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
+          has_terrace?: boolean
           id?: string
           images?: string[] | null
           instagram_url?: string | null
