@@ -34,10 +34,22 @@ export function Footer() {
     if (!email) return;
     
     setIsLoading(true);
-    // Simulate newsletter signup
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    toast.success(t('footer.newsletterSuccess', 'Bedankt! Je bent aangemeld voor de nieuwsbrief.'));
-    setEmail('');
+    try {
+      const { error } = await supabase
+        .from('newsletter_subscribers')
+        .upsert({ email, is_active: true }, { onConflict: 'email' });
+      
+      if (error) throw error;
+      toast.success(t('footer.newsletterSuccess', 'Bedankt! Je bent aangemeld voor de nieuwsbrief.'));
+      setEmail('');
+    } catch (err: any) {
+      if (err.code === '23505') {
+        toast.info('Je bent al aangemeld voor de nieuwsbrief!');
+        setEmail('');
+      } else {
+        toast.error('Er ging iets mis. Probeer het opnieuw.');
+      }
+    }
     setIsLoading(false);
   };
 

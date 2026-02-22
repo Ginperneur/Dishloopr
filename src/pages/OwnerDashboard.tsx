@@ -64,6 +64,7 @@ import { NeighborhoodAnalysis } from '@/components/owner/NeighborhoodAnalysis';
 import { PeakHoursInsight } from '@/components/owner/PeakHoursInsight';
 import { PromotionROI } from '@/components/owner/PromotionROI';
 import { OwnerEventsManager } from '@/components/owner/OwnerEventsManager';
+import { NewsletterPlacement } from '@/components/owner/NewsletterPlacement';
 import { useOptimizationInsights } from '@/hooks/useOptimizationInsights';
 import { useMarketInsights } from '@/hooks/useMarketInsights';
 import { useRestaurantDishes } from '@/hooks/useRestaurantDishes';
@@ -124,6 +125,17 @@ export default function OwnerDashboard() {
       window.history.replaceState({}, '', '/owner-dashboard');
     } else if (verification === 'cancelled') {
       toast.error('Verificatie betaling geannuleerd.');
+      window.history.replaceState({}, '', '/owner-dashboard');
+    }
+
+    // Handle newsletter redirect from Stripe
+    const newsletter = searchParams.get('newsletter');
+    if (newsletter === 'success') {
+      toast.success('Betaling ontvangen! Je plaatsing wordt beoordeeld.');
+      setActiveTab('marketing');
+      window.history.replaceState({}, '', '/owner-dashboard');
+    } else if (newsletter === 'cancelled') {
+      toast.info('Nieuwsbrief betaling geannuleerd.');
       window.history.replaceState({}, '', '/owner-dashboard');
     }
   }, [searchParams]);
@@ -712,6 +724,14 @@ export default function OwnerDashboard() {
                     <DemandRoutingSettings restaurant={selectedRestaurant} />
                   </div>
                 )}
+
+                {/* Newsletter Placement */}
+                <div className="border-t pt-8">
+                  <NewsletterPlacement 
+                    restaurantId={selectedRestaurant.id} 
+                    restaurantName={selectedRestaurant.name} 
+                  />
+                </div>
               </>
             )}
           </TabsContent>
