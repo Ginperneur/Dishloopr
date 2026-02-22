@@ -23,6 +23,10 @@ export interface RestaurantDish {
   created_at: string;
   updated_at: string;
   course_type: string;
+  is_halal: boolean;
+  is_vegetarian: boolean;
+  is_vegan: boolean;
+  is_gluten_free: boolean;
   dish?: {
     id: string;
     name: string;

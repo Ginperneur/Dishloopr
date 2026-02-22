@@ -413,33 +413,7 @@ export default function RestaurantPage() {
 
             <Separator />
 
-            {/* Known For - Signature dishes that boost search ranking */}
-            {restaurant.dishes && restaurant.dishes.length > 0 && (
-              <>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  <h2 className="text-lg md:text-xl font-bold mb-3 md:mb-4">{t('restaurant.knownFor')}</h2>
-                  <div className="flex flex-wrap gap-2 md:gap-3">
-                    {restaurant.dishes.map((dish) => (
-                      <Link
-                        key={dish.id}
-                        to={`/search?dish=${encodeURIComponent(dish.name)}`}
-                        className="flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-lg md:rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/20 transition-colors text-sm md:text-base group"
-                      >
-                        <span className="font-medium text-primary group-hover:text-primary/80">{dish.name}</span>
-                      </Link>
-                    ))}
-                  </div>
-                </motion.div>
-
-                <Separator />
-              </>
-            )}
-
-            {/* Menu Section - always shown */}
+            {/* Gerechten - unified section with filters */}
             <MenuSection restaurantId={restaurant.id} />
 
             <Separator />

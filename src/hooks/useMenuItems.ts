@@ -13,7 +13,7 @@ export const COURSE_TYPE_LABELS: Record<CourseType, string> = {
   drank: '🥤 Dranken',
 };
 
-interface MenuItem {
+export interface MenuItem {
   id: string;
   restaurant_id: string;
   name: string;
@@ -25,6 +25,7 @@ interface MenuItem {
   is_vegetarian: boolean;
   is_vegan: boolean;
   is_gluten_free: boolean;
+  is_halal: boolean;
   image_url: string | null;
   is_available: boolean;
   is_signature: boolean;
@@ -52,6 +53,10 @@ export function useMenuItems(restaurantId: string | undefined) {
             id,
             restaurant_id,
             is_signature,
+            is_halal,
+            is_vegetarian,
+            is_vegan,
+            is_gluten_free,
             status,
             course_type,
             dish:dishes(
@@ -81,9 +86,10 @@ export function useMenuItems(restaurantId: string | undefined) {
               category: cuisineTags[0] || 'Gerechten',
               course_type: courseType,
               allergens: [],
-              is_vegetarian: cuisineTags.some(t => t.toLowerCase().includes('vegetar')),
-              is_vegan: cuisineTags.some(t => t.toLowerCase().includes('vegan')),
-              is_gluten_free: cuisineTags.some(t => t.toLowerCase().includes('gluten')),
+              is_vegetarian: rd.is_vegetarian || false,
+              is_vegan: rd.is_vegan || false,
+              is_gluten_free: rd.is_gluten_free || false,
+              is_halal: rd.is_halal || false,
               image_url: null,
               is_available: true,
               is_signature: rd.is_signature,
@@ -92,11 +98,9 @@ export function useMenuItems(restaurantId: string | undefined) {
 
         setMenuItems(items);
         
-        // Extract unique categories
         const uniqueCategories = [...new Set(items.map(item => item.category))];
         setCategories(uniqueCategories);
 
-        // Extract course types in correct order
         const presentCourseTypes = COURSE_TYPE_ORDER.filter(ct =>
           items.some(item => item.course_type === ct)
         );
