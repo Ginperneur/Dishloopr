@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, LogOut, User, Store, Shield, Heart, Search, BarChart3, Utensils, BookOpen } from 'lucide-react';
+import { Menu, X, LogOut, User, Store, Shield, Heart, Search, BarChart3, Utensils, BookOpen, PartyPopper } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -87,6 +87,10 @@ export function Header() {
           </Link>
           <Link to="/search?featured=true" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
             {t('nav.featured')}
+          </Link>
+          <Link to="/events" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1.5">
+            <PartyPopper className="h-4 w-4" />
+            {t('nav.events', 'Events & Acties')}
           </Link>
           {user && (
             <Link to="/favorites" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1.5">
@@ -230,6 +234,10 @@ export function Header() {
               <Link to="/collections" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors" onClick={() => setMobileMenuOpen(false)}>
                 <BookOpen className="h-5 w-5 text-muted-foreground" />
                 <span className="font-medium">{t('nav.collections')}</span>
+              </Link>
+              <Link to="/events" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                <PartyPopper className="h-5 w-5 text-muted-foreground" />
+                <span className="font-medium">{t('nav.events', 'Events & Acties')}</span>
               </Link>
 
               {user && (
