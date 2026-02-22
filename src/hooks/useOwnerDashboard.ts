@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdminCheck } from '@/hooks/useAdminCheck';
 import type { Database } from '@/integrations/supabase/types';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
@@ -21,6 +22,7 @@ export interface ReviewWithProfile extends Review {
 
 export function useOwnerDashboard() {
   const { user } = useAuth();
+  const { isAdmin } = useAdminCheck();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [reviews, setReviews] = useState<ReviewWithProfile[]>([]);
@@ -32,7 +34,7 @@ export function useOwnerDashboard() {
     if (user) {
       fetchOwnerRestaurants();
     }
-  }, [user]);
+  }, [user, isAdmin]);
 
   useEffect(() => {
     if (selectedRestaurant) {
@@ -52,6 +54,22 @@ export function useOwnerDashboard() {
 
   const fetchOwnerRestaurants = async () => {
     if (!user) return;
+
+    // Admin can see all restaurants
+    if (isAdmin) {
+      const { data: allData } = await supabase
+        .from('restaurants')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+
+      if (allData && allData.length > 0) {
+        setRestaurants(allData);
+        setSelectedRestaurant(allData[0]);
+      }
+      setLoading(false);
+      return;
+    }
 
     // Fetch via claimed_by_owner_id
     const { data: claimedData } = await supabase
