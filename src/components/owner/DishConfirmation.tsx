@@ -5,11 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Check, X, Plus, Loader2, ChefHat, AlertCircle, Search } from 'lucide-react';
+import { Check, X, Plus, Loader2, ChefHat, AlertCircle, Search, Leaf, Wheat } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { cn, formatDishName } from '@/lib/utils';
@@ -33,6 +34,7 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
     rejectDish,
     suggestDish,
     deleteDish,
+    refetch,
   } = useRestaurantDishes({ restaurantId });
 
   const [addDishOpen, setAddDishOpen] = useState(false);
@@ -142,6 +144,20 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
     setSelectedDishId('');
   };
 
+  const toggleDietaryOption = async (dishId: string, field: string, currentValue: boolean) => {
+    const { error } = await supabase
+      .from('restaurant_dishes')
+      .update({ [field]: !currentValue })
+      .eq('id', dishId);
+
+    if (error) {
+      toast.error('Kon niet bijwerken');
+      return;
+    }
+    toast.success('Bijgewerkt');
+    refetch();
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -159,14 +175,12 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
             <ChefHat className="w-8 h-8 text-primary shrink-0" />
             <div>
               <p className="font-medium mb-1">
-                {isNL
-                  ? 'Bevestig je gerechten'
-                  : 'Confirm your dishes'}
+                {isNL ? 'Bevestig je gerechten' : 'Confirm your dishes'}
               </p>
               <p className="text-sm text-muted-foreground">
                 {isNL
-                  ? 'Dishloopr stelt gerechten voor op basis van je type keuken. Bevestig wat klopt zodat gasten je beter kunnen vinden.'
-                  : 'Dishloopr suggests dishes based on your cuisine type. Confirm what\'s correct so guests can find you faster.'}
+                  ? 'Dishloopr stelt gerechten voor op basis van je type keuken. Bevestig wat klopt en geef aan welke dieetopties beschikbaar zijn.'
+                  : 'Dishloopr suggests dishes based on your cuisine type. Confirm what\'s correct and indicate available dietary options.'}
               </p>
             </div>
           </div>
@@ -181,9 +195,7 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
               {isNL ? 'Voorgestelde Gerechten' : 'Suggested Dishes'}
             </CardTitle>
             <CardDescription>
-              {isNL
-                ? 'Bevestig of verwijder deze suggesties'
-                : 'Confirm or remove these suggestions'}
+              {isNL ? 'Bevestig of verwijder deze suggesties' : 'Confirm or remove these suggestions'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -194,34 +206,22 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
                   className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
                 >
                   <div>
-                    <span className="font-medium">{getDishName(item.dish)}</span>
+                    <span className="font-medium text-sm">{getDishName(item.dish)}</span>
                     {item.dish?.name_en && isNL && (
-                      <span className="text-muted-foreground text-sm ml-2">
-                        ({item.dish.name_en})
-                      </span>
+                      <span className="text-muted-foreground text-xs ml-2">({item.dish.name_en})</span>
                     )}
                     <div className="flex gap-2 mt-1">
-                      <Badge variant="secondary">
+                      <Badge variant="secondary" className="text-xs">
                         {Math.round(item.confidence_score * 100)}% match
                       </Badge>
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                      onClick={() => handleConfirm(item.id)}
-                    >
+                    <Button size="sm" variant="outline" className="text-green-600 hover:text-green-700 hover:bg-green-50" onClick={() => handleConfirm(item.id)}>
                       <Check className="w-4 h-4 mr-1" />
                       {isNL ? 'Bevestig' : 'Confirm'}
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      onClick={() => handleReject(item.id)}
-                    >
+                    <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => handleReject(item.id)}>
                       <X className="w-4 h-4 mr-1" />
                       {isNL ? 'Verwijder' : 'Remove'}
                     </Button>
@@ -241,9 +241,7 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
               {isNL ? 'Bevestigde Gerechten' : 'Confirmed Dishes'}
             </CardTitle>
             <CardDescription>
-              {isNL
-                ? 'Deze gerechten zijn zichtbaar voor gasten'
-                : 'These dishes are visible to guests'}
+              {isNL ? 'Beheer gerechten en dieetopties' : 'Manage dishes and dietary options'}
             </CardDescription>
           </div>
           <Button onClick={() => setAddDishOpen(true)}>
@@ -269,36 +267,65 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
                     <p className="text-sm font-medium text-muted-foreground mb-2">
                       {COURSE_TYPE_LABELS[courseType]}
                     </p>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="space-y-2">
                       {courseDishes.map((item) => (
-                        <div key={item.id} className="flex items-center gap-1 bg-secondary rounded-lg px-2 py-1">
-                          <Select
-                            value={(item as any).course_type || 'hoofdgerecht'}
-                            onValueChange={async (v) => {
-                              await supabase.from('restaurant_dishes').update({ course_type: v }).eq('id', item.id);
-                              toast.success('Gangtype bijgewerkt');
-                              // Trigger refetch
-                              window.location.reload();
-                            }}
-                          >
-                            <SelectTrigger className="h-6 w-6 p-0 border-0 bg-transparent [&>svg]:hidden">
-                              <span className="text-xs">
-                                {courseType === 'voorgerecht' ? '🥗' : courseType === 'hoofdgerecht' ? '🍽️' : courseType === 'dessert' ? '🍰' : courseType === 'bijgerecht' ? '🥙' : '🥤'}
-                              </span>
-                            </SelectTrigger>
-                            <SelectContent>
-                              {COURSE_TYPE_ORDER.map(ct => (
-                                <SelectItem key={ct} value={ct}>{COURSE_TYPE_LABELS[ct]}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <span className="text-sm">{getDishName(item.dish)}</span>
-                          <button
-                            onClick={() => deleteDish(item.id)}
-                            className="hover:text-destructive transition-colors ml-1"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
+                        <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Select
+                              value={(item as any).course_type || 'hoofdgerecht'}
+                              onValueChange={async (v) => {
+                                await supabase.from('restaurant_dishes').update({ course_type: v }).eq('id', item.id);
+                                toast.success('Gangtype bijgewerkt');
+                                refetch();
+                              }}
+                            >
+                              <SelectTrigger className="h-7 w-7 p-0 border-0 bg-transparent [&>svg]:hidden shrink-0">
+                                <span className="text-xs">
+                                  {courseType === 'voorgerecht' ? '🥗' : courseType === 'hoofdgerecht' ? '🍽️' : courseType === 'dessert' ? '🍰' : courseType === 'bijgerecht' ? '🥙' : '🥤'}
+                                </span>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {COURSE_TYPE_ORDER.map(ct => (
+                                  <SelectItem key={ct} value={ct}>{COURSE_TYPE_LABELS[ct]}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <span className="text-sm font-medium truncate">{getDishName(item.dish)}</span>
+                          </div>
+
+                          <div className="flex items-center gap-3 shrink-0">
+                            {/* Dietary toggles */}
+                            <div className="flex items-center gap-1" title="Vegetarisch">
+                              <Leaf className="h-3.5 w-3.5 text-green-600" />
+                              <Switch
+                                checked={(item as any).is_vegetarian || false}
+                                onCheckedChange={() => toggleDietaryOption(item.id, 'is_vegetarian', (item as any).is_vegetarian || false)}
+                                className="scale-75"
+                              />
+                            </div>
+                            <div className="flex items-center gap-1" title="Glutenvrij">
+                              <Wheat className="h-3.5 w-3.5 text-amber-600" />
+                              <Switch
+                                checked={(item as any).is_gluten_free || false}
+                                onCheckedChange={() => toggleDietaryOption(item.id, 'is_gluten_free', (item as any).is_gluten_free || false)}
+                                className="scale-75"
+                              />
+                            </div>
+                            <div className="flex items-center gap-1" title="Halal">
+                              <span className="text-xs">☪️</span>
+                              <Switch
+                                checked={(item as any).is_halal || false}
+                                onCheckedChange={() => toggleDietaryOption(item.id, 'is_halal', (item as any).is_halal || false)}
+                                className="scale-75"
+                              />
+                            </div>
+                            <button
+                              onClick={() => deleteDish(item.id)}
+                              className="hover:text-destructive transition-colors ml-1"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -317,21 +344,14 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
       }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {isNL ? 'Gerecht Toevoegen' : 'Add Dish'}
-            </DialogTitle>
+            <DialogTitle>{isNL ? 'Gerecht Toevoegen' : 'Add Dish'}</DialogTitle>
           </DialogHeader>
 
           {!showNewDishForm ? (
             <div className="space-y-4">
               <Popover open={searchOpen} onOpenChange={setSearchOpen}>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={searchOpen}
-                    className="w-full justify-between"
-                  >
+                  <Button variant="outline" role="combobox" aria-expanded={searchOpen} className="w-full justify-between">
                     {selectedDishId
                       ? getDishName(availableDishes.find((d) => d.id === selectedDishId))
                       : isNL ? 'Selecteer gerecht...' : 'Select dish...'}
@@ -340,38 +360,16 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
                 </PopoverTrigger>
                 <PopoverContent className="w-full p-0" align="start">
                   <Command>
-                    <CommandInput
-                      placeholder={isNL ? 'Zoek gerecht...' : 'Search dish...'}
-                      value={searchQuery}
-                      onValueChange={setSearchQuery}
-                    />
+                    <CommandInput placeholder={isNL ? 'Zoek gerecht...' : 'Search dish...'} value={searchQuery} onValueChange={setSearchQuery} />
                     <CommandList>
-                      <CommandEmpty>
-                        {isNL ? 'Geen gerechten gevonden' : 'No dishes found'}
-                      </CommandEmpty>
+                      <CommandEmpty>{isNL ? 'Geen gerechten gevonden' : 'No dishes found'}</CommandEmpty>
                       <CommandGroup>
                         {filteredDishes.slice(0, 50).map((dish) => (
-                          <CommandItem
-                            key={dish.id}
-                            value={dish.id}
-                            onSelect={() => {
-                              setSelectedDishId(dish.id);
-                              setSearchOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                'mr-2 h-4 w-4',
-                                selectedDishId === dish.id ? 'opacity-100' : 'opacity-0'
-                              )}
-                            />
+                          <CommandItem key={dish.id} value={dish.id} onSelect={() => { setSelectedDishId(dish.id); setSearchOpen(false); }}>
+                            <Check className={cn('mr-2 h-4 w-4', selectedDishId === dish.id ? 'opacity-100' : 'opacity-0')} />
                             <div>
-                              <div>{getDishName(dish)}</div>
-                              {dish.name_en && isNL && (
-                                <div className="text-xs text-muted-foreground">
-                                  {dish.name_en}
-                                </div>
-                              )}
+                              <div className="text-sm">{getDishName(dish)}</div>
+                              {dish.name_en && isNL && <div className="text-xs text-muted-foreground">{dish.name_en}</div>}
                             </div>
                           </CommandItem>
                         ))}
@@ -380,12 +378,7 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
                   </Command>
                 </PopoverContent>
               </Popover>
-
-              <Button
-                variant="ghost"
-                className="w-full text-primary"
-                onClick={() => setShowNewDishForm(true)}
-              >
+              <Button variant="ghost" className="w-full text-primary" onClick={() => setShowNewDishForm(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 {isNL ? 'Nieuw gerecht aanmaken' : 'Create new dish'}
               </Button>
@@ -394,27 +387,13 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>{isNL ? 'Gerechtnaam (NL)' : 'Dish name (NL)'} *</Label>
-                <Input
-                  value={newDishName}
-                  onChange={(e) => setNewDishName(e.target.value)}
-                  placeholder={isNL ? 'Bijv. Rendang' : 'E.g. Rendang'}
-                  maxLength={200}
-                />
+                <Input value={newDishName} onChange={(e) => setNewDishName(e.target.value)} placeholder={isNL ? 'Bijv. Rendang' : 'E.g. Rendang'} maxLength={200} />
               </div>
               <div className="space-y-2">
                 <Label>{isNL ? 'Engelse naam (optioneel)' : 'English name (optional)'}</Label>
-                <Input
-                  value={newDishNameEn}
-                  onChange={(e) => setNewDishNameEn(e.target.value)}
-                  placeholder={isNL ? 'Bijv. Rendang' : 'E.g. Rendang'}
-                  maxLength={200}
-                />
+                <Input value={newDishNameEn} onChange={(e) => setNewDishNameEn(e.target.value)} placeholder={isNL ? 'Bijv. Rendang' : 'E.g. Rendang'} maxLength={200} />
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowNewDishForm(false)}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setShowNewDishForm(false)}>
                 {isNL ? '← Terug naar lijst' : '← Back to list'}
               </Button>
             </div>

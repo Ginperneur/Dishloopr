@@ -1312,7 +1312,11 @@ export type Database = {
           created_by: string | null
           dish_id: string
           id: string
+          is_gluten_free: boolean
+          is_halal: boolean
           is_signature: boolean
+          is_vegan: boolean
+          is_vegetarian: boolean
           rejected_reason: string | null
           restaurant_id: string
           source: string | null
@@ -1331,7 +1335,11 @@ export type Database = {
           created_by?: string | null
           dish_id: string
           id?: string
+          is_gluten_free?: boolean
+          is_halal?: boolean
           is_signature?: boolean
+          is_vegan?: boolean
+          is_vegetarian?: boolean
           rejected_reason?: string | null
           restaurant_id: string
           source?: string | null
@@ -1350,7 +1358,11 @@ export type Database = {
           created_by?: string | null
           dish_id?: string
           id?: string
+          is_gluten_free?: boolean
+          is_halal?: boolean
           is_signature?: boolean
+          is_vegan?: boolean
+          is_vegetarian?: boolean
           rejected_reason?: string | null
           restaurant_id?: string
           source?: string | null
