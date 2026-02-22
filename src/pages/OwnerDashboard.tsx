@@ -29,7 +29,8 @@ import {
   FileText,
   ChevronRight,
   Rocket,
-  CheckCircle2
+  CheckCircle2,
+  PartyPopper
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -61,6 +62,7 @@ import { ReviewIntelligence } from '@/components/owner/ReviewIntelligence';
 import { NeighborhoodAnalysis } from '@/components/owner/NeighborhoodAnalysis';
 import { PeakHoursInsight } from '@/components/owner/PeakHoursInsight';
 import { PromotionROI } from '@/components/owner/PromotionROI';
+import { OwnerEventsManager } from '@/components/owner/OwnerEventsManager';
 import { useOptimizationInsights } from '@/hooks/useOptimizationInsights';
 import { useMarketInsights } from '@/hooks/useMarketInsights';
 import { useRestaurantDishes } from '@/hooks/useRestaurantDishes';
@@ -560,6 +562,19 @@ export default function OwnerDashboard() {
                   description="Vervang of voeg nieuwe foto's toe aan je restaurantprofiel."
                   onRequestVerification={() => setVerificationDialogOpen(true)}
                 />
+              )}
+            </div>
+
+            {/* Events & Acties */}
+            <div className="border-t pt-8">
+              <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                <PartyPopper className="h-5 w-5 text-primary" />
+                Events & Acties
+              </h3>
+              {selectedRestaurant ? (
+                <OwnerEventsManager restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
+              ) : (
+                <Card><CardContent className="py-8 text-center"><p className="text-muted-foreground text-sm">Selecteer een restaurant</p></CardContent></Card>
               )}
             </div>
           </TabsContent>
