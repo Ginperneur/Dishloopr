@@ -209,10 +209,10 @@ export function createRestaurantSchema(restaurant: {
     sameAs: restaurant.website ? [restaurant.website] : undefined,
     servesCuisine: restaurant.cuisines,
     priceRange: restaurant.priceRange,
-    aggregateRating: restaurant.rating && restaurant.reviewCount && restaurant.reviewCount > 0 ? {
+    aggregateRating: Number(restaurant.rating) > 0 && Number(restaurant.reviewCount) > 0 ? {
       '@type': 'AggregateRating',
-      ratingValue: restaurant.rating,
-      reviewCount: restaurant.reviewCount,
+      ratingValue: Number(restaurant.rating),
+      reviewCount: Number(restaurant.reviewCount),
       bestRating: 5,
       worstRating: 1,
     } : undefined,
