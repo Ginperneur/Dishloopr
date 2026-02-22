@@ -137,7 +137,6 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
             className="gap-1.5 text-xs data-[state=on]:bg-emerald-100 data-[state=on]:text-emerald-700 dark:data-[state=on]:bg-emerald-900/30 dark:data-[state=on]:text-emerald-400"
             disabled={filterCounts.halal === 0}
           >
-            <span className="text-sm">☪️</span>
             {t('menu.filter.halal', 'Halal')}
             {filterCounts.halal > 0 && (
               <span className="text-muted-foreground">({filterCounts.halal})</span>
@@ -231,7 +230,7 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
                               )}
                               {item.is_halal && (
                                 <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 gap-0.5 text-[10px] px-1.5 py-0">
-                                  ☪️ Halal
+                                  Halal
                                 </Badge>
                               )}
                             </div>
