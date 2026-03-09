@@ -76,7 +76,7 @@ export function TrendingNow({ cityId }: TrendingNowProps) {
                   <div className="flex items-start justify-between">
                     <div>
                       <span className="font-semibold group-hover:text-primary transition-colors">
-                        {dish.name}
+                        {formatDishName(dish.name)}
                       </span>
                       <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                         <TrendingUp className="h-3 w-3 text-green-500" />
