@@ -197,7 +197,7 @@ export default function DishPillarPage() {
           <ChevronRight className="h-4 w-4" />
           <Link to="/eten" className="hover:text-foreground transition-colors">Eten</Link>
           <ChevronRight className="h-4 w-4" />
-          <span className="text-foreground font-medium">{dish.name}</span>
+          <span className="text-foreground font-medium">{formatDishName(dish.name)}</span>
         </nav>
       </div>
 
