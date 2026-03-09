@@ -341,8 +341,8 @@ export function SearchBar({
               ref={suggestionsRef}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.2 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.15 }}
               className="fixed left-4 right-4 top-[140px] z-[9999] md:hidden rounded-2xl overflow-hidden"
               style={{ 
                 backgroundColor: 'hsl(var(--background))',
