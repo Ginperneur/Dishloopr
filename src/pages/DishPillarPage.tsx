@@ -240,7 +240,7 @@ export default function DishPillarPage() {
 
           <Button asChild size="lg">
             <Link to={`/search?dish=${encodeURIComponent(dish.name)}`}>
-              Zoek {dish.name} bij jou in de buurt
+              Zoek {formatDishName(dish.name)} bij jou in de buurt
               <ArrowRight className="h-4 w-4 ml-2" />
             </Link>
           </Button>
