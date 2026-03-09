@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { TrendingUp, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { formatDishName } from '@/lib/utils';
 import type { Database } from '@/integrations/supabase/types';
 
 type Dish = Database['public']['Tables']['dishes']['Row'];
@@ -62,7 +63,7 @@ export function TrendingDishes({ dishes, cityName }: TrendingDishesProps) {
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <h3 className="font-semibold text-sm md:text-base group-hover:text-primary transition-colors truncate">
-                      {dish.name}
+                      {formatDishName(dish.name)}
                     </h3>
                     <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
                       {(dish.search_count || 0).toLocaleString()} {t('search.results').toLowerCase()}

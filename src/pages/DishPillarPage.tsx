@@ -8,6 +8,7 @@ import { SEOHead, createBreadcrumbSchema, createItemListSchema } from '@/compone
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { formatDishName } from '@/lib/utils';
 import NotFound from './NotFound';
 
 interface CityDishData {
@@ -196,7 +197,7 @@ export default function DishPillarPage() {
           <ChevronRight className="h-4 w-4" />
           <Link to="/eten" className="hover:text-foreground transition-colors">Eten</Link>
           <ChevronRight className="h-4 w-4" />
-          <span className="text-foreground font-medium">{dish.name}</span>
+          <span className="text-foreground font-medium">{formatDishName(dish.name)}</span>
         </nav>
       </div>
 
@@ -210,7 +211,7 @@ export default function DishPillarPage() {
           <div className="flex items-center gap-2 mb-4">
             <Badge variant="secondary" className="gap-1">
               <Utensils className="h-3 w-3" />
-              {dish.name}
+              {formatDishName(dish.name)}
             </Badge>
             {dish.search_count > 0 && (
               <Badge variant="outline" className="gap-1">
@@ -221,13 +222,13 @@ export default function DishPillarPage() {
           </div>
 
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
-            De beste {dish.name.toLowerCase()} restaurants in Nederland
+            De beste {formatDishName(dish.name).toLowerCase()} restaurants in Nederland
           </h1>
 
           <p className="text-lg text-muted-foreground leading-relaxed mb-6">
             {totalRestaurants > 0
-              ? `Ontdek ${totalRestaurants} restaurants die uitstekende ${dish.name.toLowerCase()} serveren, verspreid over ${cityData.length} ${cityData.length === 1 ? 'stad' : 'steden'} in Nederland. Vergelijk op rating, prijs en sfeer.`
-              : `${dish.name} wordt steeds populairder in Nederland. Bekijk de steden waar je de beste ${dish.name.toLowerCase()} kunt vinden.`
+              ? `Ontdek ${totalRestaurants} restaurants die uitstekende ${formatDishName(dish.name).toLowerCase()} serveren, verspreid over ${cityData.length} ${cityData.length === 1 ? 'stad' : 'steden'} in Nederland. Vergelijk op rating, prijs en sfeer.`
+              : `${formatDishName(dish.name)} wordt steeds populairder in Nederland. Bekijk de steden waar je de beste ${formatDishName(dish.name).toLowerCase()} kunt vinden.`
             }
           </p>
 
@@ -239,7 +240,7 @@ export default function DishPillarPage() {
 
           <Button asChild size="lg">
             <Link to={`/search?dish=${encodeURIComponent(dish.name)}`}>
-              Zoek {dish.name} bij jou in de buurt
+              Zoek {formatDishName(dish.name)} bij jou in de buurt
               <ArrowRight className="h-4 w-4 ml-2" />
             </Link>
           </Button>

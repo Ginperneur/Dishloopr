@@ -3,6 +3,7 @@ import { Star, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { formatDishName } from '@/lib/utils';
 
 interface DishRating {
   dishId: string;
@@ -83,7 +84,7 @@ export function DishRatingSelector({ availableDishes, selectedRatings, onChange 
                   
                   return (
                     <div key={dish.id} className="flex items-center justify-between py-2 border-b last:border-0">
-                      <span className="text-sm font-medium">{dish.name}</span>
+                      <span className="text-sm font-medium">{formatDishName(dish.name)}</span>
                       <div className="flex items-center gap-0.5">
                         {[1, 2, 3, 4, 5].map(star => (
                           <button

@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { useMenuItems, COURSE_TYPE_LABELS, type CourseType } from '@/hooks/useMenuItems';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Toggle } from '@/components/ui/toggle';
+import { formatDishName } from '@/lib/utils';
 
 interface MenuSectionProps {
   restaurantId: string;
@@ -200,7 +201,7 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
                         <div key={item.id} className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm font-medium">{item.name}</span>
+                              <span className="text-sm font-medium">{formatDishName(item.name)}</span>
                               {item.is_signature && (
                                 <Badge variant="secondary" className="bg-primary/10 text-primary dark:bg-primary/20 gap-1 text-[10px] px-1.5 py-0">
                                   <Star className="h-2.5 w-2.5 fill-current" />

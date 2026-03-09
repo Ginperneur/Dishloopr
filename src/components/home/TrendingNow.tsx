@@ -5,6 +5,7 @@ import { TrendingUp, Flame, Snowflake, Sun, Leaf, Cloud } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTrendingNow } from '@/hooks/useTrendingNow';
+import { formatDishName } from '@/lib/utils';
 
 const seasonIcons: Record<string, React.ElementType> = {
   winter: Snowflake,
@@ -75,7 +76,7 @@ export function TrendingNow({ cityId }: TrendingNowProps) {
                   <div className="flex items-start justify-between">
                     <div>
                       <span className="font-semibold group-hover:text-primary transition-colors">
-                        {dish.name}
+                        {formatDishName(dish.name)}
                       </span>
                       <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                         <TrendingUp className="h-3 w-3 text-green-500" />
@@ -119,7 +120,7 @@ export function TrendingNow({ cityId }: TrendingNowProps) {
                     to={`/search?dish=${encodeURIComponent(dish.name)}`}
                     className="px-4 py-2 rounded-full bg-background border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-sm font-medium"
                   >
-                    {dish.name}
+                    {formatDishName(dish.name)}
                   </Link>
                 ))}
               </div>
