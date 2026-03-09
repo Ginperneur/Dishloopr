@@ -39,7 +39,7 @@ export function RelatedLinks({
                 to={`/search?dish=${encodeURIComponent(dish.name)}`}
                 className="inline-flex items-center gap-1 px-3 py-1 text-sm rounded-full border border-border hover:bg-primary/10 transition-colors"
               >
-                {dish.name} {cityName ? `in ${cityName}` : ''}
+                {formatDishName(dish.name)} {cityName ? `in ${cityName}` : ''}
                 <ArrowRight className="h-3 w-3" />
               </Link>
             ))}

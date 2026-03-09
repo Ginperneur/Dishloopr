@@ -127,17 +127,20 @@ export function SearchBar({
   const handleSuggestionClick = (value: string) => {
     setQuery(value);
     addSearch(value);
-    inputRef.current?.blur();
     setShowSuggestions(false);
     setShowCityDropdown(false);
-    if (onSearch) {
-      onSearch(value, cityId);
-    } else {
-      const params = new URLSearchParams();
-      params.set('dish', value);
-      if (cityId && cityId !== 'all') params.set('city', cityId);
-      navigate(`/search?${params.toString()}`);
-    }
+    inputRef.current?.blur();
+    // Small delay to let the overlay close smoothly before navigating
+    requestAnimationFrame(() => {
+      if (onSearch) {
+        onSearch(value, cityId);
+      } else {
+        const params = new URLSearchParams();
+        params.set('dish', value);
+        if (cityId && cityId !== 'all') params.set('city', cityId);
+        navigate(`/search?${params.toString()}`);
+      }
+    });
   };
 
   const handleRestaurantClick = (slug: string) => {

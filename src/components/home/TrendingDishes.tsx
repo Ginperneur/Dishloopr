@@ -63,7 +63,7 @@ export function TrendingDishes({ dishes, cityName }: TrendingDishesProps) {
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <h3 className="font-semibold text-sm md:text-base group-hover:text-primary transition-colors truncate">
-                      {dish.name}
+                      {formatDishName(dish.name)}
                     </h3>
                     <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
                       {(dish.search_count || 0).toLocaleString()} {t('search.results').toLowerCase()}
