@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { useMenuItems, COURSE_TYPE_LABELS, type CourseType } from '@/hooks/useMenuItems';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Toggle } from '@/components/ui/toggle';
+import { formatDishName } from '@/lib/utils';
 
 interface MenuSectionProps {
   restaurantId: string;
