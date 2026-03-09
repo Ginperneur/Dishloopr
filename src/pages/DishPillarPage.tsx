@@ -227,8 +227,8 @@ export default function DishPillarPage() {
 
           <p className="text-lg text-muted-foreground leading-relaxed mb-6">
             {totalRestaurants > 0
-              ? `Ontdek ${totalRestaurants} restaurants die uitstekende ${dish.name.toLowerCase()} serveren, verspreid over ${cityData.length} ${cityData.length === 1 ? 'stad' : 'steden'} in Nederland. Vergelijk op rating, prijs en sfeer.`
-              : `${dish.name} wordt steeds populairder in Nederland. Bekijk de steden waar je de beste ${dish.name.toLowerCase()} kunt vinden.`
+              ? `Ontdek ${totalRestaurants} restaurants die uitstekende ${formatDishName(dish.name).toLowerCase()} serveren, verspreid over ${cityData.length} ${cityData.length === 1 ? 'stad' : 'steden'} in Nederland. Vergelijk op rating, prijs en sfeer.`
+              : `${formatDishName(dish.name)} wordt steeds populairder in Nederland. Bekijk de steden waar je de beste ${formatDishName(dish.name).toLowerCase()} kunt vinden.`
             }
           </p>
 
