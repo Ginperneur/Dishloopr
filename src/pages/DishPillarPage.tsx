@@ -8,6 +8,7 @@ import { SEOHead, createBreadcrumbSchema, createItemListSchema } from '@/compone
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { formatDishName } from '@/lib/utils';
 import NotFound from './NotFound';
 
 interface CityDishData {
