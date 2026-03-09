@@ -211,7 +211,7 @@ export default function DishPillarPage() {
           <div className="flex items-center gap-2 mb-4">
             <Badge variant="secondary" className="gap-1">
               <Utensils className="h-3 w-3" />
-              {dish.name}
+              {formatDishName(dish.name)}
             </Badge>
             {dish.search_count > 0 && (
               <Badge variant="outline" className="gap-1">
