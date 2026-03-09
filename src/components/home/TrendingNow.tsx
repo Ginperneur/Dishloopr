@@ -5,6 +5,7 @@ import { TrendingUp, Flame, Snowflake, Sun, Leaf, Cloud } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTrendingNow } from '@/hooks/useTrendingNow';
+import { formatDishName } from '@/lib/utils';
 
 const seasonIcons: Record<string, React.ElementType> = {
   winter: Snowflake,
