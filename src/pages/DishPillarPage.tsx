@@ -222,7 +222,7 @@ export default function DishPillarPage() {
           </div>
 
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
-            De beste {dish.name.toLowerCase()} restaurants in Nederland
+            De beste {formatDishName(dish.name).toLowerCase()} restaurants in Nederland
           </h1>
 
           <p className="text-lg text-muted-foreground leading-relaxed mb-6">

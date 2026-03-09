@@ -120,7 +120,7 @@ export function TrendingNow({ cityId }: TrendingNowProps) {
                     to={`/search?dish=${encodeURIComponent(dish.name)}`}
                     className="px-4 py-2 rounded-full bg-background border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-sm font-medium"
                   >
-                    {dish.name}
+                    {formatDishName(dish.name)}
                   </Link>
                 ))}
               </div>
