@@ -39,6 +39,9 @@ export function SearchBar({
   const navigate = useNavigate();
   const { addSearch } = useSearchHistory();
   const [query, setQuery] = useState(initialQuery);
+  const [selectedDishes, setSelectedDishes] = useState<string[]>(() => 
+    initialQuery ? parseQueryToChips(initialQuery) : []
+  );
   const [cityId, setCityId] = useState(initialCity);
   const [suggestions, setSuggestions] = useState<Dish[]>([]);
   const [restaurantSuggestions, setRestaurantSuggestions] = useState<Restaurant[]>([]);
