@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
-import { Search, Plus, Trash2, Store, UtensilsCrossed, Check, X, Star } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Search, Plus, Trash2, Store, UtensilsCrossed, Check, X, Star, Filter, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
