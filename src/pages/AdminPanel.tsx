@@ -23,7 +23,8 @@ import {
   Settings,
   Crown,
   AlertCircle,
-  Image
+  Image,
+  Globe
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
