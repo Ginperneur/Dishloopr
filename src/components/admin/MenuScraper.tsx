@@ -148,7 +148,7 @@ export function MenuScraper() {
             <div className="flex gap-3 mb-4 flex-wrap">
               <Badge variant="secondary">{totalAdded} nieuwe gerechten</Badge>
               <Badge variant="outline">{totalExisting} al bekend</Badge>
-              <Badge variant="default" className="bg-green-600">{successCount} gelukt</Badge>
+              <Badge variant="default">{successCount} gelukt</Badge>
               {errorCount > 0 && <Badge variant="destructive">{errorCount} fouten</Badge>}
             </div>
 
