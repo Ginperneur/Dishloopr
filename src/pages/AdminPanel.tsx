@@ -142,6 +142,14 @@ export default function AdminPanel() {
   const [restaurantStatusFilter, setRestaurantStatusFilter] = useState<string>('all');
   const [reviewStatusFilter, setReviewStatusFilter] = useState<string>('all');
   const [activeTab, setActiveTab] = useState('restaurants');
+  const tabsRef = useRef<HTMLDivElement>(null);
+
+  const handleNavigateToTab = useCallback((tab: string) => {
+    setActiveTab(tab);
+    setTimeout(() => {
+      tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }, []);
 
   useEffect(() => {
     if (isAdmin) {
