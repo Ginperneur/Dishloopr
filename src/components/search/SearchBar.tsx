@@ -492,8 +492,8 @@ export function SearchBar({
                         onClick={() => handleSuggestionClick(cuisine)}
                         className="w-full px-4 py-4 text-left hover:bg-muted active:bg-muted transition-colors flex items-center gap-3 border-b border-border/30 last:border-b-0"
                       >
-                        <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
-                          <UtensilsCrossed className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                          <UtensilsCrossed className="h-5 w-5 text-accent-foreground" />
                         </div>
                         <span className="font-medium text-base">{toTitleCase(cuisine)}</span>
                       </button>
