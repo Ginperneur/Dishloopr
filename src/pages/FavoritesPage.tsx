@@ -104,14 +104,14 @@ export default function FavoritesPage() {
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
               <Heart className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h2 className="text-xl font-semibold mb-2">Nog geen favorieten</h2>
+            <h2 className="text-xl font-semibold mb-2">{t('favorites.empty', 'Nog geen favorieten')}</h2>
             <p className="text-muted-foreground mb-6 max-w-sm mx-auto text-sm md:text-base">
-              Ontdek restaurants en voeg ze toe aan je favorieten door op het hartje te klikken.
+              {t('favorites.emptyDescription', 'Ontdek restaurants en voeg ze toe aan je favorieten door op het hartje te klikken.')}
             </p>
             <Button asChild>
               <Link to="/search">
                 <Search className="w-4 h-4 mr-2" />
-                Ontdek restaurants
+                {t('favorites.discoverRestaurants', 'Ontdek restaurants')}
               </Link>
             </Button>
           </motion.div>

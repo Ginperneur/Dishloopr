@@ -165,7 +165,7 @@ export function Footer() {
         {/* SEO Links Section */}
         {seoLinks.length > 0 && (
           <div className="mt-8 md:mt-10 pt-6 md:pt-8 border-t border-border">
-            <h4 className="font-semibold mb-3 text-sm md:text-base">Populaire gerechten per stad</h4>
+            <h4 className="font-semibold mb-3 text-sm md:text-base">{t('footer.popularDishes', 'Populaire gerechten per stad')}</h4>
             <div className="flex flex-wrap gap-2">
               {seoLinks.map(link => (
                 <Link

@@ -77,7 +77,7 @@ export function Header() {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-4 lg:gap-6">
+        <nav className="hidden md:flex items-center gap-4 lg:gap-6" aria-label={t('nav.mainNavigation', 'Hoofdnavigatie')}>
           <Link to="/search" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
             {t('nav.discover')}
           </Link>
