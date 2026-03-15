@@ -110,6 +110,9 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Social Proof Stats */}
+      <SocialProof />
+
       {/* Featured Restaurants */}
       <section className="relative py-6 md:py-10 lg:py-14 bg-muted/30">
         <div className="container px-4 md:px-6">
