@@ -339,6 +339,58 @@ export function RestaurantDishesManager() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          
+          {/* Filter by dish */}
+          <Select value={filterDishId} onValueChange={setFilterDishId}>
+            <SelectTrigger className="w-[220px] h-8 text-sm">
+              <SelectValue placeholder="Filter op gerecht..." />
+            </SelectTrigger>
+            <SelectContent>
+              <div className="p-2">
+                <Input
+                  placeholder="Zoek gerecht..."
+                  value={filterDishSearch}
+                  onChange={(e) => setFilterDishSearch(e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <SelectItem value="__all__">Alle gerechten</SelectItem>
+              {availableDishes
+                .filter(d => d.name.toLowerCase().includes(filterDishSearch.toLowerCase()) || 
+                  (d.name_en && d.name_en.toLowerCase().includes(filterDishSearch.toLowerCase())))
+                .slice(0, 50)
+                .map(d => (
+                  <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+
+          {/* No dishes toggle */}
+          <label className="flex items-center gap-2 cursor-pointer text-sm">
+            <Checkbox
+              checked={showNoDishesOnly}
+              onCheckedChange={(v) => {
+                setShowNoDishesOnly(!!v);
+                if (v) setFilterDishId('');
+              }}
+            />
+            <AlertCircle className="h-3.5 w-3.5 text-muted-foreground" />
+            Zonder gerechten
+          </label>
+
+          {(filterDishId || showNoDishesOnly) && (
+            <Badge variant="secondary" className="gap-1">
+              {filteredRestaurants.length} restaurants
+              <button onClick={() => { setFilterDishId(''); setShowNoDishesOnly(false); }} className="ml-1 hover:text-foreground">
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+        </div>
+
         {/* Restaurant Selection */}
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
@@ -367,6 +419,9 @@ export function RestaurantDishesManager() {
                         ({restaurant.cities.name})
                       </span>
                     )}
+                    <Badge variant="outline" className="text-xs ml-auto">
+                      {restaurantDishCounts[restaurant.id] || 0}
+                    </Badge>
                   </div>
                 </SelectItem>
               ))}
