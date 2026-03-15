@@ -51,6 +51,10 @@ export interface RestaurantScoringInput {
   created_at: string;
   linkedDishes: DishMatchInfo[] | null;
   isSponsored: boolean;
+  /** How many of the user's query terms this restaurant covers */
+  queryTermsCovered?: number;
+  /** Total number of query terms the user searched for */
+  totalQueryTerms?: number;
 }
 
 export interface ScoredResult {
