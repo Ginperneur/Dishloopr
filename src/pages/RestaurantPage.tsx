@@ -278,7 +278,7 @@ export default function RestaurantPage() {
                   <div className="flex flex-wrap items-center gap-3 mb-3">
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
-                      {isOpen() ? (
+                      {isCurrentlyOpen ? (
                         <Badge variant="secondary" className="bg-tag-family/10 text-tag-family text-xs">
                           {t('restaurant.openNow')}
                         </Badge>
