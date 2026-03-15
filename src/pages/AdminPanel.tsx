@@ -141,6 +141,7 @@ export default function AdminPanel() {
   // Filter states
   const [restaurantStatusFilter, setRestaurantStatusFilter] = useState<string>('all');
   const [reviewStatusFilter, setReviewStatusFilter] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState('restaurants');
 
   useEffect(() => {
     if (isAdmin) {
@@ -422,16 +423,12 @@ export default function AdminPanel() {
             transition={{ delay: 0.15 }}
             className="mb-6"
           >
-            <AdminNotifications onNavigate={(tab) => {
-              // Find and click the tab trigger
-              const tabTrigger = document.querySelector(`[data-state][value="${tab}"]`) as HTMLButtonElement;
-              if (tabTrigger) tabTrigger.click();
-            }} />
+            <AdminNotifications onNavigate={(tab) => setActiveTab(tab)} />
           </motion.div>
         )}
 
         {/* Tabs */}
-        <Tabs defaultValue="restaurants" className="space-y-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="flex-wrap h-auto gap-1 bg-muted/50 p-1">
             <TabsTrigger value="restaurants" className="gap-1.5">
               <Store className="h-4 w-4" />
