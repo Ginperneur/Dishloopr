@@ -55,19 +55,15 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
         {/* Image */}
         <div className="relative aspect-[16/10] sm:aspect-[16/9] overflow-hidden bg-muted">
           {hasImage ? (
-            <img
+            <ImageWithFallback
               src={restaurant.images![0]}
               alt={restaurant.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                e.currentTarget.nextElementSibling?.classList.remove('hidden');
-              }}
             />
-          ) : null}
-          <div className={`absolute inset-0 flex items-center justify-center ${hasImage ? 'hidden' : ''}`}>
-            <ImageOff className="w-12 h-12 text-muted-foreground/40" />
-          </div>
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <ImageOff className="w-12 h-12 text-muted-foreground/40" />
+            </div>
+          )}
           
           {/* Badges */}
           <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
