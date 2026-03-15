@@ -27,8 +27,10 @@ const signupSchema = z.object({
 export default function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { user, loading, signIn, signUp } = useAuth();
+  const initialTab = searchParams.get('tab') === 'signup' ? 'signup' : 'login';
   
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
