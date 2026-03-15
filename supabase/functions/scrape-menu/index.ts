@@ -179,8 +179,31 @@ Regels:
     });
 
     if (!aiResponse.ok) {
-      console.error('AI error:', await aiResponse.text());
-      return new Response(JSON.stringify({ error: 'AI analyse mislukt' }), {
+      const aiErrorText = await aiResponse.text();
+      console.error('AI error:', aiResponse.status, aiErrorText);
+
+      if (aiResponse.status === 429) {
+        return new Response(JSON.stringify({ error: 'Te veel AI-verzoeken, probeer het zo opnieuw.' }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      if (aiResponse.status === 402) {
+        return new Response(JSON.stringify({ error: 'AI credits op. Voeg credits toe in je workspace usage.' }), {
+          status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      if (aiResponse.status === 401) {
+        return new Response(JSON.stringify({ error: 'AI authenticatie mislukt. Probeer het opnieuw.' }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      return new Response(JSON.stringify({
+        error: 'AI analyse mislukt',
+        details: aiErrorText.slice(0, 500),
+      }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
