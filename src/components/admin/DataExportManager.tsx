@@ -22,7 +22,6 @@ const BATCH_SIZE = 1000;
 async function fetchAllRows(
   table: string,
   select: string,
-  filters?: { column: string; value: unknown }[],
   order?: string
 ): Promise<Record<string, unknown>[]> {
   const all: Record<string, unknown>[] = [];
@@ -30,12 +29,7 @@ async function fetchAllRows(
   let hasMore = true;
 
   while (hasMore) {
-    let query = supabase.from(table).select(select).range(from, from + BATCH_SIZE - 1);
-    if (filters) {
-      for (const f of filters) {
-        query = query.eq(f.column, f.value);
-      }
-    }
+    let query = (supabase as any).from(table).select(select).range(from, from + BATCH_SIZE - 1);
     if (order) {
       query = query.order(order);
     }
