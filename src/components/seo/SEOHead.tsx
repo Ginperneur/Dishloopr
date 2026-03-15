@@ -13,7 +13,7 @@ interface SEOHeadProps {
   publishedTime?: string;
   modifiedTime?: string;
   noindex?: boolean;
-  structuredData?: object;
+  structuredData?: object | object[];
 }
 
 export function SEOHead({
