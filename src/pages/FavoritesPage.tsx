@@ -57,12 +57,12 @@ export default function FavoritesPage() {
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
               <Heart className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold mb-4">Mijn Favorieten</h1>
+            <h1 className="text-2xl font-bold mb-4">{t('favorites.myFavorites', 'Mijn Favorieten')}</h1>
             <p className="text-muted-foreground mb-6">
-              Log in om je favoriete restaurants te bekijken en beheren.
+              {t('favorites.loginPrompt', 'Log in om je favoriete restaurants te bekijken en beheren.')}
             </p>
             <Button asChild size="lg">
-              <Link to="/login">Inloggen</Link>
+              <Link to="/login">{t('nav.login')}</Link>
             </Button>
           </motion.div>
         </div>
