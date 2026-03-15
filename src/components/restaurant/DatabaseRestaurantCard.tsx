@@ -38,6 +38,10 @@ function ImageWithFallback({ src, alt }: { src: string; alt: string }) {
     <img
       src={src}
       alt={alt}
+      width={640}
+      height={360}
+      loading="lazy"
+      decoding="async"
       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
       onError={() => setFailed(true)}
     />
