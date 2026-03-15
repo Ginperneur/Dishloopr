@@ -197,10 +197,10 @@ export function Header() {
           ) : (
             <>
               <Button variant="outline" size="sm" asChild>
-                <Link to="/login">{t('nav.login')}</Link>
+                <Link to="/login?tab=login">{t('nav.login')}</Link>
               </Button>
               <Button size="sm" asChild>
-                <Link to="/login">{t('nav.signup')}</Link>
+                <Link to="/login?tab=signup">{t('nav.signup')}</Link>
               </Button>
             </>
           )}
