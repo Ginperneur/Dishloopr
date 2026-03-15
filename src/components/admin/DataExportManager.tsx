@@ -106,7 +106,6 @@ const EXPORTS: ExportConfig[] = [
       fetchAllRows(
         'restaurants',
         'id, name, slug, address, postal_code, phone, website_url, instagram_url, tiktok_url, cuisines, ambience_tags, dietary_options, concepts, experiences, meal_types, price_level, rating, review_count, is_active, is_featured, has_terrace, geo_lat, geo_lng, claim_status, created_at, updated_at, city:cities(name, slug)',
-        undefined,
         'name'
       ),
   },
@@ -116,7 +115,7 @@ const EXPORTS: ExportConfig[] = [
     description: 'Alle gerechten in de database met tags en synoniemen.',
     icon: <Database className="w-5 h-5" />,
     fetchData: () =>
-      fetchAllRows('dishes', 'id, name, name_en, slug, cuisine_tags, seasonal_tags, synonyms, is_active, search_count, created_at', undefined, 'name'),
+      fetchAllRows('dishes', 'id, name, name_en, slug, cuisine_tags, seasonal_tags, synonyms, is_active, search_count, created_at', 'name'),
   },
   {
     key: 'restaurant_dishes',
@@ -127,7 +126,6 @@ const EXPORTS: ExportConfig[] = [
       fetchAllRows(
         'restaurant_dishes',
         'id, status, source, confidence_score, course_type, is_signature, is_halal, is_vegetarian, is_vegan, is_gluten_free, created_at, dish:dishes(name, slug), restaurant:restaurants(name, slug)',
-        undefined,
         'created_at'
       ),
   },
@@ -140,7 +138,6 @@ const EXPORTS: ExportConfig[] = [
       fetchAllRows(
         'reviews',
         'id, rating, title, body, status, is_verified, suggested_tags, created_at, restaurant:restaurants(name, slug)',
-        undefined,
         'created_at'
       ),
   },
@@ -150,7 +147,7 @@ const EXPORTS: ExportConfig[] = [
     description: 'Alle steden met land en status.',
     icon: <Database className="w-5 h-5" />,
     fetchData: () =>
-      fetchAllRows('cities', 'id, name, slug, country_code, is_active, created_at', undefined, 'name'),
+      fetchAllRows('cities', 'id, name, slug, country_code, is_active, created_at', 'name'),
   },
   {
     key: 'collections',
@@ -158,7 +155,7 @@ const EXPORTS: ExportConfig[] = [
     description: 'Alle collecties met metadata.',
     icon: <Database className="w-5 h-5" />,
     fetchData: () =>
-      fetchAllRows('collections', 'id, title, slug, subtitle, description, cuisine, is_active, is_featured, seo_title, seo_description, created_at', undefined, 'title'),
+      fetchAllRows('collections', 'id, title, slug, subtitle, description, cuisine, is_active, is_featured, seo_title, seo_description, created_at', 'title'),
   },
   {
     key: 'newsletter_subscribers',
@@ -166,7 +163,7 @@ const EXPORTS: ExportConfig[] = [
     description: 'Alle nieuwsbrief abonnees met status.',
     icon: <Database className="w-5 h-5" />,
     fetchData: () =>
-      fetchAllRows('newsletter_subscribers', 'id, email, is_active, subscribed_at, unsubscribed_at', undefined, 'subscribed_at'),
+      fetchAllRows('newsletter_subscribers', 'id, email, is_active, subscribed_at, unsubscribed_at', 'subscribed_at'),
   },
 ];
 
