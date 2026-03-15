@@ -79,7 +79,7 @@ export function RestaurantDishesManager() {
   }, [selectedRestaurant]);
 
   useEffect(() => {
-    if (filterDishId) {
+    if (filterDishId && filterDishId !== '__all__') {
       fetchRestaurantsByDish(filterDishId);
     } else {
       setRestaurantsByDish([]);
