@@ -60,6 +60,7 @@ import { AmbiancePricingManager } from '@/components/admin/AmbiancePricingManage
 import { useActivityLog } from '@/hooks/useActivityLog';
 import { AdminNotifications } from '@/components/admin/AdminNotifications';
 import { NewsletterManager } from '@/components/admin/NewsletterManager';
+import { MenuScraper } from '@/components/admin/MenuScraper';
 
 interface Stats {
   totalUsers: number;
