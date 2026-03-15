@@ -260,9 +260,9 @@ export function SearchBar({
                 }
               }}
               placeholder={selectedDishes.length > 0 ? 'Nog een gerecht...' : t('hero.searchPlaceholder')}
-              className={`flex-1 min-w-[80px] bg-transparent border-0 outline-none placeholder:text-muted-foreground ${
+              className={`flex-1 min-w-[60px] bg-transparent border-0 outline-none placeholder:text-muted-foreground ${
                 isHero 
-                  ? 'py-1 text-base md:text-lg' 
+                  ? 'py-1 text-sm md:text-lg' 
                   : 'py-1 text-sm'
               }`}
             />
