@@ -367,7 +367,7 @@ export function DishApprovalManager() {
           </div>
 
           {statusCounts.suggested > 0 && activeTab === 'suggested' && (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" onClick={handleBulkApprove} disabled={loading}>
                 <Check className="w-4 h-4 mr-2" />
                 Keur alle hoge confidence goed (≥85%)
@@ -375,6 +375,29 @@ export function DishApprovalManager() {
               <Button variant="outline" size="sm" onClick={handleBulkReject} disabled={loading}>
                 <X className="w-4 h-4 mr-2" />
                 Wijs alle lage confidence af (≤40%)
+              </Button>
+              <Button variant="outline" size="sm" onClick={async () => {
+                if (!confirm('Wil je dubbele restaurant-gerecht koppelingen opschonen? De koppeling met de hoogste confidence wordt behouden.')) return;
+                setDeduplicating(true);
+                try {
+                  const { data, error } = await supabase.rpc('deduplicate_restaurant_dishes');
+                  if (error) throw error;
+                  const result = data as any;
+                  if (result?.duplicates_removed > 0) {
+                    toast.success(`${result.duplicates_removed} dubbele koppelingen verwijderd`);
+                  } else {
+                    toast.info('Geen duplicaten gevonden');
+                  }
+                  await Promise.all([fetchDishes(), fetchStatusCounts()]);
+                } catch (err) {
+                  toast.error('Deduplicatie mislukt');
+                  console.error(err);
+                } finally {
+                  setDeduplicating(false);
+                }
+              }} disabled={loading || deduplicating}>
+                {deduplicating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Copy className="w-4 h-4 mr-2" />}
+                Duplicaten opschonen
               </Button>
             </div>
           )}
