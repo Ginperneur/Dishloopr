@@ -24,7 +24,8 @@ import {
   Crown,
   AlertCircle,
   Image,
-  Globe
+  Globe,
+  Download
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -62,6 +63,7 @@ import { useActivityLog } from '@/hooks/useActivityLog';
 import { AdminNotifications } from '@/components/admin/AdminNotifications';
 import { NewsletterManager } from '@/components/admin/NewsletterManager';
 import { MenuScraper } from '@/components/admin/MenuScraper';
+import { DataExportManager } from '@/components/admin/DataExportManager';
 
 interface Stats {
   totalUsers: number;
@@ -545,6 +547,10 @@ export default function AdminPanel() {
               <Globe className="h-4 w-4" />
               <span className="hidden sm:inline">Menu Scraper</span>
             </TabsTrigger>
+            <TabsTrigger value="data-export" className="gap-1.5">
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">Export</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="restaurants">
@@ -1023,6 +1029,10 @@ export default function AdminPanel() {
 
           <TabsContent value="menu-scraper">
             <MenuScraper />
+          </TabsContent>
+
+          <TabsContent value="data-export">
+            <DataExportManager />
           </TabsContent>
         </Tabs>
         </div>
