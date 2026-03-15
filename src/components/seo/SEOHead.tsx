@@ -259,12 +259,25 @@ export function createWebsiteSchema() {
     '@type': 'WebSite',
     name: 'Dishloopr',
     url: 'https://dishloopr.com',
-    description: 'Ontdek de beste restaurants en gerechten in Nederland',
+    description: 'Ontdek de beste restaurants in Nederland op basis van het gerecht waar je zin in hebt',
+    inLanguage: ['nl', 'en', 'de', 'fr', 'es'],
+    publisher: {
+      '@type': 'Organization',
+      name: 'Dishloopr',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://dishloopr.com/favicon.png',
+      },
+      sameAs: [
+        'https://instagram.com/dishloopr',
+        'https://tiktok.com/@dishloopr',
+      ],
+    },
     potentialAction: {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: 'https://dishloopr.com/search?q={search_term_string}',
+        urlTemplate: 'https://dishloopr.com/search?dish={search_term_string}',
       },
       'query-input': 'required name=search_term_string',
     },
