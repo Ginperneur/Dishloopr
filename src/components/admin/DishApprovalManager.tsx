@@ -53,6 +53,7 @@ export function DishApprovalManager() {
     rejected: 0,
   });
   const [actionLoading, setActionLoading] = useState<Set<string>>(new Set());
+  const [deduplicating, setDeduplicating] = useState(false);
 
   // Map tab names to status values
   const tabToStatus: Record<string, string> = {
