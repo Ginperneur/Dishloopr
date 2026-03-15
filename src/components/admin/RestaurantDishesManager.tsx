@@ -275,7 +275,7 @@ export function RestaurantDishesManager() {
       filtered = filtered.filter(r => !restaurantDishCounts[r.id]);
     }
 
-    if (filterDishId) {
+    if (filterDishId && filterDishId !== '__all__') {
       filtered = filtered.filter(r => restaurantsByDish.includes(r.id));
     }
 
