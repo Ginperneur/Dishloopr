@@ -431,7 +431,7 @@ export default function AdminPanel() {
             transition={{ delay: 0.15 }}
             className="mb-6"
           >
-            <AdminNotifications onNavigate={(tab) => setActiveTab(tab)} />
+            <AdminNotifications onNavigate={handleNavigateToTab} />
           </motion.div>
         )}
 
