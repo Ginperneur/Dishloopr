@@ -162,7 +162,7 @@ export default function LoginPage() {
           </div>
 
           <div className="bg-card rounded-2xl border border-border p-5 md:p-8">
-            <Tabs defaultValue="login" className="w-full">
+            <Tabs defaultValue={initialTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-5 md:mb-6">
                 <TabsTrigger value="login" className="text-sm md:text-base">{t('nav.login')}</TabsTrigger>
                 <TabsTrigger value="signup" className="text-sm md:text-base">{t('nav.signup')}</TabsTrigger>

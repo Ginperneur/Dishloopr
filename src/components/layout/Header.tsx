@@ -314,10 +314,10 @@ export function Header() {
               ) : (
                 <div className="flex gap-3">
                   <Button variant="outline" className="flex-1" asChild>
-                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>{t('nav.login')}</Link>
+                    <Link to="/login?tab=login" onClick={() => setMobileMenuOpen(false)}>{t('nav.login')}</Link>
                   </Button>
                   <Button className="flex-1" asChild>
-                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>{t('nav.signup')}</Link>
+                    <Link to="/login?tab=signup" onClick={() => setMobileMenuOpen(false)}>{t('nav.signup')}</Link>
                   </Button>
                 </div>
               )}

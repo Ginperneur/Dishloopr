@@ -90,7 +90,7 @@ function StatCard({
   alert?: boolean;
 }) {
   return (
-    <Card className={alert ? 'border-orange-500/50' : ''}>
+    <Card className={alert ? 'border-destructive/50' : ''}>
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div>

@@ -223,7 +223,7 @@ export default function SearchPage() {
         ])}
       />
       {/* Search Header */}
-      <div className="sticky top-14 md:top-16 z-40 bg-background border-b border-border py-3 md:py-4">
+      <div className="sticky top-[3.5rem] md:top-[4rem] z-40 bg-background border-b border-border py-3 md:py-4">
         <div className="container px-4 md:px-6">
           <div className="flex items-center gap-3">
             <div className="flex-1">
