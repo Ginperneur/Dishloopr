@@ -97,13 +97,13 @@ function StatCard({
             <p className="text-xs text-muted-foreground">{title}</p>
             <p className="text-2xl font-bold">{value.toLocaleString()}</p>
             {trend && (
-              <p className={`text-xs ${trend.isPositive ? 'text-green-600' : 'text-red-600'}`}>
+              <p className={`text-xs ${trend.isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}`}>
                 {trend.isPositive ? '+' : ''}{trend.value}% vs vorige week
               </p>
             )}
           </div>
-          <div className={`h-10 w-10 rounded-full ${alert ? 'bg-orange-500/10' : 'bg-primary/10'} flex items-center justify-center`}>
-            <Icon className={`h-5 w-5 ${alert ? 'text-orange-500' : 'text-primary'}`} />
+          <div className={`h-10 w-10 rounded-full ${alert ? 'bg-destructive/10' : 'bg-primary/10'} flex items-center justify-center`}>
+            <Icon className={`h-5 w-5 ${alert ? 'text-destructive' : 'text-primary'}`} />
           </div>
         </div>
       </CardContent>
