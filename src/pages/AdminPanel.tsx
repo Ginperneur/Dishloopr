@@ -23,7 +23,8 @@ import {
   Settings,
   Crown,
   AlertCircle,
-  Image
+  Image,
+  Globe
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -60,6 +61,7 @@ import { AmbiancePricingManager } from '@/components/admin/AmbiancePricingManage
 import { useActivityLog } from '@/hooks/useActivityLog';
 import { AdminNotifications } from '@/components/admin/AdminNotifications';
 import { NewsletterManager } from '@/components/admin/NewsletterManager';
+import { MenuScraper } from '@/components/admin/MenuScraper';
 
 interface Stats {
   totalUsers: number;
@@ -520,6 +522,10 @@ export default function AdminPanel() {
             <TabsTrigger value="newsletter" className="gap-1.5">
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">Nieuwsbrief</span>
+            </TabsTrigger>
+            <TabsTrigger value="menu-scraper" className="gap-1.5">
+              <Globe className="h-4 w-4" />
+              <span className="hidden sm:inline">Menu Scraper</span>
             </TabsTrigger>
           </TabsList>
 
@@ -995,6 +1001,10 @@ export default function AdminPanel() {
                 <NewsletterManager />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="menu-scraper">
+            <MenuScraper />
           </TabsContent>
         </Tabs>
 
