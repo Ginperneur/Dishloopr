@@ -73,7 +73,7 @@ export function MenuScraper() {
       const pageSize = 1000;
 
       while (true) {
-        let query = supabase
+        let query: any = supabase
           .from('restaurant_dishes')
           .select('restaurant_id')
           .in('restaurant_id', chunk)
