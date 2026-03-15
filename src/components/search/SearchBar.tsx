@@ -219,27 +219,52 @@ export function SearchBar({
           isHero ? 'p-2 md:p-3' : 'p-1.5'
         }`}
       >
-        {/* Search Input */}
-        <div className="flex-1 relative">
-          <Search className={`absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground ${isHero ? 'h-5 w-5' : 'h-4 w-4'}`} />
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            onFocus={() => {
-              if (query.length >= 2 && hasSuggestions) {
-                setShowSuggestions(true);
-              }
-            }}
-            placeholder={t('hero.searchPlaceholder')}
-            className={`w-full bg-transparent border-0 outline-none placeholder:text-muted-foreground ${
-              isHero 
-                ? 'pl-12 pr-4 py-3 text-base md:text-lg' 
-                : 'pl-10 pr-3 py-2.5 text-sm'
-            }`}
-          />
+        {/* Search Input with chips */}
+        <div className="flex-1 relative flex items-center flex-wrap gap-1">
+          <Search className={`absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground ${isHero ? 'h-5 w-5' : 'h-4 w-4'} z-10`} />
+          <div className={`flex items-center flex-wrap gap-1 w-full ${isHero ? 'pl-12 pr-4 py-2' : 'pl-10 pr-3 py-1.5'}`}>
+            {selectedDishes.map((dish) => (
+              <span
+                key={dish}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium shrink-0"
+              >
+                {toTitleCase(dish)}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeDish(dish);
+                  }}
+                  className="hover:text-destructive transition-colors"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSearch();
+                if (e.key === 'Backspace' && !query && selectedDishes.length > 0) {
+                  removeDish(selectedDishes[selectedDishes.length - 1]);
+                }
+              }}
+              onFocus={() => {
+                if (query.length >= 2 && hasSuggestions) {
+                  setShowSuggestions(true);
+                }
+              }}
+              placeholder={selectedDishes.length > 0 ? 'Nog een gerecht...' : t('hero.searchPlaceholder')}
+              className={`flex-1 min-w-[80px] bg-transparent border-0 outline-none placeholder:text-muted-foreground ${
+                isHero 
+                  ? 'py-1 text-base md:text-lg' 
+                  : 'py-1 text-sm'
+              }`}
+            />
+          </div>
         </div>
 
         {/* Divider - only on desktop */}
