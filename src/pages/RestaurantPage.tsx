@@ -44,6 +44,7 @@ import { useAlternativeRestaurants, type RoutingReason } from '@/hooks/useAltern
 import { useAuth } from '@/contexts/AuthContext';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { PRICE_LABELS_FULL, AMBIENCE_TAG_STYLES, AMBIENCE_TAG_I18N_KEYS, WEEK_DAYS } from '@/lib/constants';
+import { TikTokIcon } from '@/components/icons/TikTokIcon';
 
 export default function RestaurantPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -154,14 +155,6 @@ export default function RestaurantPage() {
   }
 
   const openingHours = (restaurant.opening_hours || {}) as { [key: string]: string };
-
-  const isOpen = () => {
-    const now = new Date();
-    const day = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][now.getDay()];
-    const hours = openingHours[day];
-    if (!hours || hours === 'closed') return false;
-    return true;
-  };
 
   // Generate SEO structured data
   const restaurantSchema = createRestaurantSchema({
@@ -286,7 +279,7 @@ export default function RestaurantPage() {
                   <div className="flex flex-wrap items-center gap-3 mb-3">
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
-                      {isOpen() ? (
+                      {isCurrentlyOpen ? (
                         <Badge variant="secondary" className="bg-tag-family/10 text-tag-family text-xs">
                           {t('restaurant.openNow')}
                         </Badge>
@@ -329,7 +322,8 @@ export default function RestaurantPage() {
                       variant="outline" 
                       size="sm"
                       onClick={() => toggleFavorite(restaurant.id)}
-                      className={`gap-2 ${isFavorite(restaurant.id) ? 'text-red-500 border-red-500/30' : ''}`}
+                      aria-label={isFavorite(restaurant.id) ? t('favorites.remove', 'Verwijder uit favorieten') : t('favorites.add', 'Toevoegen aan favorieten')}
+                      className={`gap-2 ${isFavorite(restaurant.id) ? 'text-destructive border-destructive/30' : ''}`}
                     >
                       <Heart className={`h-4 w-4 ${isFavorite(restaurant.id) ? 'fill-current' : ''}`} />
                       <span className="hidden sm:inline">{isFavorite(restaurant.id) ? 'Opgeslagen' : 'Opslaan'}</span>
@@ -358,10 +352,8 @@ export default function RestaurantPage() {
                     )}
                     {restaurant.tiktok_url && (
                       <Button variant="outline" size="icon" className="h-8 w-8" asChild>
-                        <a href={restaurant.tiktok_url} target="_blank" rel="noopener noreferrer" title="TikTok">
-                          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
-                          </svg>
+                        <a href={restaurant.tiktok_url} target="_blank" rel="noopener noreferrer" aria-label="TikTok">
+                          <TikTokIcon />
                         </a>
                       </Button>
                     )}
@@ -554,10 +546,8 @@ export default function RestaurantPage() {
                       )}
                       {restaurant.tiktok_url && (
                         <Button variant="outline" size="icon" asChild className="flex-1">
-                          <a href={restaurant.tiktok_url} target="_blank" rel="noopener noreferrer" title="TikTok">
-                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
-                            </svg>
+                          <a href={restaurant.tiktok_url} target="_blank" rel="noopener noreferrer" aria-label="TikTok">
+                            <TikTokIcon />
                           </a>
                         </Button>
                       )}

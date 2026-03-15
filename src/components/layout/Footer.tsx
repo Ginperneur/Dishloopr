@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { Instagram, Mail, ArrowRight } from 'lucide-react';
+import { TikTokIcon } from '@/components/icons/TikTokIcon';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -110,9 +111,7 @@ export function Footer() {
                 className="p-2 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors"
                 aria-label="TikTok"
               >
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
-                </svg>
+                <TikTokIcon />
               </a>
               <a 
                 href="mailto:info@dishloopr.com" 
@@ -126,7 +125,7 @@ export function Footer() {
 
           {/* Links */}
           <div>
-            <h4 className="font-semibold mb-3 md:mb-4 text-sm md:text-base">Dishloopr</h4>
+            <h4 className="font-semibold mb-3 md:mb-4 text-sm md:text-base">{t('footer.brand', 'Dishloopr')}</h4>
             <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
               <li><Link to="/search" className="hover:text-foreground transition-colors">{t('nav.discover')}</Link></li>
               <li><Link to="/collections" className="hover:text-foreground transition-colors">{t('footer.collections', 'Collecties')}</Link></li>
@@ -154,9 +153,9 @@ export function Footer() {
 
           {/* Steden */}
           <div>
-            <h4 className="font-semibold mb-3 md:mb-4 text-sm md:text-base">Steden</h4>
+            <h4 className="font-semibold mb-3 md:mb-4 text-sm md:text-base">{t('footer.cities', 'Steden')}</h4>
             <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
-              <li><Link to="/steden" className="hover:text-foreground transition-colors">Alle steden</Link></li>
+              <li><Link to="/steden" className="hover:text-foreground transition-colors">{t('footer.allCities', 'Alle steden')}</Link></li>
               <li><Link to="/steden/amsterdam" className="hover:text-foreground transition-colors">Amsterdam</Link></li>
               <li><Link to="/steden/rotterdam" className="hover:text-foreground transition-colors">Rotterdam</Link></li>
             </ul>
@@ -166,7 +165,7 @@ export function Footer() {
         {/* SEO Links Section */}
         {seoLinks.length > 0 && (
           <div className="mt-8 md:mt-10 pt-6 md:pt-8 border-t border-border">
-            <h4 className="font-semibold mb-3 text-sm md:text-base">Populaire gerechten per stad</h4>
+            <h4 className="font-semibold mb-3 text-sm md:text-base">{t('footer.popularDishes', 'Populaire gerechten per stad')}</h4>
             <div className="flex flex-wrap gap-2">
               {seoLinks.map(link => (
                 <Link

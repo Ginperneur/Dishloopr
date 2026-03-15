@@ -1,5 +1,6 @@
 import { SEOHead } from '@/components/seo/SEOHead';
 import { Layout } from '@/components/layout/Layout';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Heart, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ import type { Database } from '@/integrations/supabase/types';
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 
 export default function FavoritesPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { favorites, loading: favoritesLoading } = useFavorites();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -55,12 +57,12 @@ export default function FavoritesPage() {
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
               <Heart className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold mb-4">Mijn Favorieten</h1>
+            <h1 className="text-2xl font-bold mb-4">{t('favorites.myFavorites', 'Mijn Favorieten')}</h1>
             <p className="text-muted-foreground mb-6">
-              Log in om je favoriete restaurants te bekijken en beheren.
+              {t('favorites.loginPrompt', 'Log in om je favoriete restaurants te bekijken en beheren.')}
             </p>
             <Button asChild size="lg">
-              <Link to="/login">Inloggen</Link>
+              <Link to="/login">{t('nav.login')}</Link>
             </Button>
           </motion.div>
         </div>
@@ -70,9 +72,9 @@ export default function FavoritesPage() {
 
   return (
     <Layout>
-      <SEOHead
-        title="Mijn Favorieten | Dishloopr"
-        description="Bekijk en beheer je favoriete restaurants op Dishloopr."
+        <SEOHead
+        title={`${t('favorites.myFavorites', 'Mijn Favorieten')} | Dishloopr`}
+        description={t('favorites.seoDescription', 'Bekijk en beheer je favoriete restaurants op Dishloopr.')}
         noindex={true}
       />
       <div className="container py-6 md:py-12">
@@ -81,9 +83,9 @@ export default function FavoritesPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6 md:mb-8"
         >
-          <h1 className="text-2xl md:text-4xl font-bold mb-1 md:mb-2">Mijn Favorieten</h1>
+          <h1 className="text-2xl md:text-4xl font-bold mb-1 md:mb-2">{t('favorites.myFavorites', 'Mijn Favorieten')}</h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            {restaurants.length} opgeslagen restaurant{restaurants.length !== 1 ? 's' : ''}
+            {t('favorites.savedCount', '{{count}} opgeslagen restaurant(s)', { count: restaurants.length })}
           </p>
         </motion.div>
 
@@ -102,14 +104,14 @@ export default function FavoritesPage() {
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
               <Heart className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h2 className="text-xl font-semibold mb-2">Nog geen favorieten</h2>
+            <h2 className="text-xl font-semibold mb-2">{t('favorites.empty', 'Nog geen favorieten')}</h2>
             <p className="text-muted-foreground mb-6 max-w-sm mx-auto text-sm md:text-base">
-              Ontdek restaurants en voeg ze toe aan je favorieten door op het hartje te klikken.
+              {t('favorites.emptyDescription', 'Ontdek restaurants en voeg ze toe aan je favorieten door op het hartje te klikken.')}
             </p>
             <Button asChild>
               <Link to="/search">
                 <Search className="w-4 h-4 mr-2" />
-                Ontdek restaurants
+                {t('favorites.discoverRestaurants', 'Ontdek restaurants')}
               </Link>
             </Button>
           </motion.div>
