@@ -1001,6 +1001,10 @@ export default function AdminPanel() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="menu-scraper">
+            <MenuScraper />
+          </TabsContent>
         </Tabs>
 
         {/* Restaurant Detail Modal */}
