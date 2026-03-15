@@ -58,6 +58,46 @@ export function MenuScraper() {
     };
   };
 
+  const fetchDistinctRestaurantIds = async (
+    restaurantIds: string[],
+    extraFilter?: { column: string; value: string | string[] }
+  ): Promise<Set<string>> => {
+    // Batch in chunks of 200 IDs to avoid URL length limits,
+    // and paginate each chunk to avoid the 1000-row default limit
+    const ids = new Set<string>();
+    const chunkSize = 200;
+
+    for (let i = 0; i < restaurantIds.length; i += chunkSize) {
+      const chunk = restaurantIds.slice(i, i + chunkSize);
+      let from = 0;
+      const pageSize = 1000;
+
+      while (true) {
+        let query = supabase
+          .from('restaurant_dishes')
+          .select('restaurant_id')
+          .in('restaurant_id', chunk)
+          .range(from, from + pageSize - 1);
+
+        if (extraFilter) {
+          if (Array.isArray(extraFilter.value)) {
+            query = query.in(extraFilter.column, extraFilter.value);
+          } else {
+            query = query.eq(extraFilter.column, extraFilter.value);
+          }
+        }
+
+        const { data } = await query;
+        if (!data || data.length === 0) break;
+        data.forEach(d => ids.add(d.restaurant_id));
+        if (data.length < pageSize) break;
+        from += pageSize;
+      }
+    }
+
+    return ids;
+  };
+
   const fetchFilteredRestaurants = async () => {
     // First get all restaurants with website
     const { data: restaurants, error } = await supabase
@@ -76,41 +116,26 @@ export function MenuScraper() {
       return { data: restaurants, error: null };
     }
 
-    // Get restaurant_dishes to filter
     const restaurantIds = restaurants.map(r => r.id);
-    
+
     if (filter === 'missing') {
-      // Restaurants with zero dishes at all
-      const { data: dishLinks } = await supabase
-        .from('restaurant_dishes')
-        .select('restaurant_id')
-        .in('restaurant_id', restaurantIds);
-      
-      const idsWithDishes = new Set((dishLinks || []).map(d => d.restaurant_id));
+      const idsWithDishes = await fetchDistinctRestaurantIds(restaurantIds);
       return { data: restaurants.filter(r => !idsWithDishes.has(r.id)), error: null };
     }
 
     if (filter === 'no_approved') {
-      // Restaurants without approved/verified dishes
-      const { data: dishLinks } = await supabase
-        .from('restaurant_dishes')
-        .select('restaurant_id')
-        .in('restaurant_id', restaurantIds)
-        .in('status', ['approved_by_admin', 'verified_by_owner']);
-      
-      const idsWithApproved = new Set((dishLinks || []).map(d => d.restaurant_id));
+      const idsWithApproved = await fetchDistinctRestaurantIds(restaurantIds, {
+        column: 'status',
+        value: ['approved_by_admin', 'verified_by_owner'],
+      });
       return { data: restaurants.filter(r => !idsWithApproved.has(r.id)), error: null };
     }
 
     if (filter === 'never_scraped') {
-      // Restaurants without any dish from source "scrape"
-      const { data: dishLinks } = await supabase
-        .from('restaurant_dishes')
-        .select('restaurant_id')
-        .in('restaurant_id', restaurantIds)
-        .eq('source', 'scrape');
-      
-      const idsScraped = new Set((dishLinks || []).map(d => d.restaurant_id));
+      const idsScraped = await fetchDistinctRestaurantIds(restaurantIds, {
+        column: 'source',
+        value: 'scrape',
+      });
       return { data: restaurants.filter(r => !idsScraped.has(r.id)), error: null };
     }
 
