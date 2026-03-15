@@ -153,9 +153,9 @@ export function Footer() {
 
           {/* Steden */}
           <div>
-            <h4 className="font-semibold mb-3 md:mb-4 text-sm md:text-base">Steden</h4>
+            <h4 className="font-semibold mb-3 md:mb-4 text-sm md:text-base">{t('footer.cities', 'Steden')}</h4>
             <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
-              <li><Link to="/steden" className="hover:text-foreground transition-colors">Alle steden</Link></li>
+              <li><Link to="/steden" className="hover:text-foreground transition-colors">{t('footer.allCities', 'Alle steden')}</Link></li>
               <li><Link to="/steden/amsterdam" className="hover:text-foreground transition-colors">Amsterdam</Link></li>
               <li><Link to="/steden/rotterdam" className="hover:text-foreground transition-colors">Rotterdam</Link></li>
             </ul>
