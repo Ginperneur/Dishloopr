@@ -464,7 +464,7 @@ export function SearchBar({
                         onClick={() => handleRestaurantClick(restaurant.slug)}
                         className="w-full px-4 py-4 text-left hover:bg-muted active:bg-muted transition-colors flex items-center gap-3 border-b border-border/30"
                       >
-                        <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                           <Store className="h-5 w-5 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
