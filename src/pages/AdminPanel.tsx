@@ -90,20 +90,20 @@ function StatCard({
   alert?: boolean;
 }) {
   return (
-    <Card className={alert ? 'border-orange-500/50' : ''}>
+    <Card className={alert ? 'border-destructive/50' : ''}>
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs text-muted-foreground">{title}</p>
             <p className="text-2xl font-bold">{value.toLocaleString()}</p>
             {trend && (
-              <p className={`text-xs ${trend.isPositive ? 'text-green-600' : 'text-red-600'}`}>
+              <p className={`text-xs ${trend.isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}`}>
                 {trend.isPositive ? '+' : ''}{trend.value}% vs vorige week
               </p>
             )}
           </div>
-          <div className={`h-10 w-10 rounded-full ${alert ? 'bg-orange-500/10' : 'bg-primary/10'} flex items-center justify-center`}>
-            <Icon className={`h-5 w-5 ${alert ? 'text-orange-500' : 'text-primary'}`} />
+          <div className={`h-10 w-10 rounded-full ${alert ? 'bg-destructive/10' : 'bg-primary/10'} flex items-center justify-center`}>
+            <Icon className={`h-5 w-5 ${alert ? 'text-destructive' : 'text-primary'}`} />
           </div>
         </div>
       </CardContent>
@@ -452,106 +452,130 @@ export default function AdminPanel() {
         {/* Tabs */}
         <div ref={tabsRef}>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="flex-wrap h-auto gap-1 bg-muted/50 p-1">
-            <TabsTrigger value="restaurants" className="gap-1.5">
-              <Store className="h-4 w-4" />
-              <span className="hidden sm:inline">Restaurants</span>
-            </TabsTrigger>
-            <TabsTrigger value="dishes" className="gap-1.5">
-              <UtensilsCrossed className="h-4 w-4" />
-              <span className="hidden sm:inline">Gerechten</span>
-            </TabsTrigger>
-            <TabsTrigger value="dish-approval" className="gap-1.5">
-              <Check className="h-4 w-4" />
-              <span className="hidden sm:inline">Dish Approval</span>
-            </TabsTrigger>
-            <TabsTrigger value="restaurant-dishes" className="gap-1.5">
-              <UtensilsCrossed className="h-4 w-4" />
-              <span className="hidden sm:inline">Bekend Om</span>
-            </TabsTrigger>
-            <TabsTrigger value="cities" className="gap-1.5">
-              <MapPin className="h-4 w-4" />
-              <span className="hidden sm:inline">Steden</span>
-            </TabsTrigger>
-            <TabsTrigger value="collections" className="gap-1.5">
-              <Sparkles className="h-4 w-4" />
-              <span className="hidden sm:inline">Collecties</span>
-            </TabsTrigger>
-            <TabsTrigger value="bulk-import" className="gap-1.5">
-              <Upload className="h-4 w-4" />
-              <span className="hidden sm:inline">Import</span>
-            </TabsTrigger>
-            <TabsTrigger value="claims" className="gap-1.5 relative">
-              <FileText className="h-4 w-4" />
-              <span className="hidden sm:inline">Claims</span>
-              {stats.pendingClaims > 0 && (
-                <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 p-0 text-[10px] flex items-center justify-center">
-                  {stats.pendingClaims}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="sponsored" className="gap-1.5">
-              <Sparkles className="h-4 w-4" />
-              <span className="hidden sm:inline">Sponsored</span>
-            </TabsTrigger>
-            <TabsTrigger value="featured-slots" className="gap-1.5">
-              <Crown className="h-4 w-4" />
-              <span className="hidden sm:inline">Featured</span>
-            </TabsTrigger>
-            <TabsTrigger value="reviews" className="gap-1.5 relative">
-              <MessageSquare className="h-4 w-4" />
-              <span className="hidden sm:inline">Reviews</span>
-              {stats.pendingReviews > 0 && (
-                <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 p-0 text-[10px] flex items-center justify-center">
-                  {stats.pendingReviews}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="users" className="gap-1.5">
-              <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Gebruikers</span>
-            </TabsTrigger>
-            <TabsTrigger value="roles" className="gap-1.5">
-              <Crown className="h-4 w-4" />
-              <span className="hidden sm:inline">Rollen</span>
-            </TabsTrigger>
-            <TabsTrigger value="activity" className="gap-1.5">
-              <Settings className="h-4 w-4" />
-              <span className="hidden sm:inline">Activiteit</span>
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="gap-1.5">
-              <Settings className="h-4 w-4" />
-              <span className="hidden sm:inline">Instellingen</span>
-            </TabsTrigger>
-            <TabsTrigger value="seo" className="gap-1.5">
-              <TrendingUp className="h-4 w-4" />
-              <span className="hidden sm:inline">SEO Pages</span>
-            </TabsTrigger>
-            <TabsTrigger value="chains" className="gap-1.5">
-              <Store className="h-4 w-4" />
-              <span className="hidden sm:inline">Ketens</span>
-            </TabsTrigger>
-            <TabsTrigger value="geocode" className="gap-1.5">
-              <MapPin className="h-4 w-4" />
-              <span className="hidden sm:inline">Geocode</span>
-            </TabsTrigger>
-            <TabsTrigger value="photos" className="gap-1.5">
-              <Image className="h-4 w-4" />
-              <span className="hidden sm:inline">Foto's</span>
-            </TabsTrigger>
-            <TabsTrigger value="newsletter" className="gap-1.5">
-              <FileText className="h-4 w-4" />
-              <span className="hidden sm:inline">Nieuwsbrief</span>
-            </TabsTrigger>
-            <TabsTrigger value="menu-scraper" className="gap-1.5">
-              <Globe className="h-4 w-4" />
-              <span className="hidden sm:inline">Menu Scraper</span>
-            </TabsTrigger>
-            <TabsTrigger value="data-export" className="gap-1.5">
-              <Download className="h-4 w-4" />
-              <span className="hidden sm:inline">Export</span>
-            </TabsTrigger>
-          </TabsList>
+         <div className="space-y-2">
+            {/* Group: Content */}
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold px-1 mb-1">Content</p>
+              <TabsList className="flex-wrap h-auto gap-1 bg-muted/50 p-1 w-full justify-start">
+                <TabsTrigger value="restaurants" className="gap-1.5 text-xs">
+                  <Store className="h-3.5 w-3.5" />
+                  <span>Restaurants</span>
+                </TabsTrigger>
+                <TabsTrigger value="dishes" className="gap-1.5 text-xs">
+                  <UtensilsCrossed className="h-3.5 w-3.5" />
+                  <span>Gerechten</span>
+                </TabsTrigger>
+                <TabsTrigger value="dish-approval" className="gap-1.5 text-xs">
+                  <Check className="h-3.5 w-3.5" />
+                  <span>Goedkeuring</span>
+                </TabsTrigger>
+                <TabsTrigger value="restaurant-dishes" className="gap-1.5 text-xs">
+                  <UtensilsCrossed className="h-3.5 w-3.5" />
+                  <span>Bekend Om</span>
+                </TabsTrigger>
+                <TabsTrigger value="cities" className="gap-1.5 text-xs">
+                  <MapPin className="h-3.5 w-3.5" />
+                  <span>Steden</span>
+                </TabsTrigger>
+                <TabsTrigger value="collections" className="gap-1.5 text-xs">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>Collecties</span>
+                </TabsTrigger>
+                <TabsTrigger value="chains" className="gap-1.5 text-xs">
+                  <Store className="h-3.5 w-3.5" />
+                  <span>Ketens</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
+            {/* Group: Gebruikers & Claims */}
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold px-1 mb-1">Gebruikers & Claims</p>
+              <TabsList className="flex-wrap h-auto gap-1 bg-muted/50 p-1 w-full justify-start">
+                <TabsTrigger value="reviews" className="gap-1.5 text-xs relative">
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  <span>Reviews</span>
+                  {stats.pendingReviews > 0 && (
+                    <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 p-0 text-[10px] flex items-center justify-center">
+                      {stats.pendingReviews}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="users" className="gap-1.5 text-xs">
+                  <Users className="h-3.5 w-3.5" />
+                  <span>Gebruikers</span>
+                </TabsTrigger>
+                <TabsTrigger value="roles" className="gap-1.5 text-xs">
+                  <Crown className="h-3.5 w-3.5" />
+                  <span>Rollen</span>
+                </TabsTrigger>
+                <TabsTrigger value="claims" className="gap-1.5 text-xs relative">
+                  <FileText className="h-3.5 w-3.5" />
+                  <span>Claims</span>
+                  {stats.pendingClaims > 0 && (
+                    <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 p-0 text-[10px] flex items-center justify-center">
+                      {stats.pendingClaims}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              </TabsList>
+            </div>
+            {/* Group: Marketing & Monetisatie */}
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold px-1 mb-1">Marketing</p>
+              <TabsList className="flex-wrap h-auto gap-1 bg-muted/50 p-1 w-full justify-start">
+                <TabsTrigger value="sponsored" className="gap-1.5 text-xs">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>Sponsored</span>
+                </TabsTrigger>
+                <TabsTrigger value="featured-slots" className="gap-1.5 text-xs">
+                  <Crown className="h-3.5 w-3.5" />
+                  <span>Featured</span>
+                </TabsTrigger>
+                <TabsTrigger value="newsletter" className="gap-1.5 text-xs">
+                  <FileText className="h-3.5 w-3.5" />
+                  <span>Nieuwsbrief</span>
+                </TabsTrigger>
+                <TabsTrigger value="seo" className="gap-1.5 text-xs">
+                  <TrendingUp className="h-3.5 w-3.5" />
+                  <span>SEO Pages</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
+            {/* Group: Tools & Systeem */}
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold px-1 mb-1">Tools & Systeem</p>
+              <TabsList className="flex-wrap h-auto gap-1 bg-muted/50 p-1 w-full justify-start">
+                <TabsTrigger value="bulk-import" className="gap-1.5 text-xs">
+                  <Upload className="h-3.5 w-3.5" />
+                  <span>Import</span>
+                </TabsTrigger>
+                <TabsTrigger value="menu-scraper" className="gap-1.5 text-xs">
+                  <Globe className="h-3.5 w-3.5" />
+                  <span>Menu Scraper</span>
+                </TabsTrigger>
+                <TabsTrigger value="geocode" className="gap-1.5 text-xs">
+                  <MapPin className="h-3.5 w-3.5" />
+                  <span>Geocode</span>
+                </TabsTrigger>
+                <TabsTrigger value="photos" className="gap-1.5 text-xs">
+                  <Image className="h-3.5 w-3.5" />
+                  <span>Foto's</span>
+                </TabsTrigger>
+                <TabsTrigger value="data-export" className="gap-1.5 text-xs">
+                  <Download className="h-3.5 w-3.5" />
+                  <span>Export</span>
+                </TabsTrigger>
+                <TabsTrigger value="activity" className="gap-1.5 text-xs">
+                  <Settings className="h-3.5 w-3.5" />
+                  <span>Activiteit</span>
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="gap-1.5 text-xs">
+                  <Settings className="h-3.5 w-3.5" />
+                  <span>Instellingen</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
+          </div>
 
           <TabsContent value="restaurants">
             <Card>
@@ -835,7 +859,7 @@ export default function AdminPanel() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 text-green-600"
+                              className="h-7 w-7 text-primary"
                               onClick={() => updateReviewStatus(review.id, 'published')}
                             >
                               <Check className="h-4 w-4" />

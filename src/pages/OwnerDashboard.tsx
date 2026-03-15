@@ -299,12 +299,12 @@ export default function OwnerDashboard() {
         {!isVerified && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
             {isPendingAdminReview ? (
-              <Card className="border-blue-500/30 bg-blue-500/5">
+              <Card className="border-primary/30 bg-primary/5">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <Clock className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                    <Clock className="h-5 w-5 text-primary flex-shrink-0" />
                     <div className="flex-1">
-                      <p className="font-medium text-blue-700 text-sm">In afwachting van admin review</p>
+                      <p className="font-medium text-primary text-sm">In afwachting van admin review</p>
                       <p className="text-xs text-muted-foreground">
                         Je betaling is ontvangen. Een admin zal je aanvraag beoordelen.
                       </p>
@@ -316,12 +316,12 @@ export default function OwnerDashboard() {
                 </CardContent>
               </Card>
             ) : (
-              <Card className="border-yellow-500/30 bg-yellow-500/5">
+              <Card className="border-accent/30 bg-accent/5">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <AlertTriangle className="h-5 w-5 text-yellow-600 flex-shrink-0" />
+                    <AlertTriangle className="h-5 w-5 text-accent-foreground flex-shrink-0" />
                     <div className="flex-1">
-                      <p className="font-medium text-yellow-700 text-sm">Beperkte toegang</p>
+                      <p className="font-medium text-accent-foreground text-sm">Beperkte toegang</p>
                       <p className="text-xs text-muted-foreground">
                         Verifieer je eigendom voor volledige dashboard-toegang.
                       </p>
@@ -438,25 +438,25 @@ export default function OwnerDashboard() {
 
         {/* Main Tabs - Grouped into 5 clear sections */}
         <Tabs value={activeTab} defaultValue="overview" onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="w-full grid grid-cols-5 h-auto p-1">
-            <TabsTrigger value="overview" className="flex flex-col sm:flex-row items-center gap-1 py-2.5 text-xs sm:text-sm">
+          <TabsList className="w-full h-auto p-1 flex overflow-x-auto sm:grid sm:grid-cols-5 gap-1">
+            <TabsTrigger value="overview" className="flex items-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm whitespace-nowrap shrink-0">
               <LayoutDashboard className="h-4 w-4" />
               <span>Overzicht</span>
             </TabsTrigger>
-            <TabsTrigger value="content" className="flex flex-col sm:flex-row items-center gap-1 py-2.5 text-xs sm:text-sm">
+            <TabsTrigger value="content" className="flex items-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm whitespace-nowrap shrink-0">
               <FileText className="h-4 w-4" />
               <span>Content</span>
             </TabsTrigger>
-            <TabsTrigger value="insights" className="flex flex-col sm:flex-row items-center gap-1 py-2.5 text-xs sm:text-sm" disabled={!isVerified}>
+            <TabsTrigger value="insights" className="flex items-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm whitespace-nowrap shrink-0" disabled={!isVerified}>
               <BarChart3 className="h-4 w-4" />
               <span>Inzichten</span>
               {!isVerified && <Lock className="h-3 w-3" />}
             </TabsTrigger>
-            <TabsTrigger value="marketing" className="flex flex-col sm:flex-row items-center gap-1 py-2.5 text-xs sm:text-sm">
+            <TabsTrigger value="marketing" className="flex items-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm whitespace-nowrap shrink-0">
               <Megaphone className="h-4 w-4" />
               <span>Marketing</span>
             </TabsTrigger>
-            <TabsTrigger value="market" className="flex flex-col sm:flex-row items-center gap-1 py-2.5 text-xs sm:text-sm" disabled={!isVerified}>
+            <TabsTrigger value="market" className="flex items-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm whitespace-nowrap shrink-0" disabled={!isVerified}>
               <TrendingUp className="h-4 w-4" />
               <span>Markt</span>
               {!isVerified && <Lock className="h-3 w-3" />}

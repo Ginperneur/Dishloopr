@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User, UtensilsCrossed, UserCircle } from 'lucide-react';
 import { z } from 'zod';
 import { Layout } from '@/components/layout/Layout';
@@ -27,8 +27,10 @@ const signupSchema = z.object({
 export default function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { user, loading, signIn, signUp } = useAuth();
+  const initialTab = searchParams.get('tab') === 'signup' ? 'signup' : 'login';
   
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -160,7 +162,7 @@ export default function LoginPage() {
           </div>
 
           <div className="bg-card rounded-2xl border border-border p-5 md:p-8">
-            <Tabs defaultValue="login" className="w-full">
+            <Tabs defaultValue={initialTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-5 md:mb-6">
                 <TabsTrigger value="login" className="text-sm md:text-base">{t('nav.login')}</TabsTrigger>
                 <TabsTrigger value="signup" className="text-sm md:text-base">{t('nav.signup')}</TabsTrigger>
