@@ -79,7 +79,7 @@ export function AddRestaurantModal({ onSuccess }: AddRestaurantModalProps) {
     setLoading(true);
     const validatedData = validation.data;
 
-    const { error } = await supabase.from('restaurants').insert({
+    const { data: newRestaurant, error } = await supabase.from('restaurants').insert({
       name: validatedData.name,
       slug: validatedData.slug,
       address: validatedData.address,
@@ -89,7 +89,7 @@ export function AddRestaurantModal({ onSuccess }: AddRestaurantModalProps) {
       website_url: validatedData.website_url || null,
       price_level: validatedData.price_level,
       is_active: true
-    });
+    }).select('id').single();
 
     setLoading(false);
 
@@ -97,6 +97,21 @@ export function AddRestaurantModal({ onSuccess }: AddRestaurantModalProps) {
       toast.error('Restaurant toevoegen mislukt: ' + error.message);
     } else {
       toast.success('Restaurant toegevoegd!');
+
+      // Auto-scrape menu if website URL is provided
+      if (validatedData.website_url && newRestaurant?.id) {
+        toast.info('Menu wordt automatisch gescraped...');
+        supabase.functions.invoke('scrape-menu', {
+          body: { restaurantId: newRestaurant.id, websiteUrl: validatedData.website_url },
+        }).then(({ data, error: scrapeError }) => {
+          if (scrapeError || !data?.success) {
+            toast.warning('Menu scraping mislukt, je kunt dit later opnieuw proberen.');
+          } else {
+            toast.success(`${data.results?.added || 0} gerechten gevonden via website!`);
+          }
+        });
+      }
+
       setFormData({
         name: '',
         slug: '',
