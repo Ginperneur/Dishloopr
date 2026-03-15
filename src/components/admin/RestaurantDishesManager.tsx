@@ -58,10 +58,18 @@ export function RestaurantDishesManager() {
   const [loading, setLoading] = useState(true);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [selectedDishToAdd, setSelectedDishToAdd] = useState<string>('');
+  
+  // New filter state
+  const [filterDishId, setFilterDishId] = useState<string>('');
+  const [filterDishSearch, setFilterDishSearch] = useState('');
+  const [showNoDishesOnly, setShowNoDishesOnly] = useState(false);
+  const [restaurantDishCounts, setRestaurantDishCounts] = useState<Record<string, number>>({});
+  const [restaurantsByDish, setRestaurantsByDish] = useState<string[]>([]);
 
   useEffect(() => {
     fetchRestaurants();
     fetchAllDishes();
+    fetchRestaurantDishCounts();
   }, []);
 
   useEffect(() => {
@@ -69,6 +77,14 @@ export function RestaurantDishesManager() {
       fetchRestaurantDishes();
     }
   }, [selectedRestaurant]);
+
+  useEffect(() => {
+    if (filterDishId) {
+      fetchRestaurantsByDish(filterDishId);
+    } else {
+      setRestaurantsByDish([]);
+    }
+  }, [filterDishId]);
 
   const fetchRestaurants = async () => {
     const { data, error } = await supabase
