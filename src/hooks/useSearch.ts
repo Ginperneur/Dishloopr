@@ -88,12 +88,27 @@ export function useSearch() {
       if (citiesToUse.length > 0) setCities(citiesToUse);
     }
     
-    // Find matching dishes (by name or synonyms)
-    const matchingDishes = dishesToSearch.filter(dish => {
-      const nameMatch = dish.name.toLowerCase().includes(queryLower);
-      const synonymMatch = dish.synonyms?.some(s => s.toLowerCase().includes(queryLower));
-      return nameMatch || synonymMatch;
-    });
+    // Find matching dishes for each query term
+    const matchingDishesByTerm = new Map<string, typeof dishesToSearch>();
+    const allMatchingDishes: typeof dishesToSearch = [];
+    
+    for (const term of queryTerms.length > 0 ? queryTerms : [queryLower]) {
+      if (!term) continue;
+      const termMatches = dishesToSearch.filter(dish => {
+        const nameMatch = dish.name.toLowerCase().includes(term);
+        const synonymMatch = dish.synonyms?.some(s => s.toLowerCase().includes(term));
+        return nameMatch || synonymMatch;
+      });
+      if (termMatches.length > 0) {
+        matchingDishesByTerm.set(term, termMatches);
+        termMatches.forEach(d => {
+          if (!allMatchingDishes.find(x => x.id === d.id)) {
+            allMatchingDishes.push(d);
+          }
+        });
+      }
+    }
+    const matchingDishes = allMatchingDishes;
 
     // Build restaurant query with DB-side limit
     let restaurantQuery = supabase
