@@ -63,7 +63,15 @@ export function useSearch() {
     
     const queryLower = query.toLowerCase().trim();
     const now = new Date();
-    const ctx: ScoringContext = { queryLower, now };
+    
+    // Support multi-dish search: split by comma
+    const queryTerms = queryLower
+      .split(',')
+      .map(t => t.trim())
+      .filter(t => t.length > 0);
+    const isMultiDish = queryTerms.length > 1;
+    
+    const ctx: ScoringContext = { queryLower: queryTerms[0] || '', now };
     
     // Fetch dishes directly if not already loaded (prevents race condition)
     let dishesToSearch = dishes;
