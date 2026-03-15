@@ -5,8 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+type ScrapeFilter = 'all' | 'missing' | 'no_approved' | 'never_scraped';
 
 interface ScrapeResult {
   restaurantId: string;
@@ -18,11 +21,19 @@ interface ScrapeResult {
   scrapedUrl?: string;
 }
 
+const FILTER_LABELS: Record<ScrapeFilter, { label: string; description: string }> = {
+  all: { label: 'Alle restaurants', description: 'Scrape alle restaurants met een website' },
+  missing: { label: 'Zonder gerechten', description: 'Alleen restaurants zonder enig gerecht' },
+  no_approved: { label: 'Zonder goedgekeurde gerechten', description: 'Restaurants zonder goedgekeurde gerechten' },
+  never_scraped: { label: 'Nog nooit gescraped', description: 'Restaurants zonder gerechten van bron "scrape"' },
+};
+
 export function MenuScraper() {
   const [results, setResults] = useState<ScrapeResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
+  const [filter, setFilter] = useState<ScrapeFilter>('missing');
 
   const scrapeRestaurant = async (restaurantId: string, websiteUrl: string): Promise<ScrapeResult & { restaurantName: string }> => {
     const { data, error } = await supabase.functions.invoke('scrape-menu', {
@@ -47,12 +58,8 @@ export function MenuScraper() {
     };
   };
 
-  const handleBulkScrape = async () => {
-    setIsRunning(true);
-    setResults([]);
-    setProgress(0);
-
-    // Fetch all restaurants with website URLs
+  const fetchFilteredRestaurants = async () => {
+    // First get all restaurants with website
     const { data: restaurants, error } = await supabase
       .from('restaurants')
       .select('id, name, website_url')
@@ -62,13 +69,69 @@ export function MenuScraper() {
       .order('name');
 
     if (error || !restaurants?.length) {
-      toast.error(error?.message || 'Geen restaurants met website gevonden');
+      return { data: null, error: error?.message || 'Geen restaurants met website gevonden' };
+    }
+
+    if (filter === 'all') {
+      return { data: restaurants, error: null };
+    }
+
+    // Get restaurant_dishes to filter
+    const restaurantIds = restaurants.map(r => r.id);
+    
+    if (filter === 'missing') {
+      // Restaurants with zero dishes at all
+      const { data: dishLinks } = await supabase
+        .from('restaurant_dishes')
+        .select('restaurant_id')
+        .in('restaurant_id', restaurantIds);
+      
+      const idsWithDishes = new Set((dishLinks || []).map(d => d.restaurant_id));
+      return { data: restaurants.filter(r => !idsWithDishes.has(r.id)), error: null };
+    }
+
+    if (filter === 'no_approved') {
+      // Restaurants without approved/verified dishes
+      const { data: dishLinks } = await supabase
+        .from('restaurant_dishes')
+        .select('restaurant_id')
+        .in('restaurant_id', restaurantIds)
+        .in('status', ['approved_by_admin', 'verified_by_owner']);
+      
+      const idsWithApproved = new Set((dishLinks || []).map(d => d.restaurant_id));
+      return { data: restaurants.filter(r => !idsWithApproved.has(r.id)), error: null };
+    }
+
+    if (filter === 'never_scraped') {
+      // Restaurants without any dish from source "scrape"
+      const { data: dishLinks } = await supabase
+        .from('restaurant_dishes')
+        .select('restaurant_id')
+        .in('restaurant_id', restaurantIds)
+        .eq('source', 'scrape');
+      
+      const idsScraped = new Set((dishLinks || []).map(d => d.restaurant_id));
+      return { data: restaurants.filter(r => !idsScraped.has(r.id)), error: null };
+    }
+
+    return { data: restaurants, error: null };
+  };
+
+  const handleBulkScrape = async () => {
+    setIsRunning(true);
+    setResults([]);
+    setProgress(0);
+
+    const { data: restaurants, error } = await fetchFilteredRestaurants();
+
+    if (error || !restaurants?.length) {
+      toast.error(error || 'Geen restaurants gevonden voor dit filter');
       setIsRunning(false);
       return;
     }
 
     setTotalCount(restaurants.length);
-    toast.info(`Start scraping van ${restaurants.length} restaurants...`);
+    toast.info(`Start scraping van ${restaurants.length} restaurants (${FILTER_LABELS[filter].label})...`);
 
     const initialResults: ScrapeResult[] = restaurants.map(r => ({
       restaurantId: r.id,
@@ -79,7 +142,6 @@ export function MenuScraper() {
 
     let completedCount = 0;
 
-    // Process sequentially to avoid rate limits
     for (const restaurant of restaurants) {
       setResults(prev => prev.map(r =>
         r.restaurantId === restaurant.id ? { ...r, status: 'scraping' as const } : r
@@ -96,7 +158,6 @@ export function MenuScraper() {
       completedCount++;
       setProgress(Math.round((completedCount / restaurants.length) * 100));
 
-      // Small delay between requests
       await new Promise(resolve => setTimeout(resolve, 1500));
     }
 
@@ -113,7 +174,7 @@ export function MenuScraper() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <CardTitle className="flex items-center gap-2">
               <Globe className="h-5 w-5" />
@@ -123,13 +184,30 @@ export function MenuScraper() {
               Scrape automatisch menu's van restaurant websites met Firecrawl + AI
             </CardDescription>
           </div>
-          <Button onClick={handleBulkScrape} disabled={isRunning} size="lg">
-            {isRunning ? (
-              <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Bezig...</>
-            ) : (
-              <><Play className="h-4 w-4 mr-2" />Bulk Scrape Starten</>
-            )}
-          </Button>
+          <div className="flex items-center gap-3">
+            <Select value={filter} onValueChange={(v) => setFilter(v as ScrapeFilter)} disabled={isRunning}>
+              <SelectTrigger className="w-[220px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(FILTER_LABELS).map(([key, { label, description }]) => (
+                  <SelectItem key={key} value={key}>
+                    <div>
+                      <span>{label}</span>
+                      <span className="block text-xs text-muted-foreground">{description}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={handleBulkScrape} disabled={isRunning} size="lg">
+              {isRunning ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Bezig...</>
+              ) : (
+                <><Play className="h-4 w-4 mr-2" />Scrape Starten</>
+              )}
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -192,7 +270,7 @@ export function MenuScraper() {
 
         {results.length === 0 && !isRunning && (
           <p className="text-sm text-muted-foreground text-center py-8">
-            Klik op "Bulk Scrape Starten" om automatisch menu's van alle restaurants met een website te scrapen.
+            Kies een filter en klik op "Scrape Starten" om menu's te scrapen.
             Gevonden gerechten verschijnen in Dish Approval.
           </p>
         )}
