@@ -167,7 +167,7 @@ export function MenuScraper() {
                         <Loader2 className="h-4 w-4 animate-spin text-primary" />
                       )}
                       {result.status === 'success' && (
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        <CheckCircle2 className="h-4 w-4 text-primary" />
                       )}
                       {result.status === 'error' && (
                         <AlertCircle className="h-4 w-4 text-destructive" />
