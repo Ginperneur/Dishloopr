@@ -321,7 +321,8 @@ export default function RestaurantPage() {
                       variant="outline" 
                       size="sm"
                       onClick={() => toggleFavorite(restaurant.id)}
-                      className={`gap-2 ${isFavorite(restaurant.id) ? 'text-red-500 border-red-500/30' : ''}`}
+                      aria-label={isFavorite(restaurant.id) ? t('favorites.remove', 'Verwijder uit favorieten') : t('favorites.add', 'Toevoegen aan favorieten')}
+                      className={`gap-2 ${isFavorite(restaurant.id) ? 'text-destructive border-destructive/30' : ''}`}
                     >
                       <Heart className={`h-4 w-4 ${isFavorite(restaurant.id) ? 'fill-current' : ''}`} />
                       <span className="hidden sm:inline">{isFavorite(restaurant.id) ? 'Opgeslagen' : 'Opslaan'}</span>
