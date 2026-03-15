@@ -155,14 +155,6 @@ export default function RestaurantPage() {
 
   const openingHours = (restaurant.opening_hours || {}) as { [key: string]: string };
 
-  const isOpen = () => {
-    const now = new Date();
-    const day = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][now.getDay()];
-    const hours = openingHours[day];
-    if (!hours || hours === 'closed') return false;
-    return true;
-  };
-
   // Generate SEO structured data
   const restaurantSchema = createRestaurantSchema({
     name: restaurant.name,
