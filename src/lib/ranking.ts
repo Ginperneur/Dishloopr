@@ -145,8 +145,20 @@ export function scoreRestaurant(
     matchScore += SPONSORED_BOOST;
   }
 
-  // 6. Newness boost (NEW) — fair exposure for new restaurants
+  // 6. Newness boost — fair exposure for new restaurants
   matchScore += newnessBoost(restaurant.created_at, ctx.now);
+
+  // 7. Multi-query coverage bonus — reward restaurants matching multiple searched dishes
+  const covered = restaurant.queryTermsCovered ?? 0;
+  const total = restaurant.totalQueryTerms ?? 1;
+  if (total > 1 && covered > 1) {
+    // Partial bonus per extra term matched
+    matchScore += (covered - 1) * MULTI_QUERY_PARTIAL_BONUS;
+    // Full match bonus when ALL terms are covered
+    if (covered >= total) {
+      matchScore += MULTI_QUERY_FULL_MATCH_BONUS;
+    }
+  }
 
   // 7. Bayesian rating (NEW) — replaces raw rating for tie-breaking
   const bRating = bayesianRating(restaurant.rating, restaurant.review_count);
