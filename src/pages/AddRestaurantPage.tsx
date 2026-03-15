@@ -369,10 +369,10 @@ export default function AddRestaurantPage() {
               <Store className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h2 className="text-xl font-bold mb-2">Log in om door te gaan</h2>
               <p className="text-muted-foreground mb-6">
-                Je moet ingelogd zijn om een restaurant toe te voegen.
+                Maak een gratis account aan of log in om je restaurant toe te voegen. Na het toevoegen kun je eigenaarschap verifiëren.
               </p>
               <Button asChild>
-                <Link to="/login?redirect=/restaurant-toevoegen">Inloggen</Link>
+                <Link to="/login?redirect=/add-restaurant">Inloggen of registreren</Link>
               </Button>
             </CardContent>
           </Card>
@@ -424,7 +424,7 @@ export default function AddRestaurantPage() {
                 <Badge variant="secondary" className="mb-2">Stap 1</Badge>
                 <h1 className="text-3xl font-bold mb-2">Zoek je restaurant</h1>
                 <p className="text-muted-foreground">
-                  We zoeken automatisch op Google om alle gegevens voor je in te vullen.
+                  Typ de naam van je restaurant en we zoeken het automatisch op. Na toevoegen kun je eigenaarschap verifiëren voor volledige dashboardtoegang.
                 </p>
               </div>
 
