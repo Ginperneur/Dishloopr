@@ -424,7 +424,7 @@ export default function AddRestaurantPage() {
                 <Badge variant="secondary" className="mb-2">Stap 1</Badge>
                 <h1 className="text-3xl font-bold mb-2">Zoek je restaurant</h1>
                 <p className="text-muted-foreground">
-                  We zoeken automatisch op Google om alle gegevens voor je in te vullen.
+                  Typ de naam van je restaurant en we zoeken het automatisch op. Na toevoegen kun je eigenaarschap verifiëren voor volledige dashboardtoegang.
                 </p>
               </div>
 
