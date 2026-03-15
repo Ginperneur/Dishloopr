@@ -141,6 +141,7 @@ export default function AdminPanel() {
   // Filter states
   const [restaurantStatusFilter, setRestaurantStatusFilter] = useState<string>('all');
   const [reviewStatusFilter, setReviewStatusFilter] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState('restaurants');
 
   useEffect(() => {
     if (isAdmin) {
