@@ -15,6 +15,7 @@ import type { Database } from '@/integrations/supabase/types';
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 
 export default function FavoritesPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { favorites, loading: favoritesLoading } = useFavorites();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
