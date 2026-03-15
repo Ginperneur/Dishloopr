@@ -460,7 +460,7 @@ export function DishApprovalManager() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="text-green-600 hover:text-green-700"
+                                className="text-primary hover:text-primary/80"
                                 onClick={() => handleApprove(item.id)}
                                 disabled={actionLoading.has(item.id)}
                               >
