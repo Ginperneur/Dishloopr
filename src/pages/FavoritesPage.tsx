@@ -72,9 +72,9 @@ export default function FavoritesPage() {
 
   return (
     <Layout>
-      <SEOHead
-        title="Mijn Favorieten | Dishloopr"
-        description="Bekijk en beheer je favoriete restaurants op Dishloopr."
+        <SEOHead
+        title={`${t('favorites.myFavorites', 'Mijn Favorieten')} | Dishloopr`}
+        description={t('favorites.seoDescription', 'Bekijk en beheer je favoriete restaurants op Dishloopr.')}
         noindex={true}
       />
       <div className="container py-6 md:py-12">
