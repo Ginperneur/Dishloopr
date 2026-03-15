@@ -158,11 +158,8 @@ export function MenuScraper() {
     }
 
     if (filter === 'never_scraped') {
-      const idsScraped = await fetchDistinctRestaurantIds(restaurantIds, {
-        column: 'source',
-        value: ['scrape', 'firecrawl'],
-      });
-      return { data: restaurants.filter(r => !idsScraped.has(r.id)), error: null };
+      const idsWithAnyScrapeAttempt = await fetchDistinctScrapeRunRestaurantIds(restaurantIds);
+      return { data: restaurants.filter(r => !idsWithAnyScrapeAttempt.has(r.id)), error: null };
     }
 
     return { data: restaurants, error: null };
