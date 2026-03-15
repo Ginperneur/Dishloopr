@@ -21,6 +21,14 @@ interface SearchBarProps {
   initialCity?: string;
 }
 
+function parseQueryToChips(query: string): string[] {
+  return query.split(',').map(t => t.trim()).filter(t => t.length > 0);
+}
+
+function chipsToQuery(chips: string[]): string {
+  return chips.join(', ');
+}
+
 export function SearchBar({ 
   onSearch, 
   variant = 'hero',
