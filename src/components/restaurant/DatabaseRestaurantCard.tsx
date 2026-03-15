@@ -23,6 +23,26 @@ interface DatabaseRestaurantCardProps {
 
 import { PRICE_LABELS, AMBIENCE_TAG_STYLES, AMBIENCE_TAG_I18N_KEYS } from '@/lib/constants';
 
+function ImageWithFallback({ src, alt }: { src: string; alt: string }) {
+  const [failed, setFailed] = useState(false);
+  
+  if (failed) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center">
+        <ImageOff className="w-12 h-12 text-muted-foreground/40" />
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+      onError={() => setFailed(true)}
+    />
+  );
+}
 
 export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = false }: DatabaseRestaurantCardProps) {
   const { t } = useTranslation();
