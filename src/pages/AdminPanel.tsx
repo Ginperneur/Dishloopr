@@ -547,6 +547,10 @@ export default function AdminPanel() {
               <Globe className="h-4 w-4" />
               <span className="hidden sm:inline">Menu Scraper</span>
             </TabsTrigger>
+            <TabsTrigger value="data-export" className="gap-1.5">
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">Export</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="restaurants">
