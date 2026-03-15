@@ -1,5 +1,6 @@
 import { SEOHead } from '@/components/seo/SEOHead';
 import { Layout } from '@/components/layout/Layout';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Heart, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
