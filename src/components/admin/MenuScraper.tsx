@@ -134,7 +134,7 @@ export function MenuScraper() {
     if (filter === 'never_scraped') {
       const idsScraped = await fetchDistinctRestaurantIds(restaurantIds, {
         column: 'source',
-        value: 'scrape',
+        value: ['scrape', 'firecrawl'],
       });
       return { data: restaurants.filter(r => !idsScraped.has(r.id)), error: null };
     }
