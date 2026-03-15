@@ -7,7 +7,9 @@ import {
   Edit2,
   Check,
   X,
-  Tag
+  Tag,
+  Copy,
+  Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
