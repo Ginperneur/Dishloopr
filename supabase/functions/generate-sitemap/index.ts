@@ -18,200 +18,102 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get all active restaurants
-    const { data: restaurants } = await supabase
-      .from('restaurants')
-      .select('slug, updated_at')
-      .eq('is_active', true)
-      .order('updated_at', { ascending: false });
+    // Parallel fetch all data
+    const [restaurantsRes, citiesRes, dishesRes, seoRes, collectionsRes] = await Promise.all([
+      supabase.from('restaurants').select('slug, updated_at').eq('is_active', true).order('updated_at', { ascending: false }),
+      supabase.from('cities').select('slug, updated_at').eq('is_active', true),
+      supabase.from('dishes').select('slug, updated_at').eq('is_active', true).order('search_count', { ascending: false }).limit(100),
+      supabase.from('seo_landing_pages').select('slug, updated_at').eq('is_active', true),
+      supabase.from('collections').select('slug, updated_at').eq('is_active', true).order('sort_order'),
+    ]);
 
-    // Get all active cities
-    const { data: cities } = await supabase
-      .from('cities')
-      .select('slug, updated_at')
-      .eq('is_active', true);
-
-    // Get all active dishes
-    const { data: dishes } = await supabase
-      .from('dishes')
-      .select('slug, updated_at')
-      .eq('is_active', true)
-      .order('search_count', { ascending: false })
-      .limit(100);
-
-    // Get all active SEO landing pages
-    const { data: seoLandingPages } = await supabase
-      .from('seo_landing_pages')
-      .select('slug, updated_at')
-      .eq('is_active', true);
-
-    // Get all active collections
-    const { data: collections } = await supabase
-      .from('collections')
-      .select('slug, updated_at')
-      .eq('is_active', true)
-      .order('sort_order');
+    const restaurants = restaurantsRes.data || [];
+    const cities = citiesRes.data || [];
+    const dishes = dishesRes.data || [];
+    const seoLandingPages = seoRes.data || [];
+    const collections = collectionsRes.data || [];
 
     const now = new Date().toISOString().split('T')[0];
 
-    // Build sitemap XML
-    let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
-  
-  <!-- Homepage -->
-  <url>
-    <loc>${SITE_URL}</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
+    const urls: string[] = [];
 
-  <!-- Static pages -->
-  <url>
-    <loc>${SITE_URL}/search</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>${SITE_URL}/eten</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>${SITE_URL}/about</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>${SITE_URL}/contact</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>${SITE_URL}/privacy</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>${SITE_URL}/terms</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>${SITE_URL}/for-restaurants</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>${SITE_URL}/collections</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-`;
-    // SEO Landing Pages (/eten/[slug]) - High priority for SEO
-    if (seoLandingPages) {
-      for (const page of seoLandingPages) {
-        const lastmod = page.updated_at?.split('T')[0] || now;
-        sitemap += `
-  <url>
-    <loc>${SITE_URL}/eten/${page.slug}</loc>
+    const addUrl = (loc: string, lastmod: string, changefreq: string, priority: string) => {
+      urls.push(`  <url>
+    <loc>${loc}</loc>
     <lastmod>${lastmod}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>`;
-      }
+    <changefreq>${changefreq}</changefreq>
+    <priority>${priority}</priority>
+  </url>`);
+    };
+
+    // Static pages
+    addUrl(SITE_URL, now, 'daily', '1.0');
+    addUrl(`${SITE_URL}/search`, now, 'hourly', '0.9');
+    addUrl(`${SITE_URL}/eten`, now, 'daily', '0.9');
+    addUrl(`${SITE_URL}/steden`, now, 'daily', '0.9');
+    addUrl(`${SITE_URL}/collections`, now, 'weekly', '0.8');
+    addUrl(`${SITE_URL}/events`, now, 'daily', '0.8');
+    addUrl(`${SITE_URL}/for-restaurants`, now, 'monthly', '0.7');
+    addUrl(`${SITE_URL}/about`, now, 'monthly', '0.5');
+    addUrl(`${SITE_URL}/contact`, now, 'monthly', '0.5');
+    addUrl(`${SITE_URL}/privacy`, now, 'monthly', '0.3');
+    addUrl(`${SITE_URL}/terms`, now, 'monthly', '0.3');
+
+    // SEO Landing Pages (/eten/[slug]) - High priority
+    for (const page of seoLandingPages) {
+      addUrl(`${SITE_URL}/eten/${page.slug}`, page.updated_at?.split('T')[0] || now, 'weekly', '0.9');
     }
 
     // Collection pages
-    if (collections) {
-      for (const collection of collections) {
-        const lastmod = collection.updated_at?.split('T')[0] || now;
-        sitemap += `
-  <url>
-    <loc>${SITE_URL}/collection/${collection.slug}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>`;
-      }
+    for (const c of collections) {
+      addUrl(`${SITE_URL}/collection/${c.slug}`, c.updated_at?.split('T')[0] || now, 'weekly', '0.8');
+    }
+
+    // City detail pages (/steden/[slug])
+    for (const city of cities) {
+      addUrl(`${SITE_URL}/steden/${city.slug}`, city.updated_at?.split('T')[0] || now, 'weekly', '0.8');
+    }
+
+    // Dish pillar pages (/eten/gerecht/[slug])
+    for (const dish of dishes) {
+      addUrl(`${SITE_URL}/eten/gerecht/${dish.slug}`, dish.updated_at?.split('T')[0] || now, 'weekly', '0.8');
     }
 
     // Restaurant pages
-    if (restaurants) {
-      for (const restaurant of restaurants) {
-        const lastmod = restaurant.updated_at?.split('T')[0] || now;
-        sitemap += `
-  <url>
-    <loc>${SITE_URL}/restaurant/${restaurant.slug}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>`;
-      }
+    for (const r of restaurants) {
+      addUrl(`${SITE_URL}/restaurant/${r.slug}`, r.updated_at?.split('T')[0] || now, 'weekly', '0.8');
     }
 
-    // Search pages per city (these are valuable for SEO)
-    if (cities) {
-      for (const city of cities) {
-        sitemap += `
-  <url>
-    <loc>${SITE_URL}/search?city=${city.slug}</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>`;
-      }
+    // Search pages per city
+    for (const city of cities) {
+      addUrl(`${SITE_URL}/search?city=${city.slug}`, now, 'daily', '0.7');
     }
 
     // Search pages per popular dish
-    if (dishes) {
-      for (const dish of dishes) {
-        sitemap += `
-  <url>
-    <loc>${SITE_URL}/search?dish=${encodeURIComponent(dish.slug)}</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>`;
+    for (const dish of dishes.slice(0, 50)) {
+      addUrl(`${SITE_URL}/search?dish=${encodeURIComponent(dish.slug)}`, now, 'daily', '0.7');
+    }
+
+    // City + dish combinations (top 20 dishes per city)
+    for (const city of cities) {
+      for (const dish of dishes.slice(0, 20)) {
+        addUrl(`${SITE_URL}/search?city=${city.slug}&amp;dish=${encodeURIComponent(dish.slug)}`, now, 'daily', '0.6');
       }
     }
 
-    // City + dish combinations (most valuable for SEO)
-    if (cities && dishes) {
-      for (const city of cities) {
-        for (const dish of dishes.slice(0, 20)) { // Top 20 dishes per city
-          sitemap += `
-  <url>
-    <loc>${SITE_URL}/search?city=${city.slug}&amp;dish=${encodeURIComponent(dish.slug)}</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>`;
-        }
-      }
-    }
-
-    sitemap += `
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.join('\n')}
 </urlset>`;
 
-    console.log(`Sitemap generated: ${restaurants?.length || 0} restaurants, ${collections?.length || 0} collections, ${seoLandingPages?.length || 0} SEO pages, ${cities?.length || 0} cities, ${dishes?.length || 0} dishes`);
+    console.log(`Sitemap generated: ${restaurants.length} restaurants, ${collections.length} collections, ${seoLandingPages.length} SEO pages, ${cities.length} cities, ${dishes.length} dishes`);
 
     return new Response(sitemap, {
       status: 200,
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/xml',
-        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+        'Cache-Control': 'public, max-age=3600',
       },
     });
   } catch (error: unknown) {
@@ -219,10 +121,7 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
       JSON.stringify({ error: errorMessage }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

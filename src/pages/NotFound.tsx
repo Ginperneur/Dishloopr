@@ -2,6 +2,7 @@ import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/layout/Layout";
+import { SEOHead } from "@/components/seo/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Home, Search } from "lucide-react";
 
@@ -15,6 +16,11 @@ const NotFound = () => {
 
   return (
     <Layout>
+      <SEOHead
+        title="Pagina niet gevonden | Dishloopr"
+        description="De pagina die je zoekt bestaat niet of is verplaatst."
+        noindex
+      />
       <div className="container py-32 flex flex-col items-center justify-center text-center">
         <h1 className="text-8xl font-bold text-primary mb-4">404</h1>
         <h2 className="text-2xl font-semibold mb-2">{t('notFound.title', 'Pagina niet gevonden')}</h2>

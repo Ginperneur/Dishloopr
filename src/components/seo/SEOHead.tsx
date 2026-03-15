@@ -13,7 +13,7 @@ interface SEOHeadProps {
   publishedTime?: string;
   modifiedTime?: string;
   noindex?: boolean;
-  structuredData?: object;
+  structuredData?: object | object[];
 }
 
 export function SEOHead({
@@ -134,7 +134,11 @@ export function SEOHead({
         script.setAttribute('data-seo-structured', 'true');
         document.head.appendChild(script);
       }
-      script.textContent = JSON.stringify(structuredData);
+      // Handle arrays by wrapping in @graph
+      const data = Array.isArray(structuredData)
+        ? { '@context': 'https://schema.org', '@graph': structuredData }
+        : structuredData;
+      script.textContent = JSON.stringify(data);
     }
 
     // Cleanup function
