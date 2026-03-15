@@ -118,40 +118,56 @@ export function SearchBar({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleSearch = () => {
-    if (query.trim()) {
-      addSearch(query.trim());
-    }
+  const executeSearch = (dishes: string[]) => {
+    const searchQuery = chipsToQuery(dishes);
+    if (searchQuery) addSearch(searchQuery);
     inputRef.current?.blur();
     setShowSuggestions(false);
     setShowCityDropdown(false);
     if (onSearch) {
-      onSearch(query, cityId);
+      onSearch(searchQuery, cityId);
     } else {
       const params = new URLSearchParams();
-      if (query) params.set('dish', query);
+      if (searchQuery) params.set('dish', searchQuery);
       if (cityId && cityId !== 'all') params.set('city', cityId);
       navigate(`/search?${params.toString()}`);
     }
   };
 
+  const handleSearch = () => {
+    // Add current input as a chip if non-empty
+    const currentDishes = [...selectedDishes];
+    if (query.trim() && !currentDishes.includes(query.trim().toLowerCase())) {
+      currentDishes.push(query.trim());
+      setSelectedDishes(currentDishes);
+      setQuery('');
+    }
+    executeSearch(currentDishes.length > 0 ? currentDishes : query.trim() ? [query.trim()] : []);
+  };
+
   const handleSuggestionClick = (value: string) => {
-    setQuery(value);
-    addSearch(value);
+    const updatedDishes = [...selectedDishes];
+    if (!updatedDishes.some(d => d.toLowerCase() === value.toLowerCase())) {
+      updatedDishes.push(value);
+    }
+    setSelectedDishes(updatedDishes);
+    setQuery('');
     setShowSuggestions(false);
-    setShowCityDropdown(false);
-    inputRef.current?.blur();
-    // Small delay to let the overlay close smoothly before navigating
-    requestAnimationFrame(() => {
-      if (onSearch) {
-        onSearch(value, cityId);
-      } else {
-        const params = new URLSearchParams();
-        params.set('dish', value);
-        if (cityId && cityId !== 'all') params.set('city', cityId);
-        navigate(`/search?${params.toString()}`);
-      }
-    });
+    // Don't auto-search on chip add — let user add more dishes
+    // But if in compact mode (search page), auto-search
+    if (variant === 'compact') {
+      requestAnimationFrame(() => {
+        executeSearch(updatedDishes);
+      });
+    }
+  };
+
+  const removeDish = (dish: string) => {
+    const updated = selectedDishes.filter(d => d !== dish);
+    setSelectedDishes(updated);
+    if (variant === 'compact') {
+      executeSearch(updated);
+    }
   };
 
   const handleRestaurantClick = (slug: string) => {
