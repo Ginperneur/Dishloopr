@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useRestaurantDishes, DishStatus, RestaurantDish } from '@/hooks/useRestaurantDishes';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { DishStatus } from '@/hooks/useRestaurantDishes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,41 +8,63 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Check, X, Trash2, Loader2, Search, Sparkles, AlertCircle } from 'lucide-react';
+import { Check, X, Trash2, Loader2, Search, Sparkles, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Restaurant {
   id: string;
   name: string;
 }
 
+interface DishItem {
+  id: string;
+  restaurant_id: string;
+  dish_id: string;
+  status: string;
+  source: string;
+  confidence_score: number;
+  rejected_reason: string | null;
+  dish: { id: string; name: string; name_en: string | null } | null;
+  restaurant: { id: string; name: string } | null;
+}
+
+const PAGE_SIZE = 50;
+
 export function DishApprovalManager() {
+  const { user } = useAuth();
   const [selectedRestaurant, setSelectedRestaurant] = useState<string>('all');
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loadingRestaurants, setLoadingRestaurants] = useState(true);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-  const [selectedDish, setSelectedDish] = useState<RestaurantDish | null>(null);
+  const [selectedDish, setSelectedDish] = useState<DishItem | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-
-  const {
-    dishes,
-    availableDishes,
-    loading,
-    refetch,
-    approveDish,
-    rejectDish,
-    deleteDish,
-    bulkApprove,
-    bulkReject,
-    suggestDish,
-  } = useRestaurantDishes({
-    restaurantId: selectedRestaurant === 'all' ? undefined : selectedRestaurant,
-    includeAll: true,
+  const [activeTab, setActiveTab] = useState<string>('suggested');
+  const [dishes, setDishes] = useState<DishItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({
+    suggested: 0,
+    approved_by_admin: 0,
+    verified_by_owner: 0,
+    rejected: 0,
   });
+  const [actionLoading, setActionLoading] = useState<Set<string>>(new Set());
 
-  // Fetch restaurants on mount
+  // Map tab names to status values
+  const tabToStatus: Record<string, string> = {
+    suggested: 'suggested',
+    approved: 'approved_by_admin',
+    verified: 'verified_by_owner',
+    rejected: 'rejected',
+  };
+
+  const currentStatus = tabToStatus[activeTab] || 'suggested';
+
+  // Fetch restaurants once
   useEffect(() => {
     const fetchRestaurants = async () => {
       const { data } = await supabase
@@ -50,50 +72,153 @@ export function DishApprovalManager() {
         .select('id, name')
         .eq('is_active', true)
         .order('name');
-      
       if (data) setRestaurants(data);
       setLoadingRestaurants(false);
     };
     fetchRestaurants();
   }, []);
 
-  // Refetch dishes when restaurant changes
-  useEffect(() => {
-    refetch();
+  // Fetch status counts (lightweight query)
+  const fetchStatusCounts = useCallback(async () => {
+    const restaurantFilter = selectedRestaurant !== 'all' ? selectedRestaurant : undefined;
+    
+    const countPromises = Object.entries(tabToStatus).map(async ([, status]) => {
+      let query = supabase
+        .from('restaurant_dishes')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', status);
+
+      if (restaurantFilter) {
+        query = query.eq('restaurant_id', restaurantFilter);
+      }
+
+      const { count } = await query;
+      return { status, count: count || 0 };
+    });
+
+    const results = await Promise.all(countPromises);
+    const counts: Record<string, number> = {};
+    results.forEach(r => { counts[r.status] = r.count; });
+    setStatusCounts(counts);
   }, [selectedRestaurant]);
 
-  const getStatusBadge = (status: DishStatus) => {
-    const variants: Record<DishStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-      suggested: { label: 'Voorgesteld', variant: 'secondary' },
-      approved_by_admin: { label: 'Goedgekeurd', variant: 'default' },
-      verified_by_owner: { label: 'Bevestigd door eigenaar', variant: 'default' },
-      rejected: { label: 'Afgewezen', variant: 'destructive' },
-    };
-    const { label, variant } = variants[status];
-    return <Badge variant={variant}>{label}</Badge>;
-  };
+  // Fetch dishes for current tab with pagination
+  const fetchDishes = useCallback(async () => {
+    setLoading(true);
+    try {
+      let query = supabase
+        .from('restaurant_dishes')
+        .select(`
+          id, restaurant_id, dish_id, status, source, confidence_score, rejected_reason,
+          dish:dishes(id, name, name_en),
+          restaurant:restaurants(id, name)
+        `, { count: 'exact' })
+        .eq('status', currentStatus)
+        .order('created_at', { ascending: false })
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
-  const getConfidenceBadge = (confidence: number) => {
-    if (confidence >= 0.8) return <Badge className="bg-green-500">Hoog ({Math.round(confidence * 100)}%)</Badge>;
-    if (confidence >= 0.5) return <Badge className="bg-yellow-500">Gemiddeld ({Math.round(confidence * 100)}%)</Badge>;
-    return <Badge className="bg-red-500">Laag ({Math.round(confidence * 100)}%)</Badge>;
-  };
+      if (selectedRestaurant !== 'all') {
+        query = query.eq('restaurant_id', selectedRestaurant);
+      }
 
-  const filterByStatus = (status: DishStatus | DishStatus[]) => {
-    const statuses = Array.isArray(status) ? status : [status];
-    return dishes.filter((d) => statuses.includes(d.status as DishStatus));
-  };
+      const { data, error, count } = await query;
+      if (error) throw error;
 
-  const filteredDishes = (statusFilter: DishStatus | DishStatus[]) => {
-    return filterByStatus(statusFilter).filter((d) => {
-      if (!searchQuery) return true;
-      const query = searchQuery.toLowerCase();
-      return (
-        d.dish?.name?.toLowerCase().includes(query) ||
-        d.dish?.name_en?.toLowerCase().includes(query) ||
-        d.restaurant?.name?.toLowerCase().includes(query)
-      );
+      setDishes((data || []) as unknown as DishItem[]);
+      setTotalCount(count || 0);
+    } catch (err) {
+      console.error('Error fetching dishes:', err);
+      toast.error('Kon gerechten niet laden');
+    } finally {
+      setLoading(false);
+    }
+  }, [currentStatus, selectedRestaurant, page]);
+
+  useEffect(() => { fetchStatusCounts(); }, [fetchStatusCounts]);
+  useEffect(() => { fetchDishes(); }, [fetchDishes]);
+
+  // Reset page when filters change
+  useEffect(() => { setPage(0); }, [selectedRestaurant, activeTab]);
+
+  // Filter locally by search
+  const filteredDishes = useMemo(() => {
+    if (!searchQuery) return dishes;
+    const q = searchQuery.toLowerCase();
+    return dishes.filter(d =>
+      d.dish?.name?.toLowerCase().includes(q) ||
+      d.dish?.name_en?.toLowerCase().includes(q) ||
+      d.restaurant?.name?.toLowerCase().includes(q)
+    );
+  }, [dishes, searchQuery]);
+
+  const setItemLoading = (id: string, isLoading: boolean) => {
+    setActionLoading(prev => {
+      const next = new Set(prev);
+      isLoading ? next.add(id) : next.delete(id);
+      return next;
     });
+  };
+
+  // Optimistic single actions
+  const handleApprove = async (id: string) => {
+    if (!user) return;
+    setItemLoading(id, true);
+    
+    // Optimistic: remove from list
+    setDishes(prev => prev.filter(d => d.id !== id));
+    setStatusCounts(prev => ({
+      ...prev,
+      suggested: Math.max(0, (prev.suggested || 0) - 1),
+      approved_by_admin: (prev.approved_by_admin || 0) + 1,
+    }));
+    setTotalCount(prev => Math.max(0, prev - 1));
+
+    const { error } = await supabase
+      .from('restaurant_dishes')
+      .update({
+        status: 'approved_by_admin',
+        approved_by: user.id,
+        approved_at: new Date().toISOString(),
+      })
+      .eq('id', id);
+
+    if (error) {
+      toast.error('Kon gerecht niet goedkeuren');
+      // Revert on error
+      await fetchDishes();
+      await fetchStatusCounts();
+    } else {
+      toast.success('Gerecht goedgekeurd');
+    }
+    setItemLoading(id, false);
+  };
+
+  const handleDelete = async (id: string) => {
+    setItemLoading(id, true);
+    const removedDish = dishes.find(d => d.id === id);
+    
+    setDishes(prev => prev.filter(d => d.id !== id));
+    setTotalCount(prev => Math.max(0, prev - 1));
+    if (removedDish) {
+      setStatusCounts(prev => ({
+        ...prev,
+        [removedDish.status]: Math.max(0, (prev[removedDish.status] || 0) - 1),
+      }));
+    }
+
+    const { error } = await supabase
+      .from('restaurant_dishes')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      toast.error('Kon gerecht niet verwijderen');
+      await fetchDishes();
+      await fetchStatusCounts();
+    } else {
+      toast.success('Gerecht verwijderd');
+    }
+    setItemLoading(id, false);
   };
 
   const handleReject = async () => {
@@ -101,111 +226,109 @@ export function DishApprovalManager() {
       toast.error('Geef een reden op');
       return;
     }
-    await rejectDish(selectedDish.id, rejectReason);
+
+    const id = selectedDish.id;
     setRejectDialogOpen(false);
+    setItemLoading(id, true);
+
+    setDishes(prev => prev.filter(d => d.id !== id));
+    setStatusCounts(prev => ({
+      ...prev,
+      suggested: Math.max(0, (prev.suggested || 0) - 1),
+      rejected: (prev.rejected || 0) + 1,
+    }));
+    setTotalCount(prev => Math.max(0, prev - 1));
+
+    const { error } = await supabase
+      .from('restaurant_dishes')
+      .update({ status: 'rejected', rejected_reason: rejectReason })
+      .eq('id', id);
+
+    if (error) {
+      toast.error('Kon gerecht niet afwijzen');
+      await fetchDishes();
+      await fetchStatusCounts();
+    } else {
+      toast.success('Gerecht afgewezen');
+    }
     setSelectedDish(null);
     setRejectReason('');
+    setItemLoading(id, false);
   };
 
+  // Batch operations using single SQL update
   const handleBulkApprove = async () => {
-    const count = await bulkApprove(0.85);
-    toast.success(`${count} gerechten goedgekeurd`);
+    if (!user) return;
+    setLoading(true);
+
+    let query = supabase
+      .from('restaurant_dishes')
+      .update({
+        status: 'approved_by_admin',
+        approved_by: user.id,
+        approved_at: new Date().toISOString(),
+      })
+      .eq('status', 'suggested')
+      .gte('confidence_score', 0.85);
+
+    if (selectedRestaurant !== 'all') {
+      query = query.eq('restaurant_id', selectedRestaurant);
+    }
+
+    const { error, count } = await query.select('id');
+
+    if (error) {
+      toast.error('Bulk goedkeuring mislukt');
+    } else {
+      toast.success(`${count || 0} gerechten goedgekeurd`);
+    }
+    await Promise.all([fetchDishes(), fetchStatusCounts()]);
+    setLoading(false);
   };
 
   const handleBulkReject = async () => {
-    const count = await bulkReject(0.4, 'Automatisch afgewezen: lage confidence score');
-    toast.success(`${count} gerechten afgewezen`);
-  };
+    if (!user) return;
+    setLoading(true);
 
-  const DishList = ({ statusFilter }: { statusFilter: DishStatus | DishStatus[] }) => {
-    const items = filteredDishes(statusFilter);
-    
-    if (items.length === 0) {
-      return (
-        <div className="text-center py-8 text-muted-foreground">
-          <AlertCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
-          <p>Geen gerechten gevonden</p>
-        </div>
-      );
+    let query = supabase
+      .from('restaurant_dishes')
+      .update({
+        status: 'rejected',
+        rejected_reason: 'Automatisch afgewezen: lage confidence score',
+      })
+      .eq('status', 'suggested')
+      .lte('confidence_score', 0.4);
+
+    if (selectedRestaurant !== 'all') {
+      query = query.eq('restaurant_id', selectedRestaurant);
     }
 
-    return (
-      <div className="space-y-2">
-        {items.map((item) => (
-          <div
-            key={item.id}
-            className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-          >
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="font-medium">{item.dish?.name}</span>
-                {item.dish?.name_en && (
-                  <span className="text-muted-foreground text-sm">({item.dish.name_en})</span>
-                )}
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>{item.restaurant?.name}</span>
-                <span>•</span>
-                {getConfidenceBadge(item.confidence_score)}
-                <span>•</span>
-                <span className="capitalize">{item.source.replace('_', ' ')}</span>
-              </div>
-              {item.rejected_reason && (
-                <p className="text-sm text-destructive mt-1">Reden: {item.rejected_reason}</p>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {getStatusBadge(item.status as DishStatus)}
-              {item.status === 'suggested' && (
-                <>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-green-600 hover:text-green-700"
-                    onClick={() => approveDish(item.id)}
-                  >
-                    <Check className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-red-600 hover:text-red-700"
-                    onClick={() => {
-                      setSelectedDish(item);
-                      setRejectDialogOpen(true);
-                    }}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </>
-              )}
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-destructive hover:text-destructive"
-                onClick={() => deleteDish(item.id)}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
+    const { error, count } = await query.select('id');
+
+    if (error) {
+      toast.error('Bulk afwijzing mislukt');
+    } else {
+      toast.success(`${count || 0} gerechten afgewezen`);
+    }
+    await Promise.all([fetchDishes(), fetchStatusCounts()]);
+    setLoading(false);
   };
 
-  if (loading || loadingRestaurants) {
+  const getConfidenceBadge = (confidence: number) => {
+    if (confidence >= 0.8) return <Badge className="bg-green-500 text-white">Hoog ({Math.round(confidence * 100)}%)</Badge>;
+    if (confidence >= 0.5) return <Badge className="bg-yellow-500 text-white">Gemiddeld ({Math.round(confidence * 100)}%)</Badge>;
+    return <Badge className="bg-red-500 text-white">Laag ({Math.round(confidence * 100)}%)</Badge>;
+  };
+
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
+  if (loadingRestaurants) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
-
-  const suggestedCount = filterByStatus('suggested').length;
-  const approvedCount = filterByStatus('approved_by_admin').length;
-  const verifiedCount = filterByStatus('verified_by_owner').length;
-  const rejectedCount = filterByStatus('rejected').length;
 
   return (
     <div className="space-y-6">
@@ -226,9 +349,7 @@ export function DishApprovalManager() {
                 <SelectContent>
                   <SelectItem value="all">Alle restaurants</SelectItem>
                   {restaurants.map((r) => (
-                    <SelectItem key={r.id} value={r.id}>
-                      {r.name}
-                    </SelectItem>
+                    <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -244,50 +365,137 @@ export function DishApprovalManager() {
             </div>
           </div>
 
-          {suggestedCount > 0 && (
+          {statusCounts.suggested > 0 && activeTab === 'suggested' && (
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={handleBulkApprove}>
+              <Button variant="outline" size="sm" onClick={handleBulkApprove} disabled={loading}>
                 <Check className="w-4 h-4 mr-2" />
                 Keur alle hoge confidence goed (≥85%)
               </Button>
-              <Button variant="outline" size="sm" onClick={handleBulkReject}>
+              <Button variant="outline" size="sm" onClick={handleBulkReject} disabled={loading}>
                 <X className="w-4 h-4 mr-2" />
                 Wijs alle lage confidence af (≤40%)
               </Button>
             </div>
           )}
 
-          <Tabs defaultValue="suggested">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="suggested">
-                Voorgesteld ({suggestedCount})
+                Voorgesteld ({statusCounts.suggested || 0})
               </TabsTrigger>
               <TabsTrigger value="approved">
-                Goedgekeurd ({approvedCount})
+                Goedgekeurd ({statusCounts.approved_by_admin || 0})
               </TabsTrigger>
               <TabsTrigger value="verified">
-                Bevestigd ({verifiedCount})
+                Bevestigd ({statusCounts.verified_by_owner || 0})
               </TabsTrigger>
               <TabsTrigger value="rejected">
-                Afgewezen ({rejectedCount})
+                Afgewezen ({statusCounts.rejected || 0})
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="suggested" className="mt-4">
-              <DishList statusFilter="suggested" />
-            </TabsContent>
+            <div className="mt-4">
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                </div>
+              ) : filteredDishes.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <AlertCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p>Geen gerechten gevonden</p>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    {filteredDishes.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium truncate">{item.dish?.name}</span>
+                            {item.dish?.name_en && (
+                              <span className="text-muted-foreground text-sm truncate">({item.dish.name_en})</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+                            <span className="truncate">{item.restaurant?.name}</span>
+                            <span>•</span>
+                            {getConfidenceBadge(item.confidence_score)}
+                            <span>•</span>
+                            <span className="capitalize">{item.source?.replace('_', ' ')}</span>
+                          </div>
+                          {item.rejected_reason && (
+                            <p className="text-sm text-destructive mt-1 truncate">Reden: {item.rejected_reason}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {item.status === 'suggested' && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-green-600 hover:text-green-700"
+                                onClick={() => handleApprove(item.id)}
+                                disabled={actionLoading.has(item.id)}
+                              >
+                                {actionLoading.has(item.id) ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-red-600 hover:text-red-700"
+                                onClick={() => { setSelectedDish(item); setRejectDialogOpen(true); }}
+                                disabled={actionLoading.has(item.id)}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleDelete(item.id)}
+                            disabled={actionLoading.has(item.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
 
-            <TabsContent value="approved" className="mt-4">
-              <DishList statusFilter="approved_by_admin" />
-            </TabsContent>
-
-            <TabsContent value="verified" className="mt-4">
-              <DishList statusFilter="verified_by_owner" />
-            </TabsContent>
-
-            <TabsContent value="rejected" className="mt-4">
-              <DishList statusFilter="rejected" />
-            </TabsContent>
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                      <span className="text-sm text-muted-foreground">
+                        Pagina {page + 1} van {totalPages} ({totalCount} totaal)
+                      </span>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setPage(p => Math.max(0, p - 1))}
+                          disabled={page === 0}
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                          disabled={page >= totalPages - 1}
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </Tabs>
         </CardContent>
       </Card>
@@ -309,12 +517,8 @@ export function DishApprovalManager() {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>
-              Annuleren
-            </Button>
-            <Button variant="destructive" onClick={handleReject}>
-              Afwijzen
-            </Button>
+            <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>Annuleren</Button>
+            <Button variant="destructive" onClick={handleReject}>Afwijzen</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
