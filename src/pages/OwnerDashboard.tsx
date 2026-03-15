@@ -299,12 +299,12 @@ export default function OwnerDashboard() {
         {!isVerified && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
             {isPendingAdminReview ? (
-              <Card className="border-blue-500/30 bg-blue-500/5">
+              <Card className="border-primary/30 bg-primary/5">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <Clock className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                    <Clock className="h-5 w-5 text-primary flex-shrink-0" />
                     <div className="flex-1">
-                      <p className="font-medium text-blue-700 text-sm">In afwachting van admin review</p>
+                      <p className="font-medium text-primary text-sm">In afwachting van admin review</p>
                       <p className="text-xs text-muted-foreground">
                         Je betaling is ontvangen. Een admin zal je aanvraag beoordelen.
                       </p>
