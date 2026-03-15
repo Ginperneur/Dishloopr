@@ -1013,6 +1013,7 @@ export default function AdminPanel() {
             <MenuScraper />
           </TabsContent>
         </Tabs>
+        </div>
 
         {/* Restaurant Detail Modal */}
         <RestaurantDetailModal
