@@ -204,19 +204,21 @@ export default function SearchPage() {
     ? t('cities.all') 
     : cities.find(c => c.id === selectedCityId)?.name || '';
 
-  const pageTitle = featuredOnly 
-    ? 'Uitgelichte restaurants'
-    : dishQuery 
-      ? `${dishQuery} restaurants${selectedCityId && selectedCityId !== 'all' ? ` in ${cities.find(c => c.id === selectedCityId)?.name || ''}` : ''}`
-      : 'Zoek restaurants';
+  const selectedCityName = selectedCityId && selectedCityId !== 'all' 
+    ? cities.find(c => c.id === selectedCityId)?.name || '' 
+    : '';
 
-  return (
-    <Layout>
-      <SEOHead
-        title={`${pageTitle} | Dishloopr`}
-        description={`Vind de beste ${dishQuery || 'restaurants'}${selectedCityId && selectedCityId !== 'all' ? ` in ${cities.find(c => c.id === selectedCityId)?.name || 'Nederland'}` : ' in Nederland'}. Bekijk reviews, menu's en reserveer direct.`}
-        keywords={[dishQuery || 'restaurants', 'eten', 'uit eten', 'Nederland', 'reviews'].filter(Boolean) as string[]}
-        canonical={`https://dishloopr.com/search${dishQuery ? `?dish=${encodeURIComponent(dishQuery)}` : ''}${selectedCityId && selectedCityId !== 'all' ? `${dishQuery ? '&' : '?'}city=${selectedCityId}` : ''}`}
+  const pageTitle = featuredOnly 
+    ? t('search.featuredTitle', 'Uitgelichte restaurants')
+    : dishQuery 
+      ? selectedCityName
+        ? `Beste ${dishQuery} in ${selectedCityName}`
+        : `${dishQuery} restaurants in Nederland`
+      : t('search.defaultTitle', 'Zoek restaurants');
+
+  const pageDescription = dishQuery
+    ? `Vind de beste ${dishQuery} restaurants${selectedCityName ? ` in ${selectedCityName}` : ' in Nederland'}. Vergelijk ${sortedResults.length}+ opties, bekijk reviews en reserveer direct.`
+    : `Zoek en ontdek ${sortedResults.length}+ restaurants${selectedCityName ? ` in ${selectedCityName}` : ' in Nederland'}. Filter op gerecht, sfeer en prijs.`;
         structuredData={createBreadcrumbSchema([
           { name: 'Home', url: 'https://dishloopr.com' },
           { name: pageTitle, url: `https://dishloopr.com/search` },
