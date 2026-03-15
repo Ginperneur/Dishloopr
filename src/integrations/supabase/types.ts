@@ -955,6 +955,59 @@ export type Database = {
           },
         ]
       }
+      menu_scrape_runs: {
+        Row: {
+          completed_at: string
+          created_at: string
+          dishes_added: number
+          dishes_existing: number
+          dishes_extracted: number
+          error_message: string | null
+          id: string
+          restaurant_id: string
+          scraped_url: string | null
+          source: string
+          started_at: string
+          status: string
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          dishes_added?: number
+          dishes_existing?: number
+          dishes_extracted?: number
+          error_message?: string | null
+          id?: string
+          restaurant_id: string
+          scraped_url?: string | null
+          source?: string
+          started_at?: string
+          status: string
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          dishes_added?: number
+          dishes_existing?: number
+          dishes_extracted?: number
+          error_message?: string | null
+          id?: string
+          restaurant_id?: string
+          scraped_url?: string | null
+          source?: string
+          started_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_scrape_runs_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletter_editions: {
         Row: {
           created_at: string

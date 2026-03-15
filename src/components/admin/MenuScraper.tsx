@@ -25,7 +25,7 @@ const FILTER_LABELS: Record<ScrapeFilter, { label: string; description: string }
   all: { label: 'Alle restaurants', description: 'Scrape alle restaurants met een website' },
   missing: { label: 'Zonder gerechten', description: 'Alleen restaurants zonder enig gerecht' },
   no_approved: { label: 'Zonder goedgekeurde gerechten', description: 'Restaurants zonder goedgekeurde gerechten' },
-  never_scraped: { label: 'Nog nooit gescraped', description: 'Restaurants zonder gerechten van bron "scrape"' },
+  never_scraped: { label: 'Nog nooit gescraped', description: 'Restaurants zonder eerdere scrape-poging' },
 };
 
 export function MenuScraper() {
@@ -98,6 +98,32 @@ export function MenuScraper() {
     return ids;
   };
 
+  const fetchDistinctScrapeRunRestaurantIds = async (restaurantIds: string[]): Promise<Set<string>> => {
+    const ids = new Set<string>();
+    const chunkSize = 200;
+
+    for (let i = 0; i < restaurantIds.length; i += chunkSize) {
+      const chunk = restaurantIds.slice(i, i + chunkSize);
+      let from = 0;
+      const pageSize = 1000;
+
+      while (true) {
+        const { data } = await supabase
+          .from('menu_scrape_runs')
+          .select('restaurant_id')
+          .in('restaurant_id', chunk)
+          .range(from, from + pageSize - 1);
+
+        if (!data || data.length === 0) break;
+        data.forEach((d) => ids.add(d.restaurant_id));
+        if (data.length < pageSize) break;
+        from += pageSize;
+      }
+    }
+
+    return ids;
+  };
+
   const fetchFilteredRestaurants = async () => {
     // First get all restaurants with website
     const { data: restaurants, error } = await supabase
@@ -132,11 +158,8 @@ export function MenuScraper() {
     }
 
     if (filter === 'never_scraped') {
-      const idsScraped = await fetchDistinctRestaurantIds(restaurantIds, {
-        column: 'source',
-        value: ['scrape', 'firecrawl'],
-      });
-      return { data: restaurants.filter(r => !idsScraped.has(r.id)), error: null };
+      const idsWithAnyScrapeAttempt = await fetchDistinctScrapeRunRestaurantIds(restaurantIds);
+      return { data: restaurants.filter(r => !idsWithAnyScrapeAttempt.has(r.id)), error: null };
     }
 
     return { data: restaurants, error: null };

@@ -17,6 +17,46 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let parsedRestaurantId: string | null = null;
+  let adminSupabase: any = null;
+  let runStartedAt = new Date().toISOString();
+  let scrapedUrlForLog: string | null = null;
+
+  const logRun = async ({
+    status,
+    dishesExtracted = 0,
+    dishesAdded = 0,
+    dishesExisting = 0,
+    errorMessage = null,
+    scrapedUrl = null,
+  }: {
+    status: string;
+    dishesExtracted?: number;
+    dishesAdded?: number;
+    dishesExisting?: number;
+    errorMessage?: string | null;
+    scrapedUrl?: string | null;
+  }) => {
+    if (!adminSupabase || !parsedRestaurantId) return;
+
+    try {
+      await adminSupabase.from('menu_scrape_runs').insert({
+        restaurant_id: parsedRestaurantId,
+        status,
+        source: 'firecrawl_ai',
+        scraped_url: scrapedUrl,
+        dishes_extracted: dishesExtracted,
+        dishes_added: dishesAdded,
+        dishes_existing: dishesExisting,
+        error_message: errorMessage,
+        started_at: runStartedAt,
+        completed_at: new Date().toISOString(),
+      });
+    } catch (logErr) {
+      console.error('Failed to log scrape run:', logErr);
+    }
+  };
+
   try {
     // Auth check
     const authHeader = req.headers.get('Authorization');
@@ -50,15 +90,25 @@ Deno.serve(async (req) => {
     }
 
     const { restaurantId, websiteUrl } = await req.json();
+    parsedRestaurantId = restaurantId;
+    runStartedAt = new Date().toISOString();
+
     if (!restaurantId || !websiteUrl) {
       return new Response(JSON.stringify({ error: 'restaurantId and websiteUrl are required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    adminSupabase = createClient(supabaseUrl, supabaseServiceKey);
+
     // Step 1: Scrape website with Firecrawl
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
     if (!firecrawlKey) {
+      await logRun({
+        status: 'firecrawl_not_configured',
+        errorMessage: 'Firecrawl not configured',
+      });
       return new Response(JSON.stringify({ error: 'Firecrawl not configured' }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -96,6 +146,7 @@ Deno.serve(async (req) => {
         console.log(`Found menu page: ${urlToScrape}`);
       }
     }
+    scrapedUrlForLog = urlToScrape;
 
     // Scrape the page
     const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
@@ -115,11 +166,23 @@ Deno.serve(async (req) => {
     if (!scrapeResponse.ok) {
       const errData = await scrapeResponse.text();
       console.error('Firecrawl scrape error:', errData);
+
       if (scrapeResponse.status === 402) {
+        await logRun({
+          status: 'firecrawl_credits_exhausted',
+          errorMessage: 'Firecrawl credits op',
+          scrapedUrl: urlToScrape,
+        });
         return new Response(JSON.stringify({ error: 'Firecrawl credits op' }), {
           status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
+
+      await logRun({
+        status: 'scrape_failed',
+        errorMessage: `Website scraping mislukt (${scrapeResponse.status})`,
+        scrapedUrl: urlToScrape,
+      });
       return new Response(JSON.stringify({ error: 'Website scraping mislukt' }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -129,6 +192,11 @@ Deno.serve(async (req) => {
     const markdown = scrapeData.data?.markdown || scrapeData.markdown || '';
 
     if (!markdown || markdown.length < 50) {
+      await logRun({
+        status: 'no_menu_content',
+        errorMessage: 'Geen menu content gevonden op deze website',
+        scrapedUrl: urlToScrape,
+      });
       return new Response(JSON.stringify({
         success: false,
         error: 'Geen menu content gevonden op deze website',
@@ -141,6 +209,11 @@ Deno.serve(async (req) => {
     // Step 2: AI extraction
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
+      await logRun({
+        status: 'ai_not_configured',
+        errorMessage: 'AI service niet geconfigureerd',
+        scrapedUrl: urlToScrape,
+      });
       return new Response(JSON.stringify({ error: 'AI service niet geconfigureerd' }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -183,23 +256,43 @@ Regels:
       console.error('AI error:', aiResponse.status, aiErrorText);
 
       if (aiResponse.status === 429) {
+        await logRun({
+          status: 'ai_rate_limited',
+          errorMessage: 'Te veel AI-verzoeken',
+          scrapedUrl: urlToScrape,
+        });
         return new Response(JSON.stringify({ error: 'Te veel AI-verzoeken, probeer het zo opnieuw.' }), {
           status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
 
       if (aiResponse.status === 402) {
+        await logRun({
+          status: 'ai_credits_exhausted',
+          errorMessage: 'AI credits op',
+          scrapedUrl: urlToScrape,
+        });
         return new Response(JSON.stringify({ error: 'AI credits op. Voeg credits toe in je workspace usage.' }), {
           status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
 
       if (aiResponse.status === 401) {
+        await logRun({
+          status: 'ai_auth_failed',
+          errorMessage: 'AI authenticatie mislukt',
+          scrapedUrl: urlToScrape,
+        });
         return new Response(JSON.stringify({ error: 'AI authenticatie mislukt. Probeer het opnieuw.' }), {
           status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
 
+      await logRun({
+        status: 'ai_failed',
+        errorMessage: aiErrorText.slice(0, 500),
+        scrapedUrl: urlToScrape,
+      });
       return new Response(JSON.stringify({
         error: 'AI analyse mislukt',
         details: aiErrorText.slice(0, 500),
@@ -217,6 +310,11 @@ Regels:
       if (jsonMatch) extractedDishes = JSON.parse(jsonMatch[0]);
     } catch (e) {
       console.error('Parse error:', e);
+      await logRun({
+        status: 'ai_parse_failed',
+        errorMessage: 'Kon gerechten niet parsen',
+        scrapedUrl: urlToScrape,
+      });
       return new Response(JSON.stringify({ error: 'Kon gerechten niet parsen', raw: content }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -225,9 +323,6 @@ Regels:
     console.log(`AI extracted ${extractedDishes.length} dishes`);
 
     // Step 3: Save to database
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
     const results = { added: [] as string[], existing: [] as string[], errors: [] as string[] };
 
     for (const dish of extractedDishes) {
@@ -238,11 +333,11 @@ Regels:
         const slug = formattedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
         // Find existing dish
-        let { data: existingDish } = await supabase
+        let { data: existingDish } = await adminSupabase
           .from('dishes').select('id, synonyms').eq('slug', slug).maybeSingle();
 
         if (!existingDish) {
-          const { data: byName } = await supabase
+          const { data: byName } = await adminSupabase
             .from('dishes').select('id, synonyms').ilike('name', formattedName).maybeSingle();
           existingDish = byName;
         }
@@ -259,12 +354,12 @@ Regels:
             !currentSynonyms.some((cs: string) => cs.toLowerCase() === s.toLowerCase())
           );
           if (newSynonyms.length > 0) {
-            await supabase.from('dishes').update({
+            await adminSupabase.from('dishes').update({
               synonyms: [...currentSynonyms, ...newSynonyms.map((s: string) => s.toLowerCase())]
             }).eq('id', dishId);
           }
         } else {
-          const { data: newDish, error: createError } = await supabase
+          const { data: newDish, error: createError } = await adminSupabase
             .from('dishes').insert({
               name: formattedName,
               name_en: dish.name_en ? formatDishName(dish.name_en) : null,
@@ -279,12 +374,12 @@ Regels:
         }
 
         // Link to restaurant
-        const { data: existingLink } = await supabase
+        const { data: existingLink } = await adminSupabase
           .from('restaurant_dishes').select('id')
           .eq('restaurant_id', restaurantId).eq('dish_id', dishId).maybeSingle();
 
         if (!existingLink) {
-          await supabase.from('restaurant_dishes').insert({
+          await adminSupabase.from('restaurant_dishes').insert({
             restaurant_id: restaurantId,
             dish_id: dishId,
             status: 'suggested',
@@ -297,6 +392,14 @@ Regels:
         results.errors.push(dish.name);
       }
     }
+
+    await logRun({
+      status: 'success',
+      dishesExtracted: extractedDishes.length,
+      dishesAdded: results.added.length,
+      dishesExisting: results.existing.length,
+      scrapedUrl: urlToScrape,
+    });
 
     return new Response(JSON.stringify({
       success: true,
@@ -313,6 +416,13 @@ Regels:
 
   } catch (error) {
     console.error('Scrape error:', error);
+
+    await logRun({
+      status: 'internal_error',
+      errorMessage: error instanceof Error ? error.message : 'Unknown',
+      scrapedUrl: scrapedUrlForLog,
+    });
+
     return new Response(JSON.stringify({
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown'
