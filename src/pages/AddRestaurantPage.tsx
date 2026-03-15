@@ -369,10 +369,10 @@ export default function AddRestaurantPage() {
               <Store className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h2 className="text-xl font-bold mb-2">Log in om door te gaan</h2>
               <p className="text-muted-foreground mb-6">
-                Je moet ingelogd zijn om een restaurant toe te voegen.
+                Maak een gratis account aan of log in om je restaurant toe te voegen. Na het toevoegen kun je eigenaarschap verifiëren.
               </p>
               <Button asChild>
-                <Link to="/login?redirect=/restaurant-toevoegen">Inloggen</Link>
+                <Link to="/login?redirect=/add-restaurant">Inloggen of registreren</Link>
               </Button>
             </CardContent>
           </Card>
