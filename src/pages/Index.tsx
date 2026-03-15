@@ -41,10 +41,11 @@ const Index = () => {
   return (
     <Layout>
       <SEOHead
-        title="Dishloopr - Ontdek de beste restaurants en gerechten in Nederland"
-        description="Vind de lekkerste gerechten en restaurants bij jou in de buurt. Zoek op gerecht, bekijk reviews en ontdek nieuwe culinaire ervaringen."
-        keywords={['restaurants', 'gerechten', 'eten', 'Nederland', 'reviews', 'culinair', 'uit eten']}
+        title="Dishloopr - Vind restaurants op gerecht | NL"
+        description="Zoek restaurants op basis van het gerecht waar je zin in hebt. Filter op stad, sfeer en prijs. Ontdek de lekkerste plekken in Nederland."
+        keywords={['restaurants', 'gerechten', 'eten', 'Nederland', 'reviews', 'uit eten', 'zoek op gerecht']}
         structuredData={createWebsiteSchema()}
+        canonical="https://dishloopr.com"
       />
       {/* Hero Section */}
       <section className="relative py-6 sm:py-8 md:py-14 lg:py-18 pb-6 sm:pb-8 md:pb-10 lg:pb-14 overflow-hidden z-10">

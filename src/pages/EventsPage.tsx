@@ -105,10 +105,25 @@ export default function EventsPage() {
   return (
     <Layout>
       <SEOHead
-        title="Events & Acties - Restaurant Evenementen | Dishloopr"
-        description="Ontdek speciale acties, evenementen en kortingen bij restaurants. Van ladies nights tot seizoensgebonden menu's - mis geen enkele actie."
-        keywords={['restaurant events', 'acties', 'kortingen', 'ladies night', 'speciale menu', 'evenementen', 'Nederland']}
-        structuredData={breadcrumbData}
+        title={t('events.seoTitle', 'Restaurant Events & Acties | Dishloopr')}
+        description={t('events.seoDescription', 'Ontdek speciale acties, evenementen en kortingen bij restaurants. Van proeverijen tot seizoensgebonden menu\'s.')}
+        keywords={['restaurant events', 'acties', 'kortingen', 'proeverij', 'speciaal menu', 'evenementen', 'Nederland']}
+        structuredData={{
+          '@context': 'https://schema.org',
+          '@graph': [
+            breadcrumbData,
+            ...(events.length > 0 ? [{
+              '@context': 'https://schema.org',
+              '@type': 'ItemList',
+              itemListElement: events.slice(0, 10).map((event, i) => ({
+                '@type': 'ListItem',
+                position: i + 1,
+                name: event.title,
+                url: `https://dishloopr.com/restaurant/${event.restaurant?.slug || ''}`,
+              })),
+            }] : []),
+          ],
+        }}
         canonical="https://dishloopr.com/events"
       />
 

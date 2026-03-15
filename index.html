@@ -4,34 +4,38 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
     
-    <title>Dishloopr - Vind restaurants op basis van gerechten | Nederland</title>
-    <meta name="description" content="Dishloopr is de snelste manier om restaurants te vinden op basis van het gerecht waar je zin in hebt, gefilterd op stad, sfeer en prijs." />
+    <title>Dishloopr - Vind restaurants op gerecht | NL</title>
+    <meta name="description" content="Zoek restaurants op basis van het gerecht waar je zin in hebt. Filter op stad, sfeer en prijs. Ontdek de lekkerste plekken in Nederland." />
     <meta name="author" content="Dishloopr" />
     <meta name="theme-color" content="#F26522" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="googlebot" content="index, follow" />
-    <meta name="keywords" content="restaurants, gerechten, uit eten, Nederland, reviews, reserveren, culinair, eten bestellen" />
+    <meta name="keywords" content="restaurants, gerechten, uit eten, Nederland, reviews, reserveren, culinair" />
     <link rel="canonical" href="https://dishloopr.com" />
     
     <!-- Open Graph / Facebook -->
-    <meta property="og:title" content="Dishloopr - Vind restaurants op basis van gerechten" />
-    <meta property="og:description" content="Dishloopr is de snelste manier om restaurants te vinden op basis van het gerecht waar je zin in hebt, gefilterd op stad, sfeer en prijs." />
+    <meta property="og:title" content="Dishloopr - Vind restaurants op gerecht" />
+    <meta property="og:description" content="Zoek restaurants op basis van het gerecht waar je zin in hebt. Filter op stad, sfeer en prijs." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://dishloopr.com" />
     <meta property="og:image" content="https://dishloopr.com/og-image.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Dishloopr - Vind restaurants op basis van gerechten" />
+    <meta property="og:image:alt" content="Dishloopr - Vind restaurants op gerecht" />
     <meta property="og:locale" content="nl_NL" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:locale:alternate" content="de_DE" />
+    <meta property="og:locale:alternate" content="fr_FR" />
+    <meta property="og:locale:alternate" content="es_ES" />
     <meta property="og:site_name" content="Dishloopr" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@dishloopr" />
-    <meta name="twitter:title" content="Dishloopr - Vind restaurants op basis van gerechten" />
-    <meta name="twitter:description" content="Dishloopr is de snelste manier om restaurants te vinden op basis van het gerecht waar je zin in hebt, gefilterd op stad, sfeer en prijs." />
+    <meta name="twitter:title" content="Dishloopr - Vind restaurants op gerecht" />
+    <meta name="twitter:description" content="Zoek restaurants op basis van het gerecht waar je zin in hebt. Filter op stad, sfeer en prijs." />
     <meta name="twitter:image" content="https://dishloopr.com/og-image.jpg" />
-    <meta name="twitter:image:alt" content="Dishloopr - Vind restaurants op basis van gerechten" />
+    <meta name="twitter:image:alt" content="Dishloopr - Vind restaurants op gerecht" />
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/favicon.png" />
@@ -58,27 +62,49 @@
     <link rel="preconnect" href="https://uktafmxojymsojqewzuy.supabase.co" />
     <link rel="preconnect" href="https://www.googletagmanager.com" />
     
-    <!-- Structured Data -->
+    <!-- Structured Data: Organization + WebSite -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "Dishloopr",
-      "url": "https://dishloopr.com",
-      "description": "Ontdek de beste restaurants in Nederland op basis van het gerecht waar je zin in hebt",
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": {
-          "@type": "EntryPoint",
-          "urlTemplate": "https://dishloopr.com/search?dish={search_term_string}"
+      "@graph": [
+        {
+          "@type": "Organization",
+          "name": "Dishloopr",
+          "url": "https://dishloopr.com",
+          "logo": "https://dishloopr.com/favicon.png",
+          "sameAs": [
+            "https://instagram.com/dishloopr",
+            "https://tiktok.com/@dishloopr"
+          ],
+          "description": "Dishloopr helpt je de beste restaurants te vinden op basis van het gerecht waar je zin in hebt"
         },
-        "query-input": "required name=search_term_string"
-      }
+        {
+          "@type": "WebSite",
+          "name": "Dishloopr",
+          "url": "https://dishloopr.com",
+          "description": "Ontdek de beste restaurants in Nederland op basis van het gerecht waar je zin in hebt",
+          "inLanguage": ["nl", "en", "de", "fr", "es"],
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://dishloopr.com/search?dish={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
     }
     </script>
   </head>
 
   <body>
+    <noscript>
+      <div style="padding:2rem;text-align:center;font-family:sans-serif">
+        <h1>Dishloopr</h1>
+        <p>JavaScript is vereist om Dishloopr te gebruiken. Schakel JavaScript in of gebruik een moderne browser.</p>
+      </div>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

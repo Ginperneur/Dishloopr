@@ -41,24 +41,24 @@ export function SEOHead({
     // Update document title
     document.title = fullTitle;
 
-    // hreflang tags for multilingual support
-    const supportedLangs = ['nl', 'en', 'de', 'fr', 'es'];
+    // Clean up old hreflang tags
     const existingHreflangs = document.querySelectorAll('link[hreflang]');
     existingHreflangs.forEach(el => el.remove());
     
-    supportedLangs.forEach(lang => {
-      const link = document.createElement('link');
-      link.setAttribute('rel', 'alternate');
-      link.setAttribute('hreflang', lang);
-      link.setAttribute('href', `${canonicalUrl}${canonicalUrl.includes('?') ? '&' : '?'}lang=${lang}`);
-      document.head.appendChild(link);
-    });
-    // x-default hreflang
+    // Only add hreflang for pages with actual localized URLs (not query-param based)
+    // Since Dishloopr uses client-side i18n (not URL-based), we set x-default only
     const xDefault = document.createElement('link');
     xDefault.setAttribute('rel', 'alternate');
     xDefault.setAttribute('hreflang', 'x-default');
     xDefault.setAttribute('href', canonicalUrl);
     document.head.appendChild(xDefault);
+
+    // Add nl as primary language
+    const nlLink = document.createElement('link');
+    nlLink.setAttribute('rel', 'alternate');
+    nlLink.setAttribute('hreflang', 'nl');
+    nlLink.setAttribute('href', canonicalUrl);
+    document.head.appendChild(nlLink);
     // Helper to update or create meta tag
     const updateMeta = (property: string, content: string, isName = false) => {
       const attr = isName ? 'name' : 'property';
@@ -259,12 +259,25 @@ export function createWebsiteSchema() {
     '@type': 'WebSite',
     name: 'Dishloopr',
     url: 'https://dishloopr.com',
-    description: 'Ontdek de beste restaurants en gerechten in Nederland',
+    description: 'Ontdek de beste restaurants in Nederland op basis van het gerecht waar je zin in hebt',
+    inLanguage: ['nl', 'en', 'de', 'fr', 'es'],
+    publisher: {
+      '@type': 'Organization',
+      name: 'Dishloopr',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://dishloopr.com/favicon.png',
+      },
+      sameAs: [
+        'https://instagram.com/dishloopr',
+        'https://tiktok.com/@dishloopr',
+      ],
+    },
     potentialAction: {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: 'https://dishloopr.com/search?q={search_term_string}',
+        urlTemplate: 'https://dishloopr.com/search?dish={search_term_string}',
       },
       'query-input': 'required name=search_term_string',
     },
