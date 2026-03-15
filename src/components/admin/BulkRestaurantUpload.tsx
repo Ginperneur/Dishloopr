@@ -84,8 +84,8 @@ export function BulkRestaurantUpload({ onSuccess }: BulkRestaurantUploadProps) {
         return;
       }
 
-      if (parsed.length > 50) {
-        toast.error('Maximum 50 restaurants per upload. Je hebt ' + parsed.length + ' restaurants.');
+      if (parsed.length > 500) {
+        toast.error('Maximum 500 restaurants per upload. Je hebt ' + parsed.length + ' restaurants.');
         return;
       }
 
