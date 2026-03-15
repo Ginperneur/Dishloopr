@@ -342,8 +342,8 @@ export function SearchBar({
         <Button
           onClick={handleSearch}
           size={isHero ? 'lg' : 'default'}
-          className={`rounded-xl font-semibold ${
-            isHero ? 'px-6 md:px-8' : 'px-4'
+          className={`rounded-xl font-semibold shrink-0 ${
+            isHero ? 'px-4 md:px-8' : 'px-4'
           }`}
         >
           <span className={isHero ? 'hidden md:inline' : 'hidden'}>
