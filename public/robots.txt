@@ -20,7 +20,7 @@ Allow: /
 Crawl-delay: 2
 
 # Sitemap location
-Sitemap: https://uktafmxojymsojqewzuy.supabase.co/functions/v1/generate-sitemap
+Sitemap: https://dishloopr.com/sitemap.xml
 
 # Disallow private pages
 Disallow: /admin
