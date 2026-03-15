@@ -76,11 +76,13 @@ export function SearchBar({
     if (query.length >= 2) {
       const queryLower = query.toLowerCase();
 
-      // Filter dishes by name or synonyms
+      // Filter dishes by name or synonyms, excluding already selected
+      const selectedLower = selectedDishes.map(d => d.toLowerCase());
       const filteredDishes = allDishes.filter(
         d =>
-          d.name.toLowerCase().includes(queryLower) ||
-          d.synonyms?.some(s => s.toLowerCase().includes(queryLower))
+          !selectedLower.includes(d.name.toLowerCase()) &&
+          (d.name.toLowerCase().includes(queryLower) ||
+          d.synonyms?.some(s => s.toLowerCase().includes(queryLower)))
       );
       setSuggestions(filteredDishes.slice(0, 5));
 
