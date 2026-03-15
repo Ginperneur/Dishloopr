@@ -65,7 +65,7 @@ const Index = () => {
             transition={{ duration: 0.5 }}
             className="text-center mb-5 md:mb-10"
           >
-            <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold mb-2 md:mb-3 leading-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold mb-2 md:mb-3 leading-tight font-display">
               {t('hero.title')}
               <br />
               <span className="text-gradient">{t('hero.titleAccent')}</span>
