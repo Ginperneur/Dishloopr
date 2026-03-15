@@ -179,7 +179,7 @@ export function useSearch() {
     const cityMap = new Map(citiesToUse.map(c => [c.id, c.name]));
 
     // No query: return all with Bayesian rating sort
-    if (!queryLower) {
+    if (queryTerms.length === 0) {
       const scoredResults: SearchResult[] = restaurants.map(r => ({
         ...r,
         cityName: cityMap.get(r.city_id),
