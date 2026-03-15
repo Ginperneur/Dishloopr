@@ -63,6 +63,7 @@ import { useActivityLog } from '@/hooks/useActivityLog';
 import { AdminNotifications } from '@/components/admin/AdminNotifications';
 import { NewsletterManager } from '@/components/admin/NewsletterManager';
 import { MenuScraper } from '@/components/admin/MenuScraper';
+import { DataExportManager } from '@/components/admin/DataExportManager';
 
 interface Stats {
   totalUsers: number;
