@@ -28,21 +28,20 @@ export function Header() {
 
   useEffect(() => {
     if (user) {
-      supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' })
-        .then(({ data }) => setIsAdmin(data === true));
-      
-      // Fetch avatar
-      supabase.from('profiles').select('avatar_url').eq('id', user.id).single()
-        .then(({ data }) => setAvatarUrl(data?.avatar_url || null));
-
-      // Check if user is a restaurant owner (has any restaurant_managers entry or account_type)
+      // Batch all queries in parallel
       const accountType = user.user_metadata?.account_type;
-      if (accountType === 'restaurant') {
-        setIsOwner(true);
-      } else {
-        supabase.from('restaurant_managers').select('id').eq('user_id', user.id).limit(1)
-          .then(({ data }) => setIsOwner((data?.length || 0) > 0));
-      }
+      
+      Promise.all([
+        supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' }),
+        supabase.from('profiles').select('avatar_url').eq('id', user.id).single(),
+        accountType === 'restaurant' 
+          ? Promise.resolve({ data: [{ id: 'owner' }] }) 
+          : supabase.from('restaurant_managers').select('id').eq('user_id', user.id).limit(1),
+      ]).then(([adminRes, profileRes, managerRes]) => {
+        setIsAdmin(adminRes.data === true);
+        setAvatarUrl(profileRes.data?.avatar_url || null);
+        setIsOwner(accountType === 'restaurant' || (managerRes.data?.length || 0) > 0);
+      });
     } else {
       setIsAdmin(false);
       setIsOwner(false);
