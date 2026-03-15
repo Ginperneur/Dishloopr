@@ -7,7 +7,9 @@ import {
   Edit2,
   Check,
   X,
-  Tag
+  Tag,
+  Copy,
+  Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -48,10 +50,34 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
   const [newDishSynonyms, setNewDishSynonyms] = useState<string[]>([]);
   const [newDishCuisines, setNewDishCuisines] = useState<string[]>([]);
   const { logActivity } = useActivityLog();
+  const [deduplicating, setDeduplicating] = useState(false);
 
   useEffect(() => {
     fetchDishes();
   }, []);
+
+  const handleDeduplicateDishes = async () => {
+    if (!confirm('Wil je alle dubbele gerechten samenvoegen? Het oudste gerecht wordt behouden en restaurant-koppelingen worden overgenomen.')) return;
+    setDeduplicating(true);
+    try {
+      const { data, error } = await supabase.rpc('deduplicate_dishes');
+      if (error) throw error;
+      const result = data as any;
+      if (result?.duplicates_found > 0) {
+        toast.success(`${result.dishes_removed} dubbele gerechten verwijderd`);
+        await logActivity({ actionType: 'deduplicate', entityType: 'dish', entityName: `${result.dishes_removed} duplicaten` });
+      } else {
+        toast.info('Geen duplicaten gevonden');
+      }
+      fetchDishes();
+      onUpdate?.();
+    } catch (err) {
+      toast.error('Deduplicatie mislukt');
+      console.error(err);
+    } finally {
+      setDeduplicating(false);
+    }
+  };
 
   const fetchDishes = async () => {
     setLoading(true);
@@ -213,6 +239,10 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
                 className="pl-9 h-9"
               />
             </div>
+            <Button size="sm" variant="outline" onClick={handleDeduplicateDishes} disabled={deduplicating}>
+              {deduplicating ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Copy className="h-4 w-4 mr-1" />}
+              Duplicaten opschonen
+            </Button>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="sm">

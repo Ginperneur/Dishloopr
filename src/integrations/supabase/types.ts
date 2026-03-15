@@ -2499,6 +2499,8 @@ export type Database = {
         Returns: number
       }
       can_create_claim: { Args: { _user_id: string }; Returns: boolean }
+      deduplicate_dishes: { Args: never; Returns: Json }
+      deduplicate_restaurant_dishes: { Args: never; Returns: Json }
       get_available_slots: { Args: { p_product_id: string }; Returns: number }
       get_featured_active_count: {
         Args: { p_slot_id: string }
