@@ -244,8 +244,27 @@ export function useSearch() {
       }
     }
 
+    // Build per-restaurant query term coverage map for multi-dish search
+    const restaurantTermCoverage = new Map<string, number>();
+    if (isMultiDish && matchingDishesByTerm.size > 0) {
+      for (const [_term, termDishes] of matchingDishesByTerm) {
+        const termDishIds = new Set(termDishes.map(d => d.id));
+        // For each restaurant that has linked dishes, check if any match this term
+        for (const [restaurantId, dishes] of restaurantDishMap) {
+          const matchesTerm = dishes.some(d => {
+            const dish = matchingDishes.find(md => md.name === d.name);
+            return dish && termDishIds.has(dish.id);
+          });
+          if (matchesTerm) {
+            restaurantTermCoverage.set(restaurantId, (restaurantTermCoverage.get(restaurantId) || 0) + 1);
+          }
+        }
+      }
+    }
+
     // Score all restaurants using ranking engine
     const scoredResults: SearchResult[] = [];
+    const totalQueryTerms = isMultiDish ? queryTerms.length : 1;
 
     for (const restaurant of restaurants) {
       const scored = scoreRestaurant(
@@ -261,11 +280,13 @@ export function useSearch() {
           created_at: restaurant.created_at,
           linkedDishes: restaurantDishMap.get(restaurant.id) || null,
           isSponsored: sponsoredRestaurants.has(restaurant.id),
+          queryTermsCovered: restaurantTermCoverage.get(restaurant.id) || 0,
+          totalQueryTerms,
         },
         ctx
       );
 
-      if (scored.matchScore > 0 || queryLower === '') {
+      if (scored.matchScore > 0) {
         scoredResults.push({
           ...restaurant,
           cityName: cityMap.get(restaurant.city_id),
