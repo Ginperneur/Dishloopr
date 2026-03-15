@@ -266,9 +266,21 @@ export function RestaurantDishesManager() {
     ));
   };
 
-  const filteredRestaurants = restaurants.filter(r =>
-    r.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredRestaurants = useMemo(() => {
+    let filtered = restaurants.filter(r =>
+      r.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    if (showNoDishesOnly) {
+      filtered = filtered.filter(r => !restaurantDishCounts[r.id]);
+    }
+
+    if (filterDishId) {
+      filtered = filtered.filter(r => restaurantsByDish.includes(r.id));
+    }
+
+    return filtered;
+  }, [restaurants, searchQuery, showNoDishesOnly, restaurantDishCounts, filterDishId, restaurantsByDish]);
 
   const filteredAvailableDishes = availableDishes.filter(d =>
     d.name.toLowerCase().includes(dishSearchQuery.toLowerCase()) ||
