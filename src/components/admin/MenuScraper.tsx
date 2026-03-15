@@ -25,7 +25,7 @@ const FILTER_LABELS: Record<ScrapeFilter, { label: string; description: string }
   all: { label: 'Alle restaurants', description: 'Scrape alle restaurants met een website' },
   missing: { label: 'Zonder gerechten', description: 'Alleen restaurants zonder enig gerecht' },
   no_approved: { label: 'Zonder goedgekeurde gerechten', description: 'Restaurants zonder goedgekeurde gerechten' },
-  never_scraped: { label: 'Nog nooit gescraped', description: 'Restaurants zonder gerechten van bron "scrape"' },
+  never_scraped: { label: 'Nog nooit gescraped', description: 'Restaurants zonder eerdere scrape-poging' },
 };
 
 export function MenuScraper() {
