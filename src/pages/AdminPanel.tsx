@@ -422,11 +422,7 @@ export default function AdminPanel() {
             transition={{ delay: 0.15 }}
             className="mb-6"
           >
-            <AdminNotifications onNavigate={(tab) => {
-              // Find and click the tab trigger
-              const tabTrigger = document.querySelector(`[data-state][value="${tab}"]`) as HTMLButtonElement;
-              if (tabTrigger) tabTrigger.click();
-            }} />
+            <AdminNotifications onNavigate={(tab) => setActiveTab(tab)} />
           </motion.div>
         )}
 
