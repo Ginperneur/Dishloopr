@@ -115,6 +115,32 @@ export function RestaurantDishesManager() {
     setAvailableDishes(data || []);
   };
 
+  const fetchRestaurantDishCounts = async () => {
+    // Get counts per restaurant
+    const { data, error } = await supabase
+      .from('restaurant_dishes')
+      .select('restaurant_id');
+
+    if (!error && data) {
+      const counts: Record<string, number> = {};
+      data.forEach(row => {
+        counts[row.restaurant_id] = (counts[row.restaurant_id] || 0) + 1;
+      });
+      setRestaurantDishCounts(counts);
+    }
+  };
+
+  const fetchRestaurantsByDish = async (dishId: string) => {
+    const { data, error } = await supabase
+      .from('restaurant_dishes')
+      .select('restaurant_id')
+      .eq('dish_id', dishId);
+
+    if (!error && data) {
+      setRestaurantsByDish(data.map(r => r.restaurant_id));
+    }
+  };
+
   const fetchRestaurantDishes = async () => {
     const { data, error } = await supabase
       .from('restaurant_dishes')
