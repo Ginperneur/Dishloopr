@@ -427,7 +427,7 @@ export default function AdminPanel() {
         )}
 
         {/* Tabs */}
-        <Tabs defaultValue="restaurants" className="space-y-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="flex-wrap h-auto gap-1 bg-muted/50 p-1">
             <TabsTrigger value="restaurants" className="gap-1.5">
               <Store className="h-4 w-4" />
