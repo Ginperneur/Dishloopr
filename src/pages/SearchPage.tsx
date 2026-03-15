@@ -219,9 +219,19 @@ export default function SearchPage() {
   const pageDescription = dishQuery
     ? `Vind de beste ${dishQuery} restaurants${selectedCityName ? ` in ${selectedCityName}` : ' in Nederland'}. Vergelijk ${sortedResults.length}+ opties, bekijk reviews en reserveer direct.`
     : `Zoek en ontdek ${sortedResults.length}+ restaurants${selectedCityName ? ` in ${selectedCityName}` : ' in Nederland'}. Filter op gerecht, sfeer en prijs.`;
+
+  const searchCanonical = `https://dishloopr.com/search${dishQuery ? `?dish=${encodeURIComponent(dishQuery)}` : ''}${selectedCityName && selectedCityId !== 'all' ? `${dishQuery ? '&' : '?'}city=${selectedCityId}` : ''}`;
+
+  return (
+    <Layout>
+      <SEOHead
+        title={`${pageTitle} | Dishloopr`}
+        description={pageDescription}
+        keywords={[dishQuery || 'restaurants', 'eten', 'uit eten', selectedCityName || 'Nederland', 'reviews'].filter(Boolean) as string[]}
+        canonical={searchCanonical}
         structuredData={createBreadcrumbSchema([
           { name: 'Home', url: 'https://dishloopr.com' },
-          { name: pageTitle, url: `https://dishloopr.com/search` },
+          { name: pageTitle, url: 'https://dishloopr.com/search' },
         ])}
       />
       {/* Search Header */}
