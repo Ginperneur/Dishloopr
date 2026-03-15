@@ -239,6 +239,10 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
                 className="pl-9 h-9"
               />
             </div>
+            <Button size="sm" variant="outline" onClick={handleDeduplicateDishes} disabled={deduplicating}>
+              {deduplicating ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Copy className="h-4 w-4 mr-1" />}
+              Duplicaten opschonen
+            </Button>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="sm">
