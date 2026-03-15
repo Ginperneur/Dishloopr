@@ -125,7 +125,7 @@ export function Footer() {
 
           {/* Links */}
           <div>
-            <h4 className="font-semibold mb-3 md:mb-4 text-sm md:text-base">Dishloopr</h4>
+            <h4 className="font-semibold mb-3 md:mb-4 text-sm md:text-base">{t('footer.brand', 'Dishloopr')}</h4>
             <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
               <li><Link to="/search" className="hover:text-foreground transition-colors">{t('nav.discover')}</Link></li>
               <li><Link to="/collections" className="hover:text-foreground transition-colors">{t('footer.collections', 'Collecties')}</Link></li>
