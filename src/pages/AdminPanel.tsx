@@ -1030,6 +1030,10 @@ export default function AdminPanel() {
           <TabsContent value="menu-scraper">
             <MenuScraper />
           </TabsContent>
+
+          <TabsContent value="data-export">
+            <DataExportManager />
+          </TabsContent>
         </Tabs>
         </div>
 
