@@ -83,9 +83,9 @@ export default function FavoritesPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6 md:mb-8"
         >
-          <h1 className="text-2xl md:text-4xl font-bold mb-1 md:mb-2">Mijn Favorieten</h1>
+          <h1 className="text-2xl md:text-4xl font-bold mb-1 md:mb-2">{t('favorites.myFavorites', 'Mijn Favorieten')}</h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            {restaurants.length} opgeslagen restaurant{restaurants.length !== 1 ? 's' : ''}
+            {t('favorites.savedCount', '{{count}} opgeslagen restaurant(s)', { count: restaurants.length })}
           </p>
         </motion.div>
 
