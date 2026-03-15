@@ -22,7 +22,7 @@ Crawl-delay: 2
 # Sitemap location
 Sitemap: https://dishloopr.com/sitemap.xml
 
-# Disallow private pages
+# Disallow private/auth pages
 Disallow: /admin
 Disallow: /owner-dashboard
 Disallow: /dashboard
@@ -35,3 +35,6 @@ Disallow: /profile
 Disallow: /account
 Disallow: /my-dashboard
 Disallow: /insights
+Disallow: /favorites
+Disallow: /claim
+Disallow: /add-restaurant
