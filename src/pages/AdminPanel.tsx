@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -142,6 +142,14 @@ export default function AdminPanel() {
   const [restaurantStatusFilter, setRestaurantStatusFilter] = useState<string>('all');
   const [reviewStatusFilter, setReviewStatusFilter] = useState<string>('all');
   const [activeTab, setActiveTab] = useState('restaurants');
+  const tabsRef = useRef<HTMLDivElement>(null);
+
+  const handleNavigateToTab = useCallback((tab: string) => {
+    setActiveTab(tab);
+    setTimeout(() => {
+      tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }, []);
 
   useEffect(() => {
     if (isAdmin) {
@@ -423,11 +431,12 @@ export default function AdminPanel() {
             transition={{ delay: 0.15 }}
             className="mb-6"
           >
-            <AdminNotifications onNavigate={(tab) => setActiveTab(tab)} />
+            <AdminNotifications onNavigate={handleNavigateToTab} />
           </motion.div>
         )}
 
         {/* Tabs */}
+        <div ref={tabsRef}>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="flex-wrap h-auto gap-1 bg-muted/50 p-1">
             <TabsTrigger value="restaurants" className="gap-1.5">
@@ -1004,6 +1013,7 @@ export default function AdminPanel() {
             <MenuScraper />
           </TabsContent>
         </Tabs>
+        </div>
 
         {/* Restaurant Detail Modal */}
         <RestaurantDetailModal
