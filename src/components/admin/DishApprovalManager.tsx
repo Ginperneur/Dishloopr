@@ -316,9 +316,9 @@ export function DishApprovalManager() {
   };
 
   const getConfidenceBadge = (confidence: number) => {
-    if (confidence >= 0.8) return <Badge className="bg-green-500 text-white">Hoog ({Math.round(confidence * 100)}%)</Badge>;
-    if (confidence >= 0.5) return <Badge className="bg-yellow-500 text-white">Gemiddeld ({Math.round(confidence * 100)}%)</Badge>;
-    return <Badge className="bg-red-500 text-white">Laag ({Math.round(confidence * 100)}%)</Badge>;
+    if (confidence >= 0.8) return <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-primary/20 text-primary border-primary/30">Hoog ({Math.round(confidence * 100)}%)</span>;
+    if (confidence >= 0.5) return <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-accent text-accent-foreground border-accent">Gemiddeld ({Math.round(confidence * 100)}%)</span>;
+    return <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-destructive/20 text-destructive border-destructive/30">Laag ({Math.round(confidence * 100)}%)</span>;
   };
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
@@ -460,7 +460,7 @@ export function DishApprovalManager() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="text-green-600 hover:text-green-700"
+                                className="text-primary hover:text-primary/80"
                                 onClick={() => handleApprove(item.id)}
                                 disabled={actionLoading.has(item.id)}
                               >
@@ -469,7 +469,7 @@ export function DishApprovalManager() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="text-red-600 hover:text-red-700"
+                                className="text-destructive hover:text-destructive/80"
                                 onClick={() => { setSelectedDish(item); setRejectDialogOpen(true); }}
                                 disabled={actionLoading.has(item.id)}
                               >

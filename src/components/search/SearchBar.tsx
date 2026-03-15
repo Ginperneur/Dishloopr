@@ -217,8 +217,8 @@ export function SearchBar({
         initial={isHero ? { y: 20, opacity: 0 } : false}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.5 }}
-        className={`flex items-center gap-2 search-card rounded-2xl ${
-          isHero ? 'p-2 md:p-3' : 'p-1.5'
+        className={`flex items-center gap-1 md:gap-2 search-card rounded-2xl overflow-hidden ${
+          isHero ? 'p-1.5 md:p-3' : 'p-1.5'
         }`}
       >
         {/* Search Input with chips */}
@@ -260,9 +260,9 @@ export function SearchBar({
                 }
               }}
               placeholder={selectedDishes.length > 0 ? 'Nog een gerecht...' : t('hero.searchPlaceholder')}
-              className={`flex-1 min-w-[80px] bg-transparent border-0 outline-none placeholder:text-muted-foreground ${
+              className={`flex-1 min-w-[60px] bg-transparent border-0 outline-none placeholder:text-muted-foreground ${
                 isHero 
-                  ? 'py-1 text-base md:text-lg' 
+                  ? 'py-1 text-sm md:text-lg' 
                   : 'py-1 text-sm'
               }`}
             />
@@ -342,8 +342,8 @@ export function SearchBar({
         <Button
           onClick={handleSearch}
           size={isHero ? 'lg' : 'default'}
-          className={`rounded-xl font-semibold ${
-            isHero ? 'px-6 md:px-8' : 'px-4'
+          className={`rounded-xl font-semibold shrink-0 ${
+            isHero ? 'px-3 md:px-8 h-10 md:h-11' : 'px-4'
           }`}
         >
           <span className={isHero ? 'hidden md:inline' : 'hidden'}>
@@ -464,7 +464,7 @@ export function SearchBar({
                         onClick={() => handleRestaurantClick(restaurant.slug)}
                         className="w-full px-4 py-4 text-left hover:bg-muted active:bg-muted transition-colors flex items-center gap-3 border-b border-border/30"
                       >
-                        <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                           <Store className="h-5 w-5 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -492,8 +492,8 @@ export function SearchBar({
                         onClick={() => handleSuggestionClick(cuisine)}
                         className="w-full px-4 py-4 text-left hover:bg-muted active:bg-muted transition-colors flex items-center gap-3 border-b border-border/30 last:border-b-0"
                       >
-                        <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
-                          <UtensilsCrossed className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                          <UtensilsCrossed className="h-5 w-5 text-accent-foreground" />
                         </div>
                         <span className="font-medium text-base">{toTitleCase(cuisine)}</span>
                       </button>
