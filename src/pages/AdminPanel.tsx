@@ -522,6 +522,10 @@ export default function AdminPanel() {
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">Nieuwsbrief</span>
             </TabsTrigger>
+            <TabsTrigger value="menu-scraper" className="gap-1.5">
+              <Globe className="h-4 w-4" />
+              <span className="hidden sm:inline">Menu Scraper</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="restaurants">
