@@ -203,14 +203,26 @@ export default function AdminPanel() {
     setUsers(profileData || []);
 
     // Fetch restaurants with city info
-    const { data: restaurantData } = await supabase
-      .from('restaurants')
-      .select(`
-        *,
-        cities:city_id (name)
-      `)
-      .order('created_at', { ascending: false })
-      .limit(200);
+    // Fetch all restaurants (paginated in batches of 1000 to avoid Supabase limit)
+    let allRestaurants: any[] = [];
+    let from = 0;
+    const batchSize = 1000;
+    while (true) {
+      const { data: batch } = await supabase
+        .from('restaurants')
+        .select(`
+          *,
+          cities:city_id (name)
+        `)
+        .order('created_at', { ascending: false })
+        .range(from, from + batchSize - 1);
+      
+      if (!batch || batch.length === 0) break;
+      allRestaurants = allRestaurants.concat(batch);
+      if (batch.length < batchSize) break;
+      from += batchSize;
+    }
+    const restaurantData = allRestaurants;
     setRestaurants(restaurantData || []);
 
     // Fetch reviews with restaurant info
