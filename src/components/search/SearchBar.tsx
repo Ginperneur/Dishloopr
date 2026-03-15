@@ -21,6 +21,14 @@ interface SearchBarProps {
   initialCity?: string;
 }
 
+function parseQueryToChips(query: string): string[] {
+  return query.split(',').map(t => t.trim()).filter(t => t.length > 0);
+}
+
+function chipsToQuery(chips: string[]): string {
+  return chips.join(', ');
+}
+
 export function SearchBar({ 
   onSearch, 
   variant = 'hero',
@@ -31,6 +39,9 @@ export function SearchBar({
   const navigate = useNavigate();
   const { addSearch } = useSearchHistory();
   const [query, setQuery] = useState(initialQuery);
+  const [selectedDishes, setSelectedDishes] = useState<string[]>(() => 
+    initialQuery ? parseQueryToChips(initialQuery) : []
+  );
   const [cityId, setCityId] = useState(initialCity);
   const [suggestions, setSuggestions] = useState<Dish[]>([]);
   const [restaurantSuggestions, setRestaurantSuggestions] = useState<Restaurant[]>([]);
@@ -65,11 +76,13 @@ export function SearchBar({
     if (query.length >= 2) {
       const queryLower = query.toLowerCase();
 
-      // Filter dishes by name or synonyms
+      // Filter dishes by name or synonyms, excluding already selected
+      const selectedLower = selectedDishes.map(d => d.toLowerCase());
       const filteredDishes = allDishes.filter(
         d =>
-          d.name.toLowerCase().includes(queryLower) ||
-          d.synonyms?.some(s => s.toLowerCase().includes(queryLower))
+          !selectedLower.includes(d.name.toLowerCase()) &&
+          (d.name.toLowerCase().includes(queryLower) ||
+          d.synonyms?.some(s => s.toLowerCase().includes(queryLower)))
       );
       setSuggestions(filteredDishes.slice(0, 5));
 
@@ -107,40 +120,56 @@ export function SearchBar({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleSearch = () => {
-    if (query.trim()) {
-      addSearch(query.trim());
-    }
+  const executeSearch = (dishes: string[]) => {
+    const searchQuery = chipsToQuery(dishes);
+    if (searchQuery) addSearch(searchQuery);
     inputRef.current?.blur();
     setShowSuggestions(false);
     setShowCityDropdown(false);
     if (onSearch) {
-      onSearch(query, cityId);
+      onSearch(searchQuery, cityId);
     } else {
       const params = new URLSearchParams();
-      if (query) params.set('dish', query);
+      if (searchQuery) params.set('dish', searchQuery);
       if (cityId && cityId !== 'all') params.set('city', cityId);
       navigate(`/search?${params.toString()}`);
     }
   };
 
+  const handleSearch = () => {
+    // Add current input as a chip if non-empty
+    const currentDishes = [...selectedDishes];
+    if (query.trim() && !currentDishes.includes(query.trim().toLowerCase())) {
+      currentDishes.push(query.trim());
+      setSelectedDishes(currentDishes);
+      setQuery('');
+    }
+    executeSearch(currentDishes.length > 0 ? currentDishes : query.trim() ? [query.trim()] : []);
+  };
+
   const handleSuggestionClick = (value: string) => {
-    setQuery(value);
-    addSearch(value);
+    const updatedDishes = [...selectedDishes];
+    if (!updatedDishes.some(d => d.toLowerCase() === value.toLowerCase())) {
+      updatedDishes.push(value);
+    }
+    setSelectedDishes(updatedDishes);
+    setQuery('');
     setShowSuggestions(false);
-    setShowCityDropdown(false);
-    inputRef.current?.blur();
-    // Small delay to let the overlay close smoothly before navigating
-    requestAnimationFrame(() => {
-      if (onSearch) {
-        onSearch(value, cityId);
-      } else {
-        const params = new URLSearchParams();
-        params.set('dish', value);
-        if (cityId && cityId !== 'all') params.set('city', cityId);
-        navigate(`/search?${params.toString()}`);
-      }
-    });
+    // Don't auto-search on chip add — let user add more dishes
+    // But if in compact mode (search page), auto-search
+    if (variant === 'compact') {
+      requestAnimationFrame(() => {
+        executeSearch(updatedDishes);
+      });
+    }
+  };
+
+  const removeDish = (dish: string) => {
+    const updated = selectedDishes.filter(d => d !== dish);
+    setSelectedDishes(updated);
+    if (variant === 'compact') {
+      executeSearch(updated);
+    }
   };
 
   const handleRestaurantClick = (slug: string) => {
@@ -192,27 +221,52 @@ export function SearchBar({
           isHero ? 'p-2 md:p-3' : 'p-1.5'
         }`}
       >
-        {/* Search Input */}
-        <div className="flex-1 relative">
-          <Search className={`absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground ${isHero ? 'h-5 w-5' : 'h-4 w-4'}`} />
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            onFocus={() => {
-              if (query.length >= 2 && hasSuggestions) {
-                setShowSuggestions(true);
-              }
-            }}
-            placeholder={t('hero.searchPlaceholder')}
-            className={`w-full bg-transparent border-0 outline-none placeholder:text-muted-foreground ${
-              isHero 
-                ? 'pl-12 pr-4 py-3 text-base md:text-lg' 
-                : 'pl-10 pr-3 py-2.5 text-sm'
-            }`}
-          />
+        {/* Search Input with chips */}
+        <div className="flex-1 relative flex items-center flex-wrap gap-1">
+          <Search className={`absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground ${isHero ? 'h-5 w-5' : 'h-4 w-4'} z-10`} />
+          <div className={`flex items-center flex-wrap gap-1 w-full ${isHero ? 'pl-12 pr-4 py-2' : 'pl-10 pr-3 py-1.5'}`}>
+            {selectedDishes.map((dish) => (
+              <span
+                key={dish}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium shrink-0"
+              >
+                {toTitleCase(dish)}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeDish(dish);
+                  }}
+                  className="hover:text-destructive transition-colors"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSearch();
+                if (e.key === 'Backspace' && !query && selectedDishes.length > 0) {
+                  removeDish(selectedDishes[selectedDishes.length - 1]);
+                }
+              }}
+              onFocus={() => {
+                if (query.length >= 2 && hasSuggestions) {
+                  setShowSuggestions(true);
+                }
+              }}
+              placeholder={selectedDishes.length > 0 ? 'Nog een gerecht...' : t('hero.searchPlaceholder')}
+              className={`flex-1 min-w-[80px] bg-transparent border-0 outline-none placeholder:text-muted-foreground ${
+                isHero 
+                  ? 'py-1 text-base md:text-lg' 
+                  : 'py-1 text-sm'
+              }`}
+            />
+          </div>
         </div>
 
         {/* Divider - only on desktop */}

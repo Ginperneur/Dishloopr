@@ -63,7 +63,15 @@ export function useSearch() {
     
     const queryLower = query.toLowerCase().trim();
     const now = new Date();
-    const ctx: ScoringContext = { queryLower, now };
+    
+    // Support multi-dish search: split by comma
+    const queryTerms = queryLower
+      .split(',')
+      .map(t => t.trim())
+      .filter(t => t.length > 0);
+    const isMultiDish = queryTerms.length > 1;
+    
+    const ctx: ScoringContext = { queryLower: queryTerms[0] || '', now };
     
     // Fetch dishes directly if not already loaded (prevents race condition)
     let dishesToSearch = dishes;
@@ -80,12 +88,27 @@ export function useSearch() {
       if (citiesToUse.length > 0) setCities(citiesToUse);
     }
     
-    // Find matching dishes (by name or synonyms)
-    const matchingDishes = dishesToSearch.filter(dish => {
-      const nameMatch = dish.name.toLowerCase().includes(queryLower);
-      const synonymMatch = dish.synonyms?.some(s => s.toLowerCase().includes(queryLower));
-      return nameMatch || synonymMatch;
-    });
+    // Find matching dishes for each query term
+    const matchingDishesByTerm = new Map<string, typeof dishesToSearch>();
+    const allMatchingDishes: typeof dishesToSearch = [];
+    
+    for (const term of queryTerms.length > 0 ? queryTerms : [queryLower]) {
+      if (!term) continue;
+      const termMatches = dishesToSearch.filter(dish => {
+        const nameMatch = dish.name.toLowerCase().includes(term);
+        const synonymMatch = dish.synonyms?.some(s => s.toLowerCase().includes(term));
+        return nameMatch || synonymMatch;
+      });
+      if (termMatches.length > 0) {
+        matchingDishesByTerm.set(term, termMatches);
+        termMatches.forEach(d => {
+          if (!allMatchingDishes.find(x => x.id === d.id)) {
+            allMatchingDishes.push(d);
+          }
+        });
+      }
+    }
+    const matchingDishes = allMatchingDishes;
 
     // Build restaurant query with DB-side limit
     let restaurantQuery = supabase
@@ -156,7 +179,7 @@ export function useSearch() {
     const cityMap = new Map(citiesToUse.map(c => [c.id, c.name]));
 
     // No query: return all with Bayesian rating sort
-    if (!queryLower) {
+    if (queryTerms.length === 0) {
       const scoredResults: SearchResult[] = restaurants.map(r => ({
         ...r,
         cityName: cityMap.get(r.city_id),
@@ -221,8 +244,27 @@ export function useSearch() {
       }
     }
 
+    // Build per-restaurant query term coverage map for multi-dish search
+    const restaurantTermCoverage = new Map<string, number>();
+    if (isMultiDish && matchingDishesByTerm.size > 0) {
+      for (const [_term, termDishes] of matchingDishesByTerm) {
+        const termDishIds = new Set(termDishes.map(d => d.id));
+        // For each restaurant that has linked dishes, check if any match this term
+        for (const [restaurantId, dishes] of restaurantDishMap) {
+          const matchesTerm = dishes.some(d => {
+            const dish = matchingDishes.find(md => md.name === d.name);
+            return dish && termDishIds.has(dish.id);
+          });
+          if (matchesTerm) {
+            restaurantTermCoverage.set(restaurantId, (restaurantTermCoverage.get(restaurantId) || 0) + 1);
+          }
+        }
+      }
+    }
+
     // Score all restaurants using ranking engine
     const scoredResults: SearchResult[] = [];
+    const totalQueryTerms = isMultiDish ? queryTerms.length : 1;
 
     for (const restaurant of restaurants) {
       const scored = scoreRestaurant(
@@ -238,11 +280,13 @@ export function useSearch() {
           created_at: restaurant.created_at,
           linkedDishes: restaurantDishMap.get(restaurant.id) || null,
           isSponsored: sponsoredRestaurants.has(restaurant.id),
+          queryTermsCovered: restaurantTermCoverage.get(restaurant.id) || 0,
+          totalQueryTerms,
         },
         ctx
       );
 
-      if (scored.matchScore > 0 || queryLower === '') {
+      if (scored.matchScore > 0) {
         scoredResults.push({
           ...restaurant,
           cityName: cityMap.get(restaurant.city_id),

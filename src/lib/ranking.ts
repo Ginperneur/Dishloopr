@@ -24,6 +24,8 @@ const TOP_LISTING_BOOST = 1;
 const SPONSORED_BOOST = 15;           
 const NEWNESS_BOOST_MAX = 8;           // Max boost for restaurants < 30 days old
 const NEWNESS_WINDOW_DAYS = 30;        // How long the newness boost applies
+const MULTI_QUERY_FULL_MATCH_BONUS = 200; // Bonus when ALL searched dishes are available
+const MULTI_QUERY_PARTIAL_BONUS = 60;  // Per additional query term matched (beyond 1)
 const MAX_SPONSORED_IN_TOP5 = 2;       // Cap sponsored in top 5
 const MAX_SAME_CHAIN_IN_TOP10 = 2;     // Cap same chain in top 10
 const RECENCY_HALF_LIFE_DAYS = 90;     // Reviews lose half their weight after this many days
@@ -51,6 +53,10 @@ export interface RestaurantScoringInput {
   created_at: string;
   linkedDishes: DishMatchInfo[] | null;
   isSponsored: boolean;
+  /** How many of the user's query terms this restaurant covers */
+  queryTermsCovered?: number;
+  /** Total number of query terms the user searched for */
+  totalQueryTerms?: number;
 }
 
 export interface ScoredResult {
@@ -141,8 +147,20 @@ export function scoreRestaurant(
     matchScore += SPONSORED_BOOST;
   }
 
-  // 6. Newness boost (NEW) — fair exposure for new restaurants
+  // 6. Newness boost — fair exposure for new restaurants
   matchScore += newnessBoost(restaurant.created_at, ctx.now);
+
+  // 7. Multi-query coverage bonus — reward restaurants matching multiple searched dishes
+  const covered = restaurant.queryTermsCovered ?? 0;
+  const total = restaurant.totalQueryTerms ?? 1;
+  if (total > 1 && covered > 1) {
+    // Partial bonus per extra term matched
+    matchScore += (covered - 1) * MULTI_QUERY_PARTIAL_BONUS;
+    // Full match bonus when ALL terms are covered
+    if (covered >= total) {
+      matchScore += MULTI_QUERY_FULL_MATCH_BONUS;
+    }
+  }
 
   // 7. Bayesian rating (NEW) — replaces raw rating for tie-breaking
   const bRating = bayesianRating(restaurant.rating, restaurant.review_count);
