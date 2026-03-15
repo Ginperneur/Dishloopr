@@ -6,6 +6,7 @@ import { SearchBar } from '@/components/search/SearchBar';
 import { Layout } from '@/components/layout/Layout';
 import { TrendingDishes } from '@/components/home/TrendingDishes';
 import { UpcomingEvents } from '@/components/home/UpcomingEvents';
+import { SocialProof } from '@/components/home/SocialProof';
 import { DatabaseRestaurantCard } from '@/components/restaurant/DatabaseRestaurantCard';
 import { SurpriseMe } from '@/components/ai/SurpriseMe';
 import { PersonalizedRecommendations } from '@/components/ai/PersonalizedRecommendations';
@@ -64,7 +65,7 @@ const Index = () => {
             transition={{ duration: 0.5 }}
             className="text-center mb-5 md:mb-10"
           >
-            <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold mb-2 md:mb-3 leading-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold mb-2 md:mb-3 leading-tight font-display">
               {t('hero.title')}
               <br />
               <span className="text-gradient">{t('hero.titleAccent')}</span>
@@ -108,6 +109,9 @@ const Index = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* Social Proof Stats */}
+      <SocialProof />
 
       {/* Featured Restaurants */}
       <section className="relative py-6 md:py-10 lg:py-14 bg-muted/30">

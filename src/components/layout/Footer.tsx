@@ -129,6 +129,7 @@ export function Footer() {
             <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
               <li><Link to="/search" className="hover:text-foreground transition-colors">{t('nav.discover')}</Link></li>
               <li><Link to="/collections" className="hover:text-foreground transition-colors">{t('footer.collections', 'Collecties')}</Link></li>
+              <li><Link to="/events" className="hover:text-foreground transition-colors">{t('nav.events', 'Events')}</Link></li>
               <li><Link to="/about" className="hover:text-foreground transition-colors">{t('footer.about')}</Link></li>
               <li><Link to="/contact" className="hover:text-foreground transition-colors">{t('footer.contact')}</Link></li>
             </ul>
@@ -141,23 +142,34 @@ export function Footer() {
               <li><Link to="/claim" className="hover:text-foreground transition-colors">{t('footer.claimRestaurant')}</Link></li>
               <li><Link to="/dashboard" className="hover:text-foreground transition-colors">{t('nav.dashboard')}</Link></li>
             </ul>
-          </div>
 
-          <div>
-            <h4 className="font-semibold mb-3 md:mb-4 text-sm md:text-base">Legal</h4>
+            <h4 className="font-semibold mt-5 mb-3 text-sm md:text-base">Legal</h4>
             <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
               <li><Link to="/terms" className="hover:text-foreground transition-colors">{t('footer.terms')}</Link></li>
               <li><Link to="/privacy" className="hover:text-foreground transition-colors">{t('footer.privacy')}</Link></li>
             </ul>
           </div>
 
-          {/* Steden */}
+          {/* Steden — expanded for SEO crawl paths */}
           <div>
             <h4 className="font-semibold mb-3 md:mb-4 text-sm md:text-base">{t('footer.cities', 'Steden')}</h4>
             <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
-              <li><Link to="/steden" className="hover:text-foreground transition-colors">{t('footer.allCities', 'Alle steden')}</Link></li>
+              <li><Link to="/steden" className="hover:text-foreground transition-colors font-medium">{t('footer.allCities', 'Alle steden')}</Link></li>
               <li><Link to="/steden/amsterdam" className="hover:text-foreground transition-colors">Amsterdam</Link></li>
               <li><Link to="/steden/rotterdam" className="hover:text-foreground transition-colors">Rotterdam</Link></li>
+              <li><Link to="/steden/den-haag" className="hover:text-foreground transition-colors">Den Haag</Link></li>
+              <li><Link to="/steden/utrecht" className="hover:text-foreground transition-colors">Utrecht</Link></li>
+              <li><Link to="/steden/groningen" className="hover:text-foreground transition-colors">Groningen</Link></li>
+              <li><Link to="/steden/eindhoven" className="hover:text-foreground transition-colors">Eindhoven</Link></li>
+            </ul>
+
+            <h4 className="font-semibold mt-5 mb-3 text-sm md:text-base">{t('footer.popularDishes', 'Populaire gerechten')}</h4>
+            <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
+              <li><Link to="/eten" className="hover:text-foreground transition-colors font-medium">Alle gerechten</Link></li>
+              <li><Link to="/search?dish=sushi" className="hover:text-foreground transition-colors">Sushi</Link></li>
+              <li><Link to="/search?dish=ramen" className="hover:text-foreground transition-colors">Ramen</Link></li>
+              <li><Link to="/search?dish=pizza" className="hover:text-foreground transition-colors">Pizza</Link></li>
+              <li><Link to="/search?dish=burger" className="hover:text-foreground transition-colors">Burgers</Link></li>
             </ul>
           </div>
         </div>
