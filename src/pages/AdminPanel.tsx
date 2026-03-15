@@ -859,7 +859,7 @@ export default function AdminPanel() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 text-green-600"
+                              className="h-7 w-7 text-primary"
                               onClick={() => updateReviewStatus(review.id, 'published')}
                             >
                               <Check className="h-4 w-4" />

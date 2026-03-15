@@ -316,12 +316,12 @@ export default function OwnerDashboard() {
                 </CardContent>
               </Card>
             ) : (
-              <Card className="border-yellow-500/30 bg-yellow-500/5">
+              <Card className="border-accent/30 bg-accent/5">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <AlertTriangle className="h-5 w-5 text-yellow-600 flex-shrink-0" />
+                    <AlertTriangle className="h-5 w-5 text-accent-foreground flex-shrink-0" />
                     <div className="flex-1">
-                      <p className="font-medium text-yellow-700 text-sm">Beperkte toegang</p>
+                      <p className="font-medium text-accent-foreground text-sm">Beperkte toegang</p>
                       <p className="text-xs text-muted-foreground">
                         Verifieer je eigendom voor volledige dashboard-toegang.
                       </p>
