@@ -200,7 +200,7 @@ export function RevenueDashboard() {
                   <TableRow key={i}>
                     <TableCell className="font-medium text-sm py-2">{r.name}</TableCell>
                     <TableCell className="text-right py-2">
-                      <span className="font-mono text-sm font-medium text-emerald-600">€{r.total.toFixed(0)}</span>
+                      <span className="font-mono text-sm font-medium">€{r.total.toFixed(0)}</span>
                     </TableCell>
                   </TableRow>
                 ))}
