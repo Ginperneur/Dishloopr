@@ -546,6 +546,10 @@ export default function AdminPanel() {
             <div>
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold px-1 mb-1">Tools & Systeem</p>
               <TabsList className="flex-wrap h-auto gap-1 bg-muted/50 p-1 w-full justify-start">
+                <TabsTrigger value="audit" className="gap-1.5 text-xs">
+                  <ShieldAlert className="h-3.5 w-3.5" />
+                  <span>Audit</span>
+                </TabsTrigger>
                 <TabsTrigger value="bulk-import" className="gap-1.5 text-xs">
                   <Upload className="h-3.5 w-3.5" />
                   <span>Import</span>
