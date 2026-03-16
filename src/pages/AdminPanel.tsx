@@ -72,6 +72,12 @@ import { DuplicateMerger } from '@/components/admin/DuplicateMerger';
 import { CompletenessScore } from '@/components/admin/CompletenessScore';
 import { RevenueDashboard } from '@/components/admin/RevenueDashboard';
 import { UserInsights } from '@/components/admin/UserInsights';
+import { SearchAnalytics } from '@/components/admin/SearchAnalytics';
+import { GeographicCoverage } from '@/components/admin/GeographicCoverage';
+import { SeoHealthMonitor } from '@/components/admin/SeoHealthMonitor';
+import { BulkActionsManager } from '@/components/admin/BulkActionsManager';
+import { AuditTrail } from '@/components/admin/AuditTrail';
+import { ChurnRiskDashboard } from '@/components/admin/ChurnRiskDashboard';
 
 interface Stats {
   totalUsers: number;
