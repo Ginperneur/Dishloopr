@@ -1240,6 +1240,13 @@ export default function AdminPanel() {
           onOpenChange={setDetailModalOpen}
           onUpdate={fetchData}
         />
+
+        {/* User Profile Modal */}
+        <UserProfileModal
+          user={selectedUser}
+          open={userModalOpen}
+          onOpenChange={setUserModalOpen}
+        />
       </div>
     </Layout>
   );
