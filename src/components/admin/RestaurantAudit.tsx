@@ -401,6 +401,8 @@ export function RestaurantAudit() {
                   <SelectItem value="critical">🔴 Hoog risico</SelectItem>
                   <SelectItem value="warning">🟡 Waarschuwing</SelectItem>
                   <SelectItem value="clean">🟢 Schoon</SelectItem>
+                  <SelectItem value="approved">✅ Goedgekeurd</SelectItem>
+                  <SelectItem value="rejected">❌ Geweigerd</SelectItem>
                 </SelectContent>
               </Select>
               <Button variant="outline" size="sm" onClick={runAudit}>
