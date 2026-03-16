@@ -25,7 +25,8 @@ import {
   AlertCircle,
   Image,
   Globe,
-  Download
+  Download,
+  ShieldAlert
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -64,6 +65,7 @@ import { AdminNotifications } from '@/components/admin/AdminNotifications';
 import { NewsletterManager } from '@/components/admin/NewsletterManager';
 import { MenuScraper } from '@/components/admin/MenuScraper';
 import { DataExportManager } from '@/components/admin/DataExportManager';
+import { RestaurantAudit } from '@/components/admin/RestaurantAudit';
 
 interface Stats {
   totalUsers: number;
@@ -545,6 +547,10 @@ export default function AdminPanel() {
             <div>
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold px-1 mb-1">Tools & Systeem</p>
               <TabsList className="flex-wrap h-auto gap-1 bg-muted/50 p-1 w-full justify-start">
+                <TabsTrigger value="audit" className="gap-1.5 text-xs">
+                  <ShieldAlert className="h-3.5 w-3.5" />
+                  <span>Audit</span>
+                </TabsTrigger>
                 <TabsTrigger value="bulk-import" className="gap-1.5 text-xs">
                   <Upload className="h-3.5 w-3.5" />
                   <span>Import</span>
@@ -1057,6 +1063,10 @@ export default function AdminPanel() {
 
           <TabsContent value="data-export">
             <DataExportManager />
+          </TabsContent>
+
+          <TabsContent value="audit">
+            <RestaurantAudit />
           </TabsContent>
         </Tabs>
         </div>
