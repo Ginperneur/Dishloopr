@@ -66,6 +66,12 @@ import { NewsletterManager } from '@/components/admin/NewsletterManager';
 import { MenuScraper } from '@/components/admin/MenuScraper';
 import { DataExportManager } from '@/components/admin/DataExportManager';
 import { RestaurantAudit } from '@/components/admin/RestaurantAudit';
+import { KpiDashboard } from '@/components/admin/KpiDashboard';
+import { BrokenImageChecker } from '@/components/admin/BrokenImageChecker';
+import { DuplicateMerger } from '@/components/admin/DuplicateMerger';
+import { CompletenessScore } from '@/components/admin/CompletenessScore';
+import { RevenueDashboard } from '@/components/admin/RevenueDashboard';
+import { UserInsights } from '@/components/admin/UserInsights';
 
 interface Stats {
   totalUsers: number;
@@ -145,7 +151,7 @@ export default function AdminPanel() {
   // Filter states
   const [restaurantStatusFilter, setRestaurantStatusFilter] = useState<string>('all');
   const [reviewStatusFilter, setReviewStatusFilter] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState('restaurants');
+  const [activeTab, setActiveTab] = useState('kpi');
   const tabsRef = useRef<HTMLDivElement>(null);
 
   const handleNavigateToTab = useCallback((tab: string) => {
@@ -455,6 +461,24 @@ export default function AdminPanel() {
         <div ref={tabsRef}>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
          <div className="space-y-2">
+             {/* Group: Dashboard */}
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold px-1 mb-1">Dashboard</p>
+              <TabsList className="flex-wrap h-auto gap-1 bg-muted/50 p-1 w-full justify-start">
+                <TabsTrigger value="kpi" className="gap-1.5 text-xs">
+                  <TrendingUp className="h-3.5 w-3.5" />
+                  <span>KPI's</span>
+                </TabsTrigger>
+                <TabsTrigger value="revenue" className="gap-1.5 text-xs">
+                  <Crown className="h-3.5 w-3.5" />
+                  <span>Omzet</span>
+                </TabsTrigger>
+                <TabsTrigger value="user-insights" className="gap-1.5 text-xs">
+                  <Users className="h-3.5 w-3.5" />
+                  <span>User Insights</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
             {/* Group: Content */}
             <div>
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold px-1 mb-1">Content</p>
@@ -550,6 +574,18 @@ export default function AdminPanel() {
                 <TabsTrigger value="audit" className="gap-1.5 text-xs">
                   <ShieldAlert className="h-3.5 w-3.5" />
                   <span>Audit</span>
+                </TabsTrigger>
+                <TabsTrigger value="broken-images" className="gap-1.5 text-xs">
+                  <Image className="h-3.5 w-3.5" />
+                  <span>Broken Images</span>
+                </TabsTrigger>
+                <TabsTrigger value="duplicates" className="gap-1.5 text-xs">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  <span>Duplicaten</span>
+                </TabsTrigger>
+                <TabsTrigger value="completeness" className="gap-1.5 text-xs">
+                  <Eye className="h-3.5 w-3.5" />
+                  <span>Completeness</span>
                 </TabsTrigger>
                 <TabsTrigger value="bulk-import" className="gap-1.5 text-xs">
                   <Upload className="h-3.5 w-3.5" />
@@ -1065,8 +1101,32 @@ export default function AdminPanel() {
             <DataExportManager />
           </TabsContent>
 
+          <TabsContent value="kpi">
+            <KpiDashboard />
+          </TabsContent>
+
+          <TabsContent value="revenue">
+            <RevenueDashboard />
+          </TabsContent>
+
+          <TabsContent value="user-insights">
+            <UserInsights />
+          </TabsContent>
+
           <TabsContent value="audit">
             <RestaurantAudit />
+          </TabsContent>
+
+          <TabsContent value="broken-images">
+            <BrokenImageChecker />
+          </TabsContent>
+
+          <TabsContent value="duplicates">
+            <DuplicateMerger />
+          </TabsContent>
+
+          <TabsContent value="completeness">
+            <CompletenessScore />
           </TabsContent>
         </Tabs>
         </div>
