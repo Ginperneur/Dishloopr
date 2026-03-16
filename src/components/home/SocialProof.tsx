@@ -64,7 +64,7 @@ export function SocialProof() {
     { icon: Utensils, value: stats.restaurants, label: 'Restaurants', suffix: '+' },
     { icon: Star, value: stats.reviews, label: 'Reviews', suffix: '+' },
     { icon: MapPin, value: stats.cities, label: 'Steden', suffix: '' },
-    { icon: Users, value: stats.dishes, label: 'Gerechten', suffix: '+' },
+    { icon: ChefHat, value: stats.dishes, label: 'Gerechten', suffix: '+' },
   ];
 
   return (
