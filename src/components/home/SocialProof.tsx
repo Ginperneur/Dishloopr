@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Utensils, Star, MapPin, Users } from 'lucide-react';
+import { Utensils, Star, MapPin, ChefHat } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Stats {
