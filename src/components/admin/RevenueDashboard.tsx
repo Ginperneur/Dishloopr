@@ -16,7 +16,7 @@ interface RevenueData {
   newsletterCount: number;
   totalMonthlyRevenue: number;
   revenueByMonth: { month: string; featured: number; sponsored: number; newsletter: number }[];
-  topRestaurants: { name: string; totalSpend: number; type: string }[];
+  topRestaurants: { name: string; total: number; type: string }[];
 }
 
 const COLORS = ['hsl(var(--primary))', '#10b981', '#f59e0b', '#8b5cf6'];
