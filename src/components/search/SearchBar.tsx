@@ -273,7 +273,7 @@ export function SearchBar({
         <div className={`h-8 w-px bg-border hidden md:block`} />
 
         {/* City Selector - Desktop only (inside search bar) */}
-        <div className="relative hidden md:block" data-city-dropdown>
+        <div className="relative hidden md:block z-50" data-city-dropdown>
           <button
             onClick={() => setShowCityDropdown(!showCityDropdown)}
             className={`flex items-center gap-2 hover:bg-muted rounded-xl transition-colors ${
