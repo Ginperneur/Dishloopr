@@ -989,36 +989,79 @@ export default function AdminPanel() {
           <TabsContent value="users">
             <Card>
               <CardHeader>
-                <CardTitle>Gebruikers</CardTitle>
-                <CardDescription>{users.length} geregistreerde gebruikers</CardDescription>
+                <div className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  <div>
+                    <CardTitle>Gebruikers</CardTitle>
+                    <CardDescription>{users.length} geregistreerde gebruikers</CardDescription>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-10"></TableHead>
                       <TableHead>Naam</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead className="text-center">Reviews</TableHead>
+                      <TableHead className="text-center">Helpful</TableHead>
                       <TableHead className="text-center">Level</TableHead>
+                      <TableHead>Status</TableHead>
                       <TableHead>Aangemaakt</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedUsers.map(user => (
-                      <TableRow key={user.id}>
-                        <TableCell className="font-medium">{user.name || '(Geen naam)'}</TableCell>
-                        <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                        <TableCell className="text-center">{user.total_reviews || 0}</TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant="outline" className="capitalize">
-                            {user.reviewer_level || 'bronze'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {new Date(user.created_at).toLocaleDateString('nl-NL')}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {paginatedUsers.map(u => {
+                      const level = u.reviewer_level || 'bronze';
+                      const levelColors: Record<string, string> = {
+                        bronze: 'bg-amber-700/10 text-amber-700 border-amber-700/30',
+                        silver: 'bg-slate-400/10 text-slate-500 border-slate-400/30',
+                        gold: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/30',
+                        platinum: 'bg-purple-500/10 text-purple-600 border-purple-500/30',
+                      };
+                      const daysSinceUpdate = Math.floor((Date.now() - new Date(u.updated_at || u.created_at).getTime()) / (1000 * 60 * 60 * 24));
+                      const isActive = daysSinceUpdate < 90;
+                      const initials = (u.name || u.email || '?').slice(0, 2).toUpperCase();
+
+                      return (
+                        <TableRow
+                          key={u.id}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => { setSelectedUser(u); setUserModalOpen(true); }}
+                        >
+                          <TableCell>
+                            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary overflow-hidden">
+                              {u.avatar_url ? (
+                                <img src={u.avatar_url} alt="" className="h-full w-full object-cover" />
+                              ) : (
+                                initials
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-medium">{u.name || '(Geen naam)'}</TableCell>
+                          <TableCell className="text-muted-foreground text-sm">{u.email}</TableCell>
+                          <TableCell className="text-center font-medium">{u.total_reviews || 0}</TableCell>
+                          <TableCell className="text-center text-sm">{u.helpful_votes || 0}</TableCell>
+                          <TableCell className="text-center">
+                            <Badge className={`${levelColors[level] || levelColors.bronze} border capitalize text-[10px]`}>
+                              {level}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1.5">
+                              <div className={`h-2 w-2 rounded-full ${isActive ? 'bg-green-500' : 'bg-muted-foreground/30'}`} />
+                              <span className="text-xs text-muted-foreground">
+                                {isActive ? 'Actief' : 'Inactief'}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {new Date(u.created_at).toLocaleDateString('nl-NL')}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
                 
