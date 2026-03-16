@@ -201,16 +201,31 @@ export function RestaurantAudit() {
     setLoading(false);
   };
 
+  const handleApprove = (id: string) => {
+    const next = new Set(approvedIds);
+    next.add(id);
+    setApprovedIds(next);
+    saveApprovedIds(next);
+    toast.success('Restaurant goedgekeurd en verborgen uit audit');
+  };
+
+  const handleResetApproved = () => {
+    setApprovedIds(new Set());
+    saveApprovedIds(new Set());
+    toast.success('Alle goedkeuringen gereset');
+  };
+
   const filtered = useMemo(() => {
+    const withoutApproved = restaurants.filter(r => !approvedIds.has(r.id));
     switch (filterLevel) {
       case 'critical':
-        return restaurants.filter(r => r.risk_score >= 6);
+        return withoutApproved.filter(r => r.risk_score >= 6);
       case 'warning':
-        return restaurants.filter(r => r.risk_score >= 2 && r.risk_score < 6);
+        return withoutApproved.filter(r => r.risk_score >= 2 && r.risk_score < 6);
       case 'clean':
-        return restaurants.filter(r => r.risk_score === 0);
+        return withoutApproved.filter(r => r.risk_score === 0);
       default:
-        return restaurants.filter(r => r.risk_score > 0);
+        return withoutApproved.filter(r => r.risk_score > 0);
     }
   }, [restaurants, filterLevel]);
 
