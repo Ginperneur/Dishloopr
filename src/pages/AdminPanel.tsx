@@ -25,7 +25,8 @@ import {
   AlertCircle,
   Image,
   Globe,
-  Download
+  Download,
+  ShieldAlert
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
