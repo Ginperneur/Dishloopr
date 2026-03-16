@@ -184,6 +184,7 @@ export function SearchBar({
   const handleCitySelect = (id: string) => {
     setCityId(id);
     setShowCityDropdown(false);
+    inputRef.current?.blur();
   };
 
   const selectedCity = cities.find(c => c.id === cityId);
