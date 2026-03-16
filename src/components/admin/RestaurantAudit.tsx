@@ -406,6 +406,15 @@ export function RestaurantAudit() {
                         <Button
                           variant="ghost"
                           size="icon"
+                          className="h-7 w-7 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+                          onClick={() => handleApprove(r.id)}
+                          title="Goedkeuren — verberg uit audit"
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           className="h-7 w-7"
                           onClick={() => window.open(`/restaurant/${r.slug}`, '_blank')}
                           title="Bekijk restaurant"
