@@ -227,7 +227,7 @@ export function RestaurantAudit() {
       default:
         return withoutApproved.filter(r => r.risk_score > 0);
     }
-  }, [restaurants, filterLevel]);
+  }, [restaurants, filterLevel, approvedIds]);
 
   const stats = useMemo(() => ({
     total: restaurants.length,
