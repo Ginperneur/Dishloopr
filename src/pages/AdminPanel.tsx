@@ -80,6 +80,7 @@ import { SeoHealthMonitor } from '@/components/admin/SeoHealthMonitor';
 import { BulkActionsManager } from '@/components/admin/BulkActionsManager';
 import { AuditTrail } from '@/components/admin/AuditTrail';
 import { ChurnRiskDashboard } from '@/components/admin/ChurnRiskDashboard';
+import { UserProfileModal } from '@/components/admin/UserProfileModal';
 
 interface Stats {
   totalUsers: number;
