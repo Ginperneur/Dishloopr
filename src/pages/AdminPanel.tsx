@@ -64,6 +64,7 @@ import { AdminNotifications } from '@/components/admin/AdminNotifications';
 import { NewsletterManager } from '@/components/admin/NewsletterManager';
 import { MenuScraper } from '@/components/admin/MenuScraper';
 import { DataExportManager } from '@/components/admin/DataExportManager';
+import { RestaurantAudit } from '@/components/admin/RestaurantAudit';
 
 interface Stats {
   totalUsers: number;
