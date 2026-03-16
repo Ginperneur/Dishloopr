@@ -575,6 +575,18 @@ export default function AdminPanel() {
                   <ShieldAlert className="h-3.5 w-3.5" />
                   <span>Audit</span>
                 </TabsTrigger>
+                <TabsTrigger value="broken-images" className="gap-1.5 text-xs">
+                  <Image className="h-3.5 w-3.5" />
+                  <span>Broken Images</span>
+                </TabsTrigger>
+                <TabsTrigger value="duplicates" className="gap-1.5 text-xs">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  <span>Duplicaten</span>
+                </TabsTrigger>
+                <TabsTrigger value="completeness" className="gap-1.5 text-xs">
+                  <Eye className="h-3.5 w-3.5" />
+                  <span>Completeness</span>
+                </TabsTrigger>
                 <TabsTrigger value="bulk-import" className="gap-1.5 text-xs">
                   <Upload className="h-3.5 w-3.5" />
                   <span>Import</span>
