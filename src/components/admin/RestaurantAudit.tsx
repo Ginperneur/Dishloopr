@@ -332,43 +332,51 @@ export function RestaurantAudit() {
   return (
     <div className="space-y-4">
       {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setFilterLevel('all')}>
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+        <Card className={`cursor-pointer hover:border-primary/50 transition-colors ${filterLevel === 'all' ? 'border-primary' : ''}`} onClick={() => setFilterLevel('all')}>
           <CardContent className="p-3 text-center">
             <p className="text-2xl font-bold">{stats.total}</p>
-            <p className="text-xs text-muted-foreground">Totaal gescand</p>
+            <p className="text-xs text-muted-foreground">Totaal</p>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:border-destructive/50 transition-colors border-destructive/20" onClick={() => setFilterLevel('critical')}>
+        <Card className={`cursor-pointer hover:border-destructive/50 transition-colors border-destructive/20 ${filterLevel === 'critical' ? 'border-destructive' : ''}`} onClick={() => setFilterLevel('critical')}>
           <CardContent className="p-3 text-center">
             <p className="text-2xl font-bold text-destructive">{stats.critical}</p>
             <p className="text-xs text-muted-foreground">Hoog risico</p>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:border-yellow-500/50 transition-colors border-yellow-500/20" onClick={() => setFilterLevel('warning')}>
+        <Card className={`cursor-pointer hover:border-yellow-500/50 transition-colors border-yellow-500/20 ${filterLevel === 'warning' ? 'border-yellow-500' : ''}`} onClick={() => setFilterLevel('warning')}>
           <CardContent className="p-3 text-center">
             <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.warning}</p>
             <p className="text-xs text-muted-foreground">Waarschuwing</p>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer hover:border-emerald-500/50 transition-colors border-emerald-500/20" onClick={() => setFilterLevel('clean')}>
+        <Card className={`cursor-pointer hover:border-emerald-500/50 transition-colors border-emerald-500/20 ${filterLevel === 'clean' ? 'border-emerald-500' : ''}`} onClick={() => setFilterLevel('clean')}>
           <CardContent className="p-3 text-center">
             <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{stats.clean}</p>
             <p className="text-xs text-muted-foreground">Schoon</p>
           </CardContent>
         </Card>
-        <Card className="border-primary/20">
+        <Card className={`cursor-pointer hover:border-primary/50 transition-colors border-primary/20 ${filterLevel === 'approved' ? 'border-primary' : ''}`} onClick={() => setFilterLevel('approved')}>
           <CardContent className="p-3 text-center">
             <p className="text-2xl font-bold text-primary">{stats.approved}</p>
             <p className="text-xs text-muted-foreground">Goedgekeurd</p>
-            {stats.approved > 0 && (
-              <Button variant="ghost" size="sm" className="h-5 text-[10px] mt-1 px-1.5" onClick={handleResetApproved}>
-                <RotateCcw className="h-3 w-3 mr-0.5" />Reset
-              </Button>
-            )}
+          </CardContent>
+        </Card>
+        <Card className={`cursor-pointer hover:border-destructive/50 transition-colors border-destructive/20 ${filterLevel === 'rejected' ? 'border-destructive' : ''}`} onClick={() => setFilterLevel('rejected')}>
+          <CardContent className="p-3 text-center">
+            <p className="text-2xl font-bold text-destructive">{stats.rejected}</p>
+            <p className="text-xs text-muted-foreground">Geweigerd</p>
           </CardContent>
         </Card>
       </div>
+      {(stats.approved > 0 || stats.rejected > 0) && (
+        <div className="flex justify-end">
+          <Button variant="ghost" size="sm" className="text-xs h-7" onClick={handleResetAll}>
+            <RotateCcw className="h-3 w-3 mr-1" />Alle beslissingen resetten
+          </Button>
+        </div>
+      )}
 
       {/* Results table */}
       <Card>
