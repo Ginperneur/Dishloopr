@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertTriangle, ShieldAlert, Eye, Trash2, RefreshCw, MapPin, ImageOff, UtensilsCrossed, Copy, Ban } from 'lucide-react';
+import { AlertTriangle, ShieldAlert, Eye, Trash2, RefreshCw, MapPin, ImageOff, UtensilsCrossed, Copy, Ban, CheckCircle2, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AuditRestaurant {
@@ -37,11 +37,25 @@ interface AuditFlag {
 
 type FilterLevel = 'all' | 'critical' | 'warning' | 'clean';
 
+const APPROVED_STORAGE_KEY = 'dishloopr_audit_approved';
+
+function getApprovedIds(): Set<string> {
+  try {
+    const stored = localStorage.getItem(APPROVED_STORAGE_KEY);
+    return stored ? new Set(JSON.parse(stored)) : new Set();
+  } catch { return new Set(); }
+}
+
+function saveApprovedIds(ids: Set<string>) {
+  localStorage.setItem(APPROVED_STORAGE_KEY, JSON.stringify([...ids]));
+}
+
 export function RestaurantAudit() {
   const [loading, setLoading] = useState(true);
   const [restaurants, setRestaurants] = useState<AuditRestaurant[]>([]);
   const [filterLevel, setFilterLevel] = useState<FilterLevel>('all');
   const [deactivating, setDeactivating] = useState<string | null>(null);
+  const [approvedIds, setApprovedIds] = useState<Set<string>>(getApprovedIds);
 
   useEffect(() => {
     runAudit();
@@ -187,25 +201,44 @@ export function RestaurantAudit() {
     setLoading(false);
   };
 
+  const handleApprove = (id: string) => {
+    const next = new Set(approvedIds);
+    next.add(id);
+    setApprovedIds(next);
+    saveApprovedIds(next);
+    toast.success('Restaurant goedgekeurd en verborgen uit audit');
+  };
+
+  const handleResetApproved = () => {
+    setApprovedIds(new Set());
+    saveApprovedIds(new Set());
+    toast.success('Alle goedkeuringen gereset');
+  };
+
   const filtered = useMemo(() => {
+    const withoutApproved = restaurants.filter(r => !approvedIds.has(r.id));
     switch (filterLevel) {
       case 'critical':
-        return restaurants.filter(r => r.risk_score >= 6);
+        return withoutApproved.filter(r => r.risk_score >= 6);
       case 'warning':
-        return restaurants.filter(r => r.risk_score >= 2 && r.risk_score < 6);
+        return withoutApproved.filter(r => r.risk_score >= 2 && r.risk_score < 6);
       case 'clean':
-        return restaurants.filter(r => r.risk_score === 0);
+        return withoutApproved.filter(r => r.risk_score === 0);
       default:
-        return restaurants.filter(r => r.risk_score > 0);
+        return withoutApproved.filter(r => r.risk_score > 0);
     }
-  }, [restaurants, filterLevel]);
+  }, [restaurants, filterLevel, approvedIds]);
 
-  const stats = useMemo(() => ({
-    total: restaurants.length,
-    critical: restaurants.filter(r => r.risk_score >= 6).length,
-    warning: restaurants.filter(r => r.risk_score >= 2 && r.risk_score < 6).length,
-    clean: restaurants.filter(r => r.risk_score === 0).length,
-  }), [restaurants]);
+  const stats = useMemo(() => {
+    const unapproved = restaurants.filter(r => !approvedIds.has(r.id));
+    return {
+      total: restaurants.length,
+      approved: approvedIds.size,
+      critical: unapproved.filter(r => r.risk_score >= 6).length,
+      warning: unapproved.filter(r => r.risk_score >= 2 && r.risk_score < 6).length,
+      clean: unapproved.filter(r => r.risk_score === 0).length,
+    };
+  }, [restaurants, approvedIds]);
 
   const handleDeactivate = async (id: string) => {
     setDeactivating(id);
@@ -253,7 +286,7 @@ export function RestaurantAudit() {
   return (
     <div className="space-y-4">
       {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setFilterLevel('all')}>
           <CardContent className="p-3 text-center">
             <p className="text-2xl font-bold">{stats.total}</p>
@@ -276,6 +309,17 @@ export function RestaurantAudit() {
           <CardContent className="p-3 text-center">
             <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{stats.clean}</p>
             <p className="text-xs text-muted-foreground">Schoon</p>
+          </CardContent>
+        </Card>
+        <Card className="border-primary/20">
+          <CardContent className="p-3 text-center">
+            <p className="text-2xl font-bold text-primary">{stats.approved}</p>
+            <p className="text-xs text-muted-foreground">Goedgekeurd</p>
+            {stats.approved > 0 && (
+              <Button variant="ghost" size="sm" className="h-5 text-[10px] mt-1 px-1.5" onClick={handleResetApproved}>
+                <RotateCcw className="h-3 w-3 mr-0.5" />Reset
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -359,6 +403,15 @@ export function RestaurantAudit() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+                          onClick={() => handleApprove(r.id)}
+                          title="Goedkeuren — verberg uit audit"
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
