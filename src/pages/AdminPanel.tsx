@@ -151,7 +151,7 @@ export default function AdminPanel() {
   // Filter states
   const [restaurantStatusFilter, setRestaurantStatusFilter] = useState<string>('all');
   const [reviewStatusFilter, setReviewStatusFilter] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState('restaurants');
+  const [activeTab, setActiveTab] = useState('kpi');
   const tabsRef = useRef<HTMLDivElement>(null);
 
   const handleNavigateToTab = useCallback((tab: string) => {
