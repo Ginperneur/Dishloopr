@@ -546,17 +546,31 @@ export function RestaurantAudit() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-wrap gap-1 max-w-[300px]">
-                        {r.flags.map((flag, i) => (
-                          <span
-                            key={i}
-                            className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded bg-muted"
-                            title={flag.detail}
-                          >
-                            {getFlagIcon(flag.type)}
-                            {flag.label}
-                          </span>
-                        ))}
+                      <div className="flex flex-wrap gap-1 max-w-[350px]">
+                        {r.flags.map((flag, i) => {
+                          const fixKey = `${r.id}:${flag.label}`;
+                          const isFixing = fixing === fixKey;
+                          return (
+                            <span
+                              key={i}
+                              className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded bg-muted"
+                              title={flag.detail}
+                            >
+                              {getFlagIcon(flag.type)}
+                              {flag.label}
+                              {canAutoFix(flag.label) && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleAutoFix(r, flag); }}
+                                  disabled={!!fixing}
+                                  className="ml-0.5 p-0.5 rounded hover:bg-primary/10 text-primary disabled:opacity-50"
+                                  title={`Probeer "${flag.label}" automatisch op te lossen`}
+                                >
+                                  {isFixing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+                                </button>
+                              )}
+                            </span>
+                          );
+                        })}
                       </div>
                     </TableCell>
                     <TableCell>
