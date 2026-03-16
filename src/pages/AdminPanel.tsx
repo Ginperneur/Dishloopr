@@ -1160,6 +1160,30 @@ export default function AdminPanel() {
           <TabsContent value="completeness">
             <CompletenessScore />
           </TabsContent>
+
+          <TabsContent value="search-analytics">
+            <SearchAnalytics />
+          </TabsContent>
+
+          <TabsContent value="geographic">
+            <GeographicCoverage />
+          </TabsContent>
+
+          <TabsContent value="seo-health">
+            <SeoHealthMonitor />
+          </TabsContent>
+
+          <TabsContent value="bulk-actions">
+            <BulkActionsManager />
+          </TabsContent>
+
+          <TabsContent value="audit-trail">
+            <AuditTrail />
+          </TabsContent>
+
+          <TabsContent value="churn">
+            <ChurnRiskDashboard />
+          </TabsContent>
         </Tabs>
         </div>
 
