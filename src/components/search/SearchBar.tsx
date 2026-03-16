@@ -54,6 +54,7 @@ export function SearchBar({
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const cityButtonRef = useRef<HTMLButtonElement>(null);
 
   // Fetch cities, dishes and restaurants on mount
   useEffect(() => {
