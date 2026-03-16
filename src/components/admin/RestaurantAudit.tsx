@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertTriangle, ShieldAlert, Eye, Trash2, RefreshCw, MapPin, ImageOff, UtensilsCrossed, Copy, Ban, CheckCircle2, RotateCcw, XCircle, Undo2 } from 'lucide-react';
+import { AlertTriangle, ShieldAlert, Eye, Trash2, RefreshCw, MapPin, ImageOff, UtensilsCrossed, Copy, Ban, CheckCircle2, RotateCcw, XCircle, Undo2, Wand2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AuditRestaurant {
@@ -56,6 +56,7 @@ export function RestaurantAudit() {
   const [restaurants, setRestaurants] = useState<AuditRestaurant[]>([]);
   const [filterLevel, setFilterLevel] = useState<FilterLevel>('all');
   const [deactivating, setDeactivating] = useState<string | null>(null);
+  const [fixing, setFixing] = useState<string | null>(null); // "restaurantId:flagLabel"
   const [approvedIds, setApprovedIds] = useState<Set<string>>(() => getStoredIds(APPROVED_STORAGE_KEY));
   const [rejectedIds, setRejectedIds] = useState<Set<string>>(() => getStoredIds(REJECTED_STORAGE_KEY));
 
@@ -304,6 +305,107 @@ export function RestaurantAudit() {
     setDeactivating(null);
   };
 
+  const canAutoFix = (flagLabel: string) => {
+    return ["Geen foto's", "Geen gerechten", "Geen coördinaten"].includes(flagLabel);
+  };
+
+  const handleAutoFix = async (restaurant: AuditRestaurant, flag: AuditFlag) => {
+    const fixKey = `${restaurant.id}:${flag.label}`;
+    setFixing(fixKey);
+
+    try {
+      switch (flag.label) {
+        case "Geen foto's": {
+          // Search Google Places for this restaurant, then fetch photos
+          const searchQuery = `${restaurant.name} ${restaurant.address}`;
+          const { data: searchData, error: searchError } = await supabase.functions.invoke("google-places-search", {
+            body: { query: searchQuery, city: restaurant.city_name },
+          });
+          if (searchError) throw searchError;
+
+          const place = searchData?.results?.[0];
+          if (!place?.place_id) {
+            toast.warning(`Geen Google Places resultaat gevonden voor ${restaurant.name}`);
+            break;
+          }
+
+          const { data: photoData, error: photoError } = await supabase.functions.invoke("fetch-google-photos", {
+            body: {
+              place_id: place.place_id,
+              photo_references: place.photo_references || [],
+              restaurant_id: restaurant.id,
+              max_photos: 5,
+            },
+          });
+          if (photoError) throw photoError;
+
+          if (photoData?.count > 0) {
+            toast.success(`${photoData.count} foto's toegevoegd voor ${restaurant.name}`);
+            // Update local state
+            setRestaurants(prev => prev.map(r => {
+              if (r.id !== restaurant.id) return r;
+              const newFlags = r.flags.filter(f => f.label !== "Geen foto's");
+              return { ...r, images: ['placeholder'], flags: newFlags, risk_score: r.risk_score - 2 };
+            }));
+          } else {
+            toast.warning(`Geen foto's gevonden voor ${restaurant.name}`);
+          }
+          break;
+        }
+
+        case "Geen gerechten": {
+          if (!restaurant.website_url) {
+            toast.warning(`${restaurant.name} heeft geen website om te scrapen`);
+            break;
+          }
+
+          const { data: scrapeData, error: scrapeError } = await supabase.functions.invoke("scrape-menu", {
+            body: { restaurant_id: restaurant.id, url: restaurant.website_url },
+          });
+          if (scrapeError) throw scrapeError;
+
+          const added = scrapeData?.dishes_added || 0;
+          if (added > 0) {
+            toast.success(`${added} gerechten toegevoegd voor ${restaurant.name}`);
+            setRestaurants(prev => prev.map(r => {
+              if (r.id !== restaurant.id) return r;
+              const newFlags = r.flags.filter(f => f.label !== "Geen gerechten");
+              return { ...r, dish_count: added, flags: newFlags, risk_score: r.risk_score - 2 };
+            }));
+          } else {
+            toast.warning(`Geen gerechten gevonden op de website van ${restaurant.name}`);
+          }
+          break;
+        }
+
+        case "Geen coördinaten": {
+          const { data: geoData, error: geoError } = await supabase.functions.invoke("geocode-restaurants", {
+            body: { restaurant_ids: [restaurant.id] },
+          });
+          if (geoError) throw geoError;
+
+          const geocoded = geoData?.geocoded || 0;
+          if (geocoded > 0) {
+            toast.success(`${restaurant.name} succesvol gegeocodeerd`);
+            setRestaurants(prev => prev.map(r => {
+              if (r.id !== restaurant.id) return r;
+              const newFlags = r.flags.filter(f => f.label !== "Geen coördinaten");
+              return { ...r, geo_lat: 1, geo_lng: 1, flags: newFlags, risk_score: r.risk_score - 2 };
+            }));
+          } else {
+            toast.warning(`Geocoding mislukt voor ${restaurant.name}`);
+          }
+          break;
+        }
+      }
+    } catch (err: any) {
+      console.error(`Auto-fix error for ${restaurant.name}:`, err);
+      toast.error(`Fout bij auto-fix: ${err.message || 'Onbekende fout'}`);
+    } finally {
+      setFixing(null);
+    }
+  };
+
   const getRiskBadge = (score: number) => {
     if (score >= 6) return <Badge variant="destructive" className="gap-1"><ShieldAlert className="h-3 w-3" />Hoog risico</Badge>;
     if (score >= 2) return <Badge variant="outline" className="gap-1 border-yellow-500 text-yellow-700 dark:text-yellow-400"><AlertTriangle className="h-3 w-3" />Let op</Badge>;
@@ -444,17 +546,31 @@ export function RestaurantAudit() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-wrap gap-1 max-w-[300px]">
-                        {r.flags.map((flag, i) => (
-                          <span
-                            key={i}
-                            className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded bg-muted"
-                            title={flag.detail}
-                          >
-                            {getFlagIcon(flag.type)}
-                            {flag.label}
-                          </span>
-                        ))}
+                      <div className="flex flex-wrap gap-1 max-w-[350px]">
+                        {r.flags.map((flag, i) => {
+                          const fixKey = `${r.id}:${flag.label}`;
+                          const isFixing = fixing === fixKey;
+                          return (
+                            <span
+                              key={i}
+                              className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded bg-muted"
+                              title={flag.detail}
+                            >
+                              {getFlagIcon(flag.type)}
+                              {flag.label}
+                              {canAutoFix(flag.label) && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleAutoFix(r, flag); }}
+                                  disabled={!!fixing}
+                                  className="ml-0.5 p-0.5 rounded hover:bg-primary/10 text-primary disabled:opacity-50"
+                                  title={`Probeer "${flag.label}" automatisch op te lossen`}
+                                >
+                                  {isFixing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+                                </button>
+                              )}
+                            </span>
+                          );
+                        })}
                       </div>
                     </TableCell>
                     <TableCell>
