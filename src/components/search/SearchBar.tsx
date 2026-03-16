@@ -321,46 +321,7 @@ export function SearchBar({
             <ChevronDown className={`text-muted-foreground transition-transform ${showCityDropdown ? 'rotate-180' : ''} ${isHero ? 'h-4 w-4' : 'h-3 w-3'}`} />
           </button>
 
-          {/* Desktop City Dropdown */}
-          <AnimatePresence>
-            {showCityDropdown && (
-              <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 6 }}
-                transition={{ duration: 0.15 }}
-                className="absolute top-full right-0 mt-2 min-w-[200px] rounded-xl overflow-hidden"
-                style={{ 
-                  backgroundColor: 'hsl(var(--background))',
-                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                  border: '2px solid hsl(var(--border))',
-                  zIndex: 9999
-                }}
-              >
-                <div className="max-h-[50vh] overflow-y-auto">
-                  <button
-                    onClick={() => handleCitySelect('all')}
-                    className={`w-full px-4 py-3.5 text-left hover:bg-muted active:bg-muted/80 transition-colors ${
-                      cityId === 'all' ? 'bg-primary/10 text-primary font-semibold' : ''
-                    }`}
-                  >
-                    {t('cities.all')}
-                  </button>
-                  {cities.map((city) => (
-                    <button
-                      key={city.id}
-                      onClick={() => handleCitySelect(city.id)}
-                      className={`w-full px-4 py-3.5 text-left hover:bg-muted active:bg-muted/80 transition-colors ${
-                        cityId === city.id ? 'bg-primary/10 text-primary font-semibold' : ''
-                      }`}
-                    >
-                      {city.name}
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Desktop City Dropdown rendered via portal below to avoid clipping */}
         </div>
 
         {/* Voice Search */}
