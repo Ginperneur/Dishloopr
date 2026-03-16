@@ -1063,6 +1063,10 @@ export default function AdminPanel() {
           <TabsContent value="data-export">
             <DataExportManager />
           </TabsContent>
+
+          <TabsContent value="audit">
+            <RestaurantAudit />
+          </TabsContent>
         </Tabs>
         </div>
 
