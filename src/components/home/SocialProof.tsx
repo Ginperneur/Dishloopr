@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Utensils, Star, MapPin, Users } from 'lucide-react';
+import { Utensils, Star, MapPin, ChefHat } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Stats {
@@ -64,7 +64,7 @@ export function SocialProof() {
     { icon: Utensils, value: stats.restaurants, label: 'Restaurants', suffix: '+' },
     { icon: Star, value: stats.reviews, label: 'Reviews', suffix: '+' },
     { icon: MapPin, value: stats.cities, label: 'Steden', suffix: '' },
-    { icon: Users, value: stats.dishes, label: 'Gerechten', suffix: '+' },
+    { icon: ChefHat, value: stats.dishes, label: 'Gerechten', suffix: '+' },
   ];
 
   return (
