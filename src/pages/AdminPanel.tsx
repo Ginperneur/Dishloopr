@@ -1101,8 +1101,32 @@ export default function AdminPanel() {
             <DataExportManager />
           </TabsContent>
 
+          <TabsContent value="kpi">
+            <KpiDashboard />
+          </TabsContent>
+
+          <TabsContent value="revenue">
+            <RevenueDashboard />
+          </TabsContent>
+
+          <TabsContent value="user-insights">
+            <UserInsights />
+          </TabsContent>
+
           <TabsContent value="audit">
             <RestaurantAudit />
+          </TabsContent>
+
+          <TabsContent value="broken-images">
+            <BrokenImageChecker />
+          </TabsContent>
+
+          <TabsContent value="duplicates">
+            <DuplicateMerger />
+          </TabsContent>
+
+          <TabsContent value="completeness">
+            <CompletenessScore />
           </TabsContent>
         </Tabs>
         </div>
