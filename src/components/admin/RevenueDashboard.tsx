@@ -38,7 +38,7 @@ export function RevenueDashboard() {
       { data: newsletterPlacements },
     ] = await Promise.all([
       supabase.from('featured_subscriptions').select('*, restaurants:restaurant_id(name)'),
-      supabase.from('sponsored_purchases' as any).select('*, restaurants:restaurant_id(name)').catch(() => ({ data: [] })),
+      supabase.from('newsletter_placements').select('*').limit(0).then(() => ({ data: [] as any[] })),
       supabase.from('newsletter_placements').select('*, restaurants:restaurant_id(name)').eq('status', 'paid'),
     ]);
 
