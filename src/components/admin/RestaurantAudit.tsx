@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertTriangle, ShieldAlert, Eye, Trash2, RefreshCw, MapPin, ImageOff, UtensilsCrossed, Copy, Ban, CheckCircle2, RotateCcw } from 'lucide-react';
+import { AlertTriangle, ShieldAlert, Eye, Trash2, RefreshCw, MapPin, ImageOff, UtensilsCrossed, Copy, Ban, CheckCircle2, RotateCcw, XCircle, Undo2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AuditRestaurant {
