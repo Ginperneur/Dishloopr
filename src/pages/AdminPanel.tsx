@@ -625,6 +625,18 @@ export default function AdminPanel() {
                   <Download className="h-3.5 w-3.5" />
                   <span>Export</span>
                 </TabsTrigger>
+                <TabsTrigger value="seo-health" className="gap-1.5 text-xs">
+                  <Globe className="h-3.5 w-3.5" />
+                  <span>SEO Health</span>
+                </TabsTrigger>
+                <TabsTrigger value="bulk-actions" className="gap-1.5 text-xs">
+                  <Zap className="h-3.5 w-3.5" />
+                  <span>Bulk Acties</span>
+                </TabsTrigger>
+                <TabsTrigger value="audit-trail" className="gap-1.5 text-xs">
+                  <History className="h-3.5 w-3.5" />
+                  <span>Audit Trail</span>
+                </TabsTrigger>
                 <TabsTrigger value="activity" className="gap-1.5 text-xs">
                   <Settings className="h-3.5 w-3.5" />
                   <span>Activiteit</span>
