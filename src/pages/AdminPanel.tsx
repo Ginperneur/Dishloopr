@@ -636,7 +636,7 @@ export default function AdminPanel() {
                   <span>Bulk Acties</span>
                 </TabsTrigger>
                 <TabsTrigger value="audit-trail" className="gap-1.5 text-xs">
-                  <History className="h-3.5 w-3.5" />
+                  <Clock className="h-3.5 w-3.5" />
                   <span>Audit Trail</span>
                 </TabsTrigger>
                 <TabsTrigger value="activity" className="gap-1.5 text-xs">
