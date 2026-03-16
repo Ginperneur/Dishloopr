@@ -207,10 +207,22 @@ export function DuplicateMerger() {
               {groups.length} groepen met mogelijke duplicaten gevonden
             </CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={findDuplicates}>
-            <RefreshCw className="h-4 w-4 mr-1" />
-            Opnieuw zoeken
-          </Button>
+          <div className="flex gap-2">
+            {groups.length > 0 && (
+              <Button
+                size="sm"
+                onClick={mergeAll}
+                disabled={!!merging}
+              >
+                <GitMerge className="h-4 w-4 mr-1" />
+                {merging === '__all__' ? 'Bezig...' : `Alles samenvoegen (${groups.length})`}
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={findDuplicates}>
+              <RefreshCw className="h-4 w-4 mr-1" />
+              Opnieuw zoeken
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
