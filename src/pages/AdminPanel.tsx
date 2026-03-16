@@ -483,6 +483,18 @@ export default function AdminPanel() {
                   <Users className="h-3.5 w-3.5" />
                   <span>User Insights</span>
                 </TabsTrigger>
+                <TabsTrigger value="search-analytics" className="gap-1.5 text-xs">
+                  <Search className="h-3.5 w-3.5" />
+                  <span>Zoek Analytics</span>
+                </TabsTrigger>
+                <TabsTrigger value="geographic" className="gap-1.5 text-xs">
+                  <MapPin className="h-3.5 w-3.5" />
+                  <span>Dekking</span>
+                </TabsTrigger>
+                <TabsTrigger value="churn" className="gap-1.5 text-xs">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  <span>Churn Risk</span>
+                </TabsTrigger>
               </TabsList>
             </div>
             {/* Group: Content */}
