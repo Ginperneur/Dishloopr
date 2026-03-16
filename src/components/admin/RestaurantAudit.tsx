@@ -204,43 +204,87 @@ export function RestaurantAudit() {
   };
 
   const handleApprove = (id: string) => {
-    const next = new Set(approvedIds);
-    next.add(id);
-    setApprovedIds(next);
-    saveApprovedIds(next);
-    toast.success('Restaurant goedgekeurd en verborgen uit audit');
+    const nextApproved = new Set(approvedIds);
+    nextApproved.add(id);
+    // Remove from rejected if it was there
+    const nextRejected = new Set(rejectedIds);
+    nextRejected.delete(id);
+    setApprovedIds(nextApproved);
+    setRejectedIds(nextRejected);
+    saveStoredIds(APPROVED_STORAGE_KEY, nextApproved);
+    saveStoredIds(REJECTED_STORAGE_KEY, nextRejected);
+    toast.success('Restaurant goedgekeurd');
   };
 
-  const handleResetApproved = () => {
+  const handleReject = (id: string) => {
+    const nextRejected = new Set(rejectedIds);
+    nextRejected.add(id);
+    // Remove from approved if it was there
+    const nextApproved = new Set(approvedIds);
+    nextApproved.delete(id);
+    setRejectedIds(nextRejected);
+    setApprovedIds(nextApproved);
+    saveStoredIds(REJECTED_STORAGE_KEY, nextRejected);
+    saveStoredIds(APPROVED_STORAGE_KEY, nextApproved);
+    toast.success('Restaurant gemarkeerd als geweigerd');
+  };
+
+  const handleUndoDecision = (id: string) => {
+    const nextApproved = new Set(approvedIds);
+    const nextRejected = new Set(rejectedIds);
+    nextApproved.delete(id);
+    nextRejected.delete(id);
+    setApprovedIds(nextApproved);
+    setRejectedIds(nextRejected);
+    saveStoredIds(APPROVED_STORAGE_KEY, nextApproved);
+    saveStoredIds(REJECTED_STORAGE_KEY, nextRejected);
+    toast.success('Beslissing ongedaan gemaakt');
+  };
+
+  const handleResetAll = () => {
     setApprovedIds(new Set());
-    saveApprovedIds(new Set());
-    toast.success('Alle goedkeuringen gereset');
+    setRejectedIds(new Set());
+    saveStoredIds(APPROVED_STORAGE_KEY, new Set());
+    saveStoredIds(REJECTED_STORAGE_KEY, new Set());
+    toast.success('Alle beslissingen gereset');
   };
 
   const filtered = useMemo(() => {
-    const withoutApproved = restaurants.filter(r => !approvedIds.has(r.id));
     switch (filterLevel) {
-      case 'critical':
-        return withoutApproved.filter(r => r.risk_score >= 6);
-      case 'warning':
-        return withoutApproved.filter(r => r.risk_score >= 2 && r.risk_score < 6);
-      case 'clean':
-        return withoutApproved.filter(r => r.risk_score === 0);
-      default:
-        return withoutApproved.filter(r => r.risk_score > 0);
+      case 'critical': {
+        const pool = restaurants.filter(r => !approvedIds.has(r.id) && !rejectedIds.has(r.id));
+        return pool.filter(r => r.risk_score >= 6);
+      }
+      case 'warning': {
+        const pool = restaurants.filter(r => !approvedIds.has(r.id) && !rejectedIds.has(r.id));
+        return pool.filter(r => r.risk_score >= 2 && r.risk_score < 6);
+      }
+      case 'clean': {
+        const pool = restaurants.filter(r => !approvedIds.has(r.id) && !rejectedIds.has(r.id));
+        return pool.filter(r => r.risk_score === 0);
+      }
+      case 'approved':
+        return restaurants.filter(r => approvedIds.has(r.id));
+      case 'rejected':
+        return restaurants.filter(r => rejectedIds.has(r.id));
+      default: {
+        const pool = restaurants.filter(r => !approvedIds.has(r.id) && !rejectedIds.has(r.id));
+        return pool.filter(r => r.risk_score > 0);
+      }
     }
-  }, [restaurants, filterLevel, approvedIds]);
+  }, [restaurants, filterLevel, approvedIds, rejectedIds]);
 
   const stats = useMemo(() => {
-    const unapproved = restaurants.filter(r => !approvedIds.has(r.id));
+    const pending = restaurants.filter(r => !approvedIds.has(r.id) && !rejectedIds.has(r.id));
     return {
       total: restaurants.length,
       approved: approvedIds.size,
-      critical: unapproved.filter(r => r.risk_score >= 6).length,
-      warning: unapproved.filter(r => r.risk_score >= 2 && r.risk_score < 6).length,
-      clean: unapproved.filter(r => r.risk_score === 0).length,
+      rejected: rejectedIds.size,
+      critical: pending.filter(r => r.risk_score >= 6).length,
+      warning: pending.filter(r => r.risk_score >= 2 && r.risk_score < 6).length,
+      clean: pending.filter(r => r.risk_score === 0).length,
     };
-  }, [restaurants, approvedIds]);
+  }, [restaurants, approvedIds, rejectedIds]);
 
   const handleDeactivate = async (id: string) => {
     setDeactivating(id);
