@@ -37,11 +37,25 @@ interface AuditFlag {
 
 type FilterLevel = 'all' | 'critical' | 'warning' | 'clean';
 
+const APPROVED_STORAGE_KEY = 'dishloopr_audit_approved';
+
+function getApprovedIds(): Set<string> {
+  try {
+    const stored = localStorage.getItem(APPROVED_STORAGE_KEY);
+    return stored ? new Set(JSON.parse(stored)) : new Set();
+  } catch { return new Set(); }
+}
+
+function saveApprovedIds(ids: Set<string>) {
+  localStorage.setItem(APPROVED_STORAGE_KEY, JSON.stringify([...ids]));
+}
+
 export function RestaurantAudit() {
   const [loading, setLoading] = useState(true);
   const [restaurants, setRestaurants] = useState<AuditRestaurant[]>([]);
   const [filterLevel, setFilterLevel] = useState<FilterLevel>('all');
   const [deactivating, setDeactivating] = useState<string | null>(null);
+  const [approvedIds, setApprovedIds] = useState<Set<string>>(getApprovedIds);
 
   useEffect(() => {
     runAudit();
