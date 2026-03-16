@@ -49,7 +49,7 @@ const Index = () => {
         canonical="https://dishloopr.com"
       />
       {/* Hero Section */}
-      <section className="relative py-6 sm:py-8 md:py-14 lg:py-18 pb-6 sm:pb-8 md:pb-10 lg:pb-14 overflow-hidden z-10">
+      <section className="relative py-6 sm:py-8 md:py-14 lg:py-18 pb-6 sm:pb-8 md:pb-10 lg:pb-14 z-10">
         {/* Background gradient */}
         <div 
           className="absolute inset-0 -z-10"

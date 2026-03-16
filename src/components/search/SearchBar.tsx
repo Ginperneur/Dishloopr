@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -53,6 +54,7 @@ export function SearchBar({
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const cityButtonRef = useRef<HTMLButtonElement>(null);
 
   // Fetch cities, dishes and restaurants on mount
   useEffect(() => {
@@ -182,6 +184,7 @@ export function SearchBar({
   const handleCitySelect = (id: string) => {
     setCityId(id);
     setShowCityDropdown(false);
+    inputRef.current?.blur();
   };
 
   const selectedCity = cities.find(c => c.id === cityId);
@@ -190,25 +193,57 @@ export function SearchBar({
   const isHero = variant === 'hero';
   const hasSuggestions = suggestions.length > 0 || cuisineSuggestions.length > 0 || restaurantSuggestions.length > 0;
 
-  // Calculate position for desktop dropdown with viewport-aware max-height
+  // Calculate positions for fixed overlays so they never get clipped by parent containers
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0, maxHeight: 400 });
+  const [cityDropdownPosition, setCityDropdownPosition] = useState({ top: 0, left: 0, width: 240, maxHeight: 400 });
   const searchBarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (showSuggestions && searchBarRef.current) {
-      const rect = searchBarRef.current.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      const spaceBelow = viewportHeight - rect.bottom - 24; // 24px padding from bottom
-      const calculatedMaxHeight = Math.min(Math.max(spaceBelow, 200), 500); // Min 200px, max 500px
-      
-      setDropdownPosition({
-        top: rect.bottom + 8,
-        left: rect.left,
-        width: rect.width,
-        maxHeight: calculatedMaxHeight
-      });
-    }
-  }, [showSuggestions]);
+    const updateOverlayPositions = () => {
+      if (showSuggestions && searchBarRef.current) {
+        const rect = searchBarRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const spaceBelow = viewportHeight - rect.bottom - 24;
+        const calculatedMaxHeight = Math.min(Math.max(spaceBelow, 200), 500);
+
+        setDropdownPosition({
+          top: rect.bottom + 8,
+          left: rect.left,
+          width: rect.width,
+          maxHeight: calculatedMaxHeight,
+        });
+      }
+
+      if (showCityDropdown && cityButtonRef.current) {
+        const rect = cityButtonRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+        const preferredWidth = Math.max(rect.width, 240);
+        const left = Math.max(16, Math.min(rect.right - preferredWidth, viewportWidth - preferredWidth - 16));
+        const top = rect.bottom + 8;
+        const maxHeight = Math.min(Math.max(viewportHeight - top - 24, 220), 420);
+
+        setCityDropdownPosition({
+          top,
+          left,
+          width: preferredWidth,
+          maxHeight,
+        });
+      }
+    };
+
+    updateOverlayPositions();
+
+    if (!showSuggestions && !showCityDropdown) return;
+
+    window.addEventListener('resize', updateOverlayPositions);
+    window.addEventListener('scroll', updateOverlayPositions, true);
+
+    return () => {
+      window.removeEventListener('resize', updateOverlayPositions);
+      window.removeEventListener('scroll', updateOverlayPositions, true);
+    };
+  }, [showSuggestions, showCityDropdown]);
 
   return (
     <div ref={searchBarRef} className={`relative w-full ${isHero ? 'max-w-3xl mx-auto' : ''}`}>
@@ -275,6 +310,7 @@ export function SearchBar({
         {/* City Selector - Desktop only (inside search bar) */}
         <div className="relative hidden md:block z-50" data-city-dropdown>
           <button
+            ref={cityButtonRef}
             onClick={() => setShowCityDropdown(!showCityDropdown)}
             className={`flex items-center gap-2 hover:bg-muted rounded-xl transition-colors ${
               isHero ? 'px-4 py-3' : 'px-3 py-2'
@@ -285,46 +321,7 @@ export function SearchBar({
             <ChevronDown className={`text-muted-foreground transition-transform ${showCityDropdown ? 'rotate-180' : ''} ${isHero ? 'h-4 w-4' : 'h-3 w-3'}`} />
           </button>
 
-          {/* Desktop City Dropdown */}
-          <AnimatePresence>
-            {showCityDropdown && (
-              <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 6 }}
-                transition={{ duration: 0.15 }}
-                className="absolute top-full right-0 mt-2 min-w-[200px] rounded-xl overflow-hidden"
-                style={{ 
-                  backgroundColor: 'hsl(var(--background))',
-                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                  border: '2px solid hsl(var(--border))',
-                  zIndex: 9999
-                }}
-              >
-                <div className="max-h-[50vh] overflow-y-auto">
-                  <button
-                    onClick={() => handleCitySelect('all')}
-                    className={`w-full px-4 py-3.5 text-left hover:bg-muted active:bg-muted/80 transition-colors ${
-                      cityId === 'all' ? 'bg-primary/10 text-primary font-semibold' : ''
-                    }`}
-                  >
-                    {t('cities.all')}
-                  </button>
-                  {cities.map((city) => (
-                    <button
-                      key={city.id}
-                      onClick={() => handleCitySelect(city.id)}
-                      className={`w-full px-4 py-3.5 text-left hover:bg-muted active:bg-muted/80 transition-colors ${
-                        cityId === city.id ? 'bg-primary/10 text-primary font-semibold' : ''
-                      }`}
-                    >
-                      {city.name}
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Desktop City Dropdown rendered via portal below to avoid clipping */}
         </div>
 
         {/* Voice Search */}
@@ -702,6 +699,52 @@ export function SearchBar({
             setShowSuggestions(false);
           }}
         />
+      )}
+
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {showCityDropdown && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 6 }}
+              transition={{ duration: 0.15 }}
+              className="hidden md:block fixed rounded-xl overflow-hidden z-[9999]"
+              style={{
+                top: cityDropdownPosition.top,
+                left: cityDropdownPosition.left,
+                width: cityDropdownPosition.width,
+                maxHeight: cityDropdownPosition.maxHeight,
+                backgroundColor: 'hsl(var(--background))',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                border: '2px solid hsl(var(--border))',
+              }}
+            >
+              <div className="overflow-y-auto overscroll-contain" style={{ maxHeight: cityDropdownPosition.maxHeight - 4 }}>
+                <button
+                  onClick={() => handleCitySelect('all')}
+                  className={`w-full px-4 py-3.5 text-left hover:bg-muted active:bg-muted/80 transition-colors ${
+                    cityId === 'all' ? 'bg-primary/10 text-primary font-semibold' : ''
+                  }`}
+                >
+                  {t('cities.all')}
+                </button>
+                {cities.map((city) => (
+                  <button
+                    key={city.id}
+                    onClick={() => handleCitySelect(city.id)}
+                    className={`w-full px-4 py-3.5 text-left hover:bg-muted active:bg-muted/80 transition-colors ${
+                      cityId === city.id ? 'bg-primary/10 text-primary font-semibold' : ''
+                    }`}
+                  >
+                    {city.name}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
       )}
     </div>
   );
