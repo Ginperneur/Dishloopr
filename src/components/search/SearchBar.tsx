@@ -310,6 +310,7 @@ export function SearchBar({
         {/* City Selector - Desktop only (inside search bar) */}
         <div className="relative hidden md:block z-50" data-city-dropdown>
           <button
+            ref={cityButtonRef}
             onClick={() => setShowCityDropdown(!showCityDropdown)}
             className={`flex items-center gap-2 hover:bg-muted rounded-xl transition-colors ${
               isHero ? 'px-4 py-3' : 'px-3 py-2'
