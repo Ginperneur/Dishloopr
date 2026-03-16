@@ -286,7 +286,7 @@ export function RestaurantAudit() {
   return (
     <div className="space-y-4">
       {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setFilterLevel('all')}>
           <CardContent className="p-3 text-center">
             <p className="text-2xl font-bold">{stats.total}</p>
@@ -309,6 +309,17 @@ export function RestaurantAudit() {
           <CardContent className="p-3 text-center">
             <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{stats.clean}</p>
             <p className="text-xs text-muted-foreground">Schoon</p>
+          </CardContent>
+        </Card>
+        <Card className="border-primary/20">
+          <CardContent className="p-3 text-center">
+            <p className="text-2xl font-bold text-primary">{stats.approved}</p>
+            <p className="text-xs text-muted-foreground">Goedgekeurd</p>
+            {stats.approved > 0 && (
+              <Button variant="ghost" size="sm" className="h-5 text-[10px] mt-1 px-1.5" onClick={handleResetApproved}>
+                <RotateCcw className="h-3 w-3 mr-0.5" />Reset
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>
