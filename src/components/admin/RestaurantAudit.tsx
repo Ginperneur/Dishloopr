@@ -56,6 +56,7 @@ export function RestaurantAudit() {
   const [restaurants, setRestaurants] = useState<AuditRestaurant[]>([]);
   const [filterLevel, setFilterLevel] = useState<FilterLevel>('all');
   const [deactivating, setDeactivating] = useState<string | null>(null);
+  const [fixing, setFixing] = useState<string | null>(null); // "restaurantId:flagLabel"
   const [approvedIds, setApprovedIds] = useState<Set<string>>(() => getStoredIds(APPROVED_STORAGE_KEY));
   const [rejectedIds, setRejectedIds] = useState<Set<string>>(() => getStoredIds(REJECTED_STORAGE_KEY));
 
