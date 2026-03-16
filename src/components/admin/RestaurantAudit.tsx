@@ -229,12 +229,16 @@ export function RestaurantAudit() {
     }
   }, [restaurants, filterLevel, approvedIds]);
 
-  const stats = useMemo(() => ({
-    total: restaurants.length,
-    critical: restaurants.filter(r => r.risk_score >= 6).length,
-    warning: restaurants.filter(r => r.risk_score >= 2 && r.risk_score < 6).length,
-    clean: restaurants.filter(r => r.risk_score === 0).length,
-  }), [restaurants]);
+  const stats = useMemo(() => {
+    const unapproved = restaurants.filter(r => !approvedIds.has(r.id));
+    return {
+      total: restaurants.length,
+      approved: approvedIds.size,
+      critical: unapproved.filter(r => r.risk_score >= 6).length,
+      warning: unapproved.filter(r => r.risk_score >= 2 && r.risk_score < 6).length,
+      clean: unapproved.filter(r => r.risk_score === 0).length,
+    };
+  }, [restaurants, approvedIds]);
 
   const handleDeactivate = async (id: string) => {
     setDeactivating(id);
