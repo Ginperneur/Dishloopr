@@ -35,19 +35,20 @@ interface AuditFlag {
   detail: string;
 }
 
-type FilterLevel = 'all' | 'critical' | 'warning' | 'clean';
+type FilterLevel = 'all' | 'critical' | 'warning' | 'clean' | 'approved' | 'rejected';
 
 const APPROVED_STORAGE_KEY = 'dishloopr_audit_approved';
+const REJECTED_STORAGE_KEY = 'dishloopr_audit_rejected';
 
-function getApprovedIds(): Set<string> {
+function getStoredIds(key: string): Set<string> {
   try {
-    const stored = localStorage.getItem(APPROVED_STORAGE_KEY);
+    const stored = localStorage.getItem(key);
     return stored ? new Set(JSON.parse(stored)) : new Set();
   } catch { return new Set(); }
 }
 
-function saveApprovedIds(ids: Set<string>) {
-  localStorage.setItem(APPROVED_STORAGE_KEY, JSON.stringify([...ids]));
+function saveStoredIds(key: string, ids: Set<string>) {
+  localStorage.setItem(key, JSON.stringify([...ids]));
 }
 
 export function RestaurantAudit() {
@@ -55,7 +56,8 @@ export function RestaurantAudit() {
   const [restaurants, setRestaurants] = useState<AuditRestaurant[]>([]);
   const [filterLevel, setFilterLevel] = useState<FilterLevel>('all');
   const [deactivating, setDeactivating] = useState<string | null>(null);
-  const [approvedIds, setApprovedIds] = useState<Set<string>>(getApprovedIds);
+  const [approvedIds, setApprovedIds] = useState<Set<string>>(() => getStoredIds(APPROVED_STORAGE_KEY));
+  const [rejectedIds, setRejectedIds] = useState<Set<string>>(() => getStoredIds(REJECTED_STORAGE_KEY));
 
   useEffect(() => {
     runAudit();
