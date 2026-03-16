@@ -461,6 +461,24 @@ export default function AdminPanel() {
         <div ref={tabsRef}>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
          <div className="space-y-2">
+             {/* Group: Dashboard */}
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold px-1 mb-1">Dashboard</p>
+              <TabsList className="flex-wrap h-auto gap-1 bg-muted/50 p-1 w-full justify-start">
+                <TabsTrigger value="kpi" className="gap-1.5 text-xs">
+                  <TrendingUp className="h-3.5 w-3.5" />
+                  <span>KPI's</span>
+                </TabsTrigger>
+                <TabsTrigger value="revenue" className="gap-1.5 text-xs">
+                  <Crown className="h-3.5 w-3.5" />
+                  <span>Omzet</span>
+                </TabsTrigger>
+                <TabsTrigger value="user-insights" className="gap-1.5 text-xs">
+                  <Users className="h-3.5 w-3.5" />
+                  <span>User Insights</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
             {/* Group: Content */}
             <div>
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold px-1 mb-1">Content</p>
