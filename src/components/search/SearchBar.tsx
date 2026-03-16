@@ -700,6 +700,52 @@ export function SearchBar({
           }}
         />
       )}
+
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {showCityDropdown && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 6 }}
+              transition={{ duration: 0.15 }}
+              className="hidden md:block fixed rounded-xl overflow-hidden z-[9999]"
+              style={{
+                top: cityDropdownPosition.top,
+                left: cityDropdownPosition.left,
+                width: cityDropdownPosition.width,
+                maxHeight: cityDropdownPosition.maxHeight,
+                backgroundColor: 'hsl(var(--background))',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                border: '2px solid hsl(var(--border))',
+              }}
+            >
+              <div className="overflow-y-auto overscroll-contain" style={{ maxHeight: cityDropdownPosition.maxHeight - 4 }}>
+                <button
+                  onClick={() => handleCitySelect('all')}
+                  className={`w-full px-4 py-3.5 text-left hover:bg-muted active:bg-muted/80 transition-colors ${
+                    cityId === 'all' ? 'bg-primary/10 text-primary font-semibold' : ''
+                  }`}
+                >
+                  {t('cities.all')}
+                </button>
+                {cities.map((city) => (
+                  <button
+                    key={city.id}
+                    onClick={() => handleCitySelect(city.id)}
+                    className={`w-full px-4 py-3.5 text-left hover:bg-muted active:bg-muted/80 transition-colors ${
+                      cityId === city.id ? 'bg-primary/10 text-primary font-semibold' : ''
+                    }`}
+                  >
+                    {city.name}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }
