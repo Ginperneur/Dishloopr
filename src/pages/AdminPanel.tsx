@@ -26,7 +26,9 @@ import {
   Image,
   Globe,
   Download,
-  ShieldAlert
+  ShieldAlert,
+  Zap,
+  Clock
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -72,6 +74,12 @@ import { DuplicateMerger } from '@/components/admin/DuplicateMerger';
 import { CompletenessScore } from '@/components/admin/CompletenessScore';
 import { RevenueDashboard } from '@/components/admin/RevenueDashboard';
 import { UserInsights } from '@/components/admin/UserInsights';
+import { SearchAnalytics } from '@/components/admin/SearchAnalytics';
+import { GeographicCoverage } from '@/components/admin/GeographicCoverage';
+import { SeoHealthMonitor } from '@/components/admin/SeoHealthMonitor';
+import { BulkActionsManager } from '@/components/admin/BulkActionsManager';
+import { AuditTrail } from '@/components/admin/AuditTrail';
+import { ChurnRiskDashboard } from '@/components/admin/ChurnRiskDashboard';
 
 interface Stats {
   totalUsers: number;
@@ -477,6 +485,18 @@ export default function AdminPanel() {
                   <Users className="h-3.5 w-3.5" />
                   <span>User Insights</span>
                 </TabsTrigger>
+                <TabsTrigger value="search-analytics" className="gap-1.5 text-xs">
+                  <Search className="h-3.5 w-3.5" />
+                  <span>Zoek Analytics</span>
+                </TabsTrigger>
+                <TabsTrigger value="geographic" className="gap-1.5 text-xs">
+                  <MapPin className="h-3.5 w-3.5" />
+                  <span>Dekking</span>
+                </TabsTrigger>
+                <TabsTrigger value="churn" className="gap-1.5 text-xs">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  <span>Churn Risk</span>
+                </TabsTrigger>
               </TabsList>
             </div>
             {/* Group: Content */}
@@ -606,6 +626,18 @@ export default function AdminPanel() {
                 <TabsTrigger value="data-export" className="gap-1.5 text-xs">
                   <Download className="h-3.5 w-3.5" />
                   <span>Export</span>
+                </TabsTrigger>
+                <TabsTrigger value="seo-health" className="gap-1.5 text-xs">
+                  <Globe className="h-3.5 w-3.5" />
+                  <span>SEO Health</span>
+                </TabsTrigger>
+                <TabsTrigger value="bulk-actions" className="gap-1.5 text-xs">
+                  <Zap className="h-3.5 w-3.5" />
+                  <span>Bulk Acties</span>
+                </TabsTrigger>
+                <TabsTrigger value="audit-trail" className="gap-1.5 text-xs">
+                  <Clock className="h-3.5 w-3.5" />
+                  <span>Audit Trail</span>
                 </TabsTrigger>
                 <TabsTrigger value="activity" className="gap-1.5 text-xs">
                   <Settings className="h-3.5 w-3.5" />
@@ -1127,6 +1159,30 @@ export default function AdminPanel() {
 
           <TabsContent value="completeness">
             <CompletenessScore />
+          </TabsContent>
+
+          <TabsContent value="search-analytics">
+            <SearchAnalytics />
+          </TabsContent>
+
+          <TabsContent value="geographic">
+            <GeographicCoverage />
+          </TabsContent>
+
+          <TabsContent value="seo-health">
+            <SeoHealthMonitor />
+          </TabsContent>
+
+          <TabsContent value="bulk-actions">
+            <BulkActionsManager />
+          </TabsContent>
+
+          <TabsContent value="audit-trail">
+            <AuditTrail />
+          </TabsContent>
+
+          <TabsContent value="churn">
+            <ChurnRiskDashboard />
           </TabsContent>
         </Tabs>
         </div>
