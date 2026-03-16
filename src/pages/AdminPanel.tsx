@@ -66,6 +66,12 @@ import { NewsletterManager } from '@/components/admin/NewsletterManager';
 import { MenuScraper } from '@/components/admin/MenuScraper';
 import { DataExportManager } from '@/components/admin/DataExportManager';
 import { RestaurantAudit } from '@/components/admin/RestaurantAudit';
+import { KpiDashboard } from '@/components/admin/KpiDashboard';
+import { BrokenImageChecker } from '@/components/admin/BrokenImageChecker';
+import { DuplicateMerger } from '@/components/admin/DuplicateMerger';
+import { CompletenessScore } from '@/components/admin/CompletenessScore';
+import { RevenueDashboard } from '@/components/admin/RevenueDashboard';
+import { UserInsights } from '@/components/admin/UserInsights';
 
 interface Stats {
   totalUsers: number;
