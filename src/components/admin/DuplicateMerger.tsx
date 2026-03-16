@@ -111,6 +111,59 @@ export function DuplicateMerger() {
     setLoading(false);
   };
 
+  const mergeAll = async () => {
+    if (!confirm(`Weet je zeker dat je ALLE ${groups.length} groepen wilt samenvoegen? Dit kan niet ongedaan worden.`)) return;
+    setMerging('__all__');
+    let merged = 0;
+    for (const group of [...groups]) {
+      const keepId = keepIds[group.key];
+      if (!keepId) continue;
+      const removeIds = group.restaurants.filter(r => r.id !== keepId).map(r => r.id);
+      const keepRestaurant = group.restaurants.find(r => r.id === keepId)!;
+      try {
+        for (const removeId of removeIds) {
+          await supabase.from('reviews').update({ restaurant_id: keepId }).eq('restaurant_id', removeId);
+        }
+        for (const removeId of removeIds) {
+          const { data: existingDishes } = await supabase.from('restaurant_dishes').select('dish_id').eq('restaurant_id', keepId);
+          const existingDishIds = new Set((existingDishes || []).map((d: any) => d.dish_id));
+          const { data: moveDishes } = await supabase.from('restaurant_dishes').select('*').eq('restaurant_id', removeId);
+          for (const dish of (moveDishes || [])) {
+            if (!existingDishIds.has(dish.dish_id)) {
+              await supabase.from('restaurant_dishes').update({ restaurant_id: keepId }).eq('id', dish.id);
+            } else {
+              await supabase.from('restaurant_dishes').delete().eq('id', dish.id);
+            }
+          }
+        }
+        for (const removeId of removeIds) {
+          await supabase.from('favorites').update({ restaurant_id: keepId }).eq('restaurant_id', removeId);
+        }
+        for (const removeId of removeIds) {
+          await supabase.from('menu_items').update({ restaurant_id: keepId }).eq('restaurant_id', removeId);
+        }
+        for (const removeId of removeIds) {
+          await supabase.from('restaurants').delete().eq('id', removeId);
+        }
+        const { count } = await supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('restaurant_id', keepId);
+        await supabase.from('restaurants').update({ review_count: count || 0 }).eq('id', keepId);
+        await logActivity({
+          actionType: 'deduplicate',
+          entityType: 'restaurant',
+          entityId: keepId,
+          entityName: keepRestaurant.name,
+          details: { merged_ids: removeIds, type: group.type }
+        });
+        merged++;
+        setGroups(prev => prev.filter(g => g.key !== group.key));
+      } catch (err) {
+        console.error(`Merge failed for ${group.key}`, err);
+      }
+    }
+    toast.success(`${merged} groepen samengevoegd`);
+    setMerging(null);
+  };
+
   const mergeGroup = async (group: DuplicateGroup) => {
     const keepId = keepIds[group.key];
     if (!keepId) {
@@ -207,10 +260,22 @@ export function DuplicateMerger() {
               {groups.length} groepen met mogelijke duplicaten gevonden
             </CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={findDuplicates}>
-            <RefreshCw className="h-4 w-4 mr-1" />
-            Opnieuw zoeken
-          </Button>
+          <div className="flex gap-2">
+            {groups.length > 0 && (
+              <Button
+                size="sm"
+                onClick={mergeAll}
+                disabled={!!merging}
+              >
+                <GitMerge className="h-4 w-4 mr-1" />
+                {merging === '__all__' ? 'Bezig...' : `Alles samenvoegen (${groups.length})`}
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={findDuplicates}>
+              <RefreshCw className="h-4 w-4 mr-1" />
+              Opnieuw zoeken
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
