@@ -151,6 +151,8 @@ export default function AdminPanel() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedRestaurant, setSelectedRestaurant] = useState<any>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [userModalOpen, setUserModalOpen] = useState(false);
   
   // Pagination states
   const [restaurantPage, setRestaurantPage] = useState(1);
