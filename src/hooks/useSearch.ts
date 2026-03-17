@@ -262,11 +262,21 @@ export function useSearch() {
       }
     }
 
+    // When query matches known dishes, ONLY show restaurants that have those dishes
+    const hasDishMatches = matchingDishes.length > 0;
+
     // Score all restaurants using ranking engine
     const scoredResults: SearchResult[] = [];
     const totalQueryTerms = isMultiDish ? queryTerms.length : 1;
 
     for (const restaurant of restaurants) {
+      const linkedDishes = restaurantDishMap.get(restaurant.id) || null;
+      
+      // If the search matched known dishes, skip restaurants without that dish
+      if (hasDishMatches && (!linkedDishes || linkedDishes.length === 0)) {
+        continue;
+      }
+
       const scored = scoreRestaurant(
         {
           id: restaurant.id,
@@ -278,7 +288,7 @@ export function useSearch() {
           is_top_listing: restaurant.is_top_listing,
           chain_id: restaurant.chain_id,
           created_at: restaurant.created_at,
-          linkedDishes: restaurantDishMap.get(restaurant.id) || null,
+          linkedDishes,
           isSponsored: sponsoredRestaurants.has(restaurant.id),
           queryTermsCovered: restaurantTermCoverage.get(restaurant.id) || 0,
           totalQueryTerms,
