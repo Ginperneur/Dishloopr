@@ -157,6 +157,7 @@ export function SearchBar({
     }
     setSelectedDishes(updatedDishes);
     setQuery('');
+    suppressSuggestionsRef.current = true;
     setShowSuggestions(false);
     // Don't auto-search on chip add — let user add more dishes
     // But if in compact mode (search page), auto-search
