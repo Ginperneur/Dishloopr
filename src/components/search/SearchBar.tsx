@@ -101,7 +101,7 @@ export function SearchBar({
       );
       setCuisineSuggestions(filteredCuisines.slice(0, 3));
 
-      setShowSuggestions(filteredDishes.length > 0 || filteredCuisines.length > 0 || filteredRestaurants.length > 0);
+      setShowSuggestions(!suppressSuggestionsRef.current && (filteredDishes.length > 0 || filteredCuisines.length > 0 || filteredRestaurants.length > 0));
     } else {
       setSuggestions([]);
       setRestaurantSuggestions([]);
