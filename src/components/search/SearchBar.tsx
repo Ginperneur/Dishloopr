@@ -53,6 +53,7 @@ export function SearchBar({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const suppressSuggestionsRef = useRef(false);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const cityButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -100,7 +101,7 @@ export function SearchBar({
       );
       setCuisineSuggestions(filteredCuisines.slice(0, 3));
 
-      setShowSuggestions(filteredDishes.length > 0 || filteredCuisines.length > 0 || filteredRestaurants.length > 0);
+      setShowSuggestions(!suppressSuggestionsRef.current && (filteredDishes.length > 0 || filteredCuisines.length > 0 || filteredRestaurants.length > 0));
     } else {
       setSuggestions([]);
       setRestaurantSuggestions([]);
@@ -156,6 +157,7 @@ export function SearchBar({
     }
     setSelectedDishes(updatedDishes);
     setQuery('');
+    suppressSuggestionsRef.current = true;
     setShowSuggestions(false);
     // Don't auto-search on chip add — let user add more dishes
     // But if in compact mode (search page), auto-search
@@ -282,7 +284,7 @@ export function SearchBar({
               ref={inputRef}
               type="text"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => { suppressSuggestionsRef.current = false; setQuery(e.target.value); }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSearch();
                 if (e.key === 'Backspace' && !query && selectedDishes.length > 0) {
