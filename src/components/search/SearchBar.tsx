@@ -284,7 +284,7 @@ export function SearchBar({
               ref={inputRef}
               type="text"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => { suppressSuggestionsRef.current = false; setQuery(e.target.value); }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSearch();
                 if (e.key === 'Backspace' && !query && selectedDishes.length > 0) {
