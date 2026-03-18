@@ -1235,6 +1235,10 @@ export default function AdminPanel() {
           <TabsContent value="churn">
             <ChurnRiskDashboard />
           </TabsContent>
+
+          <TabsContent value="claim-analytics">
+            <ClaimAnalytics />
+          </TabsContent>
         </Tabs>
         </div>
 
