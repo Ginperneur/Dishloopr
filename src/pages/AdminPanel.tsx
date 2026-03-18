@@ -501,6 +501,10 @@ export default function AdminPanel() {
                   <AlertCircle className="h-3.5 w-3.5" />
                   <span>Churn Risk</span>
                 </TabsTrigger>
+                <TabsTrigger value="claim-analytics" className="gap-1.5 text-xs">
+                  <Shield className="h-3.5 w-3.5" />
+                  <span>Claim Analyse</span>
+                </TabsTrigger>
               </TabsList>
             </div>
             {/* Group: Content */}
