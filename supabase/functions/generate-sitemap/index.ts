@@ -84,22 +84,8 @@ serve(async (req) => {
       addUrl(`${SITE_URL}/restaurant/${r.slug}`, r.updated_at?.split('T')[0] || now, 'weekly', '0.8');
     }
 
-    // Search pages per city
-    for (const city of cities) {
-      addUrl(`${SITE_URL}/search?city=${city.slug}`, now, 'daily', '0.7');
-    }
-
-    // Search pages per popular dish
-    for (const dish of dishes.slice(0, 50)) {
-      addUrl(`${SITE_URL}/search?dish=${encodeURIComponent(dish.slug)}`, now, 'daily', '0.7');
-    }
-
-    // City + dish combinations (top 20 dishes per city)
-    for (const city of cities) {
-      for (const dish of dishes.slice(0, 20)) {
-        addUrl(`${SITE_URL}/search?city=${city.slug}&amp;dish=${encodeURIComponent(dish.slug)}`, now, 'daily', '0.6');
-      }
-    }
+    // Note: Search pages with query parameters are NOT included in the sitemap
+    // to avoid canonical duplication issues. Use SEO landing pages (/eten/[slug]) instead.
 
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

@@ -220,7 +220,8 @@ export default function SearchPage() {
     ? `Vind de beste ${dishQuery} restaurants${selectedCityName ? ` in ${selectedCityName}` : ' in Nederland'}. Vergelijk ${sortedResults.length}+ opties, bekijk reviews en reserveer direct.`
     : `Zoek en ontdek ${sortedResults.length}+ restaurants${selectedCityName ? ` in ${selectedCityName}` : ' in Nederland'}. Filter op gerecht, sfeer en prijs.`;
 
-  const searchCanonical = `https://dishloopr.com/search${dishQuery ? `?dish=${encodeURIComponent(dishQuery)}` : ''}${selectedCityName && selectedCityId !== 'all' ? `${dishQuery ? '&' : '?'}city=${selectedCityId}` : ''}`;
+  // Always use clean canonical to avoid duplicate indexing of filtered views
+  const hasFilters = !!(dishQuery || (selectedCityId && selectedCityId !== 'all'));
 
   return (
     <Layout>
@@ -228,7 +229,8 @@ export default function SearchPage() {
         title={`${pageTitle} | Dishloopr`}
         description={pageDescription}
         keywords={[dishQuery || 'restaurants', 'eten', 'uit eten', selectedCityName || 'Nederland', 'reviews'].filter(Boolean) as string[]}
-        canonical={searchCanonical}
+        canonical="https://dishloopr.com/search"
+        noindex={hasFilters}
         structuredData={createBreadcrumbSchema([
           { name: 'Home', url: 'https://dishloopr.com' },
           { name: pageTitle, url: 'https://dishloopr.com/search' },
