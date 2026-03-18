@@ -88,7 +88,8 @@ export function AddRestaurantModal({ onSuccess }: AddRestaurantModalProps) {
       phone: validatedData.phone || null,
       website_url: validatedData.website_url || null,
       price_level: validatedData.price_level,
-      is_active: true
+      is_active: true,
+      added_by_source: 'admin',
     }).select('id').single();
 
     setLoading(false);

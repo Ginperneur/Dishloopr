@@ -80,6 +80,7 @@ import { SeoHealthMonitor } from '@/components/admin/SeoHealthMonitor';
 import { BulkActionsManager } from '@/components/admin/BulkActionsManager';
 import { AuditTrail } from '@/components/admin/AuditTrail';
 import { ChurnRiskDashboard } from '@/components/admin/ChurnRiskDashboard';
+import { ClaimAnalytics } from '@/components/admin/ClaimAnalytics';
 import { UserProfileModal } from '@/components/admin/UserProfileModal';
 
 interface Stats {
@@ -499,6 +500,10 @@ export default function AdminPanel() {
                 <TabsTrigger value="churn" className="gap-1.5 text-xs">
                   <AlertCircle className="h-3.5 w-3.5" />
                   <span>Churn Risk</span>
+                </TabsTrigger>
+                <TabsTrigger value="claim-analytics" className="gap-1.5 text-xs">
+                  <Shield className="h-3.5 w-3.5" />
+                  <span>Claim Analyse</span>
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -1229,6 +1234,10 @@ export default function AdminPanel() {
 
           <TabsContent value="churn">
             <ChurnRiskDashboard />
+          </TabsContent>
+
+          <TabsContent value="claim-analytics">
+            <ClaimAnalytics />
           </TabsContent>
         </Tabs>
         </div>

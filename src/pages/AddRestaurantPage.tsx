@@ -273,6 +273,7 @@ export default function AddRestaurantPage() {
           claimed_by_owner_id: user.id,
           claim_status: 'claimed_unverified',
           is_active: false,
+          added_by_source: 'owner',
         })
         .select('id')
         .single();

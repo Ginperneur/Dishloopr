@@ -1591,6 +1591,7 @@ export type Database = {
       restaurants: {
         Row: {
           accepts_routed_demand: boolean | null
+          added_by_source: string
           address: string
           ambience_tags: string[] | null
           chain_id: string | null
@@ -1633,6 +1634,7 @@ export type Database = {
         }
         Insert: {
           accepts_routed_demand?: boolean | null
+          added_by_source?: string
           address: string
           ambience_tags?: string[] | null
           chain_id?: string | null
@@ -1675,6 +1677,7 @@ export type Database = {
         }
         Update: {
           accepts_routed_demand?: boolean | null
+          added_by_source?: string
           address?: string
           ambience_tags?: string[] | null
           chain_id?: string | null
