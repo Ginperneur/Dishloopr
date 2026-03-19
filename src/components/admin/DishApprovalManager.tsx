@@ -377,6 +377,9 @@ export function DishApprovalManager() {
                 <X className="w-4 h-4 mr-2" />
                 Wijs alle lage confidence af (≤40%)
               </Button>
+              <DuplicateDishChecker onCleanupDone={async () => {
+                await Promise.all([fetchDishes(), fetchStatusCounts()]);
+              }} />
               <Button variant="outline" size="sm" onClick={async () => {
                 if (!confirm('Wil je dubbele restaurant-gerecht koppelingen opschonen? De koppeling met de hoogste confidence wordt behouden.')) return;
                 setDeduplicating(true);
