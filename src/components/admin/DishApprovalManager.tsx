@@ -531,6 +531,14 @@ export function DishApprovalManager() {
                           )}
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openEditDialog(item)}
+                            disabled={actionLoading.has(item.id)}
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
                           {item.status === 'suggested' && (
                             <>
                               <Button
