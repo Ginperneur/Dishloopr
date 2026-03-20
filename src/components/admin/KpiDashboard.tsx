@@ -2,13 +2,15 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { 
   Store, Users, MessageSquare, UtensilsCrossed, MapPin, 
   TrendingUp, TrendingDown, Crown, Shield, Eye, Star,
-  BarChart3, Activity
+  BarChart3, Activity, RefreshCw, Sparkles
 } from 'lucide-react';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { toast } from 'sonner';
 
 interface KpiData {
   totalRestaurants: number;
