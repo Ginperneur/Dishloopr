@@ -34,10 +34,37 @@ interface KpiData {
 export function KpiDashboard() {
   const [data, setData] = useState<KpiData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [deduping, setDeduping] = useState(false);
 
   useEffect(() => {
     fetchKpis();
   }, []);
+
+  const handleDedupeAndRefresh = async () => {
+    setDeduping(true);
+    try {
+      const [dishDedup, rdDedup] = await Promise.all([
+        supabase.rpc('deduplicate_dishes'),
+        supabase.rpc('deduplicate_restaurant_dishes'),
+      ]);
+      const dishesRemoved = (dishDedup.data as any)?.dishes_removed || 0;
+      const dupsRemoved = (rdDedup.data as any)?.duplicates_removed || 0;
+      toast.success(`Opgeschoond: ${dishesRemoved} dubbele gerechten, ${dupsRemoved} dubbele koppelingen verwijderd`);
+      await fetchKpis();
+    } catch (e) {
+      toast.error('Fout bij opschonen');
+    } finally {
+      setDeduping(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchKpis();
+    setRefreshing(false);
+    toast.success('Data vernieuwd');
+  };
 
   const fetchKpis = async () => {
     setLoading(true);
