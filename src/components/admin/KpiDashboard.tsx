@@ -186,6 +186,18 @@ export function KpiDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Actions */}
+      <div className="flex items-center gap-2 justify-end">
+        <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing || deduping}>
+          <RefreshCw className={`h-4 w-4 mr-1 ${refreshing ? 'animate-spin' : ''}`} />
+          Vernieuwen
+        </Button>
+        <Button variant="outline" size="sm" onClick={handleDedupeAndRefresh} disabled={deduping || refreshing}>
+          <Sparkles className={`h-4 w-4 mr-1 ${deduping ? 'animate-pulse' : ''}`} />
+          Opschonen & vernieuwen
+        </Button>
+      </div>
+
       {/* Key Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card>
