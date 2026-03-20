@@ -328,6 +328,66 @@ export function DishApprovalManager() {
     setLoading(false);
   };
 
+  const openEditDialog = async (item: DishItem) => {
+    setEditingItem(item);
+    setEditDishName(item.dish?.name || '');
+    // Fetch full restaurant_dish data for flags
+    const { data } = await supabase
+      .from('restaurant_dishes')
+      .select('course_type, is_signature, is_vegetarian, is_vegan, is_halal, is_gluten_free')
+      .eq('id', item.id)
+      .single();
+    if (data) {
+      setEditCourseType(data.course_type || 'hoofdgerecht');
+      setEditIsSignature(data.is_signature || false);
+      setEditIsVegetarian(data.is_vegetarian || false);
+      setEditIsVegan(data.is_vegan || false);
+      setEditIsHalal(data.is_halal || false);
+      setEditIsGlutenFree(data.is_gluten_free || false);
+    }
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingItem) return;
+    setEditSaving(true);
+
+    // Update dish name if changed
+    if (editDishName.trim() && editDishName !== editingItem.dish?.name) {
+      const { error: dishError } = await supabase
+        .from('dishes')
+        .update({ name: editDishName.trim() })
+        .eq('id', editingItem.dish_id);
+      if (dishError) {
+        toast.error('Kon gerechtnaam niet bijwerken');
+        setEditSaving(false);
+        return;
+      }
+    }
+
+    // Update restaurant_dish flags
+    const { error } = await supabase
+      .from('restaurant_dishes')
+      .update({
+        course_type: editCourseType,
+        is_signature: editIsSignature,
+        is_vegetarian: editIsVegetarian,
+        is_vegan: editIsVegan,
+        is_halal: editIsHalal,
+        is_gluten_free: editIsGlutenFree,
+      })
+      .eq('id', editingItem.id);
+
+    if (error) {
+      toast.error('Kon gerecht niet bijwerken');
+    } else {
+      toast.success('Gerecht bijgewerkt');
+      setEditDialogOpen(false);
+      await fetchDishes();
+    }
+    setEditSaving(false);
+  };
+
   const getConfidenceBadge = (confidence: number) => {
     if (confidence >= 0.8) return <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-primary/20 text-primary border-primary/30">Hoog ({Math.round(confidence * 100)}%)</span>;
     if (confidence >= 0.5) return <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-accent text-accent-foreground border-accent">Gemiddeld ({Math.round(confidence * 100)}%)</span>;
