@@ -630,6 +630,68 @@ export function DishApprovalManager() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Gerecht bewerken</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Gerechtnaam</Label>
+              <Input value={editDishName} onChange={(e) => setEditDishName(e.target.value)} />
+            </div>
+            <div>
+              <Label>Restaurant</Label>
+              <Input value={editingItem?.restaurant?.name || ''} disabled className="opacity-60" />
+            </div>
+            <div>
+              <Label>Gang</Label>
+              <Select value={editCourseType} onValueChange={setEditCourseType}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="voorgerecht">Voorgerecht</SelectItem>
+                  <SelectItem value="hoofdgerecht">Hoofdgerecht</SelectItem>
+                  <SelectItem value="dessert">Dessert</SelectItem>
+                  <SelectItem value="bijgerecht">Bijgerecht</SelectItem>
+                  <SelectItem value="snack">Snack</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <Label className="text-sm">Signature</Label>
+                <Switch checked={editIsSignature} onCheckedChange={setEditIsSignature} />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <Label className="text-sm">Vegetarisch</Label>
+                <Switch checked={editIsVegetarian} onCheckedChange={setEditIsVegetarian} />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <Label className="text-sm">Vegan</Label>
+                <Switch checked={editIsVegan} onCheckedChange={setEditIsVegan} />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <Label className="text-sm">Halal</Label>
+                <Switch checked={editIsHalal} onCheckedChange={setEditIsHalal} />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border p-3 col-span-2">
+                <Label className="text-sm">Glutenvrij</Label>
+                <Switch checked={editIsGlutenFree} onCheckedChange={setEditIsGlutenFree} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Annuleren</Button>
+            <Button onClick={handleSaveEdit} disabled={editSaving}>
+              {editSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Opslaan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
