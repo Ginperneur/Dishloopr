@@ -2,13 +2,15 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { 
   Store, Users, MessageSquare, UtensilsCrossed, MapPin, 
   TrendingUp, TrendingDown, Crown, Shield, Eye, Star,
-  BarChart3, Activity
+  BarChart3, Activity, RefreshCw, Sparkles
 } from 'lucide-react';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { toast } from 'sonner';
 
 interface KpiData {
   totalRestaurants: number;
@@ -32,10 +34,37 @@ interface KpiData {
 export function KpiDashboard() {
   const [data, setData] = useState<KpiData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [deduping, setDeduping] = useState(false);
 
   useEffect(() => {
     fetchKpis();
   }, []);
+
+  const handleDedupeAndRefresh = async () => {
+    setDeduping(true);
+    try {
+      const [dishDedup, rdDedup] = await Promise.all([
+        supabase.rpc('deduplicate_dishes'),
+        supabase.rpc('deduplicate_restaurant_dishes'),
+      ]);
+      const dishesRemoved = (dishDedup.data as any)?.dishes_removed || 0;
+      const dupsRemoved = (rdDedup.data as any)?.duplicates_removed || 0;
+      toast.success(`Opgeschoond: ${dishesRemoved} dubbele gerechten, ${dupsRemoved} dubbele koppelingen verwijderd`);
+      await fetchKpis();
+    } catch (e) {
+      toast.error('Fout bij opschonen');
+    } finally {
+      setDeduping(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchKpis();
+    setRefreshing(false);
+    toast.success('Data vernieuwd');
+  };
 
   const fetchKpis = async () => {
     setLoading(true);
@@ -157,6 +186,18 @@ export function KpiDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Actions */}
+      <div className="flex items-center gap-2 justify-end">
+        <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing || deduping}>
+          <RefreshCw className={`h-4 w-4 mr-1 ${refreshing ? 'animate-spin' : ''}`} />
+          Vernieuwen
+        </Button>
+        <Button variant="outline" size="sm" onClick={handleDedupeAndRefresh} disabled={deduping || refreshing}>
+          <Sparkles className={`h-4 w-4 mr-1 ${deduping ? 'animate-pulse' : ''}`} />
+          Opschonen & vernieuwen
+        </Button>
+      </div>
+
       {/* Key Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card>
