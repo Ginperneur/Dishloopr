@@ -6,9 +6,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Check, X, Trash2, Loader2, Search, Sparkles, AlertCircle, ChevronLeft, ChevronRight, Copy } from 'lucide-react';
+import { Check, X, Trash2, Loader2, Search, Sparkles, AlertCircle, ChevronLeft, ChevronRight, Copy, Edit2 } from 'lucide-react';
 import { DuplicateDishChecker } from './DuplicateDishChecker';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -55,6 +57,16 @@ export function DishApprovalManager() {
   });
   const [actionLoading, setActionLoading] = useState<Set<string>>(new Set());
   const [deduplicating, setDeduplicating] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<DishItem | null>(null);
+  const [editDishName, setEditDishName] = useState('');
+  const [editCourseType, setEditCourseType] = useState('hoofdgerecht');
+  const [editIsSignature, setEditIsSignature] = useState(false);
+  const [editIsVegetarian, setEditIsVegetarian] = useState(false);
+  const [editIsVegan, setEditIsVegan] = useState(false);
+  const [editIsHalal, setEditIsHalal] = useState(false);
+  const [editIsGlutenFree, setEditIsGlutenFree] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
 
   // Map tab names to status values
   const tabToStatus: Record<string, string> = {
@@ -316,6 +328,66 @@ export function DishApprovalManager() {
     setLoading(false);
   };
 
+  const openEditDialog = async (item: DishItem) => {
+    setEditingItem(item);
+    setEditDishName(item.dish?.name || '');
+    // Fetch full restaurant_dish data for flags
+    const { data } = await supabase
+      .from('restaurant_dishes')
+      .select('course_type, is_signature, is_vegetarian, is_vegan, is_halal, is_gluten_free')
+      .eq('id', item.id)
+      .single();
+    if (data) {
+      setEditCourseType(data.course_type || 'hoofdgerecht');
+      setEditIsSignature(data.is_signature || false);
+      setEditIsVegetarian(data.is_vegetarian || false);
+      setEditIsVegan(data.is_vegan || false);
+      setEditIsHalal(data.is_halal || false);
+      setEditIsGlutenFree(data.is_gluten_free || false);
+    }
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingItem) return;
+    setEditSaving(true);
+
+    // Update dish name if changed
+    if (editDishName.trim() && editDishName !== editingItem.dish?.name) {
+      const { error: dishError } = await supabase
+        .from('dishes')
+        .update({ name: editDishName.trim() })
+        .eq('id', editingItem.dish_id);
+      if (dishError) {
+        toast.error('Kon gerechtnaam niet bijwerken');
+        setEditSaving(false);
+        return;
+      }
+    }
+
+    // Update restaurant_dish flags
+    const { error } = await supabase
+      .from('restaurant_dishes')
+      .update({
+        course_type: editCourseType,
+        is_signature: editIsSignature,
+        is_vegetarian: editIsVegetarian,
+        is_vegan: editIsVegan,
+        is_halal: editIsHalal,
+        is_gluten_free: editIsGlutenFree,
+      })
+      .eq('id', editingItem.id);
+
+    if (error) {
+      toast.error('Kon gerecht niet bijwerken');
+    } else {
+      toast.success('Gerecht bijgewerkt');
+      setEditDialogOpen(false);
+      await fetchDishes();
+    }
+    setEditSaving(false);
+  };
+
   const getConfidenceBadge = (confidence: number) => {
     if (confidence >= 0.8) return <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-primary/20 text-primary border-primary/30">Hoog ({Math.round(confidence * 100)}%)</span>;
     if (confidence >= 0.5) return <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-accent text-accent-foreground border-accent">Gemiddeld ({Math.round(confidence * 100)}%)</span>;
@@ -459,6 +531,14 @@ export function DishApprovalManager() {
                           )}
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openEditDialog(item)}
+                            disabled={actionLoading.has(item.id)}
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
                           {item.status === 'suggested' && (
                             <>
                               <Button
@@ -547,6 +627,68 @@ export function DishApprovalManager() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>Annuleren</Button>
             <Button variant="destructive" onClick={handleReject}>Afwijzen</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Gerecht bewerken</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Gerechtnaam</Label>
+              <Input value={editDishName} onChange={(e) => setEditDishName(e.target.value)} />
+            </div>
+            <div>
+              <Label>Restaurant</Label>
+              <Input value={editingItem?.restaurant?.name || ''} disabled className="opacity-60" />
+            </div>
+            <div>
+              <Label>Gang</Label>
+              <Select value={editCourseType} onValueChange={setEditCourseType}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="voorgerecht">Voorgerecht</SelectItem>
+                  <SelectItem value="hoofdgerecht">Hoofdgerecht</SelectItem>
+                  <SelectItem value="dessert">Dessert</SelectItem>
+                  <SelectItem value="bijgerecht">Bijgerecht</SelectItem>
+                  <SelectItem value="snack">Snack</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <Label className="text-sm">Signature</Label>
+                <Switch checked={editIsSignature} onCheckedChange={setEditIsSignature} />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <Label className="text-sm">Vegetarisch</Label>
+                <Switch checked={editIsVegetarian} onCheckedChange={setEditIsVegetarian} />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <Label className="text-sm">Vegan</Label>
+                <Switch checked={editIsVegan} onCheckedChange={setEditIsVegan} />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <Label className="text-sm">Halal</Label>
+                <Switch checked={editIsHalal} onCheckedChange={setEditIsHalal} />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border p-3 col-span-2">
+                <Label className="text-sm">Glutenvrij</Label>
+                <Switch checked={editIsGlutenFree} onCheckedChange={setEditIsGlutenFree} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Annuleren</Button>
+            <Button onClick={handleSaveEdit} disabled={editSaving}>
+              {editSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Opslaan
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
