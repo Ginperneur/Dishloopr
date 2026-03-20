@@ -57,6 +57,16 @@ export function DishApprovalManager() {
   });
   const [actionLoading, setActionLoading] = useState<Set<string>>(new Set());
   const [deduplicating, setDeduplicating] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<DishItem | null>(null);
+  const [editDishName, setEditDishName] = useState('');
+  const [editCourseType, setEditCourseType] = useState('hoofdgerecht');
+  const [editIsSignature, setEditIsSignature] = useState(false);
+  const [editIsVegetarian, setEditIsVegetarian] = useState(false);
+  const [editIsVegan, setEditIsVegan] = useState(false);
+  const [editIsHalal, setEditIsHalal] = useState(false);
+  const [editIsGlutenFree, setEditIsGlutenFree] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
 
   // Map tab names to status values
   const tabToStatus: Record<string, string> = {
