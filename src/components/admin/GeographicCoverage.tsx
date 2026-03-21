@@ -123,6 +123,7 @@ export function GeographicCoverage() {
         from += 1000;
       }
       setCityRestaurants(all);
+      setSelected(new Set());
     } catch (err) {
       console.error('Error fetching city restaurants:', err);
     } finally {
@@ -130,8 +131,55 @@ export function GeographicCoverage() {
     }
   };
 
-  const emptyCities = cityStats.filter(c => c.restaurantCount === 0);
-  const lowCoverage = cityStats.filter(c => c.restaurantCount > 0 && c.coverageScore < 40);
+  const toggleSelect = (id: string) => {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelected(next);
+  };
+
+  const selectAll = () => {
+    if (selected.size === cityRestaurants.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(cityRestaurants.map(r => r.id)));
+    }
+  };
+
+  const bulkDeactivate = async () => {
+    if (selected.size === 0) return;
+    if (!confirm(`${selected.size} restaurants deactiveren?`)) return;
+    setExecuting(true);
+    const ids = Array.from(selected);
+    for (let i = 0; i < ids.length; i += 200) {
+      const chunk = ids.slice(i, i + 200);
+      await supabase.from('restaurants').update({ is_active: false }).in('id', chunk);
+    }
+    toast.success(`${ids.length} restaurants gedeactiveerd`);
+    setSelected(new Set());
+    setExecuting(false);
+    if (selectedCity) openCityDetail(selectedCity);
+  };
+
+  const bulkDelete = async () => {
+    if (selected.size === 0) return;
+    if (!confirm(`${selected.size} restaurants PERMANENT verwijderen? Dit kan niet ongedaan worden!`)) return;
+    if (!confirm(`Weet je het zeker? Alle gekoppelde gerechten, reviews en favorieten worden ook verwijderd.`)) return;
+    setExecuting(true);
+    const ids = Array.from(selected);
+    for (let i = 0; i < ids.length; i += 200) {
+      const chunk = ids.slice(i, i + 200);
+      // Delete related data first
+      await supabase.from('restaurant_dishes').delete().in('restaurant_id', chunk);
+      await supabase.from('reviews').delete().in('restaurant_id', chunk);
+      await supabase.from('favorites').delete().in('restaurant_id', chunk);
+      await supabase.from('menu_items').delete().in('restaurant_id', chunk);
+      await supabase.from('restaurants').delete().in('id', chunk);
+    }
+    toast.success(`${ids.length} restaurants verwijderd`);
+    setSelected(new Set());
+    setExecuting(false);
+    if (selectedCity) openCityDetail(selectedCity);
+  };
 
   if (selectedCity) {
     return (
