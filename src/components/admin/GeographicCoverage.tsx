@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Loader2, AlertTriangle, TrendingUp } from 'lucide-react';
+import { MapPin, Loader2, AlertTriangle, ChevronLeft, Eye, CheckCircle, XCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -16,10 +17,23 @@ interface CityStats {
   coverageScore: number;
 }
 
+interface CityRestaurant {
+  id: string;
+  name: string;
+  slug: string;
+  is_active: boolean;
+  claimed_by_owner_id: string | null;
+  address: string;
+  cuisines: string[] | null;
+}
+
 export function GeographicCoverage() {
   const [cityStats, setCityStats] = useState<CityStats[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalRestaurants, setTotalRestaurants] = useState(0);
+  const [selectedCity, setSelectedCity] = useState<CityStats | null>(null);
+  const [cityRestaurants, setCityRestaurants] = useState<CityRestaurant[]>([]);
+  const [loadingRestaurants, setLoadingRestaurants] = useState(false);
 
   useEffect(() => {
     fetchCoverage();
@@ -28,7 +42,6 @@ export function GeographicCoverage() {
   const fetchCoverage = async () => {
     setLoading(true);
     try {
-      // Fetch all cities
       const { data: cities } = await supabase
         .from('cities')
         .select('id, name, is_active')
@@ -37,7 +50,6 @@ export function GeographicCoverage() {
 
       if (!cities) { setLoading(false); return; }
 
-      // Fetch all restaurants in batches
       let allRestaurants: any[] = [];
       let from = 0;
       while (true) {
@@ -53,7 +65,6 @@ export function GeographicCoverage() {
 
       setTotalRestaurants(allRestaurants.length);
 
-      // Group by city
       const cityMap = new Map<string, { total: number; active: number; claimed: number; geocoded: number }>();
       for (const r of allRestaurants) {
         const entry = cityMap.get(r.city_id) || { total: 0, active: 0, claimed: 0, geocoded: 0 };
@@ -66,7 +77,6 @@ export function GeographicCoverage() {
 
       const stats: CityStats[] = cities.map(city => {
         const data = cityMap.get(city.id) || { total: 0, active: 0, claimed: 0, geocoded: 0 };
-        // Coverage score: weighted average of geocoding, active %, and claimed %
         const geoScore = data.total > 0 ? (data.geocoded / data.total) * 40 : 0;
         const activeScore = data.total > 0 ? (data.active / data.total) * 30 : 0;
         const claimedScore = data.total > 0 ? (data.claimed / data.total) * 30 : 0;
@@ -90,8 +100,110 @@ export function GeographicCoverage() {
     }
   };
 
+  const openCityDetail = async (city: CityStats) => {
+    setSelectedCity(city);
+    setLoadingRestaurants(true);
+    try {
+      let all: any[] = [];
+      let from = 0;
+      while (true) {
+        const { data } = await supabase
+          .from('restaurants')
+          .select('id, name, slug, is_active, claimed_by_owner_id, address, cuisines')
+          .eq('city_id', city.id)
+          .order('name')
+          .range(from, from + 999);
+        if (!data || data.length === 0) break;
+        all = all.concat(data);
+        if (data.length < 1000) break;
+        from += 1000;
+      }
+      setCityRestaurants(all);
+    } catch (err) {
+      console.error('Error fetching city restaurants:', err);
+    } finally {
+      setLoadingRestaurants(false);
+    }
+  };
+
   const emptyCities = cityStats.filter(c => c.restaurantCount === 0);
   const lowCoverage = cityStats.filter(c => c.restaurantCount > 0 && c.coverageScore < 40);
+
+  if (selectedCity) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedCity(null)}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Restaurants in {selectedCity.name}
+              </CardTitle>
+              <CardDescription>
+                {selectedCity.restaurantCount} restaurants • {selectedCity.activeCount} actief • {selectedCity.claimedCount} geclaimd
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loadingRestaurants ? (
+            <div className="py-12 text-center">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Restaurant</TableHead>
+                  <TableHead>Adres</TableHead>
+                  <TableHead>Keukens</TableHead>
+                  <TableHead className="text-center">Actief</TableHead>
+                  <TableHead className="text-center">Geclaimd</TableHead>
+                  <TableHead className="w-12"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {cityRestaurants.map(r => (
+                  <TableRow key={r.id}>
+                    <TableCell className="font-medium text-sm">{r.name}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{r.address}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {(r.cuisines || []).slice(0, 3).map(c => (
+                          <Badge key={c} variant="outline" className="text-[10px] py-0">{c}</Badge>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {r.is_active ? <CheckCircle className="h-4 w-4 text-green-600 mx-auto" /> : <XCircle className="h-4 w-4 text-destructive mx-auto" />}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {r.claimed_by_owner_id ? <CheckCircle className="h-4 w-4 text-green-600 mx-auto" /> : <XCircle className="h-4 w-4 text-muted-foreground mx-auto" />}
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => window.open(`/restaurant/${r.slug}`, '_blank')}>
+                        <Eye className="h-3.5 w-3.5" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {cityRestaurants.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                      Geen restaurants in deze stad
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -101,7 +213,7 @@ export function GeographicCoverage() {
           Geografische Dekking
         </CardTitle>
         <CardDescription>
-          Restaurant-dichtheid en datakwaliteit per stad
+          Restaurant-dichtheid en datakwaliteit per stad — klik op een stad om restaurants te zien
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -111,7 +223,6 @@ export function GeographicCoverage() {
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Summary cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="p-3 rounded-lg bg-muted/50">
                 <p className="text-xs text-muted-foreground">Steden</p>
@@ -131,7 +242,6 @@ export function GeographicCoverage() {
               </div>
             </div>
 
-            {/* White spots alert */}
             {emptyCities.length > 0 && (
               <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
                 <div className="flex items-center gap-2 mb-2">
@@ -148,7 +258,6 @@ export function GeographicCoverage() {
               </div>
             )}
 
-            {/* City table */}
             <Table>
               <TableHeader>
                 <TableRow>
@@ -162,8 +271,8 @@ export function GeographicCoverage() {
               </TableHeader>
               <TableBody>
                 {cityStats.map(city => (
-                  <TableRow key={city.id}>
-                    <TableCell className="font-medium">{city.name}</TableCell>
+                  <TableRow key={city.id} className="cursor-pointer" onClick={() => openCityDetail(city)}>
+                    <TableCell className="font-medium text-primary hover:underline">{city.name}</TableCell>
                     <TableCell className="text-right">{city.restaurantCount}</TableCell>
                     <TableCell className="text-right">{city.activeCount}</TableCell>
                     <TableCell className="text-right">{city.claimedCount}</TableCell>
