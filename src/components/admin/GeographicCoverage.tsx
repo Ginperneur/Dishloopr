@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Loader2, AlertTriangle, ChevronLeft, Eye, CheckCircle, XCircle, EyeOff, Trash2 } from 'lucide-react';
+import { MapPin, Loader2, AlertTriangle, ChevronLeft, Eye, CheckCircle, XCircle, EyeOff, Trash2, Pencil } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -38,6 +42,13 @@ export function GeographicCoverage() {
   const [loadingRestaurants, setLoadingRestaurants] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [executing, setExecuting] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editRestaurant, setEditRestaurant] = useState<CityRestaurant | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editAddress, setEditAddress] = useState('');
+  const [editCuisines, setEditCuisines] = useState('');
+  const [editActive, setEditActive] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchCoverage();
@@ -181,6 +192,37 @@ export function GeographicCoverage() {
     if (selectedCity) openCityDetail(selectedCity);
   };
 
+  const openEdit = (r: CityRestaurant) => {
+    setEditRestaurant(r);
+    setEditName(r.name);
+    setEditAddress(r.address);
+    setEditCuisines((r.cuisines || []).join(', '));
+    setEditActive(r.is_active);
+    setEditOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editRestaurant) return;
+    setSaving(true);
+    const slug = editName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const cuisinesArr = editCuisines.split(',').map(c => c.trim()).filter(Boolean);
+    const { error } = await supabase
+      .from('restaurants')
+      .update({
+        name: editName,
+        slug,
+        address: editAddress,
+        cuisines: cuisinesArr,
+        is_active: editActive,
+      })
+      .eq('id', editRestaurant.id);
+    setSaving(false);
+    if (error) { toast.error('Opslaan mislukt'); return; }
+    toast.success(`${editName} bijgewerkt`);
+    setEditOpen(false);
+    if (selectedCity) openCityDetail(selectedCity);
+  };
+
   const emptyCities = cityStats.filter(c => c.restaurantCount === 0);
   const lowCoverage = cityStats.filter(c => c.restaurantCount > 0 && c.coverageScore < 40);
 
@@ -281,6 +323,9 @@ export function GeographicCoverage() {
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => window.open(`/restaurant/${r.slug}`, '_blank')}>
                           <Eye className="h-3.5 w-3.5" />
                         </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(r)}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -295,6 +340,40 @@ export function GeographicCoverage() {
               </Table>
             </div>
           )}
+
+          {/* Edit dialog */}
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Restaurant bewerken</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label>Naam</Label>
+                  <Input value={editName} onChange={e => setEditName(e.target.value)} />
+                </div>
+                <div>
+                  <Label>Adres</Label>
+                  <Input value={editAddress} onChange={e => setEditAddress(e.target.value)} />
+                </div>
+                <div>
+                  <Label>Keukens (kommagescheiden)</Label>
+                  <Input value={editCuisines} onChange={e => setEditCuisines(e.target.value)} placeholder="Italiaans, Pizza, Pasta" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>Actief</Label>
+                  <Switch checked={editActive} onCheckedChange={setEditActive} />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEditOpen(false)}>Annuleren</Button>
+                <Button onClick={handleSaveEdit} disabled={saving || !editName.trim()}>
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Opslaan
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </CardContent>
       </Card>
     );
