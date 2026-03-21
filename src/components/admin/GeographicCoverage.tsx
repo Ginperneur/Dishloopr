@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Loader2, AlertTriangle, ChevronLeft, Eye, CheckCircle, XCircle } from 'lucide-react';
+import { MapPin, Loader2, AlertTriangle, ChevronLeft, Eye, CheckCircle, XCircle, EyeOff, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 interface CityStats {
