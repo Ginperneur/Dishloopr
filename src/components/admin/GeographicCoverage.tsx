@@ -181,6 +181,9 @@ export function GeographicCoverage() {
     if (selectedCity) openCityDetail(selectedCity);
   };
 
+  const emptyCities = cityStats.filter(c => c.restaurantCount === 0);
+  const lowCoverage = cityStats.filter(c => c.restaurantCount > 0 && c.coverageScore < 40);
+
   if (selectedCity) {
     return (
       <Card>
@@ -206,51 +209,91 @@ export function GeographicCoverage() {
               <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Restaurant</TableHead>
-                  <TableHead>Adres</TableHead>
-                  <TableHead>Keukens</TableHead>
-                  <TableHead className="text-center">Actief</TableHead>
-                  <TableHead className="text-center">Geclaimd</TableHead>
-                  <TableHead className="w-12"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {cityRestaurants.map(r => (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-medium text-sm">{r.name}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{r.address}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {(r.cuisines || []).slice(0, 3).map(c => (
-                          <Badge key={c} variant="outline" className="text-[10px] py-0">{c}</Badge>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {r.is_active ? <CheckCircle className="h-4 w-4 text-green-600 mx-auto" /> : <XCircle className="h-4 w-4 text-destructive mx-auto" />}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {r.claimed_by_owner_id ? <CheckCircle className="h-4 w-4 text-green-600 mx-auto" /> : <XCircle className="h-4 w-4 text-muted-foreground mx-auto" />}
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => window.open(`/restaurant/${r.slug}`, '_blank')}>
-                        <Eye className="h-3.5 w-3.5" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {cityRestaurants.length === 0 && (
+            <div className="space-y-3">
+              {/* Bulk actions bar */}
+              {selected.size > 0 && (
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                  <Badge variant="outline">{selected.size} geselecteerd</Badge>
+                  <div className="flex-1" />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={bulkDeactivate}
+                    disabled={executing}
+                  >
+                    <EyeOff className="h-3.5 w-3.5 mr-1" />
+                    Deactiveren
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={bulkDelete}
+                    disabled={executing}
+                  >
+                    <Trash2 className="h-3.5 w-3.5 mr-1" />
+                    Verwijderen
+                  </Button>
+                </div>
+              )}
+
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                      Geen restaurants in deze stad
-                    </TableCell>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={selected.size === cityRestaurants.length && cityRestaurants.length > 0}
+                        onCheckedChange={selectAll}
+                      />
+                    </TableHead>
+                    <TableHead>Restaurant</TableHead>
+                    <TableHead>Adres</TableHead>
+                    <TableHead>Keukens</TableHead>
+                    <TableHead className="text-center">Actief</TableHead>
+                    <TableHead className="text-center">Geclaimd</TableHead>
+                    <TableHead className="w-12"></TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {cityRestaurants.map(r => (
+                    <TableRow key={r.id}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selected.has(r.id)}
+                          onCheckedChange={() => toggleSelect(r.id)}
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium text-sm">{r.name}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{r.address}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {(r.cuisines || []).slice(0, 3).map(c => (
+                            <Badge key={c} variant="outline" className="text-[10px] py-0">{c}</Badge>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {r.is_active ? <CheckCircle className="h-4 w-4 text-green-600 mx-auto" /> : <XCircle className="h-4 w-4 text-destructive mx-auto" />}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {r.claimed_by_owner_id ? <CheckCircle className="h-4 w-4 text-green-600 mx-auto" /> : <XCircle className="h-4 w-4 text-muted-foreground mx-auto" />}
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => window.open(`/restaurant/${r.slug}`, '_blank')}>
+                          <Eye className="h-3.5 w-3.5" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {cityRestaurants.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                        Geen restaurants in deze stad
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
