@@ -36,6 +36,8 @@ export function GeographicCoverage() {
   const [selectedCity, setSelectedCity] = useState<CityStats | null>(null);
   const [cityRestaurants, setCityRestaurants] = useState<CityRestaurant[]>([]);
   const [loadingRestaurants, setLoadingRestaurants] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [executing, setExecuting] = useState(false);
 
   useEffect(() => {
     fetchCoverage();
