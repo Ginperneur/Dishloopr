@@ -42,6 +42,13 @@ export function GeographicCoverage() {
   const [loadingRestaurants, setLoadingRestaurants] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [executing, setExecuting] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editRestaurant, setEditRestaurant] = useState<CityRestaurant | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editAddress, setEditAddress] = useState('');
+  const [editCuisines, setEditCuisines] = useState('');
+  const [editActive, setEditActive] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchCoverage();
