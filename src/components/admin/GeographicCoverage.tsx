@@ -192,6 +192,37 @@ export function GeographicCoverage() {
     if (selectedCity) openCityDetail(selectedCity);
   };
 
+  const openEdit = (r: CityRestaurant) => {
+    setEditRestaurant(r);
+    setEditName(r.name);
+    setEditAddress(r.address);
+    setEditCuisines((r.cuisines || []).join(', '));
+    setEditActive(r.is_active);
+    setEditOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editRestaurant) return;
+    setSaving(true);
+    const slug = editName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const cuisinesArr = editCuisines.split(',').map(c => c.trim()).filter(Boolean);
+    const { error } = await supabase
+      .from('restaurants')
+      .update({
+        name: editName,
+        slug,
+        address: editAddress,
+        cuisines: cuisinesArr,
+        is_active: editActive,
+      })
+      .eq('id', editRestaurant.id);
+    setSaving(false);
+    if (error) { toast.error('Opslaan mislukt'); return; }
+    toast.success(`${editName} bijgewerkt`);
+    setEditOpen(false);
+    if (selectedCity) openCityDetail(selectedCity);
+  };
+
   const emptyCities = cityStats.filter(c => c.restaurantCount === 0);
   const lowCoverage = cityStats.filter(c => c.restaurantCount > 0 && c.coverageScore < 40);
 
