@@ -323,6 +323,9 @@ export function GeographicCoverage() {
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => window.open(`/restaurant/${r.slug}`, '_blank')}>
                           <Eye className="h-3.5 w-3.5" />
                         </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(r)}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -337,6 +340,40 @@ export function GeographicCoverage() {
               </Table>
             </div>
           )}
+
+          {/* Edit dialog */}
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Restaurant bewerken</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label>Naam</Label>
+                  <Input value={editName} onChange={e => setEditName(e.target.value)} />
+                </div>
+                <div>
+                  <Label>Adres</Label>
+                  <Input value={editAddress} onChange={e => setEditAddress(e.target.value)} />
+                </div>
+                <div>
+                  <Label>Keukens (kommagescheiden)</Label>
+                  <Input value={editCuisines} onChange={e => setEditCuisines(e.target.value)} placeholder="Italiaans, Pizza, Pasta" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>Actief</Label>
+                  <Switch checked={editActive} onCheckedChange={setEditActive} />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEditOpen(false)}>Annuleren</Button>
+                <Button onClick={handleSaveEdit} disabled={saving || !editName.trim()}>
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Opslaan
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </CardContent>
       </Card>
     );
