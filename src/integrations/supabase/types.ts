@@ -525,6 +525,10 @@ export type Database = {
           cuisine_tags: string[] | null
           id: string
           is_active: boolean
+          is_gluten_free: boolean
+          is_halal: boolean
+          is_vegan: boolean
+          is_vegetarian: boolean
           name: string
           name_en: string | null
           search_count: number
@@ -538,6 +542,10 @@ export type Database = {
           cuisine_tags?: string[] | null
           id?: string
           is_active?: boolean
+          is_gluten_free?: boolean
+          is_halal?: boolean
+          is_vegan?: boolean
+          is_vegetarian?: boolean
           name: string
           name_en?: string | null
           search_count?: number
@@ -551,6 +559,10 @@ export type Database = {
           cuisine_tags?: string[] | null
           id?: string
           is_active?: boolean
+          is_gluten_free?: boolean
+          is_halal?: boolean
+          is_vegan?: boolean
+          is_vegetarian?: boolean
           name?: string
           name_en?: string | null
           search_count?: number
