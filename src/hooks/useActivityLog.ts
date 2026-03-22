@@ -2,7 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 type EntityType = 'restaurant' | 'dish' | 'city' | 'user' | 'role' | 'review' | 'claim' | 'collection' | 'sponsored_product' | 'setting' | 'menu_item';
-type ActionType = 'create' | 'update' | 'delete' | 'activate' | 'deactivate' | 'approve' | 'reject' | 'assign' | 'remove' | 'deduplicate';
+type ActionType = 'create' | 'update' | 'delete' | 'activate' | 'deactivate' | 'approve' | 'reject' | 'assign' | 'remove' | 'deduplicate' | 'ai_classify' | 'csv_import';
 
 interface LogActivityParams {
   actionType: ActionType;

@@ -595,18 +595,3 @@ function EditDishForm({ dish, onSave }: { dish: Dish; onSave: (dish: Dish) => vo
   );
 }
 
-interface Dish {
-  id: string;
-  name: string;
-  slug: string;
-  synonyms: string[];
-  cuisine_tags: string[];
-  seasonal_tags: string[];
-  search_count: number;
-  is_active: boolean;
-  is_halal: boolean;
-  is_vegetarian: boolean;
-  is_vegan: boolean;
-  is_gluten_free: boolean;
-  created_at: string;
-}
