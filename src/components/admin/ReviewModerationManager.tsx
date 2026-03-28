@@ -83,7 +83,7 @@ export function ReviewModerationManager() {
       toast.error('Fout bij bijwerken status');
       return;
     }
-    toast.success(`Review ${newStatus === 'published' ? 'goedgekeurd' : newStatus === 'rejected' ? 'afgewezen' : 'bijgewerkt'}`);
+    toast.success(`Review ${newStatus === 'published' ? 'goedgekeurd' : newStatus === 'flagged' ? 'gemarkeerd' : 'bijgewerkt'}`);
     fetchReviews();
   };
 
@@ -102,7 +102,7 @@ export function ReviewModerationManager() {
     total: reviews.length,
     published: reviews.filter(r => r.status === 'published').length,
     pending: reviews.filter(r => r.status === 'pending').length,
-    rejected: reviews.filter(r => r.status === 'rejected').length,
+    flagged: reviews.filter(r => r.status === 'flagged').length,
   };
 
   return (
@@ -129,8 +129,8 @@ export function ReviewModerationManager() {
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-red-600">{stats.rejected}</p>
-            <p className="text-xs text-muted-foreground">Afgewezen</p>
+            <p className="text-2xl font-bold text-destructive">{stats.flagged}</p>
+            <p className="text-xs text-muted-foreground">Gemarkeerd</p>
           </CardContent>
         </Card>
       </div>
@@ -154,7 +154,7 @@ export function ReviewModerationManager() {
             <SelectItem value="all">Alle statussen</SelectItem>
             <SelectItem value="published">Gepubliceerd</SelectItem>
             <SelectItem value="pending">In afwachting</SelectItem>
-            <SelectItem value="rejected">Afgewezen</SelectItem>
+            <SelectItem value="flagged">Gemarkeerd</SelectItem>
           </SelectContent>
         </Select>
         <Button variant="outline" size="icon" onClick={fetchReviews}>
@@ -188,7 +188,7 @@ export function ReviewModerationManager() {
                         review.status === 'pending' ? 'secondary' : 'destructive'
                       } className="text-xs">
                         {review.status === 'published' ? 'Gepubliceerd' :
-                         review.status === 'pending' ? 'In afwachting' : 'Afgewezen'}
+                         review.status === 'pending' ? 'In afwachting' : 'Gemarkeerd'}
                       </Badge>
                     </div>
                     {review.title && <p className="font-semibold text-sm">{review.title}</p>}
@@ -204,8 +204,8 @@ export function ReviewModerationManager() {
                         <CheckCircle className="h-4 w-4" />
                       </Button>
                     )}
-                    {review.status !== 'rejected' && (
-                      <Button size="sm" variant="outline" className="text-red-600 h-8" onClick={() => updateStatus(review.id, 'rejected')}>
+                    {review.status !== 'flagged' && (
+                      <Button size="sm" variant="outline" className="text-destructive h-8" onClick={() => updateStatus(review.id, 'flagged')}>
                         <XCircle className="h-4 w-4" />
                       </Button>
                     )}
