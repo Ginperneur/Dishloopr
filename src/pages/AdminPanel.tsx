@@ -82,6 +82,7 @@ import { AuditTrail } from '@/components/admin/AuditTrail';
 import { ChurnRiskDashboard } from '@/components/admin/ChurnRiskDashboard';
 import { ClaimAnalytics } from '@/components/admin/ClaimAnalytics';
 import { UserProfileModal } from '@/components/admin/UserProfileModal';
+import { ReviewModerationManager } from '@/components/admin/ReviewModerationManager';
 
 interface Stats {
   totalUsers: number;
