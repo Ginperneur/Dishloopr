@@ -42,6 +42,7 @@ interface Filters {
 
 export default function SearchPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { search, results, loading, cities, dishes } = useSearch();
   
