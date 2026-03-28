@@ -38,7 +38,7 @@ export function ReviewModerationManager() {
       .limit(200);
 
     if (statusFilter !== 'all') {
-      query = query.eq('status', statusFilter);
+      query = query.eq('status', statusFilter as 'published' | 'pending' | 'flagged');
     }
 
     const { data, error } = await query;
@@ -76,7 +76,7 @@ export function ReviewModerationManager() {
   const updateStatus = async (reviewId: string, newStatus: string) => {
     const { error } = await supabase
       .from('reviews')
-      .update({ status: newStatus })
+      .update({ status: newStatus as 'published' | 'pending' | 'flagged' })
       .eq('id', reviewId);
 
     if (error) {
