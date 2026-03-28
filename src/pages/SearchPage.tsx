@@ -493,16 +493,36 @@ export default function SearchPage() {
             />
           </>
         ) : (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground text-lg">
-              {t('search.noResults')}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-16 md:py-24"
+          >
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-muted mb-6">
+              <UtensilsCrossed className="h-10 w-10 text-muted-foreground" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">Geen resultaten gevonden</h3>
+            <p className="text-muted-foreground max-w-md mx-auto mb-6">
+              {dishQuery 
+                ? `We konden geen restaurants vinden voor "${dishQuery}"${selectedCityName ? ` in ${selectedCityName}` : ''}. Probeer een ander gerecht of verwijder je filters.`
+                : 'Probeer een ander zoekwoord of pas je filters aan.'}
             </p>
-            {activeFilterCount > 0 && (
-              <Button variant="outline" onClick={clearFilters} className="mt-4">
-                {t('filters.clearAll')}
+            <div className="flex flex-wrap gap-3 justify-center">
+              {activeFilterCount > 0 && (
+                <Button variant="outline" onClick={clearFilters}>
+                  Filters wissen
+                </Button>
+              )}
+              {dishQuery && (
+                <Button variant="outline" onClick={() => handleSearch('', 'all')}>
+                  Alles tonen
+                </Button>
+              )}
+              <Button onClick={() => navigate('/')}>
+                Terug naar home
               </Button>
-            )}
-          </div>
+            </div>
+          </motion.div>
         )}
       </div>
 
