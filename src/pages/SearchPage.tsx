@@ -1,8 +1,8 @@
 import { useState, useEffect, lazy, Suspense, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Map, LayoutGrid, Navigation, Loader2, ArrowUp } from 'lucide-react';
+import { X, Map, LayoutGrid, Navigation, Loader2, ArrowUp, UtensilsCrossed } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { SearchBar } from '@/components/search/SearchBar';
 import { DatabaseRestaurantCard } from '@/components/restaurant/DatabaseRestaurantCard';
