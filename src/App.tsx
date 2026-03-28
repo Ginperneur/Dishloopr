@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { Skeleton } from "@/components/ui/skeleton";
+import { OnboardingDialog } from "@/components/onboarding/OnboardingDialog";
 
 // Eagerly load critical routes
 import Index from "./pages/Index";
@@ -78,6 +79,7 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <Suspense fallback={<PageLoader />}>
+                <OnboardingDialog />
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/search" element={<SearchPage />} />

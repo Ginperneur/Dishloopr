@@ -117,13 +117,13 @@ export function ReviewModerationManager() {
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-green-600">{stats.published}</p>
+            <p className="text-2xl font-bold text-primary">{stats.published}</p>
             <p className="text-xs text-muted-foreground">Gepubliceerd</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+            <p className="text-2xl font-bold text-accent-foreground">{stats.pending}</p>
             <p className="text-xs text-muted-foreground">In afwachting</p>
           </CardContent>
         </Card>
@@ -200,7 +200,7 @@ export function ReviewModerationManager() {
                   </div>
                   <div className="flex gap-1 shrink-0">
                     {review.status !== 'published' && (
-                      <Button size="sm" variant="outline" className="text-green-600 h-8" onClick={() => updateStatus(review.id, 'published')}>
+                      <Button size="sm" variant="outline" className="text-primary h-8" onClick={() => updateStatus(review.id, 'published')}>
                         <CheckCircle className="h-4 w-4" />
                       </Button>
                     )}
@@ -210,7 +210,7 @@ export function ReviewModerationManager() {
                       </Button>
                     )}
                     {review.status !== 'pending' && (
-                      <Button size="sm" variant="outline" className="text-yellow-600 h-8" onClick={() => updateStatus(review.id, 'pending')}>
+                      <Button size="sm" variant="outline" className="text-muted-foreground h-8" onClick={() => updateStatus(review.id, 'pending')}>
                         <AlertTriangle className="h-4 w-4" />
                       </Button>
                     )}
