@@ -47,7 +47,7 @@ export function SocialProof() {
         supabase.from('restaurants').select('id', { count: 'exact', head: true }).eq('is_active', true),
         supabase.from('reviews').select('id', { count: 'exact', head: true }),
         supabase.from('cities').select('id', { count: 'exact', head: true }).eq('is_active', true),
-        supabase.from('dishes').select('id', { count: 'exact', head: true }).eq('is_active', true),
+        supabase.from('restaurant_dishes').select('id', { count: 'exact', head: true }).in('status', ['approved_by_admin', 'verified_by_owner']),
       ]);
 
       setStats({

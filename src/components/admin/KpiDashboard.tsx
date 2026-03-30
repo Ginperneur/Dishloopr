@@ -104,8 +104,18 @@ export function KpiDashboard() {
       supabase.from('profiles').select('created_at').order('created_at', { ascending: true }),
     ]);
 
-    // Dish counts
-    const { data: dishLinks } = await supabase.from('restaurant_dishes').select('restaurant_id').neq('status', 'rejected');
+    // Dish counts - approved, pending, total
+    const [
+      { data: dishLinks },
+      { count: approvedDishCount },
+      { count: pendingDishCount },
+      { count: totalDishLinks },
+    ] = await Promise.all([
+      supabase.from('restaurant_dishes').select('restaurant_id').in('status', ['approved_by_admin', 'verified_by_owner']),
+      supabase.from('restaurant_dishes').select('id', { count: 'exact', head: true }).in('status', ['approved_by_admin', 'verified_by_owner']),
+      supabase.from('restaurant_dishes').select('id', { count: 'exact', head: true }).eq('status', 'suggested'),
+      supabase.from('restaurant_dishes').select('id', { count: 'exact', head: true }),
+    ]);
     const restaurantsWithDishesSet = new Set((dishLinks || []).map((d: any) => d.restaurant_id));
 
     const restaurants = allRestaurants || [];
