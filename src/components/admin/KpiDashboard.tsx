@@ -262,6 +262,16 @@ export function KpiDashboard() {
             <p className="text-xs text-muted-foreground">Claim conversie</p>
           </CardContent>
         </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />
+              <Badge variant="outline" className="text-[10px]">{data.pendingDishes} wachtend</Badge>
+            </div>
+            <p className="text-2xl font-bold">{data.approvedDishes}<span className="text-sm font-normal text-muted-foreground">/{data.totalDishLinks}</span></p>
+            <p className="text-xs text-muted-foreground">Goedgekeurde gerechten</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Growth Chart */}
