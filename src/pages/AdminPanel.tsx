@@ -595,6 +595,10 @@ export default function AdminPanel() {
                   <TrendingUp className="h-3.5 w-3.5" />
                   <span>SEO Pages</span>
                 </TabsTrigger>
+                <TabsTrigger value="notifications" className="gap-1.5 text-xs">
+                  <Bell className="h-3.5 w-3.5" />
+                  <span>Notificaties</span>
+                </TabsTrigger>
               </TabsList>
             </div>
             {/* Group: Tools & Systeem */}
