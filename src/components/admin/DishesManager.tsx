@@ -356,6 +356,7 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
             >
               <Leaf className="h-4 w-4 mr-1" />
               Auto Labels
+            </Button>
 
             <input
               ref={fileInputRef}
