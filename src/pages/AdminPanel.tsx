@@ -1029,6 +1029,10 @@ export default function AdminPanel() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="notifications">
+            <NotificationManager />
+          </TabsContent>
+
           <TabsContent value="seo">
             <Card>
               <CardHeader>
