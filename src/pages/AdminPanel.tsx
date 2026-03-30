@@ -83,6 +83,7 @@ import { ChurnRiskDashboard } from '@/components/admin/ChurnRiskDashboard';
 import { ClaimAnalytics } from '@/components/admin/ClaimAnalytics';
 import { UserProfileModal } from '@/components/admin/UserProfileModal';
 import { ReviewModerationManager } from '@/components/admin/ReviewModerationManager';
+import { NotificationManager } from '@/components/admin/NotificationManager';
 
 interface Stats {
   totalUsers: number;
