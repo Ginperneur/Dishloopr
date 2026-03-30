@@ -341,6 +341,22 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
               {selected.size > 0 ? `AI Classificeer (${selected.size})` : `AI Classificeer (${missingDataCount} leeg)`}
             </Button>
 
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={async () => {
+                toast.loading('Dieetlabels verrijken...');
+                const { data, error } = await supabase.rpc('auto_enrich_dish_dietary_labels');
+                toast.dismiss();
+                if (error) { toast.error('Fout bij verrijking'); return; }
+                const result = data as any;
+                toast.success(`${result.dishes_name_detected} gerechten gelabeld, ${result.restaurant_dishes_inherited} koppelingen bijgewerkt`);
+                fetchDishes();
+              }}
+            >
+              <Leaf className="h-4 w-4 mr-1" />
+              Auto Labels
+
             <input
               ref={fileInputRef}
               type="file"
