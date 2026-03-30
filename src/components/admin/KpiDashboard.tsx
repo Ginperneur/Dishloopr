@@ -28,6 +28,9 @@ interface KpiData {
   restaurantsWithDishes: number;
   restaurantsWithGeo: number;
   restaurantsWithContact: number;
+  approvedDishes: number;
+  pendingDishes: number;
+  totalDishLinks: number;
   weeklyTrends: { week: string; restaurants: number; reviews: number; users: number }[];
 }
 
