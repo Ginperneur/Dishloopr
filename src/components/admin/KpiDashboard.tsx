@@ -171,6 +171,9 @@ export function KpiDashboard() {
       restaurantsWithDishes: withDishes,
       restaurantsWithGeo: withGeo,
       restaurantsWithContact: withContact,
+      approvedDishes: approvedDishCount || 0,
+      pendingDishes: pendingDishCount || 0,
+      totalDishLinks: totalDishLinks || 0,
       weeklyTrends: trends,
     });
     setLoading(false);
