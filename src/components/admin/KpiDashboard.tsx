@@ -28,6 +28,9 @@ interface KpiData {
   restaurantsWithDishes: number;
   restaurantsWithGeo: number;
   restaurantsWithContact: number;
+  approvedDishes: number;
+  pendingDishes: number;
+  totalDishLinks: number;
   weeklyTrends: { week: string; restaurants: number; reviews: number; users: number }[];
 }
 
@@ -104,8 +107,18 @@ export function KpiDashboard() {
       supabase.from('profiles').select('created_at').order('created_at', { ascending: true }),
     ]);
 
-    // Dish counts
-    const { data: dishLinks } = await supabase.from('restaurant_dishes').select('restaurant_id').neq('status', 'rejected');
+    // Dish counts - approved, pending, total
+    const [
+      { data: dishLinks },
+      { count: approvedDishCount },
+      { count: pendingDishCount },
+      { count: totalDishLinks },
+    ] = await Promise.all([
+      supabase.from('restaurant_dishes').select('restaurant_id').in('status', ['approved_by_admin', 'verified_by_owner']),
+      supabase.from('restaurant_dishes').select('id', { count: 'exact', head: true }).in('status', ['approved_by_admin', 'verified_by_owner']),
+      supabase.from('restaurant_dishes').select('id', { count: 'exact', head: true }).eq('status', 'suggested'),
+      supabase.from('restaurant_dishes').select('id', { count: 'exact', head: true }),
+    ]);
     const restaurantsWithDishesSet = new Set((dishLinks || []).map((d: any) => d.restaurant_id));
 
     const restaurants = allRestaurants || [];
@@ -158,6 +171,9 @@ export function KpiDashboard() {
       restaurantsWithDishes: withDishes,
       restaurantsWithGeo: withGeo,
       restaurantsWithContact: withContact,
+      approvedDishes: approvedDishCount || 0,
+      pendingDishes: pendingDishCount || 0,
+      totalDishLinks: totalDishLinks || 0,
       weeklyTrends: trends,
     });
     setLoading(false);
@@ -244,6 +260,16 @@ export function KpiDashboard() {
             </div>
             <p className="text-2xl font-bold">{data.verifiedClaims}/{data.totalClaims}</p>
             <p className="text-xs text-muted-foreground">Claim conversie</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />
+              <Badge variant="outline" className="text-[10px]">{data.pendingDishes} wachtend</Badge>
+            </div>
+            <p className="text-2xl font-bold">{data.approvedDishes}<span className="text-sm font-normal text-muted-foreground">/{data.totalDishLinks}</span></p>
+            <p className="text-xs text-muted-foreground">Goedgekeurde gerechten</p>
           </CardContent>
         </Card>
       </div>

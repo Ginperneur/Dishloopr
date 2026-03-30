@@ -28,7 +28,8 @@ import {
   Download,
   ShieldAlert,
   Zap,
-  Clock
+  Clock,
+  Bell
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -83,6 +84,7 @@ import { ChurnRiskDashboard } from '@/components/admin/ChurnRiskDashboard';
 import { ClaimAnalytics } from '@/components/admin/ClaimAnalytics';
 import { UserProfileModal } from '@/components/admin/UserProfileModal';
 import { ReviewModerationManager } from '@/components/admin/ReviewModerationManager';
+import { NotificationManager } from '@/components/admin/NotificationManager';
 
 interface Stats {
   totalUsers: number;
@@ -594,6 +596,10 @@ export default function AdminPanel() {
                   <TrendingUp className="h-3.5 w-3.5" />
                   <span>SEO Pages</span>
                 </TabsTrigger>
+                <TabsTrigger value="notifications" className="gap-1.5 text-xs">
+                  <Bell className="h-3.5 w-3.5" />
+                  <span>Notificaties</span>
+                </TabsTrigger>
               </TabsList>
             </div>
             {/* Group: Tools & Systeem */}
@@ -1021,6 +1027,10 @@ export default function AdminPanel() {
                 <SettingsManager />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="notifications">
+            <NotificationManager />
           </TabsContent>
 
           <TabsContent value="seo">
