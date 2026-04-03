@@ -50,7 +50,7 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `Je bent een expert in gerechten en voedsel. Classificeer elk gerecht met:\n1. synonyms: alternatieve namen in NL en EN (lowercase). Bijv. voor "Pad Thai": ["pad thai", "padthai", "thai noodles"]\n2. is_halal: true als het gerecht standaard halal is (geen varken, geen alcohol). Bij twijfel: false.\n3. is_vegetarian: true als het gerecht standaard vegetarisch is (geen vlees/vis).\n4. is_vegan: true als het gerecht standaard veganistisch is (geen dierlijke producten).\n5. is_gluten_free: true als het gerecht standaard glutenvrij is.\n6. cuisine_tags: relevante keukentags (lowercase). Bijv. ["thai", "aziatisch"]\n\nBelangrijk: baseer je op de STANDAARD bereiding van het gerecht. Variaties bestaan, maar geef de meest voorkomende classificatie.`
+            content: `Je bent een expert in gerechten en voedsel. Classificeer elk gerecht met:\n1. synonyms: alternatieve namen in NL en EN (lowercase). Bijv. voor "Pad Thai": ["pad thai", "padthai", "thai noodles"]\n2. is_halal: true als het gerecht standaard halal is (geen varken, geen alcohol). Bij twijfel: false.\n3. is_vegetarian: true ALLEEN als het gerecht GEEN vlees, vis, kip, of gevogelte bevat. Een kipburger, shoarma, of visgerecht is NOOIT vegetarisch. Bij twijfel: false.\n4. is_vegan: true ALLEEN als het gerecht GEEN dierlijke producten bevat (geen vlees, vis, zuivel, eieren, honing). Bij twijfel: false.\n5. is_gluten_free: true als het gerecht standaard glutenvrij is.\n6. cuisine_tags: relevante keukentags (lowercase). Bijv. ["thai", "aziatisch"]\n7. course_type: classificeer als "voorgerecht", "hoofdgerecht", "dessert", "bijgerecht", of "drank".\n\nBelangrijk:\n- Vlees/vis/kip = NIET vegetarisch, NIET vegan. Geen uitzonderingen.\n- "Kipburger", "Shoarma", "Tonijn" zijn NIET vegetarisch.\n- "Vegaburger", "Falafel", "Paneer" zijn WEL vegetarisch.`
           },
           {
             role: "user",
@@ -74,12 +74,13 @@ serve(async (req) => {
                         name: { type: "string", description: "Exacte naam van het gerecht zoals opgegeven" },
                         synonyms: { type: "array", items: { type: "string" } },
                         cuisine_tags: { type: "array", items: { type: "string" } },
+                        course_type: { type: "string", enum: ["voorgerecht", "hoofdgerecht", "dessert", "bijgerecht", "drank"], description: "Gang type" },
                         is_halal: { type: "boolean" },
                         is_vegetarian: { type: "boolean" },
                         is_vegan: { type: "boolean" },
                         is_gluten_free: { type: "boolean" }
                       },
-                      required: ["name", "synonyms", "is_halal", "is_vegetarian", "is_vegan", "is_gluten_free", "cuisine_tags"],
+                      required: ["name", "synonyms", "is_halal", "is_vegetarian", "is_vegan", "is_gluten_free", "cuisine_tags", "course_type"],
                       additionalProperties: false
                     }
                   }
@@ -141,7 +142,17 @@ serve(async (req) => {
         })
         .eq("id", matchDish.id);
 
-      if (!updateError) updateCount++;
+      if (!updateError) {
+        updateCount++;
+        // Also update course_type on restaurant_dishes for this dish
+        if (item.course_type) {
+          await supabase
+            .from("restaurant_dishes")
+            .update({ course_type: item.course_type })
+            .eq("dish_id", matchDish.id)
+            .eq("course_type", "hoofdgerecht"); // Only update default ones
+        }
+      }
     }
 
     return new Response(JSON.stringify({ classified: updateCount, total: dishes.length }), {
