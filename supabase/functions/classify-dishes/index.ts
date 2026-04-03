@@ -142,7 +142,17 @@ serve(async (req) => {
         })
         .eq("id", matchDish.id);
 
-      if (!updateError) updateCount++;
+      if (!updateError) {
+        updateCount++;
+        // Also update course_type on restaurant_dishes for this dish
+        if (item.course_type) {
+          await supabase
+            .from("restaurant_dishes")
+            .update({ course_type: item.course_type })
+            .eq("dish_id", matchDish.id)
+            .eq("course_type", "hoofdgerecht"); // Only update default ones
+        }
+      }
     }
 
     return new Response(JSON.stringify({ classified: updateCount, total: dishes.length }), {
