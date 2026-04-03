@@ -13,6 +13,8 @@ type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type RestaurantCardData = Restaurant & {
   chainName?: string;
   chainLocationsCount?: number;
+  matchedDishes?: string[];
+  hasDishMatch?: boolean;
 };
 
 interface DatabaseRestaurantCardProps {
