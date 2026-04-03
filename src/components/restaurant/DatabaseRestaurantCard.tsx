@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Star, MapPin, Heart, Sparkles, Trophy, ImageOff } from 'lucide-react';
+import { Star, MapPin, Heart, Sparkles, Trophy, ImageOff, UtensilsCrossed } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useState } from 'react';
@@ -13,6 +13,8 @@ type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type RestaurantCardData = Restaurant & {
   chainName?: string;
   chainLocationsCount?: number;
+  matchedDishes?: string[];
+  hasDishMatch?: boolean;
 };
 
 interface DatabaseRestaurantCardProps {
@@ -173,6 +175,18 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
               {restaurant.cuisines.slice(0, 2).map((cuisine) => (
                 <Badge key={cuisine} variant="secondary" className="text-[10px] sm:text-xs capitalize">
                   {cuisine}
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          {/* Matched Dishes */}
+          {restaurant.matchedDishes && restaurant.matchedDishes.length > 0 && (
+            <div className="flex flex-wrap gap-1 sm:gap-1.5 mb-2 sm:mb-3">
+              {restaurant.matchedDishes.slice(0, 3).map((dish) => (
+                <Badge key={dish} variant="outline" className="text-[10px] sm:text-xs capitalize border-primary/30 text-primary bg-primary/5">
+                  <UtensilsCrossed className="h-2.5 w-2.5 mr-0.5" />
+                  {dish}
                 </Badge>
               ))}
             </div>

@@ -96,8 +96,9 @@ export function useSearch() {
       if (!term) continue;
       const termMatches = dishesToSearch.filter(dish => {
         const nameMatch = dish.name.toLowerCase().includes(term);
+        const nameEnMatch = dish.name_en?.toLowerCase().includes(term);
         const synonymMatch = dish.synonyms?.some(s => s.toLowerCase().includes(term));
-        return nameMatch || synonymMatch;
+        return nameMatch || nameEnMatch || synonymMatch;
       });
       if (termMatches.length > 0) {
         matchingDishesByTerm.set(term, termMatches);
@@ -143,6 +144,9 @@ export function useSearch() {
     }
     if (filters?.experiences && filters.experiences.length > 0) {
       restaurantQuery = restaurantQuery.overlaps('experiences', filters.experiences);
+    }
+    if (filters?.dietaryOptions && filters.dietaryOptions.length > 0) {
+      restaurantQuery = restaurantQuery.overlaps('dietary_options', filters.dietaryOptions);
     }
     if (filters?.dietaryOptions && filters.dietaryOptions.length > 0) {
       restaurantQuery = restaurantQuery.overlaps('dietary_options', filters.dietaryOptions);
