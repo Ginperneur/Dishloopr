@@ -466,7 +466,7 @@ export default function SearchPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: Math.min(index * 0.05, 0.3) }}
                 >
-                  <DatabaseRestaurantCard restaurant={restaurant} />
+                  <DatabaseRestaurantCard restaurant={restaurant} isSponsored={restaurant.isSponsored} />
                 </motion.div>
               ))}
             </motion.div>
