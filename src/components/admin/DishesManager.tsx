@@ -66,15 +66,31 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
 
   const fetchDishes = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('dishes')
-      .select('*')
-      .order('name');
-    if (error) {
-      toast.error('Fout bij ophalen gerechten');
-    } else {
-      setDishes(data || []);
+    // Fetch all dishes using pagination to bypass the 1000-row limit
+    let allDishes: Dish[] = [];
+    let from = 0;
+    const pageSize = 1000;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from('dishes')
+        .select('*')
+        .order('name')
+        .range(from, from + pageSize - 1);
+      
+      if (error) {
+        toast.error('Fout bij ophalen gerechten');
+        setLoading(false);
+        return;
+      }
+      
+      allDishes = [...allDishes, ...(data || [])];
+      hasMore = (data?.length || 0) === pageSize;
+      from += pageSize;
     }
+
+    setDishes(allDishes);
     setLoading(false);
   };
 
