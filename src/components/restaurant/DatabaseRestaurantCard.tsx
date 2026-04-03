@@ -180,6 +180,18 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
             </div>
           )}
 
+          {/* Matched Dishes */}
+          {restaurant.matchedDishes && restaurant.matchedDishes.length > 0 && (
+            <div className="flex flex-wrap gap-1 sm:gap-1.5 mb-2 sm:mb-3">
+              {restaurant.matchedDishes.slice(0, 3).map((dish) => (
+                <Badge key={dish} variant="outline" className="text-[10px] sm:text-xs capitalize border-primary/30 text-primary bg-primary/5">
+                  <UtensilsCrossed className="h-2.5 w-2.5 mr-0.5" />
+                  {dish}
+                </Badge>
+              ))}
+            </div>
+          )}
+
           {/* Ambience Tags */}
           {restaurant.ambience_tags && restaurant.ambience_tags.length > 0 && (
             <div className="flex flex-wrap gap-1 sm:gap-1.5">
