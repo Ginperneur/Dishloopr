@@ -85,6 +85,7 @@ export function SearchBar({
         d =>
           !selectedLower.includes(d.name.toLowerCase()) &&
           (d.name.toLowerCase().includes(queryLower) ||
+          d.name_en?.toLowerCase().includes(queryLower) ||
           d.synonyms?.some(s => s.toLowerCase().includes(queryLower)))
       );
       setSuggestions(filteredDishes.slice(0, 5));
