@@ -148,6 +148,9 @@ export function useSearch() {
     if (filters?.dietaryOptions && filters.dietaryOptions.length > 0) {
       restaurantQuery = restaurantQuery.overlaps('dietary_options', filters.dietaryOptions);
     }
+    if (filters?.dietaryOptions && filters.dietaryOptions.length > 0) {
+      restaurantQuery = restaurantQuery.overlaps('dietary_options', filters.dietaryOptions);
+    }
     if (filters?.hasTerrace) {
       restaurantQuery = restaurantQuery.eq('has_terrace', true);
     }

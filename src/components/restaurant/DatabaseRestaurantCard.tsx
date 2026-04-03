@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Star, MapPin, Heart, Sparkles, Trophy, ImageOff } from 'lucide-react';
+import { Star, MapPin, Heart, Sparkles, Trophy, ImageOff, UtensilsCrossed } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useState } from 'react';
