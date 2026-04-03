@@ -12,6 +12,35 @@ function formatDishName(name: string): string {
   return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
 }
 
+async function tryScrape(url: string, firecrawlKey: string): Promise<{ ok: boolean; markdown?: string; status?: number; error?: string }> {
+  try {
+    const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${firecrawlKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url,
+        formats: ['markdown'],
+        onlyMainContent: true,
+        waitFor: 3000,
+      }),
+    });
+
+    if (!scrapeResponse.ok) {
+      const errText = await scrapeResponse.text();
+      return { ok: false, status: scrapeResponse.status, error: errText };
+    }
+
+    const scrapeData = await scrapeResponse.json();
+    const markdown = scrapeData.data?.markdown || scrapeData.markdown || '';
+    return { ok: true, markdown };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'fetch failed' };
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -38,7 +67,6 @@ Deno.serve(async (req) => {
     scrapedUrl?: string | null;
   }) => {
     if (!adminSupabase || !parsedRestaurantId) return;
-
     try {
       await adminSupabase.from('menu_scrape_runs').insert({
         restaurant_id: parsedRestaurantId,
@@ -58,7 +86,6 @@ Deno.serve(async (req) => {
   };
 
   try {
-    // Auth check
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -102,13 +129,9 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     adminSupabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Step 1: Scrape website with Firecrawl
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
     if (!firecrawlKey) {
-      await logRun({
-        status: 'firecrawl_not_configured',
-        errorMessage: 'Firecrawl not configured',
-      });
+      await logRun({ status: 'firecrawl_not_configured', errorMessage: 'Firecrawl not configured' });
       return new Response(JSON.stringify({ error: 'Firecrawl not configured' }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -121,58 +144,57 @@ Deno.serve(async (req) => {
 
     console.log(`Scraping menu from: ${formattedUrl}`);
 
-    // First try to find menu-related pages
-    const mapResponse = await fetch('https://api.firecrawl.dev/v1/map', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${firecrawlKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        url: formattedUrl,
-        search: 'menu kaart gerechten dishes food',
-        limit: 20,
-      }),
-    });
+    // Step 1: Try to find menu-related pages via map
+    let menuUrl: string | null = null;
+    try {
+      const mapResponse = await fetch('https://api.firecrawl.dev/v1/map', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${firecrawlKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: formattedUrl,
+          search: 'menu kaart gerechten dishes food',
+          limit: 20,
+        }),
+      });
 
-    let urlToScrape = formattedUrl;
-    if (mapResponse.ok) {
-      const mapData = await mapResponse.json();
-      const menuLinks = (mapData.links || []).filter((link: string) =>
-        /menu|kaart|gerecht|dish|food|eten/i.test(link)
-      );
-      if (menuLinks.length > 0) {
-        urlToScrape = menuLinks[0];
-        console.log(`Found menu page: ${urlToScrape}`);
+      if (mapResponse.ok) {
+        const mapData = await mapResponse.json();
+        const menuLinks = (mapData.links || []).filter((link: string) =>
+          /menu|kaart|gerecht|dish|food|eten/i.test(link)
+        );
+        if (menuLinks.length > 0) {
+          menuUrl = menuLinks[0];
+          console.log(`Found menu page: ${menuUrl}`);
+        }
+      } else {
+        // Consume body to prevent resource leak
+        await mapResponse.text();
       }
+    } catch (mapErr) {
+      console.warn('Map request failed, continuing with original URL:', mapErr);
     }
+
+    // Step 2: Scrape - try menu URL first, fallback to original
+    let markdown = '';
+    let urlToScrape = menuUrl || formattedUrl;
     scrapedUrlForLog = urlToScrape;
 
-    // Scrape the page
-    const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${firecrawlKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        url: urlToScrape,
-        formats: ['markdown'],
-        onlyMainContent: true,
-        waitFor: 3000,
-      }),
-    });
+    let scrapeResult = await tryScrape(urlToScrape, firecrawlKey);
 
-    if (!scrapeResponse.ok) {
-      const errData = await scrapeResponse.text();
-      console.error('Firecrawl scrape error:', errData);
+    // If menu URL failed and it's different from original, try original URL as fallback
+    if (!scrapeResult.ok && menuUrl && menuUrl !== formattedUrl) {
+      console.log(`Menu URL failed, trying original: ${formattedUrl}`);
+      urlToScrape = formattedUrl;
+      scrapedUrlForLog = urlToScrape;
+      scrapeResult = await tryScrape(formattedUrl, firecrawlKey);
+    }
 
-      if (scrapeResponse.status === 402) {
-        await logRun({
-          status: 'firecrawl_credits_exhausted',
-          errorMessage: 'Firecrawl credits op',
-          scrapedUrl: urlToScrape,
-        });
+    if (!scrapeResult.ok) {
+      if (scrapeResult.status === 402) {
+        await logRun({ status: 'firecrawl_credits_exhausted', errorMessage: 'Firecrawl credits op', scrapedUrl: urlToScrape });
         return new Response(JSON.stringify({ error: 'Firecrawl credits op' }), {
           status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
@@ -180,23 +202,20 @@ Deno.serve(async (req) => {
 
       await logRun({
         status: 'scrape_failed',
-        errorMessage: `Website scraping mislukt (${scrapeResponse.status})`,
+        errorMessage: `Website niet bereikbaar of geblokkeerd (${scrapeResult.status || 'network'})`,
         scrapedUrl: urlToScrape,
       });
-      return new Response(JSON.stringify({ error: 'Website scraping mislukt' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Website niet bereikbaar of geblokkeerd voor scraping',
+        scrapedUrl: urlToScrape,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const scrapeData = await scrapeResponse.json();
-    const markdown = scrapeData.data?.markdown || scrapeData.markdown || '';
+    markdown = scrapeResult.markdown || '';
 
     if (!markdown || markdown.length < 50) {
-      await logRun({
-        status: 'no_menu_content',
-        errorMessage: 'Geen menu content gevonden op deze website',
-        scrapedUrl: urlToScrape,
-      });
+      await logRun({ status: 'no_menu_content', errorMessage: 'Geen menu content gevonden', scrapedUrl: urlToScrape });
       return new Response(JSON.stringify({
         success: false,
         error: 'Geen menu content gevonden op deze website',
@@ -206,14 +225,10 @@ Deno.serve(async (req) => {
 
     console.log(`Scraped ${markdown.length} chars from ${urlToScrape}`);
 
-    // Step 2: AI extraction
+    // Step 3: AI extraction
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
-      await logRun({
-        status: 'ai_not_configured',
-        errorMessage: 'AI service niet geconfigureerd',
-        scrapedUrl: urlToScrape,
-      });
+      await logRun({ status: 'ai_not_configured', errorMessage: 'AI service niet geconfigureerd', scrapedUrl: urlToScrape });
       return new Response(JSON.stringify({ error: 'AI service niet geconfigureerd' }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -255,48 +270,22 @@ Regels:
       const aiErrorText = await aiResponse.text();
       console.error('AI error:', aiResponse.status, aiErrorText);
 
-      if (aiResponse.status === 429) {
-        await logRun({
-          status: 'ai_rate_limited',
-          errorMessage: 'Te veel AI-verzoeken',
-          scrapedUrl: urlToScrape,
-        });
-        return new Response(JSON.stringify({ error: 'Te veel AI-verzoeken, probeer het zo opnieuw.' }), {
-          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      const statusMap: Record<number, { status: string; msg: string }> = {
+        429: { status: 'ai_rate_limited', msg: 'Te veel AI-verzoeken, probeer het zo opnieuw.' },
+        402: { status: 'ai_credits_exhausted', msg: 'AI credits op.' },
+        401: { status: 'ai_auth_failed', msg: 'AI authenticatie mislukt.' },
+      };
+
+      const mapped = statusMap[aiResponse.status];
+      if (mapped) {
+        await logRun({ status: mapped.status, errorMessage: mapped.msg, scrapedUrl: urlToScrape });
+        return new Response(JSON.stringify({ error: mapped.msg }), {
+          status: aiResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
 
-      if (aiResponse.status === 402) {
-        await logRun({
-          status: 'ai_credits_exhausted',
-          errorMessage: 'AI credits op',
-          scrapedUrl: urlToScrape,
-        });
-        return new Response(JSON.stringify({ error: 'AI credits op. Voeg credits toe in je workspace usage.' }), {
-          status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-
-      if (aiResponse.status === 401) {
-        await logRun({
-          status: 'ai_auth_failed',
-          errorMessage: 'AI authenticatie mislukt',
-          scrapedUrl: urlToScrape,
-        });
-        return new Response(JSON.stringify({ error: 'AI authenticatie mislukt. Probeer het opnieuw.' }), {
-          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-
-      await logRun({
-        status: 'ai_failed',
-        errorMessage: aiErrorText.slice(0, 500),
-        scrapedUrl: urlToScrape,
-      });
-      return new Response(JSON.stringify({
-        error: 'AI analyse mislukt',
-        details: aiErrorText.slice(0, 500),
-      }), {
+      await logRun({ status: 'ai_failed', errorMessage: aiErrorText.slice(0, 500), scrapedUrl: urlToScrape });
+      return new Response(JSON.stringify({ error: 'AI analyse mislukt' }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
@@ -310,19 +299,15 @@ Regels:
       if (jsonMatch) extractedDishes = JSON.parse(jsonMatch[0]);
     } catch (e) {
       console.error('Parse error:', e);
-      await logRun({
-        status: 'ai_parse_failed',
-        errorMessage: 'Kon gerechten niet parsen',
-        scrapedUrl: urlToScrape,
-      });
-      return new Response(JSON.stringify({ error: 'Kon gerechten niet parsen', raw: content }), {
+      await logRun({ status: 'ai_parse_failed', errorMessage: 'Kon gerechten niet parsen', scrapedUrl: urlToScrape });
+      return new Response(JSON.stringify({ error: 'Kon gerechten niet parsen' }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
     console.log(`AI extracted ${extractedDishes.length} dishes`);
 
-    // Step 3: Save to database
+    // Step 4: Save to database
     const results = { added: [] as string[], existing: [] as string[], errors: [] as string[] };
 
     for (const dish of extractedDishes) {
@@ -332,7 +317,6 @@ Regels:
 
         const slug = formattedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-        // Find existing dish
         let { data: existingDish } = await adminSupabase
           .from('dishes').select('id, synonyms').eq('slug', slug).maybeSingle();
 
@@ -348,7 +332,6 @@ Regels:
           dishId = existingDish.id;
           results.existing.push(formattedName);
 
-          // Merge synonyms
           const currentSynonyms = existingDish.synonyms || [];
           const newSynonyms = (dish.synonyms || []).filter((s: string) =>
             !currentSynonyms.some((cs: string) => cs.toLowerCase() === s.toLowerCase())
@@ -373,7 +356,6 @@ Regels:
           results.added.push(formattedName);
         }
 
-        // Link to restaurant
         const { data: existingLink } = await adminSupabase
           .from('restaurant_dishes').select('id')
           .eq('restaurant_id', restaurantId).eq('dish_id', dishId).maybeSingle();
@@ -416,13 +398,11 @@ Regels:
 
   } catch (error) {
     console.error('Scrape error:', error);
-
     await logRun({
       status: 'internal_error',
       errorMessage: error instanceof Error ? error.message : 'Unknown',
       scrapedUrl: scrapedUrlForLog,
     });
-
     return new Response(JSON.stringify({
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown'
