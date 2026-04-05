@@ -49,12 +49,13 @@ export default function SearchPage() {
   const dishQuery = searchParams.get('dish') || '';
   const cityId = searchParams.get('city') || 'all';
   const featuredOnly = searchParams.get('featured') === 'true';
+  const cuisineParam = searchParams.get('cuisine') || '';
   const [selectedCityId, setSelectedCityId] = useState(cityId);
   
   const [filters, setFilters] = useState<Filters>({
     priceLevel: [],
     ambienceTags: [],
-    cuisines: [],
+    cuisines: cuisineParam ? [cuisineParam] : [],
     concepts: [],
     mealTypes: [],
     experiences: [],
