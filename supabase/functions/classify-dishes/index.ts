@@ -74,7 +74,7 @@ serve(async (req) => {
                         name: { type: "string", description: "Exacte naam van het gerecht zoals opgegeven" },
                         synonyms: { type: "array", items: { type: "string" } },
                         cuisine_tags: { type: "array", items: { type: "string" } },
-                        course_type: { type: "string", enum: ["voorgerecht", "hoofdgerecht", "dessert", "bijgerecht", "drank"], description: "Gang type" },
+                        course_type: { type: "string", enum: ["voorgerecht", "hoofdgerecht", "dessert", "bijgerecht", "drank", "menu"], description: "Gang type of menu/arrangement" },
                         is_halal: { type: "boolean" },
                         is_vegetarian: { type: "boolean" },
                         is_vegan: { type: "boolean" },
