@@ -32,10 +32,11 @@ export function SEOHead({
   structuredData,
 }: SEOHeadProps) {
   const fullTitle = title.includes('Dishloopr') ? title : `${title} | Dishloopr`;
-  const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://dishloopr.com';
-  const currentUrl = typeof window !== 'undefined' ? window.location.href : siteUrl;
-  const canonicalUrl = canonical || currentUrl;
-  const fullOgImage = ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`;
+  // Always use production URL for SEO tags — never preview/staging origins
+  const SITE_URL = 'https://dishloopr.com';
+  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/';
+  const canonicalUrl = canonical || `${SITE_URL}${currentPath}`;
+  const fullOgImage = ogImage.startsWith('http') ? ogImage : `${SITE_URL}${ogImage}`;
 
   useEffect(() => {
     // Update document title

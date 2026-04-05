@@ -37,7 +37,7 @@ interface SearchFilters {
 }
 
 // Max restaurants to fetch for browse-mode (no dish query)
-const BROWSE_LIMIT = 500;
+const BROWSE_LIMIT = 1000;
 
 /**
  * Paginated fetch helper — defeats Supabase's 1000-row default cap.
