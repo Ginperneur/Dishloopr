@@ -220,11 +220,13 @@ export function OpeningHoursDisplay({ openingHours: rawOpeningHours, phone, geoL
                       {t('openingHours.openNow')}
                     </span>
                   ) : (
-                    <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full whitespace-nowrap">
+                    <span className="text-xs font-medium text-destructive bg-destructive/10 px-2 py-0.5 rounded-full whitespace-nowrap">
                       {t('openingHours.closed')}
                     </span>
                   )}
-                  <span className="text-xs text-muted-foreground truncate max-w-[80px]">{todayHours}</span>
+                  {todayInfo?.hours && todayInfo.hours !== 'closed' && (
+                    <span className="text-xs text-muted-foreground truncate max-w-[80px]">{todayHours}</span>
+                  )}
                 </div>
               </div>
             </AccordionTrigger>

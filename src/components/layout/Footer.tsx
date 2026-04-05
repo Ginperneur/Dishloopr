@@ -143,7 +143,7 @@ export function Footer() {
               <li><Link to="/dashboard" className="hover:text-foreground transition-colors">{t('nav.dashboard')}</Link></li>
             </ul>
 
-            <h4 className="font-semibold mt-5 mb-3 text-sm md:text-base">Legal</h4>
+            <h4 className="font-semibold mt-5 mb-3 text-sm md:text-base">{t('footer.legal', 'Juridisch')}</h4>
             <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
               <li><Link to="/terms" className="hover:text-foreground transition-colors">{t('footer.terms')}</Link></li>
               <li><Link to="/privacy" className="hover:text-foreground transition-colors">{t('footer.privacy')}</Link></li>
