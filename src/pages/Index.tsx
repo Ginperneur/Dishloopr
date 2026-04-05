@@ -91,7 +91,7 @@ const Index = () => {
               <button
                 key={cuisine.value}
                 onClick={() => handleCuisineClick(cuisine.value)}
-                className="px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-full bg-card border border-border hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
+                className="px-3 py-1.5 sm:py-1.5 text-xs sm:text-sm font-medium rounded-full bg-card border border-border hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors touch-manipulation min-h-[36px] flex items-center"
               >
                 {cuisine.label}
               </button>

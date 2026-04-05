@@ -234,7 +234,7 @@ export default function RestaurantPage() {
         </div>
       </div>
 
-      <div className={`container px-4 md:px-6 py-6 md:py-8 overflow-hidden ${hasReservation ? 'pb-24 lg:pb-8' : ''}`}>
+      <div className={`container px-4 md:px-6 py-6 md:py-8 overflow-hidden ${hasReservation ? 'pb-28 lg:pb-8' : 'pb-16 lg:pb-8'}`}>
         <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6 md:space-y-8 min-w-0">
@@ -579,7 +579,7 @@ export default function RestaurantPage() {
 
       {/* Sticky mobile reservation bar */}
       {hasReservation && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-background/95 backdrop-blur border-t border-border p-3 safe-area-bottom">
+        <div className="fixed bottom-14 left-0 right-0 z-40 lg:hidden bg-background/95 backdrop-blur border-t border-border p-3 safe-area-bottom">
           <Button className="w-full bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" asChild>
             <a href={reservationHref} target="_blank" rel="noopener noreferrer" className="gap-2">
               <Calendar className="h-5 w-5" />
