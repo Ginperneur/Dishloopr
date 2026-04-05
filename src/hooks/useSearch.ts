@@ -189,21 +189,45 @@ export function useSearch() {
         'lactose-free': 'is_gluten_free', // no lactose column, approximate
       };
 
-      // Build OR filter conditions for each dietary option
+      // Also map to restaurant-level columns
+      const restaurantLevelMap: Record<string, string> = {
+        'vegan': 'is_fully_vegan',
+        'halal': 'is_fully_halal',
+      };
+
+      // Build OR filter conditions for each dietary option on restaurant_dishes
       const orConditions = filters.dietaryOptions
         .map(opt => dietaryMap[opt])
         .filter(Boolean)
         .map(col => `${col}.eq.true`);
 
+      // Get IDs from dish-level dietary flags
+      const dishLevelIds = new Set<string>();
       if (orConditions.length > 0) {
         const { data: dietaryLinks } = await supabase
           .from('restaurant_dishes')
           .select('restaurant_id')
           .neq('status', 'rejected')
           .or(orConditions.join(','));
-
-        dietaryRestaurantIds = new Set((dietaryLinks || []).map((l: any) => l.restaurant_id));
+        (dietaryLinks || []).forEach((l: any) => dishLevelIds.add(l.restaurant_id));
       }
+
+      // Also get IDs from restaurant-level flags (is_fully_halal, is_fully_vegan, etc.)
+      const restaurantOrConds = filters.dietaryOptions
+        .map(opt => restaurantLevelMap[opt])
+        .filter(Boolean)
+        .map(col => `${col}.eq.true`);
+
+      if (restaurantOrConds.length > 0) {
+        const { data: restaurantLevel } = await supabase
+          .from('restaurants')
+          .select('id')
+          .eq('is_active', true)
+          .or(restaurantOrConds.join(','));
+        (restaurantLevel || []).forEach((r: any) => dishLevelIds.add(r.id));
+      }
+
+      dietaryRestaurantIds = dishLevelIds;
     }
 
     // ── Step 3: Fetch restaurants ──
