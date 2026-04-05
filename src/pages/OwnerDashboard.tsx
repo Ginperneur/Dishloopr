@@ -906,3 +906,34 @@ export default function OwnerDashboard() {
     </Layout>
   );
 }
+
+// Reusable toggle row for restaurant settings
+function ToggleRow({ emoji, emojiClass, title, description, checked, onChange }: {
+  emoji: string;
+  emojiClass?: string;
+  title: string;
+  description: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+      <div className="flex items-center gap-3">
+        <span className={`text-lg ${emojiClass || ''}`}>{emoji}</span>
+        <div>
+          <p className="font-medium text-sm">{title}</p>
+          <p className="text-xs text-muted-foreground">{description}</p>
+        </div>
+      </div>
+      <label className="relative inline-flex items-center cursor-pointer">
+        <input
+          type="checkbox"
+          className="sr-only peer"
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+        />
+        <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:bg-primary transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-background after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
+      </label>
+    </div>
+  );
+}
