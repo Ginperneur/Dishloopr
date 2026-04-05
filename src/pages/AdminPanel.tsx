@@ -148,12 +148,19 @@ export default function AdminPanel() {
     setActiveSection(tab);
   }, []);
 
+  // Fetch only stats on mount — heavy data loads lazily per section
   useEffect(() => {
-    if (isAdmin) fetchData();
+    if (isAdmin) fetchStats();
   }, [isAdmin]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  // Lazy-load section data only when needed
+  useEffect(() => {
+    if (!isAdmin) return;
+    if (activeSection === 'restaurants' && restaurants.length === 0) fetchRestaurants();
+    if (activeSection === 'users' && users.length === 0) fetchUsers();
+  }, [activeSection, isAdmin]);
+
+  const fetchStats = async () => {
     const [
       { count: userCount }, { count: restaurantCount }, { count: reviewCount },
       { count: cityCount }, { count: dishCount }, { count: pendingCount },
@@ -177,10 +184,10 @@ export default function AdminPanel() {
       pendingClaims: (newClaimsCount || 0) + (legacyClaimsCount || 0),
       activeRestaurants: activeCount || 0
     });
+    setLoading(false);
+  };
 
-    const { data: profileData } = await supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(100);
-    setUsers(profileData || []);
-
+  const fetchRestaurants = async () => {
     let allRestaurants: any[] = [];
     let from = 0;
     const batchSize = 1000;
@@ -192,10 +199,18 @@ export default function AdminPanel() {
       from += batchSize;
     }
     setRestaurants(allRestaurants);
+  };
 
-    const { data: reviewData } = await supabase.from('reviews').select('*, restaurants:restaurant_id (name, slug)').order('created_at', { ascending: false }).limit(100);
-    setReviews(reviewData || []);
-    setLoading(false);
+  const fetchUsers = async () => {
+    const { data: profileData } = await supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(100);
+    setUsers(profileData || []);
+  };
+
+  const fetchData = async () => {
+    await fetchStats();
+    // Reload section-specific data if currently visible
+    if (activeSection === 'restaurants') fetchRestaurants();
+    if (activeSection === 'users') fetchUsers();
   };
 
   const handleRefresh = async () => {

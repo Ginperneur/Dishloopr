@@ -1,16 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { 
-  UtensilsCrossed, 
-  Search, 
-  Plus, 
-  Trash2, 
-  Edit2,
-  Copy,
-  Loader2,
-  Upload,
-  Sparkles,
-  Leaf,
-  Wheat
+  UtensilsCrossed, Search, Plus, Trash2, Edit2, Copy, Loader2, Upload, Sparkles, Leaf, Wheat,
+  ChevronLeft, ChevronRight, Eye, EyeOff, X
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,6 +38,8 @@ interface DishesManagerProps {
   onUpdate?: () => void;
 }
 
+const ITEMS_PER_PAGE = 50;
+
 export function DishesManager({ onUpdate }: DishesManagerProps) {
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,13 +53,14 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
   const [classifying, setClassifying] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [page, setPage] = useState(1);
+  const [bulkExecuting, setBulkExecuting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { fetchDishes(); }, []);
 
   const fetchDishes = async () => {
     setLoading(true);
-    // Fetch all dishes using pagination to bypass the 1000-row limit
     let allDishes: Dish[] = [];
     let from = 0;
     const pageSize = 1000;
@@ -119,7 +113,6 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
     }
   };
 
-  // AI Classification
   const handleClassify = async (mode: 'all_empty' | 'specific') => {
     setClassifying(true);
     try {
@@ -146,7 +139,6 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
     }
   };
 
-  // CSV Upload
   const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -184,7 +176,6 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
         const isVegan = veganIdx >= 0 ? parseBool(cols[veganIdx]) : undefined;
         const isGF = gfIdx >= 0 ? parseBool(cols[gfIdx]) : undefined;
 
-        // Try to find existing dish
         const existing = dishes.find(d => d.name.toLowerCase() === formattedName.toLowerCase());
 
         if (existing) {
@@ -309,12 +300,79 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
     });
   };
 
-  const filteredDishes = dishes.filter(d =>
-    d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    d.synonyms?.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  // --- Bulk actions ---
+  const bulkDelete = async () => {
+    if (!confirm(`Weet je zeker dat je ${selected.size} gerechten wilt verwijderen? Dit kan niet ongedaan worden.`)) return;
+    setBulkExecuting(true);
+    const ids = Array.from(selected);
+    let deleted = 0;
+    for (let i = 0; i < ids.length; i += 200) {
+      const chunk = ids.slice(i, i + 200);
+      const { error } = await supabase.from('dishes').delete().in('id', chunk);
+      if (!error) deleted += chunk.length;
+    }
+    await logActivity({ actionType: 'delete', entityType: 'dish', entityName: `Bulk: ${deleted} gerechten verwijderd` });
+    toast.success(`${deleted} gerechten verwijderd`);
+    setSelected(new Set());
+    setBulkExecuting(false);
+    fetchDishes();
+    onUpdate?.();
+  };
+
+  const bulkSetActive = async (active: boolean) => {
+    setBulkExecuting(true);
+    const ids = Array.from(selected);
+    let count = 0;
+    for (let i = 0; i < ids.length; i += 200) {
+      const chunk = ids.slice(i, i + 200);
+      const { error } = await supabase.from('dishes').update({ is_active: active }).in('id', chunk);
+      if (!error) count += chunk.length;
+    }
+    const label = active ? 'geactiveerd' : 'gedeactiveerd';
+    await logActivity({ actionType: active ? 'activate' : 'deactivate', entityType: 'dish', entityName: `Bulk: ${count} ${label}` });
+    toast.success(`${count} gerechten ${label}`);
+    setSelected(new Set());
+    setBulkExecuting(false);
+    setDishes(prev => prev.map(d => ids.includes(d.id) ? { ...d, is_active: active } : d));
+  };
+
+  const filteredDishes = useMemo(() => {
+    if (!searchQuery) return dishes;
+    const q = searchQuery.toLowerCase();
+    return dishes.filter(d =>
+      d.name.toLowerCase().includes(q) ||
+      d.synonyms?.some(s => s.toLowerCase().includes(q))
+    );
+  }, [dishes, searchQuery]);
+
+  const totalPages = Math.ceil(filteredDishes.length / ITEMS_PER_PAGE);
+  const paginatedDishes = useMemo(() => {
+    const start = (page - 1) * ITEMS_PER_PAGE;
+    return filteredDishes.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredDishes, page]);
+
+  // Reset page when search changes
+  useEffect(() => { setPage(1); }, [searchQuery]);
 
   const missingDataCount = dishes.filter(d => !d.synonyms?.length).length;
+
+  // Select all on current page only
+  const selectAllOnPage = (checked: boolean) => {
+    if (checked) {
+      const next = new Set(selected);
+      paginatedDishes.forEach(d => next.add(d.id));
+      setSelected(next);
+    } else {
+      const pageIds = new Set(paginatedDishes.map(d => d.id));
+      setSelected(prev => {
+        const next = new Set(prev);
+        pageIds.forEach(id => next.delete(id));
+        return next;
+      });
+    }
+  };
+
+  const allOnPageSelected = paginatedDishes.length > 0 && paginatedDishes.every(d => selected.has(d.id));
 
   return (
     <Card>
@@ -419,23 +477,49 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
             </Dialog>
           </div>
 
-          {/* CSV format hint */}
           <p className="text-xs text-muted-foreground">
             CSV-formaat: <code className="bg-muted px-1 rounded">naam,synoniemen,keuken,halal,vegetarisch,veganistisch,glutenvrij</code> — synoniemen/keuken gescheiden met <code className="bg-muted px-1 rounded">;</code>, ja/nee of true/false voor dieetlabels
           </p>
         </div>
       </CardHeader>
       <CardContent>
+        {/* Bulk action bar */}
+        {selected.size > 0 && (
+          <div className="mb-4 p-3 rounded-lg bg-primary/5 border border-primary/20 flex flex-wrap items-center gap-2">
+            <Badge variant="secondary" className="font-semibold">{selected.size} geselecteerd</Badge>
+            <div className="h-4 w-px bg-border" />
+            <Button size="sm" variant="outline" onClick={() => bulkSetActive(true)} disabled={bulkExecuting}>
+              <Eye className="h-3.5 w-3.5 mr-1" />
+              Activeren
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => bulkSetActive(false)} disabled={bulkExecuting}>
+              <EyeOff className="h-3.5 w-3.5 mr-1" />
+              Deactiveren
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => handleClassify('specific')} disabled={classifying || bulkExecuting}>
+              <Sparkles className="h-3.5 w-3.5 mr-1" />
+              AI Classificeer
+            </Button>
+            <Button size="sm" variant="destructive" onClick={bulkDelete} disabled={bulkExecuting}>
+              {bulkExecuting ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Trash2 className="h-3.5 w-3.5 mr-1" />}
+              Verwijderen
+            </Button>
+            <div className="flex-1" />
+            <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>
+              <X className="h-3.5 w-3.5 mr-1" />
+              Deselecteer
+            </Button>
+          </div>
+        )}
+
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-8">
                   <Checkbox
-                    checked={filteredDishes.length > 0 && selected.size === filteredDishes.length}
-                    onCheckedChange={(c) => {
-                      setSelected(c ? new Set(filteredDishes.map(d => d.id)) : new Set());
-                    }}
+                    checked={allOnPageSelected}
+                    onCheckedChange={(c) => selectAllOnPage(!!c)}
                   />
                 </TableHead>
                 <TableHead>Naam</TableHead>
@@ -454,12 +538,12 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
                     <TableCell colSpan={8}><div className="h-10 bg-muted rounded animate-pulse" /></TableCell>
                   </TableRow>
                 ))
-              ) : filteredDishes.length === 0 ? (
+              ) : paginatedDishes.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Geen gerechten gevonden</TableCell>
                 </TableRow>
               ) : (
-                filteredDishes.map(dish => (
+                paginatedDishes.map(dish => (
                   <TableRow key={dish.id} className={!dish.synonyms?.length ? 'bg-amber-50/50 dark:bg-amber-950/20' : ''}>
                     <TableCell>
                       <Checkbox checked={selected.has(dish.id)} onCheckedChange={() => toggleSelect(dish.id)} />
@@ -536,6 +620,23 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
             </TableBody>
           </Table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-4 pt-4 border-t">
+            <p className="text-sm text-muted-foreground">
+              {filteredDishes.length} resultaten • Pagina {page} van {totalPages}
+            </p>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -627,4 +728,3 @@ function EditDishForm({ dish, onSave }: { dish: Dish; onSave: (dish: Dish) => vo
     </div>
   );
 }
-
