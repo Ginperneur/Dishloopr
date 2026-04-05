@@ -1,5 +1,6 @@
 import { Header } from './Header';
 import { Footer } from './Footer';
+import { BottomNav } from './BottomNav';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -19,11 +20,12 @@ export function Layout({ children, showFooter = true }: LayoutProps) {
       <Header />
       <main 
         id="main-content"
-        className="flex-1 w-full max-w-full overflow-x-hidden page-transition"
+        className="flex-1 w-full max-w-full overflow-x-hidden page-transition has-bottom-nav"
       >
         {children}
       </main>
       {showFooter && <Footer />}
+      <BottomNav />
     </div>
   );
 }
