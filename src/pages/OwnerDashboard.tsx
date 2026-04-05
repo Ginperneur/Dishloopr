@@ -518,46 +518,153 @@ export default function OwnerDashboard() {
 
           {/* ===== CONTENT TAB ===== */}
           <TabsContent value="content" className="space-y-8">
-            {/* Restaurant Details Quick Settings */}
+            {/* Restaurant Quick Settings */}
             {selectedRestaurant && (
               <div>
                 <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
                   <Store className="h-5 w-5 text-primary" />
-                  Restaurant Details
+                  Restaurant Instellingen
                 </h3>
                 <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg">☀️</span>
-                        <div>
-                          <p className="font-medium text-sm">Terras beschikbaar</p>
-                          <p className="text-xs text-muted-foreground">Geef aan of gasten buiten kunnen zitten</p>
-                        </div>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="sr-only peer"
-                          checked={(selectedRestaurant as any).has_terrace ?? false}
-                          onChange={async (e) => {
-                            const newValue = e.target.checked;
-                            const { error } = await supabase
-                              .from('restaurants')
-                              .update({ has_terrace: newValue } as any)
-                              .eq('id', selectedRestaurant.id);
-                            if (error) {
-                              toast.error('Kon instelling niet opslaan');
-                            } else {
-                              toast.success(newValue ? 'Terras geactiveerd' : 'Terras gedeactiveerd');
-                              // Update local state
-                              setSelectedRestaurant({ ...selectedRestaurant, has_terrace: newValue } as any);
-                            }
-                          }}
-                        />
-                        <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:bg-primary transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-background after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
-                      </label>
-                    </div>
+                  <CardContent className="p-4 space-y-0 divide-y divide-border">
+                    {/* Fully Halal Toggle */}
+                    <ToggleRow
+                      emoji="✓"
+                      emojiClass="text-green-600 font-bold"
+                      title="Volledig Halal"
+                      description="Alle gerechten in dit restaurant zijn halal"
+                      checked={(selectedRestaurant as any).is_fully_halal ?? false}
+                      onChange={async (newValue) => {
+                        const { error } = await supabase
+                          .from('restaurants')
+                          .update({ is_fully_halal: newValue } as any)
+                          .eq('id', selectedRestaurant.id);
+                        if (error) {
+                          toast.error('Kon instelling niet opslaan');
+                          return;
+                        }
+                        // Mark all restaurant_dishes as halal
+                        if (newValue) {
+                          await supabase
+                            .from('restaurant_dishes')
+                            .update({ is_halal: true } as any)
+                            .eq('restaurant_id', selectedRestaurant.id)
+                            .neq('status', 'rejected');
+                        }
+                        toast.success(newValue ? 'Restaurant als halal gemarkeerd — alle gerechten bijgewerkt' : 'Halal-markering verwijderd');
+                        setSelectedRestaurant({ ...selectedRestaurant, is_fully_halal: newValue } as any);
+                      }}
+                    />
+                    {/* Fully Vegetarian */}
+                    <ToggleRow
+                      emoji="🥬"
+                      title="Volledig Vegetarisch"
+                      description="Alle gerechten in dit restaurant zijn vegetarisch"
+                      checked={(selectedRestaurant as any).is_fully_vegetarian ?? false}
+                      onChange={async (newValue) => {
+                        const { error } = await supabase
+                          .from('restaurants')
+                          .update({ is_fully_vegetarian: newValue } as any)
+                          .eq('id', selectedRestaurant.id);
+                        if (error) { toast.error('Kon instelling niet opslaan'); return; }
+                        if (newValue) {
+                          await supabase
+                            .from('restaurant_dishes')
+                            .update({ is_vegetarian: true } as any)
+                            .eq('restaurant_id', selectedRestaurant.id)
+                            .neq('status', 'rejected');
+                        }
+                        toast.success(newValue ? 'Restaurant als vegetarisch gemarkeerd' : 'Vegetarisch-markering verwijderd');
+                        setSelectedRestaurant({ ...selectedRestaurant, is_fully_vegetarian: newValue } as any);
+                      }}
+                    />
+                    {/* Fully Vegan */}
+                    <ToggleRow
+                      emoji="🌱"
+                      title="Volledig Veganistisch"
+                      description="Alle gerechten in dit restaurant zijn veganistisch"
+                      checked={(selectedRestaurant as any).is_fully_vegan ?? false}
+                      onChange={async (newValue) => {
+                        const { error } = await supabase
+                          .from('restaurants')
+                          .update({ is_fully_vegan: newValue } as any)
+                          .eq('id', selectedRestaurant.id);
+                        if (error) { toast.error('Kon instelling niet opslaan'); return; }
+                        if (newValue) {
+                          await supabase
+                            .from('restaurant_dishes')
+                            .update({ is_vegan: true, is_vegetarian: true } as any)
+                            .eq('restaurant_id', selectedRestaurant.id)
+                            .neq('status', 'rejected');
+                        }
+                        toast.success(newValue ? 'Restaurant als veganistisch gemarkeerd' : 'Veganistisch-markering verwijderd');
+                        setSelectedRestaurant({ ...selectedRestaurant, is_fully_vegan: newValue } as any);
+                      }}
+                    />
+                    {/* Terrace */}
+                    <ToggleRow
+                      emoji="☀️"
+                      title="Terras beschikbaar"
+                      description="Gasten kunnen buiten zitten"
+                      checked={(selectedRestaurant as any).has_terrace ?? false}
+                      onChange={async (newValue) => {
+                        const { error } = await supabase
+                          .from('restaurants')
+                          .update({ has_terrace: newValue } as any)
+                          .eq('id', selectedRestaurant.id);
+                        if (error) { toast.error('Kon instelling niet opslaan'); return; }
+                        toast.success(newValue ? 'Terras geactiveerd' : 'Terras gedeactiveerd');
+                        setSelectedRestaurant({ ...selectedRestaurant, has_terrace: newValue } as any);
+                      }}
+                    />
+                    {/* Reservations */}
+                    <ToggleRow
+                      emoji="📅"
+                      title="Reserveringen"
+                      description="Dit restaurant accepteert reserveringen"
+                      checked={(selectedRestaurant as any).accepts_reservations ?? false}
+                      onChange={async (newValue) => {
+                        const { error } = await supabase
+                          .from('restaurants')
+                          .update({ accepts_reservations: newValue } as any)
+                          .eq('id', selectedRestaurant.id);
+                        if (error) { toast.error('Kon instelling niet opslaan'); return; }
+                        toast.success(newValue ? 'Reserveringen geactiveerd' : 'Reserveringen gedeactiveerd');
+                        setSelectedRestaurant({ ...selectedRestaurant, accepts_reservations: newValue } as any);
+                      }}
+                    />
+                    {/* Delivery */}
+                    <ToggleRow
+                      emoji="🚗"
+                      title="Bezorging"
+                      description="Dit restaurant biedt bezorging aan"
+                      checked={(selectedRestaurant as any).has_delivery ?? false}
+                      onChange={async (newValue) => {
+                        const { error } = await supabase
+                          .from('restaurants')
+                          .update({ has_delivery: newValue } as any)
+                          .eq('id', selectedRestaurant.id);
+                        if (error) { toast.error('Kon instelling niet opslaan'); return; }
+                        toast.success(newValue ? 'Bezorging geactiveerd' : 'Bezorging gedeactiveerd');
+                        setSelectedRestaurant({ ...selectedRestaurant, has_delivery: newValue } as any);
+                      }}
+                    />
+                    {/* Takeaway */}
+                    <ToggleRow
+                      emoji="🥡"
+                      title="Afhaal"
+                      description="Dit restaurant biedt afhaal aan"
+                      checked={(selectedRestaurant as any).has_takeaway ?? false}
+                      onChange={async (newValue) => {
+                        const { error } = await supabase
+                          .from('restaurants')
+                          .update({ has_takeaway: newValue } as any)
+                          .eq('id', selectedRestaurant.id);
+                        if (error) { toast.error('Kon instelling niet opslaan'); return; }
+                        toast.success(newValue ? 'Afhaal geactiveerd' : 'Afhaal gedeactiveerd');
+                        setSelectedRestaurant({ ...selectedRestaurant, has_takeaway: newValue } as any);
+                      }}
+                    />
                   </CardContent>
                 </Card>
               </div>
