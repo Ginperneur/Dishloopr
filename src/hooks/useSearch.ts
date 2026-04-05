@@ -36,8 +36,31 @@ interface SearchFilters {
   hasTerrace?: boolean;
 }
 
-// Performance: DB result limit to prevent fetching entire table
-const DB_RESULT_LIMIT = 500;
+// Max restaurants to fetch for browse-mode (no dish query)
+const BROWSE_LIMIT = 500;
+
+/**
+ * Paginated fetch helper — defeats Supabase's 1000-row default cap.
+ * Fetches all rows matching a query by paginating with .range().
+ */
+async function fetchAllRows<T>(
+  buildQuery: (from: number, to: number) => any,
+  pageSize = 1000
+): Promise<T[]> {
+  const allRows: T[] = [];
+  let offset = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    const { data, error } = await buildQuery(offset, offset + pageSize - 1);
+    if (error || !data) break;
+    allRows.push(...(data as T[]));
+    hasMore = data.length === pageSize;
+    offset += pageSize;
+  }
+
+  return allRows;
+}
 
 export function useSearch() {
   const [loading, setLoading] = useState(false);
@@ -55,8 +78,7 @@ export function useSearch() {
   };
 
   /**
-   * Search for matching dishes server-side using ilike queries.
-   * This avoids loading all 8000+ dishes client-side.
+   * Search for matching dishes server-side using the search_dishes_by_term RPC.
    */
   const findMatchingDishes = async (term: string): Promise<Dish[]> => {
     const { data, error } = await supabase.rpc('search_dishes_by_term', { search_term: term });
@@ -89,7 +111,7 @@ export function useSearch() {
       if (citiesToUse.length > 0) setCities(citiesToUse);
     }
     
-    // Find matching dishes SERVER-SIDE for each query term
+    // ── Step 1: Find matching dishes SERVER-SIDE ──
     const matchingDishesByTerm = new Map<string, Dish[]>();
     const allMatchingDishes: Dish[] = [];
     const seen = new Set<string>();
@@ -121,71 +143,95 @@ export function useSearch() {
       });
     }
 
-    // When we have dish matches, pre-fetch which restaurants have those dishes
-    // This avoids the DB_RESULT_LIMIT cutting off relevant restaurants
-    let dishLinkedRestaurantIds: Set<string> | null = null;
+    // ── Step 2: Get ALL restaurant-dish links (paginated, no 1000-row cap) ──
+    let restaurantDishMap = new Map<string, DishMatchInfo[]>();
+    const dishLinkedRestaurantIds = new Set<string>();
+
     if (matchingDishes.length > 0) {
       const dishIds = matchingDishes.map(d => d.id);
-      const { data: links } = await supabase
-        .from('restaurant_dishes')
-        .select('restaurant_id')
-        .in('dish_id', dishIds)
-        .neq('status', 'rejected');
-      
-      if (links) {
-        dishLinkedRestaurantIds = new Set(links.map(l => l.restaurant_id));
+
+      const links = await fetchAllRows<{
+        restaurant_id: string;
+        dish_id: string;
+        is_signature: boolean;
+        confidence_score: number;
+      }>((from, to) =>
+        supabase
+          .from('restaurant_dishes')
+          .select('restaurant_id, dish_id, is_signature, confidence_score')
+          .in('dish_id', dishIds)
+          .neq('status', 'rejected')
+          .range(from, to)
+      );
+
+      links.forEach(link => {
+        dishLinkedRestaurantIds.add(link.restaurant_id);
+        const dishName = matchingDishes.find(d => d.id === link.dish_id)?.name;
+        if (dishName) {
+          const existing = restaurantDishMap.get(link.restaurant_id) || [];
+          existing.push({
+            name: dishName,
+            isSignature: link.is_signature || false,
+            confidenceScore: Number(link.confidence_score) || 0.5,
+          });
+          restaurantDishMap.set(link.restaurant_id, existing);
+        }
+      });
+    }
+
+    // ── Step 3: Fetch restaurants ──
+    // When we have dish matches, fetch ONLY those restaurants (precise, no limit).
+    // For browse/text-only, apply a reasonable limit.
+    const hasDishMatches = matchingDishes.length > 0;
+
+    const buildRestaurantQuery = () => {
+      let q = supabase.from('restaurants').select('*').eq('is_active', true);
+
+      if (hasDishMatches) {
+        // Fetch only restaurants that have matching dishes — split into batches if >300 IDs
+        const ids = [...dishLinkedRestaurantIds];
+        q = q.in('id', ids);
+      } else {
+        q = q.limit(BROWSE_LIMIT);
       }
-    }
 
-    // Build restaurant query
-    let restaurantQuery = supabase
-      .from('restaurants')
-      .select('*')
-      .eq('is_active', true);
+      if (featuredOnly) {
+        q = q.or('is_featured.eq.true,is_top_listing.eq.true');
+      }
+      if (cityId && cityId !== 'all') {
+        q = q.eq('city_id', cityId);
+      }
 
-    // When dish matches exist, fetch only those restaurants (precise, no limit needed)
-    // Otherwise use the general limit
-    if (dishLinkedRestaurantIds && dishLinkedRestaurantIds.size > 0) {
-      restaurantQuery = restaurantQuery.in('id', [...dishLinkedRestaurantIds]);
-    } else {
-      restaurantQuery = restaurantQuery.limit(DB_RESULT_LIMIT);
-    }
+      // Apply filters
+      if (filters?.priceLevel && filters.priceLevel.length > 0) {
+        q = q.in('price_level', filters.priceLevel);
+      }
+      if (filters?.ambienceTags && filters.ambienceTags.length > 0) {
+        q = q.overlaps('ambience_tags', filters.ambienceTags);
+      }
+      if (filters?.cuisines && filters.cuisines.length > 0) {
+        q = q.overlaps('cuisines', filters.cuisines);
+      }
+      if (filters?.concepts && filters.concepts.length > 0) {
+        q = q.overlaps('concepts', filters.concepts);
+      }
+      if (filters?.mealTypes && filters.mealTypes.length > 0) {
+        q = q.overlaps('meal_types', filters.mealTypes);
+      }
+      if (filters?.experiences && filters.experiences.length > 0) {
+        q = q.overlaps('experiences', filters.experiences);
+      }
+      if (filters?.dietaryOptions && filters.dietaryOptions.length > 0) {
+        q = q.overlaps('dietary_options', filters.dietaryOptions);
+      }
+      if (filters?.hasTerrace) {
+        q = q.eq('has_terrace', true);
+      }
 
-    if (featuredOnly) {
-      restaurantQuery = restaurantQuery.or('is_featured.eq.true,is_top_listing.eq.true');
-    }
+      return q;
+    };
 
-    if (cityId && cityId !== 'all') {
-      restaurantQuery = restaurantQuery.eq('city_id', cityId);
-    }
-
-    // Apply filters
-    if (filters?.priceLevel && filters.priceLevel.length > 0) {
-      restaurantQuery = restaurantQuery.in('price_level', filters.priceLevel);
-    }
-    if (filters?.ambienceTags && filters.ambienceTags.length > 0) {
-      restaurantQuery = restaurantQuery.overlaps('ambience_tags', filters.ambienceTags);
-    }
-    if (filters?.cuisines && filters.cuisines.length > 0) {
-      restaurantQuery = restaurantQuery.overlaps('cuisines', filters.cuisines);
-    }
-    if (filters?.concepts && filters.concepts.length > 0) {
-      restaurantQuery = restaurantQuery.overlaps('concepts', filters.concepts);
-    }
-    if (filters?.mealTypes && filters.mealTypes.length > 0) {
-      restaurantQuery = restaurantQuery.overlaps('meal_types', filters.mealTypes);
-    }
-    if (filters?.experiences && filters.experiences.length > 0) {
-      restaurantQuery = restaurantQuery.overlaps('experiences', filters.experiences);
-    }
-    if (filters?.dietaryOptions && filters.dietaryOptions.length > 0) {
-      restaurantQuery = restaurantQuery.overlaps('dietary_options', filters.dietaryOptions);
-    }
-    if (filters?.hasTerrace) {
-      restaurantQuery = restaurantQuery.eq('has_terrace', true);
-    }
-
-    const { data: restaurants, error } = await restaurantQuery;
+    const { data: restaurants, error } = await buildRestaurantQuery();
 
     if (error || !restaurants) {
       if (error) console.error('Search error:', error);
@@ -194,7 +240,7 @@ export function useSearch() {
       return;
     }
 
-    // Batch fetch chain info (single query, not N+1)
+    // ── Step 4: Chain info (batch) ──
     const chainIds = [...new Set(restaurants.map(r => r.chain_id).filter(Boolean))] as string[];
     const chainNameById = new Map<string, string>();
     const chainCountById = new Map<string, number>();
@@ -212,7 +258,7 @@ export function useSearch() {
 
     const cityMap = new Map(citiesToUse.map(c => [c.id, c.name]));
 
-    // No query: return all with Bayesian rating sort
+    // ── Step 5: No query → browse mode ──
     if (queryTerms.length === 0) {
       const scoredResults: SearchResult[] = restaurants.map(r => ({
         ...r,
@@ -229,36 +275,7 @@ export function useSearch() {
       return;
     }
 
-    // Fetch dish links with confidence_score (single batch query)
-    let restaurantDishMap = new Map<string, DishMatchInfo[]>();
-    
-    if (matchingDishes.length > 0) {
-      const dishIds = matchingDishes.map(d => d.id);
-      const { data: links } = await supabase
-        .from('restaurant_dishes')
-        .select('restaurant_id, dish_id, status, is_signature, confidence_score')
-        .in('dish_id', dishIds)
-        .neq('status', 'rejected');
-
-      if (links) {
-        links.forEach(link => {
-          const dishName = matchingDishes.find(d => d.id === link.dish_id)?.name;
-          if (dishName) {
-            const existing = restaurantDishMap.get(link.restaurant_id) || [];
-            restaurantDishMap.set(link.restaurant_id, [
-              ...existing,
-              {
-                name: dishName,
-                isSignature: link.is_signature || false,
-                confidenceScore: Number(link.confidence_score) || 0.5,
-              },
-            ]);
-          }
-        });
-      }
-    }
-
-    // Sponsored check (single batch query)
+    // ── Step 6: Sponsored check ──
     const sponsoredRestaurants = new Set<string>();
     if (matchingDishes.length > 0 && cityId && cityId !== 'all') {
       const dishIds = matchingDishes.map(d => d.id);
@@ -278,14 +295,13 @@ export function useSearch() {
       }
     }
 
-    // Build per-restaurant query term coverage map for multi-dish search
+    // ── Step 7: Multi-dish coverage ──
     const restaurantTermCoverage = new Map<string, number>();
     if (isMultiDish && matchingDishesByTerm.size > 0) {
       for (const [_term, termDishes] of matchingDishesByTerm) {
         const termDishIds = new Set(termDishes.map(d => d.id));
-        // For each restaurant that has linked dishes, check if any match this term
-        for (const [restaurantId, dishes] of restaurantDishMap) {
-          const matchesTerm = dishes.some(d => {
+        for (const [restaurantId, rDishes] of restaurantDishMap) {
+          const matchesTerm = rDishes.some(d => {
             const dish = matchingDishes.find(md => md.name === d.name);
             return dish && termDishIds.has(dish.id);
           });
@@ -296,10 +312,7 @@ export function useSearch() {
       }
     }
 
-    // When query matches known dishes, ONLY show restaurants that have those dishes
-    const hasDishMatches = matchingDishes.length > 0;
-
-    // Score all restaurants using ranking engine
+    // ── Step 8: Score & rank ──
     const scoredResults: SearchResult[] = [];
     const totalQueryTerms = isMultiDish ? queryTerms.length : 1;
 
