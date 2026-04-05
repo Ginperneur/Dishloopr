@@ -117,7 +117,7 @@ export function AdminSidebar({ activeSection, onSectionChange, pendingReviews = 
         )}
 
         {navGroups.map((group) => (
-          <SidebarGroup key={group.label} defaultOpen>
+          <SidebarGroup key={group.label}>
             <SidebarGroupLabel className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/70">
               {group.label}
             </SidebarGroupLabel>
