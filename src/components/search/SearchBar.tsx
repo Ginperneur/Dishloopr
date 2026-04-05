@@ -48,7 +48,6 @@ export function SearchBar({
   const [restaurantSuggestions, setRestaurantSuggestions] = useState<Restaurant[]>([]);
   const [cuisineSuggestions, setCuisineSuggestions] = useState<string[]>([]);
   const [cities, setCities] = useState<City[]>([]);
-  const [allDishes, setAllDishes] = useState<Dish[]>([]);
   const [allRestaurants, setAllRestaurants] = useState<Restaurant[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showCityDropdown, setShowCityDropdown] = useState(false);
