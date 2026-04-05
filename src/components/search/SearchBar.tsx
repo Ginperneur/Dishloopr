@@ -48,7 +48,6 @@ export function SearchBar({
   const [restaurantSuggestions, setRestaurantSuggestions] = useState<Restaurant[]>([]);
   const [cuisineSuggestions, setCuisineSuggestions] = useState<string[]>([]);
   const [cities, setCities] = useState<City[]>([]);
-  const [allDishes, setAllDishes] = useState<Dish[]>([]);
   const [allRestaurants, setAllRestaurants] = useState<Restaurant[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showCityDropdown, setShowCityDropdown] = useState(false);
@@ -57,59 +56,61 @@ export function SearchBar({
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const cityButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Fetch cities, dishes and restaurants on mount
+  // Fetch cities and restaurants on mount (dishes are searched server-side)
   useEffect(() => {
     const fetchData = async () => {
-      const [citiesRes, dishesRes, restaurantsRes] = await Promise.all([
+      const [citiesRes, restaurantsRes] = await Promise.all([
         supabase.from('cities').select('*').eq('is_active', true).order('name'),
-        supabase.from('dishes').select('*').eq('is_active', true).order('search_count', { ascending: false }),
-        supabase.from('restaurants').select('*').eq('is_active', true).order('rating', { ascending: false })
+        supabase.from('restaurants').select('*').eq('is_active', true).order('rating', { ascending: false }).limit(500),
       ]);
       setCities(citiesRes.data || []);
-      setAllDishes(dishesRes.data || []);
       setAllRestaurants(restaurantsRes.data || []);
     };
     fetchData();
   }, []);
 
-  // Get unique cuisines from dishes
-  const allCuisines = [...new Set(allDishes.flatMap(d => d.cuisine_tags || []))];
 
+
+
+  // Debounced server-side dish search
   useEffect(() => {
-    if (query.length >= 2) {
+    if (query.length < 2) {
+      setSuggestions([]);
+      setRestaurantSuggestions([]);
+      setCuisineSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
       const queryLower = query.toLowerCase();
-
-      // Filter dishes by name or synonyms, excluding already selected
       const selectedLower = selectedDishes.map(d => d.toLowerCase());
-      const filteredDishes = allDishes.filter(
-        d =>
-          !selectedLower.includes(d.name.toLowerCase()) &&
-          (d.name.toLowerCase().includes(queryLower) ||
-          d.name_en?.toLowerCase().includes(queryLower) ||
-          d.synonyms?.some(s => s.toLowerCase().includes(queryLower)))
-      );
-      setSuggestions(filteredDishes.slice(0, 5));
 
-      // Filter restaurants by name
+      // Server-side dish search via RPC (no 1000-row cap)
+      const { data: dishResults } = await supabase.rpc('search_dishes_by_term', { search_term: queryLower });
+      const filteredDishes = (dishResults || []).filter(
+        (d: Dish) => !selectedLower.includes(d.name.toLowerCase())
+      );
+      setSuggestions(filteredDishes.slice(0, 8));
+
+      // Filter restaurants by name (client-side, from pre-loaded top-500)
       const filteredRestaurants = allRestaurants.filter(
         r => r.name.toLowerCase().includes(queryLower)
       );
       setRestaurantSuggestions(filteredRestaurants.slice(0, 3));
 
-      // Filter cuisines
-      const filteredCuisines = allCuisines.filter(c =>
+      // Filter cuisines from dish results
+      const dishCuisines = [...new Set(filteredDishes.flatMap((d: Dish) => d.cuisine_tags || []))];
+      const filteredCuisines = dishCuisines.filter(c =>
         c.toLowerCase().includes(queryLower)
       );
       setCuisineSuggestions(filteredCuisines.slice(0, 3));
 
       setShowSuggestions(!suppressSuggestionsRef.current && (filteredDishes.length > 0 || filteredCuisines.length > 0 || filteredRestaurants.length > 0));
-    } else {
-      setSuggestions([]);
-      setRestaurantSuggestions([]);
-      setCuisineSuggestions([]);
-      setShowSuggestions(false);
-    }
-  }, [query, allDishes, allRestaurants]);
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [query, allRestaurants, selectedDishes]);
 
   // Close dropdowns on escape
   useEffect(() => {

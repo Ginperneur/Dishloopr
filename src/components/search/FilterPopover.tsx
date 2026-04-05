@@ -71,7 +71,7 @@ const EXPERIENCE_OPTIONS = [
 const DIETARY_OPTIONS = [
   { value: 'vegan', key: 'filters.vegan', emoji: '🌱' },
   { value: 'gluten-free', key: 'filters.glutenFree', emoji: '🌾' },
-  { value: 'halal', key: 'filters.halal', emoji: '☪️' },
+  { value: 'halal', key: 'filters.halal', emoji: '✓' },
   { value: 'lactose-free', key: 'filters.lactoseFree', emoji: '🥛' },
 ];
 

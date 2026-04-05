@@ -199,7 +199,9 @@ export default function SearchPage() {
     filters.cuisines.length +
     filters.concepts.length +
     filters.mealTypes.length +
-    filters.experiences.length;
+    filters.experiences.length +
+    filters.dietaryOptions.length +
+    (filters.hasTerrace ? 1 : 0);
 
   const cityName = selectedCityId === 'all' 
     ? t('cities.all') 
@@ -412,6 +414,27 @@ export default function SearchPage() {
                 <X className="h-3 w-3 ml-1" />
               </Badge>
             ))}
+            {filters.dietaryOptions.map(d => (
+              <Badge 
+                key={`diet-${d}`} 
+                variant="secondary"
+                className="cursor-pointer capitalize text-xs"
+                onClick={() => toggleFilter('dietaryOptions', d)}
+              >
+                {d.replace('-', ' ')}
+                <X className="h-3 w-3 ml-1" />
+              </Badge>
+            ))}
+            {filters.hasTerrace && (
+              <Badge 
+                variant="secondary"
+                className="cursor-pointer text-xs"
+                onClick={() => setFilters(prev => ({ ...prev, hasTerrace: undefined }))}
+              >
+                ☀️ Terras
+                <X className="h-3 w-3 ml-1" />
+              </Badge>
+            )}
             <Button variant="ghost" size="sm" onClick={clearFilters} className="h-6 text-xs px-2">
               {t('filters.clearAll')}
             </Button>

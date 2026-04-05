@@ -179,6 +179,33 @@ export function useSearch() {
       });
     }
 
+    // ── Step 2b: Dietary filter — get restaurant IDs via restaurant_dishes ──
+    let dietaryRestaurantIds: Set<string> | null = null;
+    if (filters?.dietaryOptions && filters.dietaryOptions.length > 0) {
+      const dietaryMap: Record<string, string> = {
+        'vegan': 'is_vegan',
+        'gluten-free': 'is_gluten_free',
+        'halal': 'is_halal',
+        'lactose-free': 'is_gluten_free', // no lactose column, approximate
+      };
+
+      // Build OR filter conditions for each dietary option
+      const orConditions = filters.dietaryOptions
+        .map(opt => dietaryMap[opt])
+        .filter(Boolean)
+        .map(col => `${col}.eq.true`);
+
+      if (orConditions.length > 0) {
+        const { data: dietaryLinks } = await supabase
+          .from('restaurant_dishes')
+          .select('restaurant_id')
+          .neq('status', 'rejected')
+          .or(orConditions.join(','));
+
+        dietaryRestaurantIds = new Set((dietaryLinks || []).map((l: any) => l.restaurant_id));
+      }
+    }
+
     // ── Step 3: Fetch restaurants ──
     // When we have dish matches, fetch ONLY those restaurants (precise, no limit).
     // For browse/text-only, apply a reasonable limit.
@@ -188,9 +215,26 @@ export function useSearch() {
       let q = supabase.from('restaurants').select('*').eq('is_active', true);
 
       if (hasDishMatches) {
-        // Fetch only restaurants that have matching dishes — split into batches if >300 IDs
-        const ids = [...dishLinkedRestaurantIds];
-        q = q.in('id', ids);
+        // Fetch only restaurants that have matching dishes
+        let targetIds = [...dishLinkedRestaurantIds];
+        // If dietary filter is active, intersect with dietary results
+        if (dietaryRestaurantIds) {
+          targetIds = targetIds.filter(id => dietaryRestaurantIds!.has(id));
+        }
+        if (targetIds.length === 0) {
+          // No matches possible
+          q = q.eq('id', '00000000-0000-0000-0000-000000000000');
+        } else {
+          q = q.in('id', targetIds);
+        }
+      } else if (dietaryRestaurantIds) {
+        // No dish search, but dietary filter active
+        const ids = [...dietaryRestaurantIds];
+        if (ids.length === 0) {
+          q = q.eq('id', '00000000-0000-0000-0000-000000000000');
+        } else {
+          q = q.in('id', ids);
+        }
       } else {
         q = q.limit(BROWSE_LIMIT);
       }
@@ -207,10 +251,48 @@ export function useSearch() {
         q = q.in('price_level', filters.priceLevel);
       }
       if (filters?.ambienceTags && filters.ambienceTags.length > 0) {
-        q = q.overlaps('ambience_tags', filters.ambienceTags);
+        // Case-insensitive matching: include both original and lowercase variants
+        const expandedTags = filters.ambienceTags.flatMap(tag => {
+          const lower = tag.toLowerCase();
+          const capitalized = tag.charAt(0).toUpperCase() + tag.slice(1).toLowerCase();
+          return [...new Set([tag, lower, capitalized])];
+        });
+        q = q.overlaps('ambience_tags', expandedTags);
       }
       if (filters?.cuisines && filters.cuisines.length > 0) {
-        q = q.overlaps('cuisines', filters.cuisines);
+        // Map English filter values to all known DB variants (case-insensitive)
+        const cuisineAliases: Record<string, string[]> = {
+          'japanese': ['japanese', 'japans', 'Japans'],
+          'italian': ['italian', 'italiaans', 'Italiaans'],
+          'french': ['french', 'frans', 'Frans'],
+          'chinese': ['chinese', 'chinees', 'Chinees'],
+          'indian': ['indian', 'indiaas', 'Indiaas'],
+          'mexican': ['mexican', 'mexicaans', 'Mexicaans'],
+          'thai': ['thai', 'thais', 'Thais'],
+          'greek': ['greek', 'grieks', 'Grieks'],
+          'spanish': ['spanish', 'spaans', 'Spaans'],
+          'korean': ['korean', 'koreaans', 'Koreaans'],
+          'vietnamese': ['vietnamese', 'vietnamees', 'Vietnamees'],
+          'american': ['american', 'amerikaans', 'Amerikaans', 'americaans'],
+          'vegetarian': ['vegetarian', 'vegetarisch', 'Vegetarisch'],
+          'vegan': ['vegan', 'veganistisch', 'Veganistisch'],
+          'seafood': ['seafood', 'vis', 'Vis', 'zeevruchten'],
+          'steakhouse': ['steakhouse', 'Steakhouse'],
+          'sushi': ['sushi', 'Sushi'],
+          'mediterranean': ['mediterranean', 'mediterraans', 'Mediterraans'],
+          'indonesian': ['indonesian', 'indonesisch', 'Indonesisch'],
+          'surinamese': ['surinamese', 'surinaams', 'Surinaams'],
+          'asian': ['asian', 'aziatisch', 'Aziatisch'],
+          'fusion': ['fusion', 'Fusion'],
+          'dutch': ['dutch', 'nederlands', 'Nederlands', 'hollands'],
+          'international': ['international', 'internationaal', 'Internationaal'],
+          'kantonees': ['kantonees', 'Kantonees', 'cantonese'],
+        };
+        const expandedCuisines = filters.cuisines.flatMap(c => {
+          const aliases = cuisineAliases[c.toLowerCase()];
+          return aliases || [c, c.toLowerCase(), c.charAt(0).toUpperCase() + c.slice(1).toLowerCase()];
+        });
+        q = q.overlaps('cuisines', [...new Set(expandedCuisines)]);
       }
       if (filters?.concepts && filters.concepts.length > 0) {
         q = q.overlaps('concepts', filters.concepts);
@@ -221,9 +303,7 @@ export function useSearch() {
       if (filters?.experiences && filters.experiences.length > 0) {
         q = q.overlaps('experiences', filters.experiences);
       }
-      if (filters?.dietaryOptions && filters.dietaryOptions.length > 0) {
-        q = q.overlaps('dietary_options', filters.dietaryOptions);
-      }
+      // Dietary is already handled via restaurant_dishes pre-filter above
       if (filters?.hasTerrace) {
         q = q.eq('has_terrace', true);
       }
