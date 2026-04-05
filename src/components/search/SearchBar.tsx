@@ -57,16 +57,14 @@ export function SearchBar({
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const cityButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Fetch cities, dishes and restaurants on mount
+  // Fetch cities and restaurants on mount (dishes are searched server-side)
   useEffect(() => {
     const fetchData = async () => {
-      const [citiesRes, dishesRes, restaurantsRes] = await Promise.all([
+      const [citiesRes, restaurantsRes] = await Promise.all([
         supabase.from('cities').select('*').eq('is_active', true).order('name'),
-        supabase.from('dishes').select('*').eq('is_active', true).order('search_count', { ascending: false }),
-        supabase.from('restaurants').select('*').eq('is_active', true).order('rating', { ascending: false })
+        supabase.from('restaurants').select('*').eq('is_active', true).order('rating', { ascending: false }).limit(500),
       ]);
       setCities(citiesRes.data || []);
-      setAllDishes(dishesRes.data || []);
       setAllRestaurants(restaurantsRes.data || []);
     };
     fetchData();
