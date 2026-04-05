@@ -260,11 +260,15 @@ export default function RestaurantPage() {
                   )}
 
                   <div className="flex flex-wrap items-center gap-2 md:gap-4 text-sm md:text-base text-muted-foreground mb-3">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 md:h-5 md:w-5 fill-rating text-rating" />
-                      <span className="font-semibold text-foreground">{Number(restaurant.rating).toFixed(1)}</span>
-                      <span>({restaurant.review_count} {t('restaurant.reviews')})</span>
-                    </div>
+                    {restaurant.review_count > 0 ? (
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 md:h-5 md:w-5 fill-rating text-rating" />
+                        <span className="font-semibold text-foreground">{Number(restaurant.rating).toFixed(1)}</span>
+                        <span>({restaurant.review_count} {t('restaurant.reviews')})</span>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">{t('restaurant.noReviewsYet', 'Nog geen beoordelingen')}</span>
+                    )}
                     <span className="hidden md:inline">{PRICE_LABELS_FULL[restaurant.price_level]}</span>
                     <span className="md:hidden">{'€'.repeat(restaurant.price_level)}</span>
                   </div>
