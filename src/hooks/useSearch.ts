@@ -61,43 +61,55 @@ export function useSearch() {
   const findMatchingDishes = async (term: string): Promise<Dish[]> => {
     const pattern = `%${term}%`;
     
-    // Search by name, name_en, and synonyms in parallel
-    const [byName, byNameEn, bySynonym] = await Promise.all([
-      supabase.from('dishes').select('*').eq('is_active', true).ilike('name', pattern).limit(200),
-      supabase.from('dishes').select('*').eq('is_active', true).ilike('name_en', pattern).limit(200),
-      supabase.from('dishes').select('*').eq('is_active', true).contains('synonyms', [term]).limit(200),
-    ]);
+    // Use or() to search name, name_en in a single query
+    // Synonyms are text[] so we use cs (contains) for exact and a second query for partial
+    const { data: matches } = await supabase
+      .from('dishes')
+      .select('*')
+      .eq('is_active', true)
+      .or(`name.ilike.${pattern},name_en.ilike.${pattern}`)
+      .limit(300);
 
-    // Deduplicate
     const seen = new Set<string>();
     const results: Dish[] = [];
-    for (const list of [byName.data, byNameEn.data, bySynonym.data]) {
-      if (!list) continue;
-      for (const dish of list) {
-        if (!seen.has(dish.id)) {
+    
+    if (matches) {
+      for (const dish of matches) {
+        seen.add(dish.id);
+        results.push(dish);
+      }
+    }
+
+    // For synonyms: fetch dishes that have any synonym containing the term
+    // We need to use a broader approach since PostgREST can't do ilike on array elements
+    // Paginate through all dishes checking synonyms server-side via RPC would be ideal,
+    // but for now fetch in batches and filter client-side
+    const BATCH_SIZE = 1000;
+    let offset = 0;
+    let hasMore = true;
+    
+    while (hasMore && offset < 10000) {
+      const { data: batch } = await supabase
+        .from('dishes')
+        .select('*')
+        .eq('is_active', true)
+        .not('synonyms', 'is', null)
+        .range(offset, offset + BATCH_SIZE - 1);
+      
+      if (!batch || batch.length === 0) {
+        hasMore = false;
+        break;
+      }
+      
+      for (const dish of batch) {
+        if (!seen.has(dish.id) && dish.synonyms?.some(s => s.toLowerCase().includes(term))) {
           seen.add(dish.id);
           results.push(dish);
         }
       }
-    }
-    
-    // Also do client-side synonym check (contains does exact array element match,
-    // but we need partial matching in synonyms too)
-    if (results.length < 50) {
-      const { data: allSynonymMatches } = await supabase
-        .from('dishes')
-        .select('*')
-        .eq('is_active', true)
-        .limit(500);
       
-      if (allSynonymMatches) {
-        for (const dish of allSynonymMatches) {
-          if (!seen.has(dish.id) && dish.synonyms?.some(s => s.toLowerCase().includes(term))) {
-            seen.add(dish.id);
-            results.push(dish);
-          }
-        }
-      }
+      if (batch.length < BATCH_SIZE) hasMore = false;
+      offset += BATCH_SIZE;
     }
     
     return results;
