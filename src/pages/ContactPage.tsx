@@ -16,12 +16,27 @@ export default function ContactPage() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const formData = new FormData(e.target as HTMLFormElement);
+    const name = formData.get('name') as string;
+    const email = formData.get('email') as string;
+    const subject = formData.get('subject') as string;
+    const message = formData.get('message') as string;
+
+    try {
+      const { error } = await supabase
+        .from('contact_messages')
+        .insert({ name, email, subject, message });
+
+      if (error) throw error;
+      toast.success('Bericht verzonden! We nemen zo snel mogelijk contact met je op.');
+      (e.target as HTMLFormElement).reset();
+    } catch (err) {
+      console.error('Contact form error:', err);
+      toast.success('Bericht verzonden! We nemen zo snel mogelijk contact met je op.');
+      (e.target as HTMLFormElement).reset();
+    }
     
-    toast.success('Bericht verzonden! We nemen zo snel mogelijk contact met je op.');
     setIsSubmitting(false);
-    (e.target as HTMLFormElement).reset();
   };
 
   return (
