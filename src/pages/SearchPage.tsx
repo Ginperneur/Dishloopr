@@ -414,6 +414,27 @@ export default function SearchPage() {
                 <X className="h-3 w-3 ml-1" />
               </Badge>
             ))}
+            {filters.dietaryOptions.map(d => (
+              <Badge 
+                key={`diet-${d}`} 
+                variant="secondary"
+                className="cursor-pointer capitalize text-xs"
+                onClick={() => toggleFilter('dietaryOptions', d)}
+              >
+                {d.replace('-', ' ')}
+                <X className="h-3 w-3 ml-1" />
+              </Badge>
+            ))}
+            {filters.hasTerrace && (
+              <Badge 
+                variant="secondary"
+                className="cursor-pointer text-xs"
+                onClick={() => setFilters(prev => ({ ...prev, hasTerrace: undefined }))}
+              >
+                ☀️ Terras
+                <X className="h-3 w-3 ml-1" />
+              </Badge>
+            )}
             <Button variant="ghost" size="sm" onClick={clearFilters} className="h-6 text-xs px-2">
               {t('filters.clearAll')}
             </Button>
