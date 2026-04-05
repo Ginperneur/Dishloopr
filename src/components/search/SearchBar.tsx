@@ -69,8 +69,8 @@ export function SearchBar({
     fetchData();
   }, []);
 
-  // Get unique cuisines from dishes
-  const allCuisines = [...new Set(allDishes.flatMap(d => d.cuisine_tags || []))];
+
+
 
   // Debounced server-side dish search
   useEffect(() => {
