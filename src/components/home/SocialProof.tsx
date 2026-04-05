@@ -62,7 +62,7 @@ export function SocialProof() {
 
   const items = [
     { icon: Utensils, value: stats.restaurants, label: 'Restaurants', suffix: '+' },
-    { icon: Star, value: stats.reviews, label: 'Reviews', suffix: '+' },
+    ...(stats.reviews > 0 ? [{ icon: Star, value: stats.reviews, label: 'Reviews', suffix: '+' }] : []),
     { icon: MapPin, value: stats.cities, label: 'Steden', suffix: '' },
     { icon: ChefHat, value: stats.dishes, label: 'Gerechten', suffix: '+' },
   ];

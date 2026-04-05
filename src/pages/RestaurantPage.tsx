@@ -212,7 +212,8 @@ export default function RestaurantPage() {
         {/* Back Button */}
         <Link
           to="/search"
-          className="absolute top-4 left-4 z-10 p-2 rounded-full bg-background/80 backdrop-blur hover:bg-background transition-colors"
+          className="absolute top-4 left-4 z-10 p-2.5 rounded-full bg-background/90 backdrop-blur-sm shadow-lg hover:bg-background transition-colors border border-border/50"
+          aria-label={t('common.back', 'Terug')}
         >
           <ChevronLeft className="h-5 w-5" />
         </Link>
