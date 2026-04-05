@@ -121,12 +121,35 @@ export function useSearch() {
       });
     }
 
-    // Build restaurant query with DB-side limit
+    // When we have dish matches, pre-fetch which restaurants have those dishes
+    // This avoids the DB_RESULT_LIMIT cutting off relevant restaurants
+    let dishLinkedRestaurantIds: Set<string> | null = null;
+    if (matchingDishes.length > 0) {
+      const dishIds = matchingDishes.map(d => d.id);
+      const { data: links } = await supabase
+        .from('restaurant_dishes')
+        .select('restaurant_id')
+        .in('dish_id', dishIds)
+        .neq('status', 'rejected');
+      
+      if (links) {
+        dishLinkedRestaurantIds = new Set(links.map(l => l.restaurant_id));
+      }
+    }
+
+    // Build restaurant query
     let restaurantQuery = supabase
       .from('restaurants')
       .select('*')
-      .eq('is_active', true)
-      .limit(DB_RESULT_LIMIT);
+      .eq('is_active', true);
+
+    // When dish matches exist, fetch only those restaurants (precise, no limit needed)
+    // Otherwise use the general limit
+    if (dishLinkedRestaurantIds && dishLinkedRestaurantIds.size > 0) {
+      restaurantQuery = restaurantQuery.in('id', [...dishLinkedRestaurantIds]);
+    } else {
+      restaurantQuery = restaurantQuery.limit(DB_RESULT_LIMIT);
+    }
 
     if (featuredOnly) {
       restaurantQuery = restaurantQuery.or('is_featured.eq.true,is_top_listing.eq.true');
@@ -154,9 +177,6 @@ export function useSearch() {
     }
     if (filters?.experiences && filters.experiences.length > 0) {
       restaurantQuery = restaurantQuery.overlaps('experiences', filters.experiences);
-    }
-    if (filters?.dietaryOptions && filters.dietaryOptions.length > 0) {
-      restaurantQuery = restaurantQuery.overlaps('dietary_options', filters.dietaryOptions);
     }
     if (filters?.dietaryOptions && filters.dietaryOptions.length > 0) {
       restaurantQuery = restaurantQuery.overlaps('dietary_options', filters.dietaryOptions);
