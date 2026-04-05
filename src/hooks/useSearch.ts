@@ -46,16 +46,25 @@ export function useSearch() {
   const [cities, setCities] = useState<City[]>([]);
 
   useEffect(() => {
-    fetchDishesAndCities();
+    fetchCities();
   }, []);
 
-  const fetchDishesAndCities = async () => {
-    const [dishesRes, citiesRes] = await Promise.all([
-      supabase.from('dishes').select('*').eq('is_active', true),
-      supabase.from('cities').select('*').eq('is_active', true).order('name')
-    ]);
-    setDishes(dishesRes.data || []);
-    setCities(citiesRes.data || []);
+  const fetchCities = async () => {
+    const { data } = await supabase.from('cities').select('*').eq('is_active', true).order('name');
+    if (data) setCities(data);
+  };
+
+  /**
+   * Search for matching dishes server-side using ilike queries.
+   * This avoids loading all 8000+ dishes client-side.
+   */
+  const findMatchingDishes = async (term: string): Promise<Dish[]> => {
+    const { data, error } = await supabase.rpc('search_dishes_by_term', { search_term: term });
+    if (error) {
+      console.error('Dish search error:', error);
+      return [];
+    }
+    return (data as Dish[]) || [];
   };
 
   const search = useCallback(async (query: string, cityId?: string, filters?: SearchFilters, featuredOnly?: boolean) => {
@@ -73,43 +82,44 @@ export function useSearch() {
     
     const ctx: ScoringContext = { queryLower: queryTerms[0] || '', now };
     
-    // Fetch dishes directly if not already loaded (prevents race condition)
-    let dishesToSearch = dishes;
     let citiesToUse = cities;
-    
-    if (dishesToSearch.length === 0 || citiesToUse.length === 0) {
-      const [dishesRes, citiesRes] = await Promise.all([
-        supabase.from('dishes').select('*').eq('is_active', true),
-        supabase.from('cities').select('*').eq('is_active', true).order('name')
-      ]);
-      dishesToSearch = dishesRes.data || [];
-      citiesToUse = citiesRes.data || [];
-      if (dishesToSearch.length > 0) setDishes(dishesToSearch);
+    if (citiesToUse.length === 0) {
+      const { data } = await supabase.from('cities').select('*').eq('is_active', true).order('name');
+      citiesToUse = data || [];
       if (citiesToUse.length > 0) setCities(citiesToUse);
     }
     
-    // Find matching dishes for each query term
-    const matchingDishesByTerm = new Map<string, typeof dishesToSearch>();
-    const allMatchingDishes: typeof dishesToSearch = [];
+    // Find matching dishes SERVER-SIDE for each query term
+    const matchingDishesByTerm = new Map<string, Dish[]>();
+    const allMatchingDishes: Dish[] = [];
+    const seen = new Set<string>();
     
-    for (const term of queryTerms.length > 0 ? queryTerms : [queryLower]) {
-      if (!term) continue;
-      const termMatches = dishesToSearch.filter(dish => {
-        const nameMatch = dish.name.toLowerCase().includes(term);
-        const nameEnMatch = dish.name_en?.toLowerCase().includes(term);
-        const synonymMatch = dish.synonyms?.some(s => s.toLowerCase().includes(term));
-        return nameMatch || nameEnMatch || synonymMatch;
+    if (queryTerms.length > 0) {
+      const termResults = await Promise.all(queryTerms.map(term => findMatchingDishes(term)));
+      
+      queryTerms.forEach((term, i) => {
+        const termMatches = termResults[i];
+        if (termMatches.length > 0) {
+          matchingDishesByTerm.set(term, termMatches);
+          termMatches.forEach(d => {
+            if (!seen.has(d.id)) {
+              seen.add(d.id);
+              allMatchingDishes.push(d);
+            }
+          });
+        }
       });
-      if (termMatches.length > 0) {
-        matchingDishesByTerm.set(term, termMatches);
-        termMatches.forEach(d => {
-          if (!allMatchingDishes.find(x => x.id === d.id)) {
-            allMatchingDishes.push(d);
-          }
-        });
-      }
     }
     const matchingDishes = allMatchingDishes;
+    
+    // Update dishes state for autocomplete/UI
+    if (matchingDishes.length > 0) {
+      setDishes(prev => {
+        const existing = new Set(prev.map(d => d.id));
+        const newDishes = matchingDishes.filter(d => !existing.has(d.id));
+        return newDishes.length > 0 ? [...prev, ...newDishes] : prev;
+      });
+    }
 
     // Build restaurant query with DB-side limit
     let restaurantQuery = supabase
@@ -321,7 +331,7 @@ export function useSearch() {
 
     setResults(rebalanced);
     setLoading(false);
-  }, [dishes, cities]);
+  }, [cities]);
 
   return { search, results, loading, dishes, cities };
 }

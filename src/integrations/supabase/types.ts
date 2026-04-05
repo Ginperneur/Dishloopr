@@ -2557,6 +2557,32 @@ export type Database = {
         Args: { _restaurant_id: string; _user_id: string }
         Returns: boolean
       }
+      search_dishes_by_term: {
+        Args: { search_term: string }
+        Returns: {
+          created_at: string
+          cuisine_tags: string[] | null
+          id: string
+          is_active: boolean
+          is_gluten_free: boolean
+          is_halal: boolean
+          is_vegan: boolean
+          is_vegetarian: boolean
+          name: string
+          name_en: string | null
+          search_count: number
+          seasonal_tags: string[] | null
+          slug: string
+          synonyms: string[] | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "dishes"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       update_user_badges: { Args: { p_user_id: string }; Returns: undefined }
     }
     Enums: {
