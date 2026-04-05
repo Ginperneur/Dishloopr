@@ -275,13 +275,29 @@ export function useSearch() {
         q = q.in('price_level', filters.priceLevel);
       }
       if (filters?.ambienceTags && filters.ambienceTags.length > 0) {
-        // Case-insensitive matching: include both original and lowercase variants
+        // Map English filter values to all known DB variants (Dutch + English + casing)
+        const ambienceAliases: Record<string, string[]> = {
+          'romantic': ['romantic', 'romantisch', 'Romantisch'],
+          'cozy': ['cozy', 'gezellig', 'Gezellig'],
+          'modern': ['modern', 'Modern', 'strak', 'Strak'],
+          'trendy': ['trendy', 'Trendy', 'hip', 'Hip'],
+          'classic': ['classic', 'klassiek', 'Klassiek'],
+          'casual': ['casual', 'Casual', 'informeel', 'Informeel'],
+          'fine-dining': ['fine-dining', 'fine dining', 'Fine Dining', 'high-end', 'High-end', 'luxe', 'Luxe'],
+          'high-end': ['high-end', 'High-end', 'fine-dining', 'fine dining', 'Fine Dining', 'luxe', 'Luxe'],
+          'family-friendly': ['family-friendly', 'Family-friendly', 'kindvriendelijk', 'Kindvriendelijk'],
+          'business': ['business', 'Business', 'zakelijk', 'Zakelijk'],
+          'lively': ['lively', 'Lively', 'levendig', 'Levendig', 'bruisend', 'Bruisend'],
+          'intimate': ['intimate', 'Intimate', 'intiem', 'Intiem'],
+          'terrace': ['terrace', 'Terrace', 'terras', 'Terras'],
+          'industrial': ['industrial', 'Industrial', 'industrieel', 'Industrieel'],
+          'traditional': ['traditional', 'Traditional', 'traditioneel', 'Traditioneel'],
+        };
         const expandedTags = filters.ambienceTags.flatMap(tag => {
-          const lower = tag.toLowerCase();
-          const capitalized = tag.charAt(0).toUpperCase() + tag.slice(1).toLowerCase();
-          return [...new Set([tag, lower, capitalized])];
+          const aliases = ambienceAliases[tag.toLowerCase()];
+          return aliases || [tag, tag.toLowerCase(), tag.charAt(0).toUpperCase() + tag.slice(1).toLowerCase()];
         });
-        q = q.overlaps('ambience_tags', expandedTags);
+        q = q.overlaps('ambience_tags', [...new Set(expandedTags)]);
       }
       if (filters?.cuisines && filters.cuisines.length > 0) {
         // Map English filter values to all known DB variants (case-insensitive)
