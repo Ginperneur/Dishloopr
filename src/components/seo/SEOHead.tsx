@@ -32,33 +32,22 @@ export function SEOHead({
   structuredData,
 }: SEOHeadProps) {
   const fullTitle = title.includes('Dishloopr') ? title : `${title} | Dishloopr`;
-  const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://dishloopr.com';
-  const currentUrl = typeof window !== 'undefined' ? window.location.href : siteUrl;
-  const canonicalUrl = canonical || currentUrl;
-  const fullOgImage = ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`;
+  // Always use production URL for SEO tags — never preview/staging origins
+  const SITE_URL = 'https://dishloopr.com';
+  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/';
+  const canonicalUrl = canonical || `${SITE_URL}${currentPath}`;
+  const fullOgImage = ogImage.startsWith('http') ? ogImage : `${SITE_URL}${ogImage}`;
 
   useEffect(() => {
     // Update document title
     document.title = fullTitle;
 
-    // Clean up old hreflang tags
+    // Remove stale hreflang tags from previous pages
     const existingHreflangs = document.querySelectorAll('link[hreflang]');
     existingHreflangs.forEach(el => el.remove());
     
-    // Only add hreflang for pages with actual localized URLs (not query-param based)
-    // Since Dishloopr uses client-side i18n (not URL-based), we set x-default only
-    const xDefault = document.createElement('link');
-    xDefault.setAttribute('rel', 'alternate');
-    xDefault.setAttribute('hreflang', 'x-default');
-    xDefault.setAttribute('href', canonicalUrl);
-    document.head.appendChild(xDefault);
-
-    // Add nl as primary language
-    const nlLink = document.createElement('link');
-    nlLink.setAttribute('rel', 'alternate');
-    nlLink.setAttribute('hreflang', 'nl');
-    nlLink.setAttribute('href', canonicalUrl);
-    document.head.appendChild(nlLink);
+    // No hreflang needed: Dishloopr uses client-side i18n, not URL-based language versions.
+    // Adding hreflang tags that all point to the same URL confuses Google.
     // Helper to update or create meta tag
     const updateMeta = (property: string, content: string, isName = false) => {
       const attr = isName ? 'name' : 'property';
@@ -134,9 +123,15 @@ export function SEOHead({
         script.setAttribute('data-seo-structured', 'true');
         document.head.appendChild(script);
       }
-      // Handle arrays by wrapping in @graph
+      // Handle arrays by wrapping in @graph, stripping individual @context to avoid duplication
       const data = Array.isArray(structuredData)
-        ? { '@context': 'https://schema.org', '@graph': structuredData }
+        ? {
+            '@context': 'https://schema.org',
+            '@graph': structuredData.map((item: any) => {
+              const { '@context': _, ...rest } = item;
+              return rest;
+            }),
+          }
         : structuredData;
       script.textContent = JSON.stringify(data);
     }

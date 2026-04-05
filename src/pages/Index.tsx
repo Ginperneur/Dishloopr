@@ -36,7 +36,13 @@ const Index = () => {
   const { restaurants: featuredRestaurants, loading: featuredLoading } = useFeaturedRestaurants(3);
 
   const handleCuisineClick = (cuisine: string) => {
-    navigate(`/search?dish=${encodeURIComponent(cuisine)}`);
+    // Some items are dishes (sushi), others are cuisines (italiaans)
+    const cuisineTerms = ['surinaams', 'italiaans', 'indiaas', 'mexicaans', 'thais', 'grieks'];
+    if (cuisineTerms.includes(cuisine.toLowerCase())) {
+      navigate(`/search?cuisine=${encodeURIComponent(cuisine)}`);
+    } else {
+      navigate(`/search?dish=${encodeURIComponent(cuisine)}`);
+    }
   };
 
   return (
