@@ -1602,6 +1602,7 @@ export type Database = {
       }
       restaurants: {
         Row: {
+          accepts_reservations: boolean
           accepts_routed_demand: boolean | null
           added_by_source: string
           address: string
@@ -1619,12 +1620,17 @@ export type Database = {
           featured_until: string | null
           geo_lat: number | null
           geo_lng: number | null
+          has_delivery: boolean
+          has_takeaway: boolean
           has_terrace: boolean
           id: string
           images: string[] | null
           instagram_url: string | null
           is_active: boolean
           is_featured: boolean
+          is_fully_halal: boolean
+          is_fully_vegan: boolean
+          is_fully_vegetarian: boolean
           is_top_listing: boolean
           meal_types: string[] | null
           name: string
@@ -1645,6 +1651,7 @@ export type Database = {
           zenchef_id: string | null
         }
         Insert: {
+          accepts_reservations?: boolean
           accepts_routed_demand?: boolean | null
           added_by_source?: string
           address: string
@@ -1662,12 +1669,17 @@ export type Database = {
           featured_until?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
+          has_delivery?: boolean
+          has_takeaway?: boolean
           has_terrace?: boolean
           id?: string
           images?: string[] | null
           instagram_url?: string | null
           is_active?: boolean
           is_featured?: boolean
+          is_fully_halal?: boolean
+          is_fully_vegan?: boolean
+          is_fully_vegetarian?: boolean
           is_top_listing?: boolean
           meal_types?: string[] | null
           name: string
@@ -1688,6 +1700,7 @@ export type Database = {
           zenchef_id?: string | null
         }
         Update: {
+          accepts_reservations?: boolean
           accepts_routed_demand?: boolean | null
           added_by_source?: string
           address?: string
@@ -1705,12 +1718,17 @@ export type Database = {
           featured_until?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
+          has_delivery?: boolean
+          has_takeaway?: boolean
           has_terrace?: boolean
           id?: string
           images?: string[] | null
           instagram_url?: string | null
           is_active?: boolean
           is_featured?: boolean
+          is_fully_halal?: boolean
+          is_fully_vegan?: boolean
+          is_fully_vegetarian?: boolean
           is_top_listing?: boolean
           meal_types?: string[] | null
           name?: string
