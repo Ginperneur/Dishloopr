@@ -184,7 +184,7 @@ const Index = () => {
       {/* Personalized Recommendations for logged-in users */}
       <PersonalizedRecommendations />
 
-      {/* Curated Collections */}
+      {/* Samengestelde Collecties */}
       <section className="py-8 md:py-16">
         <div className="container px-4 md:px-6">
           <motion.div
