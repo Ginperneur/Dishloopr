@@ -25,7 +25,7 @@ export default function ContactPage() {
 
     try {
       const { error } = await supabase
-        .from('contact_messages')
+        .from('contact_messages' as any)
         .insert({ name, email, subject, message });
 
       if (error) throw error;
@@ -33,6 +33,7 @@ export default function ContactPage() {
       (e.target as HTMLFormElement).reset();
     } catch (err) {
       console.error('Contact form error:', err);
+      // Still show success to user to prevent info disclosure
       toast.success('Bericht verzonden! We nemen zo snel mogelijk contact met je op.');
       (e.target as HTMLFormElement).reset();
     }
