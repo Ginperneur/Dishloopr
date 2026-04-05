@@ -73,41 +73,45 @@ export function SearchBar({
   // Get unique cuisines from dishes
   const allCuisines = [...new Set(allDishes.flatMap(d => d.cuisine_tags || []))];
 
+  // Debounced server-side dish search
   useEffect(() => {
-    if (query.length >= 2) {
+    if (query.length < 2) {
+      setSuggestions([]);
+      setRestaurantSuggestions([]);
+      setCuisineSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
       const queryLower = query.toLowerCase();
-
-      // Filter dishes by name or synonyms, excluding already selected
       const selectedLower = selectedDishes.map(d => d.toLowerCase());
-      const filteredDishes = allDishes.filter(
-        d =>
-          !selectedLower.includes(d.name.toLowerCase()) &&
-          (d.name.toLowerCase().includes(queryLower) ||
-          d.name_en?.toLowerCase().includes(queryLower) ||
-          d.synonyms?.some(s => s.toLowerCase().includes(queryLower)))
-      );
-      setSuggestions(filteredDishes.slice(0, 5));
 
-      // Filter restaurants by name
+      // Server-side dish search via RPC (no 1000-row cap)
+      const { data: dishResults } = await supabase.rpc('search_dishes_by_term', { search_term: queryLower });
+      const filteredDishes = (dishResults || []).filter(
+        (d: Dish) => !selectedLower.includes(d.name.toLowerCase())
+      );
+      setSuggestions(filteredDishes.slice(0, 8));
+
+      // Filter restaurants by name (client-side, from pre-loaded top-500)
       const filteredRestaurants = allRestaurants.filter(
         r => r.name.toLowerCase().includes(queryLower)
       );
       setRestaurantSuggestions(filteredRestaurants.slice(0, 3));
 
-      // Filter cuisines
-      const filteredCuisines = allCuisines.filter(c =>
+      // Filter cuisines from dish results
+      const dishCuisines = [...new Set(filteredDishes.flatMap((d: Dish) => d.cuisine_tags || []))];
+      const filteredCuisines = dishCuisines.filter(c =>
         c.toLowerCase().includes(queryLower)
       );
       setCuisineSuggestions(filteredCuisines.slice(0, 3));
 
       setShowSuggestions(!suppressSuggestionsRef.current && (filteredDishes.length > 0 || filteredCuisines.length > 0 || filteredRestaurants.length > 0));
-    } else {
-      setSuggestions([]);
-      setRestaurantSuggestions([]);
-      setCuisineSuggestions([]);
-      setShowSuggestions(false);
-    }
-  }, [query, allDishes, allRestaurants]);
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [query, allRestaurants, selectedDishes]);
 
   // Close dropdowns on escape
   useEffect(() => {

@@ -199,7 +199,9 @@ export default function SearchPage() {
     filters.cuisines.length +
     filters.concepts.length +
     filters.mealTypes.length +
-    filters.experiences.length;
+    filters.experiences.length +
+    filters.dietaryOptions.length +
+    (filters.hasTerrace ? 1 : 0);
 
   const cityName = selectedCityId === 'all' 
     ? t('cities.all') 
