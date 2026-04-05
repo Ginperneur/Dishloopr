@@ -123,9 +123,15 @@ export function SEOHead({
         script.setAttribute('data-seo-structured', 'true');
         document.head.appendChild(script);
       }
-      // Handle arrays by wrapping in @graph
+      // Handle arrays by wrapping in @graph, stripping individual @context to avoid duplication
       const data = Array.isArray(structuredData)
-        ? { '@context': 'https://schema.org', '@graph': structuredData }
+        ? {
+            '@context': 'https://schema.org',
+            '@graph': structuredData.map((item: any) => {
+              const { '@context': _, ...rest } = item;
+              return rest;
+            }),
+          }
         : structuredData;
       script.textContent = JSON.stringify(data);
     }
