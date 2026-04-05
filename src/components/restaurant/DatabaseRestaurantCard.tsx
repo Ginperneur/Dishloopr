@@ -165,7 +165,7 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
 
             <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
               <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
-              <span className="line-clamp-1">{restaurant.address}</span>
+              <span className="line-clamp-1">{restaurant.address?.replace(/,?\s*(Nederland|Netherlands|NL)\s*$/i, '')}</span>
             </div>
           </div>
 

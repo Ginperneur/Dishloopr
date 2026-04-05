@@ -16,7 +16,7 @@ export function BottomNav() {
   const { user } = useAuth();
 
   // Don't show on admin, login, or restaurant pages
-  const hiddenPaths = ['/admin', '/login', '/dashboard'];
+  const hiddenPaths = ['/admin', '/login', '/dashboard', '/forgot-password', '/reset-password', '/email-confirm'];
   if (hiddenPaths.some(p => location.pathname.startsWith(p))) return null;
 
   const items = NAV_ITEMS.filter(item => !item.requiresAuth || user);

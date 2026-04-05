@@ -15,7 +15,7 @@ export default function CollectionsPage() {
   return (
     <Layout>
       <SEOHead
-        title={t('collections.seoTitle', 'Restaurant Collecties - Curated Lijsten | Dishloopr')}
+        title={t('collections.seoTitle', 'Restaurant Collecties - Samengestelde Lijsten | Dishloopr')}
         description={t('collections.seoDescription', 'Ontdek onze handgeselecteerde restaurant collecties. Van de beste ramen in Amsterdam tot romantische Italianen in Rotterdam - vind de perfecte plek voor elke gelegenheid.')}
         keywords={['collecties', 'restaurant lijsten', 'curated', 'beste restaurants', 'Nederland', 'eten', 'uit eten', 'amsterdam', 'rotterdam']}
         structuredData={breadcrumbData}

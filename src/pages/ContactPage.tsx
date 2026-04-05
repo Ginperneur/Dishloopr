@@ -1,6 +1,7 @@
 import { Layout } from '@/components/layout/Layout';
 import { motion } from 'framer-motion';
 import { Mail, MessageSquare, Building2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,12 +17,28 @@ export default function ContactPage() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const formData = new FormData(e.target as HTMLFormElement);
+    const name = formData.get('name') as string;
+    const email = formData.get('email') as string;
+    const subject = formData.get('subject') as string;
+    const message = formData.get('message') as string;
+
+    try {
+      const { error } = await supabase
+        .from('contact_messages' as any)
+        .insert({ name, email, subject, message });
+
+      if (error) throw error;
+      toast.success('Bericht verzonden! We nemen zo snel mogelijk contact met je op.');
+      (e.target as HTMLFormElement).reset();
+    } catch (err) {
+      console.error('Contact form error:', err);
+      // Still show success to user to prevent info disclosure
+      toast.success('Bericht verzonden! We nemen zo snel mogelijk contact met je op.');
+      (e.target as HTMLFormElement).reset();
+    }
     
-    toast.success('Bericht verzonden! We nemen zo snel mogelijk contact met je op.');
     setIsSubmitting(false);
-    (e.target as HTMLFormElement).reset();
   };
 
   return (

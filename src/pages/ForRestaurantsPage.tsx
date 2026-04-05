@@ -43,7 +43,7 @@ export default function ForRestaurantsPage() {
     { value: '150+', label: t('forRestaurants.statsRestaurants', 'Restaurants'), icon: Building2 },
     { value: '50K+', label: t('forRestaurants.statsSearches', 'Zoekopdrachten/maand'), icon: Eye },
     { value: '4.8', label: t('forRestaurants.statsRating', 'Gem. rating'), icon: Star },
-    { value: '32%', label: t('forRestaurants.statsConversion', 'Click-to-visit rate'), icon: TrendingUp },
+    { value: '32%', label: t('forRestaurants.statsConversion', 'Klik-naar-bezoek ratio'), icon: TrendingUp },
   ];
 
   // Testimonials
