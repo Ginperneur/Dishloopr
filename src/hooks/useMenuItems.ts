@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export type CourseType = 'voorgerecht' | 'hoofdgerecht' | 'dessert' | 'bijgerecht' | 'drank';
+export type CourseType = 'voorgerecht' | 'hoofdgerecht' | 'dessert' | 'bijgerecht' | 'drank' | 'menu';
 
-export const COURSE_TYPE_ORDER: CourseType[] = ['voorgerecht', 'hoofdgerecht', 'bijgerecht', 'dessert', 'drank'];
+export const COURSE_TYPE_ORDER: CourseType[] = ['menu', 'voorgerecht', 'hoofdgerecht', 'bijgerecht', 'dessert', 'drank'];
 
 export const COURSE_TYPE_LABELS: Record<CourseType, string> = {
+  menu: '📋 Menu\'s & Arrangementen',
   voorgerecht: '🥗 Voorgerechten',
   hoofdgerecht: '🍽️ Hoofdgerechten',
   bijgerecht: '🥙 Bijgerechten',
