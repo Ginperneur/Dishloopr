@@ -331,7 +331,7 @@ export function useSearch() {
 
     setResults(rebalanced);
     setLoading(false);
-  }, [dishes, cities]);
+  }, [cities]);
 
   return { search, results, loading, dishes, cities };
 }
