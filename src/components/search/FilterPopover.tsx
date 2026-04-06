@@ -117,7 +117,8 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
     filters.mealTypes.length +
     filters.experiences.length +
     filters.dietaryOptions.length +
-    (filters.hasTerrace ? 1 : 0);
+    (filters.hasTerrace ? 1 : 0) +
+    (filters.openNow ? 1 : 0);
 
   const toggleFilter = (type: keyof Filters, value: string | number) => {
     const current = filters[type] as (string | number)[];
