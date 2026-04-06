@@ -5,6 +5,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User, UtensilsCrossed, UserCircle } from 'lucide-react';
 import { z } from 'zod';
 import { Layout } from '@/components/layout/Layout';
+import { SEOHead } from '@/components/seo/SEOHead';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
