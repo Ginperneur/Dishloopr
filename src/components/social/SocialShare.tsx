@@ -25,7 +25,9 @@ export function SocialShare({
   variant = 'button',
   className = ''
 }: SocialShareProps) {
-  const shareUrl = url || (typeof window !== 'undefined' ? window.location.href : '');
+  // Always share the production URL, not preview URLs
+  const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
+  const shareUrl = url || `https://dishloopr.com${currentPath}`;
   const encodedUrl = encodeURIComponent(shareUrl);
   const encodedTitle = encodeURIComponent(title);
   const encodedDescription = encodeURIComponent(description);
