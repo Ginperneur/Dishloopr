@@ -108,6 +108,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'bulk-import': { title: "Bulk Import", description: "CSV restaurants importeren" },
   'menu-scraper': { title: "Menu Scraper", description: "Gerechten van websites scrapen" },
   'geocode': { title: "Geocode", description: "Coördinaten toekennen" },
+  'google-enrich': { title: "Google Verrijking", description: "Ratings & openingstijden importeren" },
   'photos': { title: "Foto's", description: "Google-foto's ophalen" },
   'data-export': { title: "Data Export", description: "Data exporteren als CSV" },
   'seo-health': { title: "SEO Health", description: "SEO-problemen monitoren" },
