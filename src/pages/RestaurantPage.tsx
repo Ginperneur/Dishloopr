@@ -523,7 +523,7 @@ export default function RestaurantPage() {
               <div className="p-6 rounded-2xl border border-border bg-card">
                 <div className="space-y-3">
                   {restaurant.website_url && (
-                    <Button variant="outline" className="w-full" size="lg" asChild>
+                    <Button variant="outline" className="w-full" size="lg" onClick={() => trackCTAClick('website')} asChild>
                       <a href={restaurant.website_url} target="_blank" rel="noopener noreferrer">
                         <Globe className="h-4 w-4 mr-2" />
                         {t('restaurant.website')}
@@ -533,7 +533,7 @@ export default function RestaurantPage() {
 
                   <div className="grid grid-cols-2 gap-3">
                     {restaurant.phone && (
-                      <Button variant="outline" asChild>
+                      <Button variant="outline" onClick={() => trackCTAClick('phone')} asChild>
                         <a href={`tel:${restaurant.phone}`}>
                           <Phone className="h-4 w-4 mr-2" />
                           {t('restaurant.call')}
