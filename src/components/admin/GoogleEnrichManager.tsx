@@ -67,7 +67,7 @@ export function GoogleEnrichManager() {
     try {
       while (true) {
         const { data, error } = await supabase.functions.invoke('enrich-restaurants', {
-          body: { batchSize, offset },
+          body: { batchSize, offset: 0 },
         });
 
         if (error) throw error;
@@ -85,8 +85,6 @@ export function GoogleEnrichManager() {
           toast.success('Alle restaurants verrijkt!');
           break;
         }
-
-        offset = data.nextOffset;
       }
     } catch (err) {
       console.error('Enrich error:', err);
