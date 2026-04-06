@@ -164,6 +164,11 @@ export default function LoginPage() {
 
   return (
     <Layout showFooter={false}>
+      <SEOHead
+        title="Inloggen | Dishloopr"
+        description="Log in of maak een account aan bij Dishloopr."
+        noindex
+      />
       <div className="min-h-[calc(100vh-3.5rem)] md:min-h-[calc(100vh-4rem)] flex items-center justify-center py-8 md:py-12 px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

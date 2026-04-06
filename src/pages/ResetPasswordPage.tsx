@@ -89,6 +89,11 @@ export default function ResetPasswordPage() {
 
   return (
     <Layout showFooter={false}>
+      <SEOHead
+        title="Wachtwoord herstellen | Dishloopr"
+        description="Stel een nieuw wachtwoord in voor je Dishloopr account."
+        noindex
+      />
       <div className="min-h-[calc(100vh-3.5rem)] md:min-h-[calc(100vh-4rem)] flex items-center justify-center py-8 md:py-12 px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

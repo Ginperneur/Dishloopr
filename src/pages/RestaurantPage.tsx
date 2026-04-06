@@ -218,7 +218,7 @@ export default function RestaurantPage() {
     <Layout>
       <SEOHead
         title={`${restaurant.name} - ${restaurant.cuisines?.slice(0, 2).join(' & ') || 'Restaurant'} | Dishloopr`}
-        description={`Bekijk ${restaurant.name} in ${restaurant.city?.name || 'Nederland'}. ${restaurant.cuisines?.join(', ') || 'Heerlijk eten'} met ${restaurant.review_count} reviews en een ${Number(restaurant.rating).toFixed(1)} rating.`}
+        description={`Bekijk ${restaurant.name} in ${restaurant.city?.name || 'Nederland'}. ${restaurant.cuisines?.join(', ') || 'Heerlijk eten'}${restaurant.review_count > 0 ? ` met ${restaurant.review_count} reviews en een ${Number(restaurant.rating).toFixed(1)} rating` : ''}.`}
         canonical={`https://dishloopr.com/restaurant/${restaurant.slug}`}
         ogType="restaurant"
         ogImage={restaurant.images?.[0]}

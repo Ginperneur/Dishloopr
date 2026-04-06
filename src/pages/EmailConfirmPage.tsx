@@ -54,6 +54,11 @@ export default function EmailConfirmPage() {
 
   return (
     <Layout showFooter={false}>
+      <SEOHead
+        title="E-mail bevestigen | Dishloopr"
+        description="Bevestig je e-mailadres om je Dishloopr account te activeren."
+        noindex
+      />
       <div className="min-h-[calc(100vh-3.5rem)] md:min-h-[calc(100vh-4rem)] flex items-center justify-center py-8 md:py-12 px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
