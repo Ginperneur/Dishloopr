@@ -55,9 +55,10 @@ export default function RestaurantPage() {
   const { reviews, loading: reviewsLoading, submitting, submitReview, refetch } = useReviews(restaurant?.id);
   const { isFavorite, toggleFavorite } = useFavorites();
   const { smartSuggestions, getSmartSuggestions } = useAIRecommendations();
-  const { alternatives, loading: alternativesLoading, findAlternatives, trackClick } = useAlternativeRestaurants();
+  const { alternatives, loading: alternativesLoading, findAlternatives, trackClick: trackAlternativeClick } = useAlternativeRestaurants();
   const { latitude, longitude } = useGeolocation();
   const { user } = useAuth();
+  const { trackClick: trackCTAClick, trackPageView } = useClickTracking(restaurant?.id);
 
   // Determine if restaurant is currently open
   const isCurrentlyOpen = useMemo((): boolean => {
