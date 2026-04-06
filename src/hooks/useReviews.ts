@@ -159,6 +159,11 @@ export function useReviews(restaurantId: string | undefined) {
       }
     }
 
+    // Notify restaurant owner (fire-and-forget)
+    supabase.functions.invoke('notify-owner-review', {
+      body: { reviewId: insertedReview.id }
+    }).catch(() => {}); // Don't block on notification failure
+
     toast.success('Review geplaatst!');
     await fetchReviews();
     setSubmitting(false);
