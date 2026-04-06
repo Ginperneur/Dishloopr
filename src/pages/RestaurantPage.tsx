@@ -184,8 +184,12 @@ export default function RestaurantPage() {
     { name: restaurant.name, url: `https://dishloopr.com/restaurant/${restaurant.slug}` }
   ]);
 
-  const hasReservation = !!(restaurant.reservation_url || restaurant.zenchef_id);
-  const reservationHref = restaurant.reservation_url || `https://widget.zenchef.com/reservation/${restaurant.zenchef_id}`;
+  const hasDigitalReservation = !!(restaurant.reservation_url || restaurant.zenchef_id);
+  const hasReservation = hasDigitalReservation || !!restaurant.phone;
+  const reservationHref = restaurant.reservation_url || (restaurant.zenchef_id ? `https://widget.zenchef.com/reservation/${restaurant.zenchef_id}` : undefined);
+  const googleMapsUrl = restaurant.geo_lat && restaurant.geo_lng 
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.name + ' ' + restaurant.address)}`
+    : null;
 
   return (
     <Layout>
@@ -371,7 +375,7 @@ export default function RestaurantPage() {
             <div className="lg:hidden space-y-3">
               {/* CTA Buttons */}
               <div className="grid grid-cols-2 gap-2">
-                {hasReservation && (
+                {hasDigitalReservation && reservationHref && (
                   <Button className="col-span-2 bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" asChild>
                     <a href={reservationHref} target="_blank" rel="noopener noreferrer" className="gap-2">
                       <Calendar className="h-5 w-5" />
@@ -502,6 +506,8 @@ export default function RestaurantPage() {
                 reservationUrl={restaurant.reservation_url}
                 restaurantName={restaurant.name}
                 variant="full"
+                phone={restaurant.phone}
+                googleMapsUrl={googleMapsUrl}
               />
 
               {/* Website & Contact Card */}
@@ -585,12 +591,21 @@ export default function RestaurantPage() {
       {/* Sticky mobile reservation bar */}
       {hasReservation && (
         <div className="fixed bottom-14 left-0 right-0 z-40 lg:hidden bg-background/95 backdrop-blur border-t border-border p-3 safe-area-bottom">
-          <Button className="w-full bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" asChild>
-            <a href={reservationHref} target="_blank" rel="noopener noreferrer" className="gap-2">
-              <Calendar className="h-5 w-5" />
-              {t('restaurant.reserve')}
-            </a>
-          </Button>
+          {hasDigitalReservation && reservationHref ? (
+            <Button className="w-full bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" asChild>
+              <a href={reservationHref} target="_blank" rel="noopener noreferrer" className="gap-2">
+                <Calendar className="h-5 w-5" />
+                {t('restaurant.reserve')}
+              </a>
+            </Button>
+          ) : restaurant.phone ? (
+            <Button className="w-full bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" asChild>
+              <a href={`tel:${restaurant.phone}`} className="gap-2">
+                <Phone className="h-5 w-5" />
+                Bel om te reserveren
+              </a>
+            </Button>
+          ) : null}
         </div>
       )}
     </Layout>
