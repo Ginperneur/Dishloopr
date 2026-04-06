@@ -110,7 +110,7 @@ export function GoogleEnrichManager() {
             </CardDescription>
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => runBatch(currentOffset)} disabled={running} variant="outline" size="sm">
+            <Button onClick={() => runBatch()} disabled={running} variant="outline" size="sm">
               {running ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Play className="h-4 w-4 mr-2" />}
               1 Batch (25)
             </Button>
