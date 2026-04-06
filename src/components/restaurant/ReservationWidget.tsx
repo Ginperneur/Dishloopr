@@ -69,8 +69,54 @@ export function ReservationWidget({
     };
   }, [zenchefId]);
 
-  // No reservation option available
+  // No digital reservation — show phone or Google Maps fallback
   if (!zenchefId && !reservationUrl) {
+    if (variant === 'button') {
+      if (phone) {
+        return (
+          <Button className="flex-1" size="default" variant="outline" asChild>
+            <a href={`tel:${phone}`}>
+              <Phone className="h-4 w-4 mr-2" />
+              {t('openingHours.callNow', 'Bellen')}
+            </a>
+          </Button>
+        );
+      }
+      return null;
+    }
+
+    // Full variant fallback
+    if (phone || googleMapsUrl) {
+      return (
+        <div className="p-6 rounded-2xl border border-border bg-card">
+          <h3 className="font-semibold mb-4 flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Reserveren
+          </h3>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Dit restaurant heeft geen online reserveringssysteem. Neem direct contact op:
+            </p>
+            {phone && (
+              <Button className="w-full" size="lg" asChild>
+                <a href={`tel:${phone}`}>
+                  <Phone className="h-4 w-4 mr-2" />
+                  Bel {phone}
+                </a>
+              </Button>
+            )}
+            {googleMapsUrl && (
+              <Button variant="outline" className="w-full" size="default" asChild>
+                <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Bekijk op Google Maps
+                </a>
+              </Button>
+            )}
+          </div>
+        </div>
+      );
+    }
     return null;
   }
 
