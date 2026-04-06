@@ -8,6 +8,8 @@ interface ReservationWidgetProps {
   reservationUrl?: string | null;
   restaurantName: string;
   variant?: 'full' | 'button';
+  phone?: string | null;
+  googleMapsUrl?: string | null;
 }
 
 declare global {
