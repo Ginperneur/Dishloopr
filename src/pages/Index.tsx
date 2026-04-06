@@ -214,6 +214,9 @@ const Index = () => {
       {/* Upcoming Events */}
       <UpcomingEvents />
 
+      {/* Seasonal Suggestions */}
+      <SeasonalSuggestions />
+
       {/* Trending Dishes */}
       <TrendingDishes dishes={trendingDishes} />
     </Layout>
