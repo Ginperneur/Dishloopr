@@ -122,7 +122,7 @@ export default function RestaurantPage() {
   const handleAlternativeClick = (targetId: string) => {
     if (restaurant && getUnavailabilityReason) {
       const dishId = restaurant.dishes?.[0]?.id;
-      trackClick(restaurant.id, targetId, dishId, getUnavailabilityReason);
+      trackAlternativeClick(restaurant.id, targetId, dishId, getUnavailabilityReason);
     }
   };
 
