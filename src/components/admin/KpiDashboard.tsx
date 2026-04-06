@@ -39,10 +39,32 @@ export function KpiDashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [deduping, setDeduping] = useState(false);
+  const [auditing, setAuditing] = useState(false);
 
   useEffect(() => {
     fetchKpis();
   }, []);
+
+  const handleAuditClassifications = async () => {
+    setAuditing(true);
+    try {
+      const { data: result, error } = await supabase.rpc('audit_and_fix_dish_classifications');
+      if (error) throw error;
+      const fixes = (result as any)?.total_fixes || 0;
+      if (fixes > 0) {
+        const details = (result as any)?.fixes || [];
+        const preview = details.slice(0, 3).map((f: any) => `${f.dish} (${f.from}→${f.to})`).join(', ');
+        toast.success(`${fixes} classificatiefouten hersteld: ${preview}${fixes > 3 ? '...' : ''}`);
+      } else {
+        toast.success('Geen classificatiefouten gevonden!');
+      }
+      await fetchKpis();
+    } catch (e) {
+      toast.error('Fout bij audit');
+    } finally {
+      setAuditing(false);
+    }
+  };
 
   const handleDedupeAndRefresh = async () => {
     setDeduping(true);
@@ -203,12 +225,16 @@ export function KpiDashboard() {
   return (
     <div className="space-y-6">
       {/* Actions */}
-      <div className="flex items-center gap-2 justify-end">
-        <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing || deduping}>
+      <div className="flex items-center gap-2 justify-end flex-wrap">
+        <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing || deduping || auditing}>
           <RefreshCw className={`h-4 w-4 mr-1 ${refreshing ? 'animate-spin' : ''}`} />
           Vernieuwen
         </Button>
-        <Button variant="outline" size="sm" onClick={handleDedupeAndRefresh} disabled={deduping || refreshing}>
+        <Button variant="outline" size="sm" onClick={handleAuditClassifications} disabled={auditing || deduping || refreshing}>
+          <Shield className={`h-4 w-4 mr-1 ${auditing ? 'animate-pulse' : ''}`} />
+          Audit classificaties
+        </Button>
+        <Button variant="outline" size="sm" onClick={handleDedupeAndRefresh} disabled={deduping || refreshing || auditing}>
           <Sparkles className={`h-4 w-4 mr-1 ${deduping ? 'animate-pulse' : ''}`} />
           Opschonen & vernieuwen
         </Button>
