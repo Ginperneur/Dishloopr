@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Calendar } from 'lucide-react';
+import { ExternalLink, Calendar, Phone } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface ReservationWidgetProps {
