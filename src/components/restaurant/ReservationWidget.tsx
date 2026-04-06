@@ -24,7 +24,9 @@ export function ReservationWidget({
   zenchefId, 
   reservationUrl, 
   restaurantName,
-  variant = 'full'
+  variant = 'full',
+  phone,
+  googleMapsUrl
 }: ReservationWidgetProps) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
