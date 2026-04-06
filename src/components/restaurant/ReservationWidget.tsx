@@ -141,7 +141,7 @@ export function ReservationWidget({
     
     if (reservationUrl) {
       return (
-        <Button className="flex-1" size="default" asChild>
+        <Button className="flex-1" size="default" onClick={() => onClickTrack?.('reservation')} asChild>
           <a href={reservationUrl} target="_blank" rel="noopener noreferrer">
             <Calendar className="h-4 w-4 mr-2" />
             {t('restaurant.reserve')}
