@@ -86,10 +86,10 @@ export default function SearchPage() {
   const { latitude, longitude, loading: locationLoading, requestLocation } = useGeolocation();
   const userLocation = latitude && longitude ? { lat: latitude, lng: longitude } : null;
 
-  // Sync selectedCityId with URL on mount
+  // Sync selectedCityId with resolved city ID
   useEffect(() => {
-    setSelectedCityId(cityId);
-  }, [cityId]);
+    setSelectedCityId(resolvedCityId);
+  }, [resolvedCityId]);
 
   // Show scroll-to-top button after scrolling
   useEffect(() => {
