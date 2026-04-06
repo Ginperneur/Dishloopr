@@ -98,6 +98,7 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
       setMealTypes(restaurant.meal_types || []);
       setExperiences(restaurant.experiences || []);
       setZenchefId(restaurant.zenchef_id || '');
+      setReservationUrl(restaurant.reservation_url || '');
       setInstagramUrl(restaurant.instagram_url || '');
       setTiktokUrl(restaurant.tiktok_url || '');
       setIsFeatured(restaurant.is_featured || false);
