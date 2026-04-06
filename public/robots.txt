@@ -3,26 +3,6 @@
 
 User-agent: Googlebot
 Allow: /
-Crawl-delay: 1
-
-User-agent: Bingbot
-Allow: /
-Crawl-delay: 2
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
-User-agent: *
-Allow: /
-Crawl-delay: 2
-
-# Sitemap location
-Sitemap: https://dishloopr.com/sitemap.xml
-
-# Disallow private/auth pages
 Disallow: /admin
 Disallow: /owner-dashboard
 Disallow: /dashboard
@@ -38,3 +18,50 @@ Disallow: /insights
 Disallow: /favorites
 Disallow: /claim
 Disallow: /add-restaurant
+
+User-agent: Bingbot
+Allow: /
+Disallow: /admin
+Disallow: /owner-dashboard
+Disallow: /dashboard
+Disallow: /owner
+Disallow: /login
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /email-confirm
+Disallow: /profile
+Disallow: /account
+Disallow: /my-dashboard
+Disallow: /insights
+Disallow: /favorites
+Disallow: /claim
+Disallow: /add-restaurant
+Crawl-delay: 2
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /owner-dashboard
+Disallow: /dashboard
+Disallow: /owner
+Disallow: /login
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /email-confirm
+Disallow: /profile
+Disallow: /account
+Disallow: /my-dashboard
+Disallow: /insights
+Disallow: /favorites
+Disallow: /claim
+Disallow: /add-restaurant
+Crawl-delay: 2
+
+# Sitemap location
+Sitemap: https://dishloopr.com/sitemap.xml
