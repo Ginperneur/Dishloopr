@@ -10,6 +10,7 @@ interface ReservationWidgetProps {
   variant?: 'full' | 'button';
   phone?: string | null;
   googleMapsUrl?: string | null;
+  onClickTrack?: (type: string) => void;
 }
 
 declare global {
