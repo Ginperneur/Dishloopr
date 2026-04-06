@@ -143,6 +143,11 @@ export default function FoodieDashboard() {
             <BadgesPreview badges={badges} />
           </motion.div>
 
+          {/* Group Decision Tool */}
+          <motion.div variants={fadeUp}>
+            <GroupDecisionTool />
+          </motion.div>
+
           {/* Profile link (mobile) */}
           <motion.div variants={fadeUp} className="sm:hidden">
             <Button variant="outline" asChild className="w-full">

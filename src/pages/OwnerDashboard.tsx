@@ -864,6 +864,27 @@ export default function OwnerDashboard() {
                 </div>
 
                 <div className="border-t pt-8">
+                  <CompetitorBenchmark
+                    restaurantId={selectedRestaurant.id}
+                    cityId={selectedRestaurant.city_id}
+                    cuisines={selectedRestaurant.cuisines || []}
+                    rating={Number(selectedRestaurant.rating)}
+                    reviewCount={selectedRestaurant.review_count}
+                  />
+                </div>
+
+                <div className="border-t pt-8">
+                  <DealsManager restaurantId={selectedRestaurant.id} />
+                </div>
+
+                <div className="border-t pt-8">
+                  <QRCodeGenerator
+                    restaurantSlug={selectedRestaurant.slug}
+                    restaurantName={selectedRestaurant.name}
+                  />
+                </div>
+
+                <div className="border-t pt-8">
                   <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
                     <Clock className="h-5 w-5 text-primary" />
                     Piekuren-inzicht
