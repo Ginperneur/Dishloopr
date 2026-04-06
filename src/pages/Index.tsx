@@ -7,6 +7,8 @@ import { Layout } from '@/components/layout/Layout';
 import { TrendingDishes } from '@/components/home/TrendingDishes';
 import { UpcomingEvents } from '@/components/home/UpcomingEvents';
 import { SocialProof } from '@/components/home/SocialProof';
+import { RecentlyViewed } from '@/components/home/RecentlyViewed';
+import { SeasonalSuggestions } from '@/components/home/SeasonalSuggestions';
 import { DatabaseRestaurantCard } from '@/components/restaurant/DatabaseRestaurantCard';
 import { SurpriseMe } from '@/components/ai/SurpriseMe';
 import { PersonalizedRecommendations } from '@/components/ai/PersonalizedRecommendations';
@@ -116,6 +118,9 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Recently Viewed */}
+      <RecentlyViewed />
+
       {/* Social Proof Stats */}
       <SocialProof />
 
@@ -208,6 +213,9 @@ const Index = () => {
 
       {/* Upcoming Events */}
       <UpcomingEvents />
+
+      {/* Seasonal Suggestions */}
+      <SeasonalSuggestions />
 
       {/* Trending Dishes */}
       <TrendingDishes dishes={trendingDishes} />

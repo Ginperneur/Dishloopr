@@ -44,6 +44,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const ForRestaurantsPage = lazy(() => import("./pages/ForRestaurantsPage"));
 const AddRestaurantPage = lazy(() => import("./pages/AddRestaurantPage"));
 const EventsPage = lazy(() => import("./pages/EventsPage"));
+const VotePage = lazy(() => import("./pages/VotePage"));
 
 // Page loading fallback
 function PageLoader() {
@@ -112,6 +113,7 @@ const App = () => (
                   <Route path="/steden" element={<CityIndexPage />} />
                   <Route path="/steden/:citySlug" element={<CityDetailPage />} />
                   <Route path="/events" element={<EventsPage />} />
+                  <Route path="/vote/:shareCode" element={<VotePage />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>

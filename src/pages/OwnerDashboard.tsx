@@ -65,6 +65,9 @@ import { PeakHoursInsight } from '@/components/owner/PeakHoursInsight';
 import { PromotionROI } from '@/components/owner/PromotionROI';
 import { OwnerEventsManager } from '@/components/owner/OwnerEventsManager';
 import { NewsletterPlacement } from '@/components/owner/NewsletterPlacement';
+import { QRCodeGenerator } from '@/components/owner/QRCodeGenerator';
+import { CompetitorBenchmark } from '@/components/owner/CompetitorBenchmark';
+import { DealsManager } from '@/components/owner/DealsManager';
 import { useOptimizationInsights } from '@/hooks/useOptimizationInsights';
 import { useMarketInsights } from '@/hooks/useMarketInsights';
 import { useRestaurantDishes } from '@/hooks/useRestaurantDishes';
@@ -857,6 +860,27 @@ export default function OwnerDashboard() {
                     myRating={selectedRestaurant.rating}
                     myReviewCount={selectedRestaurant.review_count}
                     myName={selectedRestaurant.name}
+                  />
+                </div>
+
+                <div className="border-t pt-8">
+                  <CompetitorBenchmark
+                    restaurantId={selectedRestaurant.id}
+                    cityId={selectedRestaurant.city_id}
+                    cuisines={selectedRestaurant.cuisines || []}
+                    rating={Number(selectedRestaurant.rating)}
+                    reviewCount={selectedRestaurant.review_count}
+                  />
+                </div>
+
+                <div className="border-t pt-8">
+                  <DealsManager restaurantId={selectedRestaurant.id} />
+                </div>
+
+                <div className="border-t pt-8">
+                  <QRCodeGenerator
+                    restaurantSlug={selectedRestaurant.slug}
+                    restaurantName={selectedRestaurant.name}
                   />
                 </div>
 

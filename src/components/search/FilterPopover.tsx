@@ -21,6 +21,7 @@ interface Filters {
   experiences: string[];
   dietaryOptions: string[];
   hasTerrace?: boolean;
+  openNow?: boolean;
 }
 
 interface FilterPopoverProps {
@@ -116,7 +117,8 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
     filters.mealTypes.length +
     filters.experiences.length +
     filters.dietaryOptions.length +
-    (filters.hasTerrace ? 1 : 0);
+    (filters.hasTerrace ? 1 : 0) +
+    (filters.openNow ? 1 : 0);
 
   const toggleFilter = (type: keyof Filters, value: string | number) => {
     const current = filters[type] as (string | number)[];
@@ -136,6 +138,7 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
       experiences: [],
       dietaryOptions: [],
       hasTerrace: undefined,
+      openNow: undefined,
     });
   };
 
@@ -164,6 +167,18 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
           </div>
           {/* Primary quick-toggle chips: dietary + terrace */}
           <div className="flex flex-wrap gap-2 mt-3">
+            {/* Open now filter */}
+            <button
+              onClick={() => onFiltersChange({ ...filters, openNow: filters.openNow ? undefined : true })}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
+                filters.openNow
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted'
+              }`}
+            >
+              <span>🕐</span>
+              <span>Open nu</span>
+            </button>
             {/* Terrace filter */}
             <button
               onClick={() => onFiltersChange({ ...filters, hasTerrace: filters.hasTerrace ? undefined : true })}

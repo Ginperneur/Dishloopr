@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Star, MapPin, Heart, Sparkles, Trophy, ImageOff, UtensilsCrossed } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { useState } from 'react';
 import type { Database } from '@/integrations/supabase/types';
 import { SponsoredBadge } from '@/components/sponsored/SponsoredBadge';
@@ -53,10 +54,12 @@ function ImageWithFallback({ src, alt }: { src: string; alt: string }) {
 export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = false }: DatabaseRestaurantCardProps) {
   const { t } = useTranslation();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { isRecentlyViewed } = useRecentlyViewed();
   const [isLikeAnimating, setIsLikeAnimating] = useState(false);
   
   const isFeatured = restaurant.is_featured || restaurant.is_top_listing;
   const hasImage = restaurant.images && restaurant.images.length > 0 && restaurant.images[0];
+  const wasViewed = isRecentlyViewed(restaurant.slug);
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -106,6 +109,11 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
               <Badge className="featured-badge border-0 gap-1">
                 <Sparkles className="h-3 w-3" />
                 {t('restaurant.featured')}
+              </Badge>
+            )}
+            {wasViewed && !isSponsored && !restaurant.is_top_listing && !restaurant.is_featured && (
+              <Badge variant="secondary" className="text-[10px] border-0 bg-background/80 backdrop-blur">
+                Bezocht
               </Badge>
             )}
           </div>

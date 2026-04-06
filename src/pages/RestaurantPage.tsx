@@ -28,6 +28,7 @@ import { MenuSection } from '@/components/restaurant/MenuSection';
 import { BusyIndicator } from '@/components/restaurant/BusyIndicator';
 import { SustainabilityScore } from '@/components/restaurant/SustainabilityScore';
 import { EventsSection } from '@/components/restaurant/EventsSection';
+import { DealsSection } from '@/components/restaurant/DealsSection';
 import { ReservationWidget } from '@/components/restaurant/ReservationWidget';
 import { AlternativeRestaurants } from '@/components/routing/AlternativeRestaurants';
 import { SocialShare } from '@/components/social/SocialShare';
@@ -46,6 +47,7 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { PRICE_LABELS_FULL, AMBIENCE_TAG_STYLES, AMBIENCE_TAG_I18N_KEYS, WEEK_DAYS } from '@/lib/constants';
 import { TikTokIcon } from '@/components/icons/TikTokIcon';
 import { useClickTracking } from '@/hooks/useClickTracking';
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 
 export default function RestaurantPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -59,6 +61,18 @@ export default function RestaurantPage() {
   const { latitude, longitude } = useGeolocation();
   const { user } = useAuth();
   const { trackClick: trackCTAClick, trackPageView } = useClickTracking(restaurant?.id);
+  const { addItem: addRecentlyViewed } = useRecentlyViewed();
+
+  // Track recently viewed
+  useEffect(() => {
+    if (restaurant) {
+      addRecentlyViewed({
+        slug: restaurant.slug,
+        name: restaurant.name,
+        image: restaurant.images?.[0] || undefined,
+      });
+    }
+  }, [restaurant?.id]);
 
   // Determine if restaurant is currently open
   const isCurrentlyOpen = useMemo((): boolean => {
@@ -447,6 +461,9 @@ export default function RestaurantPage() {
                 <Separator />
               </motion.div>
             )}
+
+            {/* Deals Section */}
+            <DealsSection restaurantId={restaurant.id} />
 
             {/* Events Section */}
             <EventsSection restaurantId={restaurant.id} />
