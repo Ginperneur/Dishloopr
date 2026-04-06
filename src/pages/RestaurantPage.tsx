@@ -60,6 +60,18 @@ export default function RestaurantPage() {
   const { latitude, longitude } = useGeolocation();
   const { user } = useAuth();
   const { trackClick: trackCTAClick, trackPageView } = useClickTracking(restaurant?.id);
+  const { addItem: addRecentlyViewed } = useRecentlyViewed();
+
+  // Track recently viewed
+  useEffect(() => {
+    if (restaurant) {
+      addRecentlyViewed({
+        slug: restaurant.slug,
+        name: restaurant.name,
+        image: restaurant.images?.[0] || undefined,
+      });
+    }
+  }, [restaurant?.id]);
 
   // Determine if restaurant is currently open
   const isCurrentlyOpen = useMemo((): boolean => {
