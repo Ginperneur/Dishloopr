@@ -39,10 +39,32 @@ export function KpiDashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [deduping, setDeduping] = useState(false);
+  const [auditing, setAuditing] = useState(false);
 
   useEffect(() => {
     fetchKpis();
   }, []);
+
+  const handleAuditClassifications = async () => {
+    setAuditing(true);
+    try {
+      const { data: result, error } = await supabase.rpc('audit_and_fix_dish_classifications');
+      if (error) throw error;
+      const fixes = (result as any)?.total_fixes || 0;
+      if (fixes > 0) {
+        const details = (result as any)?.fixes || [];
+        const preview = details.slice(0, 3).map((f: any) => `${f.dish} (${f.from}→${f.to})`).join(', ');
+        toast.success(`${fixes} classificatiefouten hersteld: ${preview}${fixes > 3 ? '...' : ''}`);
+      } else {
+        toast.success('Geen classificatiefouten gevonden!');
+      }
+      await fetchKpis();
+    } catch (e) {
+      toast.error('Fout bij audit');
+    } finally {
+      setAuditing(false);
+    }
+  };
 
   const handleDedupeAndRefresh = async () => {
     setDeduping(true);
