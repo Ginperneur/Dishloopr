@@ -23,13 +23,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Parse request body
     const body = await req.json().catch(() => ({}));
     const batchSize = body.batchSize || 25;
     const offset = body.offset || 0;
     const forceRefresh = body.forceRefresh || false;
 
-    // Fetch restaurants that need enrichment
+    // Fetch restaurants that need enrichment (google_rating IS NULL, not 0)
     let query = supabase
       .from('restaurants')
       .select('id, name, address, city_id, cities(name), google_rating, opening_hours')
@@ -49,12 +48,7 @@ Deno.serve(async (req) => {
 
     if (!restaurants || restaurants.length === 0) {
       return new Response(
-        JSON.stringify({ 
-          message: 'No restaurants to enrich', 
-          enriched: 0, 
-          failed: 0,
-          remaining: 0 
-        }),
+        JSON.stringify({ message: 'No restaurants to enrich', enriched: 0, failed: 0, remaining: 0 }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -71,6 +65,22 @@ Deno.serve(async (req) => {
 
     console.log(`Enriching batch of ${restaurants.length} restaurants (offset: ${offset}, total remaining: ${totalRemaining})`);
 
+    // Quick API key validation with a simple test query
+    if (offset === 0) {
+      const testUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=restaurant+amsterdam&key=${googleApiKey}`;
+      const testResp = await fetch(testUrl);
+      const testData = await testResp.json();
+      console.log(`API key test - status: ${testData.status}, error_message: ${testData.error_message || 'none'}`);
+      if (testData.status === 'REQUEST_DENIED') {
+        return new Response(
+          JSON.stringify({ 
+            error: `Google API key rejected: ${testData.error_message || 'REQUEST_DENIED'}. Make sure the Places API is enabled for this key.` 
+          }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     let enriched = 0;
     let failed = 0;
     const results: Array<{ id: string; name: string; status: string; rating?: number; reviews?: number }> = [];
@@ -79,11 +89,10 @@ Deno.serve(async (req) => {
       try {
         const cityName = (restaurant as any).cities?.name || '';
         const searchQuery = `${restaurant.name} restaurant ${cityName} Netherlands`;
-        
-        // Search Google Places
+
+        // Use Text Search
         const searchUrl = new URL('https://maps.googleapis.com/maps/api/place/textsearch/json');
         searchUrl.searchParams.set('query', searchQuery);
-        searchUrl.searchParams.set('type', 'restaurant');
         searchUrl.searchParams.set('key', googleApiKey);
         searchUrl.searchParams.set('language', 'nl');
         searchUrl.searchParams.set('region', 'nl');
@@ -92,8 +101,8 @@ Deno.serve(async (req) => {
         const searchData = await searchResponse.json();
 
         if (searchData.status !== 'OK' || !searchData.results?.length) {
-          console.log(`No Google result for: ${restaurant.name}`);
-          // Set google_rating to 0 so we don't retry
+          console.log(`No Google result for: ${restaurant.name} (status: ${searchData.status}, error: ${searchData.error_message || 'none'})`);
+          // Mark as attempted so we skip next time
           await supabase
             .from('restaurants')
             .update({ google_rating: 0, google_reviews_count: 0 })
@@ -103,7 +112,6 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Get details for the first match
         const placeId = searchData.results[0].place_id;
         const detailsUrl = new URL('https://maps.googleapis.com/maps/api/place/details/json');
         detailsUrl.searchParams.set('place_id', placeId);
@@ -115,7 +123,7 @@ Deno.serve(async (req) => {
         const detailsData = await detailsResponse.json();
 
         if (detailsData.status !== 'OK' || !detailsData.result) {
-          console.log(`No details for: ${restaurant.name}`);
+          console.log(`No details for: ${restaurant.name} (status: ${detailsData.status})`);
           await supabase
             .from('restaurants')
             .update({ google_rating: 0, google_reviews_count: 0 })
@@ -126,8 +134,6 @@ Deno.serve(async (req) => {
         }
 
         const place = detailsData.result;
-        
-        // Build update object
         const updateData: Record<string, unknown> = {};
 
         if (place.rating != null) {
@@ -137,7 +143,6 @@ Deno.serve(async (req) => {
           updateData.google_reviews_count = place.user_ratings_total;
         }
         if (place.opening_hours?.weekday_text && !restaurant.opening_hours) {
-          // Convert weekday_text array to our JSON format
           const hoursObj: Record<string, string> = {};
           for (const line of place.opening_hours.weekday_text) {
             const [day, ...timeParts] = line.split(': ');
@@ -146,13 +151,7 @@ Deno.serve(async (req) => {
           updateData.opening_hours = hoursObj;
         }
         if (place.price_level != null) {
-          updateData.price_level = String(Math.min(Math.max(place.price_level, 1), 4));
-        }
-        if (place.formatted_phone_number && !updateData.phone) {
-          // Only update phone if restaurant doesn't have one
-        }
-        if (place.website) {
-          // Only update website if restaurant doesn't have one - check separately
+          updateData.price_level = Math.min(Math.max(place.price_level, 1), 4);
         }
 
         if (Object.keys(updateData).length > 0) {
@@ -167,21 +166,26 @@ Deno.serve(async (req) => {
             failed++;
           } else {
             console.log(`Enriched: ${restaurant.name} - Rating: ${place.rating}, Reviews: ${place.user_ratings_total}`);
-            results.push({ 
-              id: restaurant.id, 
-              name: restaurant.name, 
+            results.push({
+              id: restaurant.id,
+              name: restaurant.name,
               status: 'enriched',
               rating: place.rating,
-              reviews: place.user_ratings_total
+              reviews: place.user_ratings_total,
             });
             enriched++;
           }
         } else {
+          // No data returned even though place was found
+          await supabase
+            .from('restaurants')
+            .update({ google_rating: 0, google_reviews_count: 0 })
+            .eq('id', restaurant.id);
           results.push({ id: restaurant.id, name: restaurant.name, status: 'no_data' });
           failed++;
         }
 
-        // Small delay to avoid hitting Google rate limits
+        // Rate limit delay
         await new Promise(resolve => setTimeout(resolve, 200));
       } catch (err) {
         console.error(`Error enriching ${restaurant.name}:`, err);
@@ -193,13 +197,13 @@ Deno.serve(async (req) => {
     const remaining = (totalRemaining || 0) - restaurants.length;
 
     return new Response(
-      JSON.stringify({ 
-        enriched, 
-        failed, 
+      JSON.stringify({
+        enriched,
+        failed,
         total: restaurants.length,
         remaining: Math.max(0, remaining),
         nextOffset: offset + batchSize,
-        results 
+        results,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
