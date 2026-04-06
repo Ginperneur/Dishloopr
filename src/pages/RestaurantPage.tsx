@@ -601,14 +601,14 @@ export default function RestaurantPage() {
       {hasReservation && (
         <div className="fixed bottom-14 left-0 right-0 z-40 lg:hidden bg-background/95 backdrop-blur border-t border-border p-3 safe-area-bottom">
           {hasDigitalReservation && reservationHref ? (
-            <Button className="w-full bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" asChild>
+            <Button className="w-full bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" onClick={() => trackCTAClick('reservation')} asChild>
               <a href={reservationHref} target="_blank" rel="noopener noreferrer" className="gap-2">
                 <Calendar className="h-5 w-5" />
                 {t('restaurant.reserve')}
               </a>
             </Button>
           ) : restaurant.phone ? (
-            <Button className="w-full bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" asChild>
+            <Button className="w-full bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" onClick={() => trackCTAClick('phone')} asChild>
               <a href={`tel:${restaurant.phone}`} className="gap-2">
                 <Phone className="h-5 w-5" />
                 Bel om te reserveren
