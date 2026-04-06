@@ -15,6 +15,7 @@ import { GettingStarted } from '@/components/foodie/GettingStarted';
 import { QuickActions } from '@/components/foodie/QuickActions';
 import { RecentReviews } from '@/components/foodie/RecentReviews';
 import { BadgesPreview } from '@/components/foodie/BadgesPreview';
+import { GroupDecisionTool } from '@/components/group/GroupDecisionTool';
 
 interface ProfileData {
   name: string | null;
