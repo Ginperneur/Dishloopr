@@ -1428,6 +1428,59 @@ export type Database = {
           },
         ]
       }
+      restaurant_deals: {
+        Row: {
+          conditions: string | null
+          created_at: string
+          deal_type: string
+          description: string | null
+          discount_percentage: number | null
+          id: string
+          is_active: boolean
+          restaurant_id: string
+          title: string
+          updated_at: string
+          valid_from: string
+          valid_until: string
+        }
+        Insert: {
+          conditions?: string | null
+          created_at?: string
+          deal_type?: string
+          description?: string | null
+          discount_percentage?: number | null
+          id?: string
+          is_active?: boolean
+          restaurant_id: string
+          title: string
+          updated_at?: string
+          valid_from?: string
+          valid_until: string
+        }
+        Update: {
+          conditions?: string | null
+          created_at?: string
+          deal_type?: string
+          description?: string | null
+          discount_percentage?: number | null
+          id?: string
+          is_active?: boolean
+          restaurant_id?: string
+          title?: string
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_deals_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_dishes: {
         Row: {
           approved_at: string | null
@@ -1966,6 +2019,114 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      shared_list_restaurants: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          id: string
+          list_id: string
+          restaurant_id: string
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          list_id: string
+          restaurant_id: string
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          list_id?: string
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_list_restaurants_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "shared_lists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shared_list_restaurants_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shared_list_votes: {
+        Row: {
+          created_at: string
+          id: string
+          list_id: string
+          restaurant_id: string
+          voter_id: string | null
+          voter_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          list_id: string
+          restaurant_id: string
+          voter_id?: string | null
+          voter_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          list_id?: string
+          restaurant_id?: string
+          voter_id?: string | null
+          voter_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_list_votes_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "shared_lists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shared_list_votes_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shared_lists: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          share_code: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          share_code?: string
+          title?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          share_code?: string
+          title?: string
+        }
+        Relationships: []
       }
       sponsored_products: {
         Row: {
