@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Star, MapPin, Heart, Sparkles, Trophy, ImageOff, UtensilsCrossed } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { useState } from 'react';
 import type { Database } from '@/integrations/supabase/types';
 import { SponsoredBadge } from '@/components/sponsored/SponsoredBadge';
