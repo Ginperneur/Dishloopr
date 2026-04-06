@@ -27,7 +27,8 @@ export function ReservationWidget({
   restaurantName,
   variant = 'full',
   phone,
-  googleMapsUrl
+  googleMapsUrl,
+  onClickTrack
 }: ReservationWidgetProps) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
