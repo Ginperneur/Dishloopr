@@ -167,6 +167,18 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
           </div>
           {/* Primary quick-toggle chips: dietary + terrace */}
           <div className="flex flex-wrap gap-2 mt-3">
+            {/* Open now filter */}
+            <button
+              onClick={() => onFiltersChange({ ...filters, openNow: filters.openNow ? undefined : true })}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
+                filters.openNow
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-muted/50 text-muted-foreground border-border hover:bg-muted'
+              }`}
+            >
+              <span>🕐</span>
+              <span>Open nu</span>
+            </button>
             {/* Terrace filter */}
             <button
               onClick={() => onFiltersChange({ ...filters, hasTerrace: filters.hasTerrace ? undefined : true })}
