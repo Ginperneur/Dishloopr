@@ -48,10 +48,25 @@ export default function SearchPage() {
   const { search, results, loading, cities, dishes } = useSearch();
   
   const dishQuery = searchParams.get('dish') || '';
-  const cityId = searchParams.get('city') || 'all';
+  const cityParam = searchParams.get('city') || 'all';
   const featuredOnly = searchParams.get('featured') === 'true';
   const cuisineParam = searchParams.get('cuisine') || '';
-  const [selectedCityId, setSelectedCityId] = useState(cityId);
+  
+  // Resolve city param: could be a UUID (from dropdown) or a slug/name (from URL)
+  const resolvedCityId = useMemo(() => {
+    if (!cityParam || cityParam === 'all') return 'all';
+    // If it's already a UUID, use directly
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cityParam)) {
+      return cityParam;
+    }
+    // Otherwise look up by slug or name (case-insensitive)
+    const match = cities.find(c => 
+      c.slug === cityParam || c.name.toLowerCase() === cityParam.toLowerCase()
+    );
+    return match?.id || 'all';
+  }, [cityParam, cities]);
+  
+  const [selectedCityId, setSelectedCityId] = useState(resolvedCityId);
   
   const [filters, setFilters] = useState<Filters>({
     priceLevel: [],
@@ -71,10 +86,10 @@ export default function SearchPage() {
   const { latitude, longitude, loading: locationLoading, requestLocation } = useGeolocation();
   const userLocation = latitude && longitude ? { lat: latitude, lng: longitude } : null;
 
-  // Sync selectedCityId with URL on mount
+  // Sync selectedCityId with resolved city ID
   useEffect(() => {
-    setSelectedCityId(cityId);
-  }, [cityId]);
+    setSelectedCityId(resolvedCityId);
+  }, [resolvedCityId]);
 
   // Show scroll-to-top button after scrolling
   useEffect(() => {
