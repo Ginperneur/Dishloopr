@@ -138,6 +138,7 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
       experiences: [],
       dietaryOptions: [],
       hasTerrace: undefined,
+      openNow: undefined,
     });
   };
 
