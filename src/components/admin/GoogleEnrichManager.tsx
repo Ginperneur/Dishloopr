@@ -20,26 +20,31 @@ export function GoogleEnrichManager() {
   const [running, setRunning] = useState(false);
   const [results, setResults] = useState<EnrichResult[]>([]);
   const [stats, setStats] = useState({ enriched: 0, failed: 0, remaining: 0, total: 0 });
-  const [currentOffset, setCurrentOffset] = useState(0);
   const [batchesDone, setBatchesDone] = useState(0);
 
-  const runBatch = async (offset = 0, batchSize = 25) => {
+  const runBatch = async (batchSize = 25) => {
     setRunning(true);
     try {
+      // Always offset 0: processed restaurants get a rating and drop out of the query automatically
       const { data, error } = await supabase.functions.invoke('enrich-restaurants', {
-        body: { batchSize, offset },
+        body: { batchSize, offset: 0 },
       });
 
       if (error) throw error;
 
+      if (data.total === 0) {
+        toast.info('Geen restaurants meer om te verrijken!');
+        setRunning(false);
+        return;
+      }
+
       setResults(prev => [...prev, ...(data.results || [])]);
-      setStats({
-        enriched: stats.enriched + (data.enriched || 0),
-        failed: stats.failed + (data.failed || 0),
+      setStats(prev => ({
+        enriched: prev.enriched + (data.enriched || 0),
+        failed: prev.failed + (data.failed || 0),
         remaining: data.remaining || 0,
-        total: stats.total + (data.total || 0),
-      });
-      setCurrentOffset(data.nextOffset || 0);
+        total: prev.total + (data.total || 0),
+      }));
       setBatchesDone(prev => prev + 1);
 
       toast.success(`Batch klaar: ${data.enriched} verrijkt, ${data.failed} mislukt, ${data.remaining} resterend`);
@@ -55,14 +60,13 @@ export function GoogleEnrichManager() {
     setResults([]);
     setStats({ enriched: 0, failed: 0, remaining: 999, total: 0 });
     setBatchesDone(0);
-    let offset = 0;
     const batchSize = 25;
 
     setRunning(true);
     try {
       while (true) {
         const { data, error } = await supabase.functions.invoke('enrich-restaurants', {
-          body: { batchSize, offset },
+          body: { batchSize, offset: 0 },
         });
 
         if (error) throw error;
@@ -80,8 +84,6 @@ export function GoogleEnrichManager() {
           toast.success('Alle restaurants verrijkt!');
           break;
         }
-
-        offset = data.nextOffset;
       }
     } catch (err) {
       console.error('Enrich error:', err);
@@ -108,7 +110,7 @@ export function GoogleEnrichManager() {
             </CardDescription>
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => runBatch(currentOffset)} disabled={running} variant="outline" size="sm">
+            <Button onClick={() => runBatch()} disabled={running} variant="outline" size="sm">
               {running ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Play className="h-4 w-4 mr-2" />}
               1 Batch (25)
             </Button>
