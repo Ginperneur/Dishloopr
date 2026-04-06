@@ -3,7 +3,7 @@ import {
   TrendingUp, Crown, Users, Search, MapPin, AlertCircle, Shield,
   Store, UtensilsCrossed, Check, Sparkles,
   MessageSquare, FileText,
-  Bell,
+  Bell, Star,
   ShieldAlert, Image, Eye, Upload, Globe, Download, Zap, Clock, Settings
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
