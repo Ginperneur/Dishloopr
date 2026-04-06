@@ -38,6 +38,7 @@ interface Filters {
   experiences: string[];
   dietaryOptions: string[];
   hasTerrace?: boolean;
+  openNow?: boolean;
 }
 
 export default function SearchPage() {
