@@ -1735,6 +1735,8 @@ export type Database = {
           featured_until: string | null
           geo_lat: number | null
           geo_lng: number | null
+          google_rating: number | null
+          google_reviews_count: number | null
           has_delivery: boolean
           has_takeaway: boolean
           has_terrace: boolean
@@ -1784,6 +1786,8 @@ export type Database = {
           featured_until?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
+          google_rating?: number | null
+          google_reviews_count?: number | null
           has_delivery?: boolean
           has_takeaway?: boolean
           has_terrace?: boolean
@@ -1833,6 +1837,8 @@ export type Database = {
           featured_until?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
+          google_rating?: number | null
+          google_reviews_count?: number | null
           has_delivery?: boolean
           has_takeaway?: boolean
           has_terrace?: boolean

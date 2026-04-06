@@ -16,6 +16,8 @@ interface TrendingDishesProps {
 export function TrendingDishes({ dishes, cityName }: TrendingDishesProps) {
   const { t } = useTranslation();
 
+  if (dishes.length === 0) return null;
+
   return (
     <section className="py-10 md:py-16">
       <div className="container px-4 md:px-6">
