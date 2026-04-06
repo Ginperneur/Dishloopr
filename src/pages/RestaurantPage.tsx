@@ -462,6 +462,9 @@ export default function RestaurantPage() {
               </motion.div>
             )}
 
+            {/* Deals Section */}
+            <DealsSection restaurantId={restaurant.id} />
+
             {/* Events Section */}
             <EventsSection restaurantId={restaurant.id} />
 
