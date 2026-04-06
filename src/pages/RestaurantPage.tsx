@@ -119,6 +119,13 @@ export default function RestaurantPage() {
     }
   }, [restaurant, getUnavailabilityReason, latitude, longitude, findAlternatives]);
 
+  // Track page view
+  useEffect(() => {
+    if (restaurant?.id) {
+      trackPageView();
+    }
+  }, [restaurant?.id, trackPageView]);
+
   const handleAlternativeClick = (targetId: string) => {
     if (restaurant && getUnavailabilityReason) {
       const dishId = restaurant.dishes?.[0]?.id;
