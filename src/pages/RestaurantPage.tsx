@@ -506,6 +506,8 @@ export default function RestaurantPage() {
                 reservationUrl={restaurant.reservation_url}
                 restaurantName={restaurant.name}
                 variant="full"
+                phone={restaurant.phone}
+                googleMapsUrl={googleMapsUrl}
               />
 
               {/* Website & Contact Card */}
