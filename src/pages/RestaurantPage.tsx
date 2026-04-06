@@ -541,7 +541,7 @@ export default function RestaurantPage() {
                       </Button>
                     )}
                     {restaurant.geo_lat && restaurant.geo_lng && (
-                      <Button variant="outline" asChild>
+                      <Button variant="outline" onClick={() => trackCTAClick('directions')} asChild>
                         <a 
                           href={`https://www.google.com/maps/dir/?api=1&destination=${restaurant.geo_lat},${restaurant.geo_lng}`}
                           target="_blank"
