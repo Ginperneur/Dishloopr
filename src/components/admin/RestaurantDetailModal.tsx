@@ -87,6 +87,7 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
   const [socialSaving, setSocialSaving] = useState(false);
   const [isFeatured, setIsFeatured] = useState(false);
   const [isTopListing, setIsTopListing] = useState(false);
+  const [reservationUrl, setReservationUrl] = useState<string>('');
 
   useEffect(() => {
     if (open && restaurant) {
