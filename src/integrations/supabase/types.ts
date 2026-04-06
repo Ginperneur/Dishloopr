@@ -2742,6 +2742,7 @@ export type Database = {
       }
     }
     Functions: {
+      audit_and_fix_dish_classifications: { Args: never; Returns: Json }
       auto_enrich_dish_dietary_labels: { Args: never; Returns: Json }
       calculate_featured_market_price: {
         Args: { p_city_id: string; p_cuisine: string }
