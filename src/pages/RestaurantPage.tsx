@@ -45,6 +45,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { PRICE_LABELS_FULL, AMBIENCE_TAG_STYLES, AMBIENCE_TAG_I18N_KEYS, WEEK_DAYS } from '@/lib/constants';
 import { TikTokIcon } from '@/components/icons/TikTokIcon';
+import { useClickTracking } from '@/hooks/useClickTracking';
 
 export default function RestaurantPage() {
   const { slug } = useParams<{ slug: string }>();
