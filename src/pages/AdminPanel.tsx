@@ -36,6 +36,7 @@ import { SeoLandingPagesManager } from '@/components/admin/SeoLandingPagesManage
 import { DishApprovalManager } from '@/components/admin/DishApprovalManager';
 import { ChainsManager } from '@/components/admin/ChainsManager';
 import { GeocodeManager } from '@/components/admin/GeocodeManager';
+import { GoogleEnrichManager } from '@/components/admin/GoogleEnrichManager';
 import { PhotosManager } from '@/components/admin/PhotosManager';
 import { RestaurantDishesManager } from '@/components/admin/RestaurantDishesManager';
 import { FeaturedSlotsManager } from '@/components/admin/FeaturedSlotsManager';
@@ -107,6 +108,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'bulk-import': { title: "Bulk Import", description: "CSV restaurants importeren" },
   'menu-scraper': { title: "Menu Scraper", description: "Gerechten van websites scrapen" },
   'geocode': { title: "Geocode", description: "Coördinaten toekennen" },
+  'google-enrich': { title: "Google Verrijking", description: "Ratings & openingstijden importeren" },
   'photos': { title: "Foto's", description: "Google-foto's ophalen" },
   'data-export': { title: "Data Export", description: "Data exporteren als CSV" },
   'seo-health': { title: "SEO Health", description: "SEO-problemen monitoren" },
@@ -582,6 +584,7 @@ export default function AdminPanel() {
               {activeSection === 'duplicates' && <DuplicateMerger />}
               {activeSection === 'completeness' && <CompletenessScore />}
               {activeSection === 'geocode' && <GeocodeManager />}
+              {activeSection === 'google-enrich' && <GoogleEnrichManager />}
               {activeSection === 'photos' && <PhotosManager />}
               {activeSection === 'seo-health' && <SeoHealthMonitor />}
               {activeSection === 'bulk-actions' && <BulkActionsManager />}

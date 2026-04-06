@@ -3,7 +3,7 @@ import {
   TrendingUp, Crown, Users, Search, MapPin, AlertCircle, Shield,
   Store, UtensilsCrossed, Check, Sparkles,
   MessageSquare, FileText,
-  Bell,
+  Bell, Star,
   ShieldAlert, Image, Eye, Upload, Globe, Download, Zap, Clock, Settings
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -80,6 +80,7 @@ const navGroups = [
       { id: 'bulk-import', label: 'Import', icon: Upload },
       { id: 'menu-scraper', label: 'Menu Scraper', icon: Globe },
       { id: 'geocode', label: 'Geocode', icon: MapPin },
+      { id: 'google-enrich', label: 'Google Verrijking', icon: Star },
       { id: 'photos', label: "Foto's", icon: Image },
       { id: 'data-export', label: 'Export', icon: Download },
       { id: 'seo-health', label: 'SEO Health', icon: Globe },
