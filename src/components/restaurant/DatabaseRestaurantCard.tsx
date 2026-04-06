@@ -54,10 +54,12 @@ function ImageWithFallback({ src, alt }: { src: string; alt: string }) {
 export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = false }: DatabaseRestaurantCardProps) {
   const { t } = useTranslation();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { isRecentlyViewed } = useRecentlyViewed();
   const [isLikeAnimating, setIsLikeAnimating] = useState(false);
   
   const isFeatured = restaurant.is_featured || restaurant.is_top_listing;
   const hasImage = restaurant.images && restaurant.images.length > 0 && restaurant.images[0];
+  const wasViewed = isRecentlyViewed(restaurant.slug);
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
