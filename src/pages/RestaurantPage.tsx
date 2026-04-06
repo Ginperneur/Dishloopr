@@ -375,7 +375,7 @@ export default function RestaurantPage() {
             <div className="lg:hidden space-y-3">
               {/* CTA Buttons */}
               <div className="grid grid-cols-2 gap-2">
-                {hasReservation && (
+                {hasDigitalReservation && reservationHref && (
                   <Button className="col-span-2 bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" asChild>
                     <a href={reservationHref} target="_blank" rel="noopener noreferrer" className="gap-2">
                       <Calendar className="h-5 w-5" />
