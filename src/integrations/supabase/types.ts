@@ -1268,6 +1268,41 @@ export type Database = {
         }
         Relationships: []
       }
+      reservation_intents: {
+        Row: {
+          clicked_at: string
+          follow_up_sent_at: string | null
+          id: string
+          restaurant_id: string
+          review_submitted: boolean
+          user_id: string
+        }
+        Insert: {
+          clicked_at?: string
+          follow_up_sent_at?: string | null
+          id?: string
+          restaurant_id: string
+          review_submitted?: boolean
+          user_id: string
+        }
+        Update: {
+          clicked_at?: string
+          follow_up_sent_at?: string | null
+          id?: string
+          restaurant_id?: string
+          review_submitted?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservation_intents_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_chains: {
         Row: {
           created_at: string
