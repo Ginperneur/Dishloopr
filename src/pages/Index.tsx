@@ -152,6 +152,10 @@ const Index = () => {
                 <SkeletonCard />
                 <SkeletonCard className="hidden lg:block" />
               </>
+            ) : featuredRestaurants.length === 0 ? (
+              <div className="col-span-full text-center py-8 text-muted-foreground">
+                <p>Binnenkort verschijnen hier uitgelichte restaurants.</p>
+              </div>
             ) : (
               featuredRestaurants.map((restaurant, index) => (
                 <DatabaseRestaurantCard
@@ -171,6 +175,10 @@ const Index = () => {
                   <div className="min-w-[280px] snap-start"><SkeletonCard /></div>
                   <div className="min-w-[280px] snap-start"><SkeletonCard /></div>
                 </>
+              ) : featuredRestaurants.length === 0 ? (
+                <div className="min-w-full text-center py-6 text-muted-foreground text-sm">
+                  Binnenkort verschijnen hier uitgelichte restaurants.
+                </div>
               ) : (
                 featuredRestaurants.map((restaurant, index) => (
                   <div key={restaurant.id} className="min-w-[280px] max-w-[300px] snap-start">
