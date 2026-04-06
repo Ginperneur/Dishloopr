@@ -28,6 +28,7 @@ import { MenuSection } from '@/components/restaurant/MenuSection';
 import { BusyIndicator } from '@/components/restaurant/BusyIndicator';
 import { SustainabilityScore } from '@/components/restaurant/SustainabilityScore';
 import { EventsSection } from '@/components/restaurant/EventsSection';
+import { DealsSection } from '@/components/restaurant/DealsSection';
 import { ReservationWidget } from '@/components/restaurant/ReservationWidget';
 import { AlternativeRestaurants } from '@/components/routing/AlternativeRestaurants';
 import { SocialShare } from '@/components/social/SocialShare';
