@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Users, Star, MapPin, Check, ThumbsUp } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
+import { SEOHead } from '@/components/seo/SEOHead';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -139,6 +140,11 @@ export default function VotePage() {
 
   return (
     <Layout>
+      <SEOHead
+        title="Stem op je favoriet | Dishloopr"
+        description="Stem op jouw favoriete restaurant in deze gedeelde lijst."
+        noindex
+      />
       <div className="container py-6 px-4 max-w-lg mx-auto">
         <div className="text-center mb-6">
           <div className="w-14 h-14 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-3">

@@ -256,8 +256,8 @@ export default function SearchPage() {
       : t('search.defaultTitle', 'Zoek restaurants');
 
   const pageDescription = dishQuery
-    ? `Vind de beste ${dishQuery} restaurants${selectedCityName ? ` in ${selectedCityName}` : ' in Nederland'}. Vergelijk ${sortedResults.length}+ opties, bekijk reviews en reserveer direct.`
-    : `Zoek en ontdek ${sortedResults.length}+ restaurants${selectedCityName ? ` in ${selectedCityName}` : ' in Nederland'}. Filter op gerecht, sfeer en prijs.`;
+    ? `Vind de beste ${dishQuery} restaurants${selectedCityName ? ` in ${selectedCityName}` : ' in Nederland'}. Vergelijk opties, bekijk reviews en reserveer direct.`
+    : `Zoek en ontdek restaurants${selectedCityName ? ` in ${selectedCityName}` : ' in Nederland'}. Filter op gerecht, sfeer en prijs.`;
 
   // Always use clean canonical to avoid duplicate indexing of filtered views
   const hasFilters = !!(dishQuery || (selectedCityId && selectedCityId !== 'all'));
