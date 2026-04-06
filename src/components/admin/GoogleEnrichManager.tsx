@@ -23,23 +23,29 @@ export function GoogleEnrichManager() {
   const [currentOffset, setCurrentOffset] = useState(0);
   const [batchesDone, setBatchesDone] = useState(0);
 
-  const runBatch = async (offset = 0, batchSize = 25) => {
+  const runBatch = async (batchSize = 25) => {
     setRunning(true);
     try {
+      // Always offset 0: processed restaurants get a rating and drop out of the query automatically
       const { data, error } = await supabase.functions.invoke('enrich-restaurants', {
-        body: { batchSize, offset },
+        body: { batchSize, offset: 0 },
       });
 
       if (error) throw error;
 
+      if (data.total === 0) {
+        toast.info('Geen restaurants meer om te verrijken!');
+        setRunning(false);
+        return;
+      }
+
       setResults(prev => [...prev, ...(data.results || [])]);
-      setStats({
-        enriched: stats.enriched + (data.enriched || 0),
-        failed: stats.failed + (data.failed || 0),
+      setStats(prev => ({
+        enriched: prev.enriched + (data.enriched || 0),
+        failed: prev.failed + (data.failed || 0),
         remaining: data.remaining || 0,
-        total: stats.total + (data.total || 0),
-      });
-      setCurrentOffset(data.nextOffset || 0);
+        total: prev.total + (data.total || 0),
+      }));
       setBatchesDone(prev => prev + 1);
 
       toast.success(`Batch klaar: ${data.enriched} verrijkt, ${data.failed} mislukt, ${data.remaining} resterend`);
