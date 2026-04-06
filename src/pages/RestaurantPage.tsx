@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useCallback } from 'react';
 import { 
   Star, 
   MapPin, 
@@ -45,6 +45,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { PRICE_LABELS_FULL, AMBIENCE_TAG_STYLES, AMBIENCE_TAG_I18N_KEYS, WEEK_DAYS } from '@/lib/constants';
 import { TikTokIcon } from '@/components/icons/TikTokIcon';
+import { useClickTracking } from '@/hooks/useClickTracking';
 
 export default function RestaurantPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -54,9 +55,10 @@ export default function RestaurantPage() {
   const { reviews, loading: reviewsLoading, submitting, submitReview, refetch } = useReviews(restaurant?.id);
   const { isFavorite, toggleFavorite } = useFavorites();
   const { smartSuggestions, getSmartSuggestions } = useAIRecommendations();
-  const { alternatives, loading: alternativesLoading, findAlternatives, trackClick } = useAlternativeRestaurants();
+  const { alternatives, loading: alternativesLoading, findAlternatives, trackClick: trackAlternativeClick } = useAlternativeRestaurants();
   const { latitude, longitude } = useGeolocation();
   const { user } = useAuth();
+  const { trackClick: trackCTAClick, trackPageView } = useClickTracking(restaurant?.id);
 
   // Determine if restaurant is currently open
   const isCurrentlyOpen = useMemo((): boolean => {
@@ -117,10 +119,17 @@ export default function RestaurantPage() {
     }
   }, [restaurant, getUnavailabilityReason, latitude, longitude, findAlternatives]);
 
+  // Track page view
+  useEffect(() => {
+    if (restaurant?.id) {
+      trackPageView();
+    }
+  }, [restaurant?.id, trackPageView]);
+
   const handleAlternativeClick = (targetId: string) => {
     if (restaurant && getUnavailabilityReason) {
       const dishId = restaurant.dishes?.[0]?.id;
-      trackClick(restaurant.id, targetId, dishId, getUnavailabilityReason);
+      trackAlternativeClick(restaurant.id, targetId, dishId, getUnavailabilityReason);
     }
   };
 
@@ -345,7 +354,7 @@ export default function RestaurantPage() {
                       className="h-8 w-8"
                     />
                     {restaurant.website_url && (
-                      <Button variant="outline" size="sm" asChild>
+                      <Button variant="outline" size="sm" onClick={() => trackCTAClick('website')} asChild>
                         <a href={restaurant.website_url} target="_blank" rel="noopener noreferrer" className="gap-2">
                           <Globe className="h-4 w-4" />
                           <span className="hidden sm:inline">Website</span>
@@ -376,7 +385,7 @@ export default function RestaurantPage() {
               {/* CTA Buttons */}
               <div className="grid grid-cols-2 gap-2">
                 {hasDigitalReservation && reservationHref && (
-                  <Button className="col-span-2 bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" asChild>
+                  <Button className="col-span-2 bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" onClick={() => trackCTAClick('reservation')} asChild>
                     <a href={reservationHref} target="_blank" rel="noopener noreferrer" className="gap-2">
                       <Calendar className="h-5 w-5" />
                       {t('restaurant.reserve')}
@@ -384,7 +393,7 @@ export default function RestaurantPage() {
                   </Button>
                 )}
                 {restaurant.phone && (
-                  <Button variant="outline" size="default" asChild>
+                  <Button variant="outline" size="default" onClick={() => trackCTAClick('phone')} asChild>
                     <a href={`tel:${restaurant.phone}`}>
                       <Phone className="h-4 w-4 mr-1.5" />
                       {t('openingHours.callNow')}
@@ -392,7 +401,7 @@ export default function RestaurantPage() {
                   </Button>
                 )}
                 {restaurant.geo_lat && restaurant.geo_lng && (
-                  <Button variant="outline" size="default" asChild>
+                  <Button variant="outline" size="default" onClick={() => trackCTAClick('directions')} asChild>
                     <a 
                       href={`https://www.google.com/maps/dir/?api=1&destination=${restaurant.geo_lat},${restaurant.geo_lng}`}
                       target="_blank"
@@ -508,13 +517,14 @@ export default function RestaurantPage() {
                 variant="full"
                 phone={restaurant.phone}
                 googleMapsUrl={googleMapsUrl}
+                onClickTrack={trackCTAClick}
               />
 
               {/* Website & Contact Card */}
               <div className="p-6 rounded-2xl border border-border bg-card">
                 <div className="space-y-3">
                   {restaurant.website_url && (
-                    <Button variant="outline" className="w-full" size="lg" asChild>
+                    <Button variant="outline" className="w-full" size="lg" onClick={() => trackCTAClick('website')} asChild>
                       <a href={restaurant.website_url} target="_blank" rel="noopener noreferrer">
                         <Globe className="h-4 w-4 mr-2" />
                         {t('restaurant.website')}
@@ -524,7 +534,7 @@ export default function RestaurantPage() {
 
                   <div className="grid grid-cols-2 gap-3">
                     {restaurant.phone && (
-                      <Button variant="outline" asChild>
+                      <Button variant="outline" onClick={() => trackCTAClick('phone')} asChild>
                         <a href={`tel:${restaurant.phone}`}>
                           <Phone className="h-4 w-4 mr-2" />
                           {t('restaurant.call')}
@@ -532,7 +542,7 @@ export default function RestaurantPage() {
                       </Button>
                     )}
                     {restaurant.geo_lat && restaurant.geo_lng && (
-                      <Button variant="outline" asChild>
+                      <Button variant="outline" onClick={() => trackCTAClick('directions')} asChild>
                         <a 
                           href={`https://www.google.com/maps/dir/?api=1&destination=${restaurant.geo_lat},${restaurant.geo_lng}`}
                           target="_blank"
@@ -592,14 +602,14 @@ export default function RestaurantPage() {
       {hasReservation && (
         <div className="fixed bottom-14 left-0 right-0 z-40 lg:hidden bg-background/95 backdrop-blur border-t border-border p-3 safe-area-bottom">
           {hasDigitalReservation && reservationHref ? (
-            <Button className="w-full bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" asChild>
+            <Button className="w-full bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" onClick={() => trackCTAClick('reservation')} asChild>
               <a href={reservationHref} target="_blank" rel="noopener noreferrer" className="gap-2">
                 <Calendar className="h-5 w-5" />
                 {t('restaurant.reserve')}
               </a>
             </Button>
           ) : restaurant.phone ? (
-            <Button className="w-full bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" asChild>
+            <Button className="w-full bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" onClick={() => trackCTAClick('phone')} asChild>
               <a href={`tel:${restaurant.phone}`} className="gap-2">
                 <Phone className="h-5 w-5" />
                 Bel om te reserveren

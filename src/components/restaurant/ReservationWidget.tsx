@@ -10,6 +10,7 @@ interface ReservationWidgetProps {
   variant?: 'full' | 'button';
   phone?: string | null;
   googleMapsUrl?: string | null;
+  onClickTrack?: (type: string) => void;
 }
 
 declare global {
@@ -26,7 +27,8 @@ export function ReservationWidget({
   restaurantName,
   variant = 'full',
   phone,
-  googleMapsUrl
+  googleMapsUrl,
+  onClickTrack
 }: ReservationWidgetProps) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -124,7 +126,7 @@ export function ReservationWidget({
   if (variant === 'button') {
     if (zenchefId && !widgetError) {
       return (
-        <Button className="flex-1" size="default" asChild>
+        <Button className="flex-1" size="default" onClick={() => onClickTrack?.('reservation')} asChild>
           <a 
             href={`https://widget.zenchef.com/reservation/${zenchefId}`} 
             target="_blank" 
@@ -139,7 +141,7 @@ export function ReservationWidget({
     
     if (reservationUrl) {
       return (
-        <Button className="flex-1" size="default" asChild>
+        <Button className="flex-1" size="default" onClick={() => onClickTrack?.('reservation')} asChild>
           <a href={reservationUrl} target="_blank" rel="noopener noreferrer">
             <Calendar className="h-4 w-4 mr-2" />
             {t('restaurant.reserve')}
