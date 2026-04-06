@@ -60,7 +60,6 @@ export function GoogleEnrichManager() {
     setResults([]);
     setStats({ enriched: 0, failed: 0, remaining: 999, total: 0 });
     setBatchesDone(0);
-    let offset = 0;
     const batchSize = 25;
 
     setRunning(true);
