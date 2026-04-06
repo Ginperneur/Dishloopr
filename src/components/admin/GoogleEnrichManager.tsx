@@ -20,7 +20,6 @@ export function GoogleEnrichManager() {
   const [running, setRunning] = useState(false);
   const [results, setResults] = useState<EnrichResult[]>([]);
   const [stats, setStats] = useState({ enriched: 0, failed: 0, remaining: 0, total: 0 });
-  const [currentOffset, setCurrentOffset] = useState(0);
   const [batchesDone, setBatchesDone] = useState(0);
 
   const runBatch = async (batchSize = 25) => {
