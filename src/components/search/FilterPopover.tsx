@@ -21,6 +21,7 @@ interface Filters {
   experiences: string[];
   dietaryOptions: string[];
   hasTerrace?: boolean;
+  openNow?: boolean;
 }
 
 interface FilterPopoverProps {
