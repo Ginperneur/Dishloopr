@@ -126,7 +126,7 @@ export function ReservationWidget({
   if (variant === 'button') {
     if (zenchefId && !widgetError) {
       return (
-        <Button className="flex-1" size="default" asChild>
+        <Button className="flex-1" size="default" onClick={() => onClickTrack?.('reservation')} asChild>
           <a 
             href={`https://widget.zenchef.com/reservation/${zenchefId}`} 
             target="_blank" 
