@@ -10,14 +10,13 @@ export function useClickTracking(restaurantId: string | undefined) {
   const trackClick = useCallback(async (type: ClickType) => {
     if (!restaurantId) return;
 
-    // Track in analytics_events (works for all users)
     const sessionId = sessionStorage.getItem('session_id') || crypto.randomUUID();
     if (!sessionStorage.getItem('session_id')) {
       sessionStorage.setItem('session_id', sessionId);
     }
 
-    // Only insert if user is authenticated (RLS requires auth)
     if (user) {
+      // Track click event
       await supabase.from('analytics_events').insert({
         restaurant_id: restaurantId,
         event_type: 'click',
@@ -26,19 +25,33 @@ export function useClickTracking(restaurantId: string | undefined) {
         metadata: { type } as any,
       });
 
-      // For reservation clicks, also track intent for follow-up
+      // For reservation clicks, also track intent for follow-up review email
       if (type === 'reservation') {
-        await supabase.from('reservation_intents').insert({
+        await supabase.from('reservation_intents' as any).insert({
           user_id: user.id,
           restaurant_id: restaurantId,
-        }).then(({ error }) => {
-          if (error && !error.message.includes('duplicate')) {
-            console.error('Failed to track reservation intent:', error);
-          }
         });
       }
     }
   }, [restaurantId, user]);
 
-  return { trackClick };
+  const trackPageView = useCallback(async () => {
+    if (!restaurantId) return;
+
+    const sessionId = sessionStorage.getItem('session_id') || crypto.randomUUID();
+    if (!sessionStorage.getItem('session_id')) {
+      sessionStorage.setItem('session_id', sessionId);
+    }
+
+    if (user) {
+      await supabase.from('analytics_events').insert({
+        restaurant_id: restaurantId,
+        event_type: 'view',
+        user_id: user.id,
+        session_id: sessionId,
+      });
+    }
+  }, [restaurantId, user]);
+
+  return { trackClick, trackPageView };
 }
