@@ -44,6 +44,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const ForRestaurantsPage = lazy(() => import("./pages/ForRestaurantsPage"));
 const AddRestaurantPage = lazy(() => import("./pages/AddRestaurantPage"));
 const EventsPage = lazy(() => import("./pages/EventsPage"));
+const VotePage = lazy(() => import("./pages/VotePage"));
 
 // Page loading fallback
 function PageLoader() {
