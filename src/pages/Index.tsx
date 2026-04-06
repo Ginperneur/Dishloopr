@@ -118,6 +118,9 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Recently Viewed */}
+      <RecentlyViewed />
+
       {/* Social Proof Stats */}
       <SocialProof />
 
