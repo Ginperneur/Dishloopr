@@ -903,18 +903,40 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
                   )}
                 </div>
 
-                {/* Fallback URL */}
                 <div className="p-4 rounded-lg border border-border">
                   <div className="flex items-center gap-2 mb-2">
                     <Globe className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium text-sm">Fallback Reserverings URL</span>
+                    <span className="font-medium text-sm">Reserverings URL</span>
                   </div>
                   <p className="text-xs text-muted-foreground mb-2">
-                    Wordt gebruikt als Zenchef niet gekoppeld is (bijv. TheFork, OpenTable)
+                    Directe reserveringslink (bijv. TheFork, OpenTable, eigen website)
                   </p>
-                  <code className="text-xs bg-muted px-2 py-1 rounded block truncate">
-                    {restaurant.reservation_url || 'Niet ingesteld'}
-                  </code>
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      value={reservationUrl}
+                      onChange={(e) => setReservationUrl(e.target.value)}
+                      placeholder="https://thefork.nl/restaurant/..."
+                      className="flex-1 px-3 py-2 text-sm rounded-md border border-input bg-background"
+                    />
+                    <Button 
+                      size="sm" 
+                      onClick={async () => {
+                        const { error } = await supabase
+                          .from('restaurants')
+                          .update({ reservation_url: reservationUrl || null })
+                          .eq('id', restaurant.id);
+                        if (error) {
+                          toast.error('Reserverings URL opslaan mislukt');
+                        } else {
+                          toast.success('Reserverings URL opgeslagen');
+                          onUpdate?.();
+                        }
+                      }}
+                    >
+                      Opslaan
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
