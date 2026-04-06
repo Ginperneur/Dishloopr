@@ -36,6 +36,7 @@ import { SeoLandingPagesManager } from '@/components/admin/SeoLandingPagesManage
 import { DishApprovalManager } from '@/components/admin/DishApprovalManager';
 import { ChainsManager } from '@/components/admin/ChainsManager';
 import { GeocodeManager } from '@/components/admin/GeocodeManager';
+import { GoogleEnrichManager } from '@/components/admin/GoogleEnrichManager';
 import { PhotosManager } from '@/components/admin/PhotosManager';
 import { RestaurantDishesManager } from '@/components/admin/RestaurantDishesManager';
 import { FeaturedSlotsManager } from '@/components/admin/FeaturedSlotsManager';
