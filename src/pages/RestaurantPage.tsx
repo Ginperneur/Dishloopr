@@ -385,7 +385,7 @@ export default function RestaurantPage() {
               {/* CTA Buttons */}
               <div className="grid grid-cols-2 gap-2">
                 {hasDigitalReservation && reservationHref && (
-                  <Button className="col-span-2 bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" asChild>
+                  <Button className="col-span-2 bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" onClick={() => trackCTAClick('reservation')} asChild>
                     <a href={reservationHref} target="_blank" rel="noopener noreferrer" className="gap-2">
                       <Calendar className="h-5 w-5" />
                       {t('restaurant.reserve')}
@@ -393,7 +393,7 @@ export default function RestaurantPage() {
                   </Button>
                 )}
                 {restaurant.phone && (
-                  <Button variant="outline" size="default" asChild>
+                  <Button variant="outline" size="default" onClick={() => trackCTAClick('phone')} asChild>
                     <a href={`tel:${restaurant.phone}`}>
                       <Phone className="h-4 w-4 mr-1.5" />
                       {t('openingHours.callNow')}
