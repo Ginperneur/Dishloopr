@@ -184,8 +184,12 @@ export default function RestaurantPage() {
     { name: restaurant.name, url: `https://dishloopr.com/restaurant/${restaurant.slug}` }
   ]);
 
-  const hasReservation = !!(restaurant.reservation_url || restaurant.zenchef_id);
-  const reservationHref = restaurant.reservation_url || `https://widget.zenchef.com/reservation/${restaurant.zenchef_id}`;
+  const hasDigitalReservation = !!(restaurant.reservation_url || restaurant.zenchef_id);
+  const hasReservation = hasDigitalReservation || !!restaurant.phone;
+  const reservationHref = restaurant.reservation_url || (restaurant.zenchef_id ? `https://widget.zenchef.com/reservation/${restaurant.zenchef_id}` : undefined);
+  const googleMapsUrl = restaurant.geo_lat && restaurant.geo_lng 
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.name + ' ' + restaurant.address)}`
+    : null;
 
   return (
     <Layout>
