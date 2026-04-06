@@ -584,6 +584,7 @@ export default function AdminPanel() {
               {activeSection === 'duplicates' && <DuplicateMerger />}
               {activeSection === 'completeness' && <CompletenessScore />}
               {activeSection === 'geocode' && <GeocodeManager />}
+              {activeSection === 'google-enrich' && <GoogleEnrichManager />}
               {activeSection === 'photos' && <PhotosManager />}
               {activeSection === 'seo-health' && <SeoHealthMonitor />}
               {activeSection === 'bulk-actions' && <BulkActionsManager />}
