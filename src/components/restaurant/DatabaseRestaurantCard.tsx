@@ -111,6 +111,11 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
                 {t('restaurant.featured')}
               </Badge>
             )}
+            {wasViewed && !isSponsored && !restaurant.is_top_listing && !restaurant.is_featured && (
+              <Badge variant="secondary" className="text-[10px] border-0 bg-background/80 backdrop-blur">
+                Bezocht
+              </Badge>
+            )}
           </div>
 
           {/* Favorite Button with Animation */}
