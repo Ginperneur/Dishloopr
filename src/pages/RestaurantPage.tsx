@@ -354,7 +354,7 @@ export default function RestaurantPage() {
                       className="h-8 w-8"
                     />
                     {restaurant.website_url && (
-                      <Button variant="outline" size="sm" asChild>
+                      <Button variant="outline" size="sm" onClick={() => trackCTAClick('website')} asChild>
                         <a href={restaurant.website_url} target="_blank" rel="noopener noreferrer" className="gap-2">
                           <Globe className="h-4 w-4" />
                           <span className="hidden sm:inline">Website</span>
