@@ -60,8 +60,20 @@ export function CompletenessScore() {
       from += 1000;
     }
 
-    const { data: dishLinks } = await supabase.from('restaurant_dishes').select('restaurant_id').neq('status', 'rejected');
-    const dishSet = new Set((dishLinks || []).map((d: any) => d.restaurant_id));
+    let allDishLinks: any[] = [];
+    let dishFrom = 0;
+    while (true) {
+      const { data: batch } = await supabase
+        .from('restaurant_dishes')
+        .select('restaurant_id')
+        .neq('status', 'rejected')
+        .range(dishFrom, dishFrom + 999);
+      if (!batch || batch.length === 0) break;
+      allDishLinks = allDishLinks.concat(batch);
+      if (batch.length < 1000) break;
+      dishFrom += 1000;
+    }
+    const dishSet = new Set(allDishLinks.map((d: any) => d.restaurant_id));
 
     const results: ScoredRestaurant[] = allRestaurants.map((r: any) => {
       const missing: string[] = [];
