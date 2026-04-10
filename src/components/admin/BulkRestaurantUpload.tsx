@@ -131,19 +131,16 @@ export function BulkRestaurantUpload({ onSuccess }: BulkRestaurantUploadProps) {
   };
 
   const checkDuplicatesByPlaceId = async () => {
-    // Fetch all existing restaurant addresses for matching
-    // We match on place_id (via google_place_id) or name+address combo
-    const existingPlaceIds = new Set<string>();
+    // Match on name+address combo since google_place_id column doesn't exist
     const existingNameAddress = new Set<string>();
     let from = 0;
     while (true) {
       const { data } = await supabase
         .from('restaurants')
-        .select('name, address, google_place_id')
+        .select('name, address')
         .range(from, from + 999);
       if (!data || data.length === 0) break;
       for (const r of data) {
-        if (r.google_place_id) existingPlaceIds.add(r.google_place_id);
         if (r.name && r.address) {
           existingNameAddress.add(`${r.name.toLowerCase().trim()}|${r.address.toLowerCase().trim()}`);
         }
@@ -156,11 +153,10 @@ export function BulkRestaurantUpload({ onSuccess }: BulkRestaurantUploadProps) {
     setRestaurants(prev => prev.map(r => {
       if (r.status !== 'success' || !r.enrichedData) return r;
 
-      const placeIdMatch = r.enrichedData.place_id && existingPlaceIds.has(r.enrichedData.place_id);
       const nameAddrMatch = r.enrichedData.address &&
         existingNameAddress.has(`${r.name.toLowerCase().trim()}|${r.enrichedData.address.toLowerCase().trim()}`);
 
-      if (placeIdMatch || nameAddrMatch) {
+      if (nameAddrMatch) {
         dupes++;
         return { ...r, status: 'duplicate' as const, errorMessage: 'Bestaat al in database (zelfde locatie)' };
       }
