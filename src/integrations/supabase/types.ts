@@ -2667,6 +2667,90 @@ export type Database = {
       }
     }
     Views: {
+      featured_subscriptions_public: {
+        Row: {
+          ambiance_addon_price: number | null
+          consecutive_months: number | null
+          cooling_off_until: string | null
+          created_at: string | null
+          expires_at: string | null
+          extra_ambiances: string[] | null
+          id: string | null
+          included_ambiance: string | null
+          max_duration_months: number | null
+          monthly_price: number | null
+          restaurant_id: string | null
+          slot_id: string | null
+          starts_at: string | null
+          status:
+            | Database["public"]["Enums"]["featured_subscription_status"]
+            | null
+          total_clicks: number | null
+          total_monthly_price: number | null
+          total_views: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          ambiance_addon_price?: number | null
+          consecutive_months?: number | null
+          cooling_off_until?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          extra_ambiances?: string[] | null
+          id?: string | null
+          included_ambiance?: string | null
+          max_duration_months?: number | null
+          monthly_price?: number | null
+          restaurant_id?: string | null
+          slot_id?: string | null
+          starts_at?: string | null
+          status?:
+            | Database["public"]["Enums"]["featured_subscription_status"]
+            | null
+          total_clicks?: number | null
+          total_monthly_price?: number | null
+          total_views?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          ambiance_addon_price?: number | null
+          consecutive_months?: number | null
+          cooling_off_until?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          extra_ambiances?: string[] | null
+          id?: string | null
+          included_ambiance?: string | null
+          max_duration_months?: number | null
+          monthly_price?: number | null
+          restaurant_id?: string | null
+          slot_id?: string | null
+          starts_at?: string | null
+          status?:
+            | Database["public"]["Enums"]["featured_subscription_status"]
+            | null
+          total_clicks?: number | null
+          total_monthly_price?: number | null
+          total_views?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "featured_subscriptions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "featured_subscriptions_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "featured_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_profiles: {
         Row: {
           avatar_url: string | null
@@ -2763,6 +2847,7 @@ export type Database = {
         Returns: number
       }
       can_create_claim: { Args: { _user_id: string }; Returns: boolean }
+      clear_expired_verification_codes: { Args: never; Returns: undefined }
       deduplicate_dishes: { Args: never; Returns: Json }
       deduplicate_restaurant_dishes: { Args: never; Returns: Json }
       get_available_slots: { Args: { p_product_id: string }; Returns: number }
