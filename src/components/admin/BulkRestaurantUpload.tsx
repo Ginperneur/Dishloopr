@@ -367,8 +367,8 @@ export function BulkRestaurantUpload({ onSuccess }: BulkRestaurantUploadProps) {
               </p>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={reset}>Annuleren</Button>
-                <Button onClick={enrichWithGooglePlaces}>
-                  Verrijken met Google Places
+                <Button onClick={checkDuplicates}>
+                  Controleer duplicaten
                 </Button>
               </div>
             </div>
@@ -389,6 +389,76 @@ export function BulkRestaurantUpload({ onSuccess }: BulkRestaurantUploadProps) {
           </div>
         )}
 
+        {/* Step 2b: Duplicate check results */}
+        {currentStep === 'checking' && !isProcessing && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="font-medium">Duplicaatcontrole voltooid</p>
+                <p className="text-sm text-muted-foreground">
+                  {restaurants.length - duplicateCount} nieuw • {duplicateCount} duplicaten (worden overgeslagen)
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Badge variant="default">{restaurants.length - duplicateCount} nieuw</Badge>
+                {duplicateCount > 0 && <Badge variant="secondary">{duplicateCount} duplicaten</Badge>}
+              </div>
+            </div>
+
+            {duplicateCount > 0 && (
+              <div className="bg-muted/50 border border-border rounded-lg p-4 flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium">Duplicaten gevonden</p>
+                  <p className="text-muted-foreground">
+                    {duplicateCount} restaurant(s) staan al in de database en worden niet verrijkt via Google Places. Dit bespaart API-kosten.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <ScrollArea className="h-[250px] border rounded-lg">
+              <div className="p-4 space-y-2">
+                {restaurants.map((r, idx) => (
+                  <div key={idx} className={`flex items-center justify-between p-2 rounded ${r.status === 'duplicate' ? 'bg-muted/50 opacity-60' : 'bg-muted/30'}`}>
+                    <div>
+                      <span className={`font-medium ${r.status === 'duplicate' ? 'line-through' : ''}`}>{r.name}</span>
+                      <span className="text-muted-foreground ml-2">• {r.city}</span>
+                    </div>
+                    {r.status === 'duplicate' ? (
+                      <Badge variant="secondary">Duplicaat</Badge>
+                    ) : (
+                      <Badge variant="outline">Nieuw</Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={reset} className="flex-1">Annuleren</Button>
+              <Button
+                onClick={enrichWithGooglePlaces}
+                className="flex-1"
+                disabled={restaurants.length - duplicateCount === 0}
+              >
+                {restaurants.length - duplicateCount} restaurants verrijken
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Checking in progress */}
+        {currentStep === 'checking' && isProcessing && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <span>Controleren op duplicaten in database...</span>
+            </div>
+            <Progress value={progress} />
+          </div>
+        )}
+
         {/* Step 3: Enriching */}
         {currentStep === 'enriching' && (
           <div className="space-y-4">
@@ -402,7 +472,7 @@ export function BulkRestaurantUpload({ onSuccess }: BulkRestaurantUploadProps) {
 
             <ScrollArea className="h-[300px] border rounded-lg">
               <div className="p-4 space-y-2">
-                {restaurants.map((r, idx) => (
+                {restaurants.filter(r => r.status !== 'duplicate').map((r, idx) => (
                   <div key={idx} className="flex items-center justify-between p-2 bg-muted/30 rounded">
                     <div>
                       <span className="font-medium">{r.name}</span>
