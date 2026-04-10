@@ -135,21 +135,34 @@ export function KpiDashboard() {
       from += 1000;
     }
 
-    // Fetch weekly trend data and dish links in parallel
+    // Fetch dish counts (head-only, no limit issue)
     const [
-      { data: weeklyRestaurants },
-      { data: weeklyReviews },
-      { data: weeklyUsers },
       { count: approvedDishCount },
       { count: pendingDishCount },
       { count: totalDishLinks },
     ] = await Promise.all([
-      supabase.from('restaurants').select('created_at').order('created_at', { ascending: true }),
-      supabase.from('reviews').select('created_at').order('created_at', { ascending: true }),
-      supabase.from('profiles').select('created_at').order('created_at', { ascending: true }),
       supabase.from('restaurant_dishes').select('id', { count: 'exact', head: true }).in('status', ['approved_by_admin', 'verified_by_owner']),
       supabase.from('restaurant_dishes').select('id', { count: 'exact', head: true }).eq('status', 'suggested'),
       supabase.from('restaurant_dishes').select('id', { count: 'exact', head: true }),
+    ]);
+
+    // Fetch weekly trend data in batches
+    const fetchAllCreatedAt = async (table: string) => {
+      let all: any[] = [];
+      let f = 0;
+      while (true) {
+        const { data: batch } = await supabase.from(table).select('created_at').order('created_at', { ascending: true }).range(f, f + 999);
+        if (!batch || batch.length === 0) break;
+        all = all.concat(batch);
+        if (batch.length < 1000) break;
+        f += 1000;
+      }
+      return all;
+    };
+    const [weeklyRestaurants, weeklyReviews, weeklyUsers] = await Promise.all([
+      fetchAllCreatedAt('restaurants'),
+      fetchAllCreatedAt('reviews'),
+      fetchAllCreatedAt('profiles'),
     ]);
 
     // Fetch ALL dish links in batches to get accurate restaurant count
