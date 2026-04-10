@@ -108,10 +108,6 @@ export function KpiDashboard() {
       { count: usersLastWeek },
       { count: totalClaims },
       { count: verifiedClaims },
-      { data: allRestaurants },
-      { data: weeklyRestaurants },
-      { data: weeklyReviews },
-      { data: weeklyUsers },
     ] = await Promise.all([
       supabase.from('restaurants').select('*', { count: 'exact', head: true }),
       supabase.from('restaurants').select('*', { count: 'exact', head: true }).eq('is_active', true),
@@ -123,19 +119,35 @@ export function KpiDashboard() {
       supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', twoWeeksAgo.toISOString()).lt('created_at', oneWeekAgo.toISOString()),
       supabase.from('restaurant_claims').select('*', { count: 'exact', head: true }),
       supabase.from('restaurant_claims').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
-      supabase.from('restaurants').select('id, images, geo_lat, geo_lng, phone, website_url, cuisines'),
-      supabase.from('restaurants').select('created_at').order('created_at', { ascending: true }),
-      supabase.from('reviews').select('created_at').order('created_at', { ascending: true }),
-      supabase.from('profiles').select('created_at').order('created_at', { ascending: true }),
     ]);
 
-    // Dish counts - approved, pending, total
+    // Fetch ALL restaurants in batches of 1000 to avoid Supabase row limit
+    let allRestaurants: any[] = [];
+    let from = 0;
+    while (true) {
+      const { data: batch } = await supabase
+        .from('restaurants')
+        .select('id, images, geo_lat, geo_lng, phone, website_url, cuisines')
+        .range(from, from + 999);
+      if (!batch || batch.length === 0) break;
+      allRestaurants = allRestaurants.concat(batch);
+      if (batch.length < 1000) break;
+      from += 1000;
+    }
+
+    // Fetch weekly trend data and dish links in parallel
     const [
+      { data: weeklyRestaurants },
+      { data: weeklyReviews },
+      { data: weeklyUsers },
       { data: dishLinks },
       { count: approvedDishCount },
       { count: pendingDishCount },
       { count: totalDishLinks },
     ] = await Promise.all([
+      supabase.from('restaurants').select('created_at').order('created_at', { ascending: true }),
+      supabase.from('reviews').select('created_at').order('created_at', { ascending: true }),
+      supabase.from('profiles').select('created_at').order('created_at', { ascending: true }),
       supabase.from('restaurant_dishes').select('restaurant_id').in('status', ['approved_by_admin', 'verified_by_owner']),
       supabase.from('restaurant_dishes').select('id', { count: 'exact', head: true }).in('status', ['approved_by_admin', 'verified_by_owner']),
       supabase.from('restaurant_dishes').select('id', { count: 'exact', head: true }).eq('status', 'suggested'),
@@ -143,7 +155,7 @@ export function KpiDashboard() {
     ]);
     const restaurantsWithDishesSet = new Set((dishLinks || []).map((d: any) => d.restaurant_id));
 
-    const restaurants = allRestaurants || [];
+    const restaurants = allRestaurants;
     const withImages = restaurants.filter((r: any) => r.images && r.images.length > 0).length;
     const withGeo = restaurants.filter((r: any) => r.geo_lat && r.geo_lng).length;
     const withContact = restaurants.filter((r: any) => r.phone || r.website_url).length;
