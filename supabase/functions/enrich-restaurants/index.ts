@@ -27,15 +27,19 @@ Deno.serve(async (req) => {
     const batchSize = body.batchSize || 25;
     const offset = body.offset || 0;
     const forceRefresh = body.forceRefresh || false;
+    const mode = body.mode || 'full'; // 'full' | 'opening_hours_only'
 
-    // Fetch restaurants that need enrichment (google_rating IS NULL, not 0)
+    // Build query based on mode
     let query = supabase
       .from('restaurants')
       .select('id, name, address, city_id, cities(name), google_rating, opening_hours')
       .eq('is_active', true)
       .order('name');
 
-    if (!forceRefresh) {
+    if (mode === 'opening_hours_only') {
+      // Restaurants that already have a rating but missing opening_hours
+      query = query.not('google_rating', 'is', null).gt('google_rating', 0).is('opening_hours', null);
+    } else if (!forceRefresh) {
       query = query.is('google_rating', null);
     }
 
@@ -58,12 +62,15 @@ Deno.serve(async (req) => {
       .from('restaurants')
       .select('id', { count: 'exact', head: true })
       .eq('is_active', true);
-    if (!forceRefresh) {
+
+    if (mode === 'opening_hours_only') {
+      countQuery = countQuery.not('google_rating', 'is', null).gt('google_rating', 0).is('opening_hours', null);
+    } else if (!forceRefresh) {
       countQuery = countQuery.is('google_rating', null);
     }
     const { count: totalRemaining } = await countQuery;
 
-    console.log(`Enriching batch of ${restaurants.length} restaurants (offset: ${offset}, total remaining: ${totalRemaining})`);
+    console.log(`[${mode}] Enriching batch of ${restaurants.length} restaurants (offset: ${offset}, total remaining: ${totalRemaining})`);
 
     // Quick API key validation with a simple test query
     if (offset === 0) {
@@ -90,7 +97,6 @@ Deno.serve(async (req) => {
         const cityName = (restaurant as any).cities?.name || '';
         const searchQuery = `${restaurant.name} restaurant ${cityName} Netherlands`;
 
-        // Use Text Search
         const searchUrl = new URL('https://maps.googleapis.com/maps/api/place/textsearch/json');
         searchUrl.searchParams.set('query', searchQuery);
         searchUrl.searchParams.set('key', googleApiKey);
@@ -101,21 +107,25 @@ Deno.serve(async (req) => {
         const searchData = await searchResponse.json();
 
         if (searchData.status !== 'OK' || !searchData.results?.length) {
-          console.log(`No Google result for: ${restaurant.name} (status: ${searchData.status}, error: ${searchData.error_message || 'none'})`);
-          // Mark as attempted so we skip next time
-          await supabase
-            .from('restaurants')
-            .update({ google_rating: 0, google_reviews_count: 0 })
-            .eq('id', restaurant.id);
+          console.log(`No Google result for: ${restaurant.name} (status: ${searchData.status})`);
+          if (mode !== 'opening_hours_only') {
+            await supabase.from('restaurants').update({ google_rating: 0, google_reviews_count: 0 }).eq('id', restaurant.id);
+          }
           results.push({ id: restaurant.id, name: restaurant.name, status: 'not_found' });
           failed++;
           continue;
         }
 
         const placeId = searchData.results[0].place_id;
+
+        // For opening_hours_only mode, we only need opening_hours
+        const fields = mode === 'opening_hours_only'
+          ? 'opening_hours'
+          : 'rating,user_ratings_total,opening_hours,price_level,formatted_phone_number,website';
+
         const detailsUrl = new URL('https://maps.googleapis.com/maps/api/place/details/json');
         detailsUrl.searchParams.set('place_id', placeId);
-        detailsUrl.searchParams.set('fields', 'rating,user_ratings_total,opening_hours,price_level,formatted_phone_number,website');
+        detailsUrl.searchParams.set('fields', fields);
         detailsUrl.searchParams.set('key', googleApiKey);
         detailsUrl.searchParams.set('language', 'nl');
 
@@ -124,10 +134,6 @@ Deno.serve(async (req) => {
 
         if (detailsData.status !== 'OK' || !detailsData.result) {
           console.log(`No details for: ${restaurant.name} (status: ${detailsData.status})`);
-          await supabase
-            .from('restaurants')
-            .update({ google_rating: 0, google_reviews_count: 0 })
-            .eq('id', restaurant.id);
           results.push({ id: restaurant.id, name: restaurant.name, status: 'no_details' });
           failed++;
           continue;
@@ -136,22 +142,19 @@ Deno.serve(async (req) => {
         const place = detailsData.result;
         const updateData: Record<string, unknown> = {};
 
-        if (place.rating != null) {
-          updateData.google_rating = place.rating;
+        if (mode !== 'opening_hours_only') {
+          if (place.rating != null) updateData.google_rating = place.rating;
+          if (place.user_ratings_total != null) updateData.google_reviews_count = place.user_ratings_total;
+          if (place.price_level != null) updateData.price_level = Math.min(Math.max(place.price_level, 1), 4);
         }
-        if (place.user_ratings_total != null) {
-          updateData.google_reviews_count = place.user_ratings_total;
-        }
-        if (place.opening_hours?.weekday_text && !restaurant.opening_hours) {
+
+        if (place.opening_hours?.weekday_text) {
           const hoursObj: Record<string, string> = {};
           for (const line of place.opening_hours.weekday_text) {
             const [day, ...timeParts] = line.split(': ');
             hoursObj[day.toLowerCase()] = timeParts.join(': ');
           }
           updateData.opening_hours = hoursObj;
-        }
-        if (place.price_level != null) {
-          updateData.price_level = Math.min(Math.max(place.price_level, 1), 4);
         }
 
         if (Object.keys(updateData).length > 0) {
@@ -165,7 +168,7 @@ Deno.serve(async (req) => {
             results.push({ id: restaurant.id, name: restaurant.name, status: 'update_failed' });
             failed++;
           } else {
-            console.log(`Enriched: ${restaurant.name} - Rating: ${place.rating}, Reviews: ${place.user_ratings_total}`);
+            console.log(`Enriched: ${restaurant.name} - Hours: ${place.opening_hours ? 'yes' : 'no'}`);
             results.push({
               id: restaurant.id,
               name: restaurant.name,
@@ -176,12 +179,14 @@ Deno.serve(async (req) => {
             enriched++;
           }
         } else {
-          // No data returned even though place was found
-          await supabase
-            .from('restaurants')
-            .update({ google_rating: 0, google_reviews_count: 0 })
-            .eq('id', restaurant.id);
-          results.push({ id: restaurant.id, name: restaurant.name, status: 'no_data' });
+          // No useful data returned
+          if (mode === 'opening_hours_only') {
+            // No opening hours found on Google either — skip silently
+            results.push({ id: restaurant.id, name: restaurant.name, status: 'no_hours' });
+          } else {
+            await supabase.from('restaurants').update({ google_rating: 0, google_reviews_count: 0 }).eq('id', restaurant.id);
+            results.push({ id: restaurant.id, name: restaurant.name, status: 'no_data' });
+          }
           failed++;
         }
 
@@ -198,6 +203,7 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        mode,
         enriched,
         failed,
         total: restaurants.length,
