@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 interface CSVRestaurant {
   name: string;
   city: string;
-  status: 'pending' | 'enriching' | 'success' | 'error';
+  status: 'pending' | 'enriching' | 'success' | 'error' | 'duplicate';
   errorMessage?: string;
   enrichedData?: {
     place_id: string;
