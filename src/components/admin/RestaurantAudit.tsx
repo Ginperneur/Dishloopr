@@ -67,25 +67,43 @@ export function RestaurantAudit() {
   const runAudit = async () => {
     setLoading(true);
 
-    // Fetch all restaurants with city name
-    const { data: allRestaurants } = await supabase
-      .from('restaurants')
-      .select('id, name, slug, address, is_active, rating, review_count, created_at, website_url, phone, geo_lat, geo_lng, images, cuisines, cities:city_id(name)')
-      .order('created_at', { ascending: false });
+    // Fetch all restaurants in batches
+    let allRestaurants: any[] = [];
+    let from = 0;
+    while (true) {
+      const { data: batch } = await supabase
+        .from('restaurants')
+        .select('id, name, slug, address, is_active, rating, review_count, created_at, website_url, phone, geo_lat, geo_lng, images, cuisines, cities:city_id(name)')
+        .order('created_at', { ascending: false })
+        .range(from, from + 999);
+      if (!batch || batch.length === 0) break;
+      allRestaurants = allRestaurants.concat(batch);
+      if (batch.length < 1000) break;
+      from += 1000;
+    }
 
-    if (!allRestaurants) {
+    if (allRestaurants.length === 0) {
       setLoading(false);
       return;
     }
 
-    // Fetch dish counts per restaurant in batch
-    const { data: dishCounts } = await supabase
-      .from('restaurant_dishes')
-      .select('restaurant_id')
-      .neq('status', 'rejected');
+    // Fetch dish counts per restaurant in batches
+    let allDishCounts: any[] = [];
+    let dishFrom = 0;
+    while (true) {
+      const { data: batch } = await supabase
+        .from('restaurant_dishes')
+        .select('restaurant_id')
+        .neq('status', 'rejected')
+        .range(dishFrom, dishFrom + 999);
+      if (!batch || batch.length === 0) break;
+      allDishCounts = allDishCounts.concat(batch);
+      if (batch.length < 1000) break;
+      dishFrom += 1000;
+    }
 
     const dishCountMap = new Map<string, number>();
-    (dishCounts || []).forEach((d: any) => {
+    allDishCounts.forEach((d: any) => {
       dishCountMap.set(d.restaurant_id, (dishCountMap.get(d.restaurant_id) || 0) + 1);
     });
 

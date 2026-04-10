@@ -296,7 +296,7 @@ export default function RestaurantPage() {
                       </div>
                     ) : (restaurant as any).google_rating ? (
                       <div className="flex items-center gap-1">
-                        <img src="https://www.google.com/favicon.ico" alt="Google" className="h-3.5 w-3.5 md:h-4 md:w-4" loading="lazy" />
+                        <Star className="h-3.5 w-3.5 md:h-4 md:w-4 fill-muted-foreground/50 text-muted-foreground/50" />
                         <span className="font-semibold text-foreground">{Number((restaurant as any).google_rating).toFixed(1)}</span>
                         <span className="text-xs text-muted-foreground">Google ({(restaurant as any).google_reviews_count || 0})</span>
                       </div>
@@ -306,7 +306,7 @@ export default function RestaurantPage() {
                     {/* Show Google rating alongside when we have own reviews too */}
                     {restaurant.review_count > 0 && (restaurant as any).google_rating && (
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <img src="https://www.google.com/favicon.ico" alt="Google" className="h-3 w-3" loading="lazy" />
+                        <Star className="h-3 w-3 fill-muted-foreground/50 text-muted-foreground/50" />
                         <span>{Number((restaurant as any).google_rating).toFixed(1)}</span>
                       </div>
                     )}
