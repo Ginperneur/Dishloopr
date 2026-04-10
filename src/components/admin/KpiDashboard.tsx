@@ -147,7 +147,7 @@ export function KpiDashboard() {
     ]);
 
     // Fetch weekly trend data in batches
-    const fetchAllCreatedAt = async (table: string) => {
+    const fetchAllCreatedAt = async (table: 'restaurants' | 'reviews' | 'profiles') => {
       let all: any[] = [];
       let f = 0;
       while (true) {
