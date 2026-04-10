@@ -159,7 +159,7 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
                 </>
               ) : (restaurant as any).google_rating ? (
                 <>
-                  <img src="https://www.google.com/favicon.ico" alt="Google" className="h-3 w-3 sm:h-3.5 sm:w-3.5" loading="lazy" />
+                  <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-muted-foreground/50 text-muted-foreground/50" />
                   <span className="font-semibold text-sm sm:text-base">{Number((restaurant as any).google_rating).toFixed(1)}</span>
                   <span className="text-muted-foreground text-xs">G</span>
                 </>
