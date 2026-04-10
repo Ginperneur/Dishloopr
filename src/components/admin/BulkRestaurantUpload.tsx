@@ -34,7 +34,7 @@ interface BulkRestaurantUploadProps {
 export function BulkRestaurantUpload({ onSuccess }: BulkRestaurantUploadProps) {
   const [restaurants, setRestaurants] = useState<CSVRestaurant[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [currentStep, setCurrentStep] = useState<'upload' | 'preview' | 'checking' | 'enriching' | 'importing' | 'done'>('upload');
+  const [currentStep, setCurrentStep] = useState<'upload' | 'preview' | 'enriching' | 'importing' | 'done'>('upload');
   const [progress, setProgress] = useState(0);
   const [duplicateCount, setDuplicateCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
