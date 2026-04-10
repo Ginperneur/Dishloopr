@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 interface CSVRestaurant {
   name: string;
   city: string;
-  status: 'pending' | 'enriching' | 'success' | 'error';
+  status: 'pending' | 'enriching' | 'success' | 'error' | 'duplicate';
   errorMessage?: string;
   enrichedData?: {
     place_id: string;
@@ -34,67 +34,99 @@ interface BulkRestaurantUploadProps {
 export function BulkRestaurantUpload({ onSuccess }: BulkRestaurantUploadProps) {
   const [restaurants, setRestaurants] = useState<CSVRestaurant[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [currentStep, setCurrentStep] = useState<'upload' | 'preview' | 'enriching' | 'importing' | 'done'>('upload');
+  const [currentStep, setCurrentStep] = useState<'upload' | 'preview' | 'checking' | 'enriching' | 'importing' | 'done'>('upload');
   const [progress, setProgress] = useState(0);
+  const [duplicateCount, setDuplicateCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const parseCSV = (text: string): CSVRestaurant[] => {
     const lines = text.trim().split('\n');
     const parsed: CSVRestaurant[] = [];
-
-    // Skip header if present
     const startIndex = lines[0].toLowerCase().includes('name') || lines[0].toLowerCase().includes('naam') ? 1 : 0;
-
     for (let i = startIndex; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
-
-      // Handle both comma and semicolon separators
       const separator = line.includes(';') ? ';' : ',';
       const parts = line.split(separator).map(p => p.trim().replace(/^["']|["']$/g, ''));
-
       if (parts.length >= 2 && parts[0] && parts[1]) {
-        parsed.push({
-          name: parts[0],
-          city: parts[1],
-          status: 'pending'
-        });
+        parsed.push({ name: parts[0], city: parts[1], status: 'pending' });
       }
     }
-
     return parsed;
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
     if (!file.name.endsWith('.csv')) {
       toast.error('Upload alsjeblieft een CSV bestand');
       return;
     }
-
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target?.result as string;
       const parsed = parseCSV(text);
-
       if (parsed.length === 0) {
         toast.error('Geen geldige restaurants gevonden in het bestand');
         return;
       }
-
       if (parsed.length > 500) {
         toast.error('Maximum 500 restaurants per upload. Je hebt ' + parsed.length + ' restaurants.');
         return;
       }
-
       setRestaurants(parsed);
       setCurrentStep('preview');
       toast.success(`${parsed.length} restaurants gevonden`);
     };
-
     reader.readAsText(file);
+  };
+
+  const checkDuplicates = async () => {
+    setCurrentStep('checking');
+    setIsProcessing(true);
+    setProgress(0);
+
+    // Fetch all existing restaurants with batch fetching
+    const allExisting: { name: string; city_name: string }[] = [];
+    let from = 0;
+    while (true) {
+      const { data } = await supabase
+        .from('restaurants')
+        .select('name, cities!inner(name)')
+        .range(from, from + 999);
+      if (!data || data.length === 0) break;
+      for (const r of data) {
+        const cityName = Array.isArray(r.cities) ? (r.cities as any)[0]?.name : (r.cities as any)?.name;
+        allExisting.push({ name: (r.name || '').toLowerCase().trim(), city_name: (cityName || '').toLowerCase().trim() });
+      }
+      if (data.length < 1000) break;
+      from += 1000;
+    }
+
+    let dupes = 0;
+    const updated = restaurants.map((r) => {
+      const isDuplicate = allExisting.some(
+        ex => ex.name === r.name.toLowerCase().trim() && ex.city_name === r.city.toLowerCase().trim()
+      );
+      if (isDuplicate) {
+        dupes++;
+        return { ...r, status: 'duplicate' as CSVRestaurant['status'], errorMessage: 'Bestaat al in database' };
+      }
+      return r;
+    });
+
+    setRestaurants(updated);
+    setDuplicateCount(dupes);
+    setIsProcessing(false);
+    setProgress(100);
+
+    if (dupes === updated.length) {
+      toast.info('Alle restaurants staan al in de database');
+    } else if (dupes > 0) {
+      toast.warning(`${dupes} duplicaten gevonden, ${updated.length - dupes} nieuwe restaurants`);
+    } else {
+      toast.success('Geen duplicaten gevonden!');
+    }
   };
 
   const enrichWithGooglePlaces = async () => {
@@ -102,62 +134,44 @@ export function BulkRestaurantUpload({ onSuccess }: BulkRestaurantUploadProps) {
     setIsProcessing(true);
     setProgress(0);
 
-    const total = restaurants.length;
+    const toEnrich = restaurants.filter(r => r.status !== 'duplicate');
+    const total = toEnrich.length;
     let completed = 0;
 
-    for (let i = 0; i < restaurants.length; i++) {
-      const restaurant = restaurants[i];
-      
-      setRestaurants(prev => prev.map((r, idx) => 
-        idx === i ? { ...r, status: 'enriching' } : r
-      ));
+    for (const restaurant of toEnrich) {
+      const idx = restaurants.findIndex(r => r.name === restaurant.name && r.city === restaurant.city);
+
+      setRestaurants(prev => prev.map((r, i) => i === idx ? { ...r, status: 'enriching' } : r));
 
       try {
         const { data, error } = await supabase.functions.invoke('google-places-search', {
           body: { query: restaurant.name, city: restaurant.city }
         });
-
         if (error) throw error;
 
         if (data.results && data.results.length > 0) {
-          const place = data.results[0]; // Take best match
-          setRestaurants(prev => prev.map((r, idx) => 
-            idx === i ? { 
-              ...r, 
-              status: 'success',
-              enrichedData: {
-                place_id: place.place_id,
-                address: place.address,
-                geo_lat: place.geo_lat,
-                geo_lng: place.geo_lng,
-                phone: place.phone,
-                website: place.website,
-                rating: place.rating,
-                price_level: place.price_level || 2,
-                opening_hours: place.opening_hours,
-                photo_references: place.photo_references || []
-              }
-            } : r
-          ));
+          const place = data.results[0];
+          setRestaurants(prev => prev.map((r, i) => i === idx ? {
+            ...r, status: 'success',
+            enrichedData: {
+              place_id: place.place_id, address: place.address,
+              geo_lat: place.geo_lat, geo_lng: place.geo_lng,
+              phone: place.phone, website: place.website,
+              rating: place.rating, price_level: place.price_level || 2,
+              opening_hours: place.opening_hours, photo_references: place.photo_references || []
+            }
+          } : r));
         } else {
-          setRestaurants(prev => prev.map((r, idx) => 
-            idx === i ? { ...r, status: 'error', errorMessage: 'Niet gevonden op Google' } : r
-          ));
+          setRestaurants(prev => prev.map((r, i) => i === idx ? { ...r, status: 'error', errorMessage: 'Niet gevonden op Google' } : r));
         }
       } catch (error) {
         console.error('Error enriching restaurant:', error);
-        setRestaurants(prev => prev.map((r, idx) => 
-          idx === i ? { ...r, status: 'error', errorMessage: 'API fout' } : r
-        ));
+        setRestaurants(prev => prev.map((r, i) => i === idx ? { ...r, status: 'error', errorMessage: 'API fout' } : r));
       }
 
       completed++;
       setProgress(Math.round((completed / total) * 100));
-
-      // Small delay to avoid rate limiting
-      if (i < restaurants.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 300));
-      }
+      if (completed < total) await new Promise(resolve => setTimeout(resolve, 300));
     }
 
     setIsProcessing(false);
@@ -353,8 +367,8 @@ export function BulkRestaurantUpload({ onSuccess }: BulkRestaurantUploadProps) {
               </p>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={reset}>Annuleren</Button>
-                <Button onClick={enrichWithGooglePlaces}>
-                  Verrijken met Google Places
+                <Button onClick={checkDuplicates}>
+                  Controleer duplicaten
                 </Button>
               </div>
             </div>
@@ -375,6 +389,76 @@ export function BulkRestaurantUpload({ onSuccess }: BulkRestaurantUploadProps) {
           </div>
         )}
 
+        {/* Step 2b: Duplicate check results */}
+        {currentStep === 'checking' && !isProcessing && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="font-medium">Duplicaatcontrole voltooid</p>
+                <p className="text-sm text-muted-foreground">
+                  {restaurants.length - duplicateCount} nieuw • {duplicateCount} duplicaten (worden overgeslagen)
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Badge variant="default">{restaurants.length - duplicateCount} nieuw</Badge>
+                {duplicateCount > 0 && <Badge variant="secondary">{duplicateCount} duplicaten</Badge>}
+              </div>
+            </div>
+
+            {duplicateCount > 0 && (
+              <div className="bg-muted/50 border border-border rounded-lg p-4 flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium">Duplicaten gevonden</p>
+                  <p className="text-muted-foreground">
+                    {duplicateCount} restaurant(s) staan al in de database en worden niet verrijkt via Google Places. Dit bespaart API-kosten.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <ScrollArea className="h-[250px] border rounded-lg">
+              <div className="p-4 space-y-2">
+                {restaurants.map((r, idx) => (
+                  <div key={idx} className={`flex items-center justify-between p-2 rounded ${r.status === 'duplicate' ? 'bg-muted/50 opacity-60' : 'bg-muted/30'}`}>
+                    <div>
+                      <span className={`font-medium ${r.status === 'duplicate' ? 'line-through' : ''}`}>{r.name}</span>
+                      <span className="text-muted-foreground ml-2">• {r.city}</span>
+                    </div>
+                    {r.status === 'duplicate' ? (
+                      <Badge variant="secondary">Duplicaat</Badge>
+                    ) : (
+                      <Badge variant="outline">Nieuw</Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={reset} className="flex-1">Annuleren</Button>
+              <Button
+                onClick={enrichWithGooglePlaces}
+                className="flex-1"
+                disabled={restaurants.length - duplicateCount === 0}
+              >
+                {restaurants.length - duplicateCount} restaurants verrijken
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Checking in progress */}
+        {currentStep === 'checking' && isProcessing && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <span>Controleren op duplicaten in database...</span>
+            </div>
+            <Progress value={progress} />
+          </div>
+        )}
+
         {/* Step 3: Enriching */}
         {currentStep === 'enriching' && (
           <div className="space-y-4">
@@ -388,7 +472,7 @@ export function BulkRestaurantUpload({ onSuccess }: BulkRestaurantUploadProps) {
 
             <ScrollArea className="h-[300px] border rounded-lg">
               <div className="p-4 space-y-2">
-                {restaurants.map((r, idx) => (
+                {restaurants.filter(r => r.status !== 'duplicate').map((r, idx) => (
                   <div key={idx} className="flex items-center justify-between p-2 bg-muted/30 rounded">
                     <div>
                       <span className="font-medium">{r.name}</span>
