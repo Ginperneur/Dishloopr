@@ -85,14 +85,7 @@ serve(async (req) => {
       payment_method_types: ["card", "ideal"],
       line_items: [
         {
-          price_data: {
-            currency: "eur",
-            product_data: {
-              name: `Nieuwsbrief plaatsing: ${title}`,
-              description: `Vermelding voor ${restaurantName} in de Dishloopr nieuwsbrief`,
-            },
-            unit_amount: 1500, // €15.00
-          },
+          price: "price_1TKicY3EXkDnjHC3kV9Mt6ma", // €15.00 Nieuwsbrief Plaatsing
           quantity: 1,
         },
       ],
