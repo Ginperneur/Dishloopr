@@ -37,7 +37,6 @@ export function BulkRestaurantUpload({ onSuccess }: BulkRestaurantUploadProps) {
   const [currentStep, setCurrentStep] = useState<'upload' | 'preview' | 'enriching' | 'importing' | 'done'>('upload');
   const [progress, setProgress] = useState(0);
   const [duplicateCount, setDuplicateCount] = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const parseCSV = (text: string): CSVRestaurant[] => {
     const lines = text.trim().split('\n');
