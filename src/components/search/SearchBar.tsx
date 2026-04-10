@@ -39,10 +39,14 @@ export function SearchBar({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { addSearch } = useSearchHistory();
-  const [query, setQuery] = useState(initialQuery);
   const [selectedDishes, setSelectedDishes] = useState<string[]>(() => 
     initialQuery ? parseQueryToChips(initialQuery) : []
   );
+  const [query, setQuery] = useState(() => {
+    // If initialQuery produces chips, clear the text input to avoid duplication
+    const chips = initialQuery ? parseQueryToChips(initialQuery) : [];
+    return chips.length > 0 ? '' : initialQuery;
+  });
   const [cityId, setCityId] = useState(initialCity);
   const [suggestions, setSuggestions] = useState<Dish[]>([]);
   const [restaurantSuggestions, setRestaurantSuggestions] = useState<Restaurant[]>([]);
