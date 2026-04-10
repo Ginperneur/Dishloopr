@@ -140,7 +140,6 @@ export function KpiDashboard() {
       { data: weeklyRestaurants },
       { data: weeklyReviews },
       { data: weeklyUsers },
-      { data: dishLinks },
       { count: approvedDishCount },
       { count: pendingDishCount },
       { count: totalDishLinks },
@@ -148,12 +147,26 @@ export function KpiDashboard() {
       supabase.from('restaurants').select('created_at').order('created_at', { ascending: true }),
       supabase.from('reviews').select('created_at').order('created_at', { ascending: true }),
       supabase.from('profiles').select('created_at').order('created_at', { ascending: true }),
-      supabase.from('restaurant_dishes').select('restaurant_id').in('status', ['approved_by_admin', 'verified_by_owner']),
       supabase.from('restaurant_dishes').select('id', { count: 'exact', head: true }).in('status', ['approved_by_admin', 'verified_by_owner']),
       supabase.from('restaurant_dishes').select('id', { count: 'exact', head: true }).eq('status', 'suggested'),
       supabase.from('restaurant_dishes').select('id', { count: 'exact', head: true }),
     ]);
-    const restaurantsWithDishesSet = new Set((dishLinks || []).map((d: any) => d.restaurant_id));
+
+    // Fetch ALL dish links in batches to get accurate restaurant count
+    let allDishLinks: any[] = [];
+    let dishFrom = 0;
+    while (true) {
+      const { data: batch } = await supabase
+        .from('restaurant_dishes')
+        .select('restaurant_id')
+        .in('status', ['approved_by_admin', 'verified_by_owner'])
+        .range(dishFrom, dishFrom + 999);
+      if (!batch || batch.length === 0) break;
+      allDishLinks = allDishLinks.concat(batch);
+      if (batch.length < 1000) break;
+      dishFrom += 1000;
+    }
+    const restaurantsWithDishesSet = new Set(allDishLinks.map((d: any) => d.restaurant_id));
 
     const restaurants = allRestaurants;
     const withImages = restaurants.filter((r: any) => r.images && r.images.length > 0).length;
