@@ -52,6 +52,7 @@ import { FeaturedMarketplace } from '@/components/featured/FeaturedMarketplace';
 import { DemandRoutingSettings } from '@/components/routing/DemandRoutingSettings';
 import { OptimizationDashboard } from '@/components/optimization/OptimizationDashboard';
 import { DishAnalytics } from '@/components/owner/DishAnalytics';
+import { SearchRanking } from '@/components/owner/SearchRanking';
 import { ClaimStatusBadge } from '@/components/claims/ClaimStatusBadge';
 import { MenuItemsManager } from '@/components/admin/MenuItemsManager';
 import { LockedFeatureOverlay } from '@/components/claims/LockedFeatureOverlay';
@@ -757,6 +758,15 @@ export default function OwnerDashboard() {
                     Prestatie Analytics
                   </h3>
                   <AnalyticsTab analytics={analytics} restaurant={selectedRestaurant} reviews={reviews} />
+                </div>
+
+                {/* Search Ranking */}
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                    Zoekpositie
+                  </h3>
+                  <SearchRanking restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
                 </div>
 
                 {/* Dish Analytics */}
