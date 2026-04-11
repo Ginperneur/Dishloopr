@@ -760,6 +760,15 @@ export default function OwnerDashboard() {
                   <AnalyticsTab analytics={analytics} restaurant={selectedRestaurant} reviews={reviews} />
                 </div>
 
+                {/* Search Ranking */}
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                    Zoekpositie
+                  </h3>
+                  <SearchRanking restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
+                </div>
+
                 {/* Dish Analytics */}
                 <div className="border-t pt-8">
                   <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
