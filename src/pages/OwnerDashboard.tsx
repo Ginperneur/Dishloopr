@@ -52,6 +52,7 @@ import { FeaturedMarketplace } from '@/components/featured/FeaturedMarketplace';
 import { DemandRoutingSettings } from '@/components/routing/DemandRoutingSettings';
 import { OptimizationDashboard } from '@/components/optimization/OptimizationDashboard';
 import { DishAnalytics } from '@/components/owner/DishAnalytics';
+import { SearchRanking } from '@/components/owner/SearchRanking';
 import { ClaimStatusBadge } from '@/components/claims/ClaimStatusBadge';
 import { MenuItemsManager } from '@/components/admin/MenuItemsManager';
 import { LockedFeatureOverlay } from '@/components/claims/LockedFeatureOverlay';
