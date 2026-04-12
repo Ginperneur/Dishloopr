@@ -128,7 +128,7 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
           Profiel Tags
         </CardTitle>
         <CardDescription>
-          Je hebt 1 gratis tag per categorie. Voeg extra tags toe voor €5/maand per tag, of neem Owner Pro (€29/maand) voor onbeperkt beheer.
+          Je hebt 1 gratis tag per categorie. Voeg extra tags toe voor €5/maand per tag (max 3), of neem Owner Pro (€29/maand) voor dezelfde limiet zonder losse kosten.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
