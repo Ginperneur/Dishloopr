@@ -199,6 +199,7 @@ Wees specifiek en realistisch. Als je het niet zeker weet op basis van de naam, 
 
       // Filter to only valid values
       // Free tier: limit to 1 tag per category (except meal_types)
+      // Free tier: limit to 1 tag per category (max extra via paid = 3)
       const validCuisines = classification.cuisines.filter(c => VALID_CUISINES.includes(c)).slice(0, 1);
       const validAmbience = classification.ambience_tags.filter(a => VALID_AMBIENCE.includes(a)).slice(0, 1);
       const validConcepts = classification.concepts.filter(c => VALID_CONCEPTS.includes(c)).slice(0, 1);

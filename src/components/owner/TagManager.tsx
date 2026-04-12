@@ -44,7 +44,7 @@ const TAG_CATEGORIES = [
 ] as const;
 
 const FREE_LIMIT = 1;
-const MAX_EXTRA = 5;
+const MAX_EXTRA = 3;
 const PER_TAG_PRICE_ID = 'price_1TLHa63EXkDnjHC3o6lXKE9p';
 const OWNER_PRO_PRICE_ID = 'price_1TKlaF3EXkDnjHC3GBXJCecX';
 
