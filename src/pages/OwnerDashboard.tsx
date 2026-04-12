@@ -58,6 +58,7 @@ import { MenuItemsManager } from '@/components/admin/MenuItemsManager';
 import { LockedFeatureOverlay } from '@/components/claims/LockedFeatureOverlay';
 import { VerificationRequiredDialog } from '@/components/claims/VerificationRequiredDialog';
 import { DishConfirmation } from '@/components/owner/DishConfirmation';
+import { TagManager } from '@/components/owner/TagManager';
 import { RestaurantImageUpload } from '@/components/admin/RestaurantImageUpload';
 import { ActionCards } from '@/components/owner/ActionCards';
 import { ReviewIntelligence } from '@/components/owner/ReviewIntelligence';
@@ -673,6 +674,15 @@ export default function OwnerDashboard() {
                 </Card>
               </div>
             )}
+
+            {/* Tag Manager - Profiel Tags */}
+            {selectedRestaurant && (
+              <TagManager
+                restaurant={selectedRestaurant}
+                onUpdate={(updated) => setSelectedRestaurant(updated)}
+              />
+            )}
+
             {/* Dishes Confirmation */}
             <div>
               <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
