@@ -44,7 +44,7 @@ const TAG_CATEGORIES = [
 ] as const;
 
 const FREE_LIMIT = 1;
-const MAX_EXTRA = 5;
+const MAX_EXTRA = 3;
 const PER_TAG_PRICE_ID = 'price_1TLHa63EXkDnjHC3o6lXKE9p';
 const OWNER_PRO_PRICE_ID = 'price_1TKlaF3EXkDnjHC3GBXJCecX';
 
@@ -128,7 +128,7 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
           Profiel Tags
         </CardTitle>
         <CardDescription>
-          Je hebt 1 gratis tag per categorie. Voeg extra tags toe voor €5/maand per tag, of neem Owner Pro (€29/maand) voor onbeperkt beheer.
+          Je hebt 1 gratis tag per categorie. Voeg extra tags toe voor €5/maand per tag (max 3), of neem Owner Pro (€29/maand) voor dezelfde limiet zonder losse kosten.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

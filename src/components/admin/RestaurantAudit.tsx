@@ -324,7 +324,7 @@ export function RestaurantAudit() {
   };
 
   const canAutoFix = (flagLabel: string) => {
-    return ["Geen foto's", "Geen gerechten", "Geen coördinaten"].includes(flagLabel);
+    return ["Geen foto's", "Geen gerechten", "Geen coördinaten", "Geen keuken"].includes(flagLabel);
   };
 
   const handleAutoFix = async (restaurant: AuditRestaurant, flag: AuditFlag) => {
@@ -412,6 +412,25 @@ export function RestaurantAudit() {
             }));
           } else {
             toast.warning(`Geocoding mislukt voor ${restaurant.name}`);
+          }
+          break;
+        }
+
+        case "Geen keuken": {
+          const { data: classifyData, error: classifyError } = await supabase.functions.invoke("classify-restaurants", {
+            body: { batch_size: 1 },
+          });
+          if (classifyError) throw classifyError;
+
+          if (classifyData?.updated > 0) {
+            toast.success(`Metadata toegevoegd voor ${restaurant.name}`);
+            setRestaurants(prev => prev.map(r => {
+              if (r.id !== restaurant.id) return r;
+              const newFlags = r.flags.filter(f => f.label !== "Geen keuken");
+              return { ...r, cuisines: ['auto'], flags: newFlags, risk_score: r.risk_score - 1 };
+            }));
+          } else {
+            toast.warning(`Kon geen metadata classificeren voor ${restaurant.name}`);
           }
           break;
         }
