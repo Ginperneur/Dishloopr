@@ -113,8 +113,8 @@ export function AIMetadataEnrichment() {
           AI Metadata Verrijking
         </CardTitle>
         <CardDescription>
-          Classificeer restaurants automatisch met keuken, sfeer, concept, maaltijdtypes en belevingen via AI.
-          Alleen restaurants zonder metadata worden verrijkt.
+          Classificeer restaurants automatisch met 1 gratis keuken, sfeer, concept en beleving via AI.
+          Extra tags kunnen eigenaren zelf toevoegen via een betaald abonnement (€5/tag/mnd of Owner Pro).
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
