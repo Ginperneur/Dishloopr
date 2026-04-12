@@ -1715,6 +1715,53 @@ export type Database = {
           },
         ]
       }
+      restaurant_tag_subscriptions: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          payment_type: string
+          restaurant_id: string
+          stripe_subscription_id: string | null
+          tag_category: string
+          tag_value: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          payment_type?: string
+          restaurant_id: string
+          stripe_subscription_id?: string | null
+          tag_category: string
+          tag_value: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          payment_type?: string
+          restaurant_id?: string
+          stripe_subscription_id?: string | null
+          tag_category?: string
+          tag_value?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_tag_subscriptions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurants: {
         Row: {
           accepts_reservations: boolean
