@@ -91,11 +91,11 @@ ${restaurantList}
 
 Geef per restaurant de volgende classificaties. Gebruik ALLEEN waarden uit de lijsten hieronder:
 
-KEUKENS (kies 1-3): ${VALID_CUISINES.join(", ")}
-SFEER (kies 1-3): ${VALID_AMBIENCE.join(", ")}
-CONCEPTEN (kies 0-2): ${VALID_CONCEPTS.join(", ")}
+KEUKENS (kies precies 1): ${VALID_CUISINES.join(", ")}
+SFEER (kies precies 1): ${VALID_AMBIENCE.join(", ")}
+CONCEPTEN (kies precies 1): ${VALID_CONCEPTS.join(", ")}
 MAALTIJDEN (kies 1-4): ${VALID_MEAL_TYPES.join(", ")}
-BELEVINGEN (kies 1-3): ${VALID_EXPERIENCES.join(", ")}
+BELEVINGEN (kies precies 1): ${VALID_EXPERIENCES.join(", ")}
 
 Antwoord ALLEEN met een JSON array. Elk element heeft:
 {
@@ -107,7 +107,8 @@ Antwoord ALLEEN met een JSON array. Elk element heeft:
   "experiences": ["..."]
 }
 
-Wees specifiek en realistisch. Als je het niet zeker weet op basis van de naam, kies dan de meest waarschijnlijke opties.`;
+BELANGRIJK: Geef precies 1 keuken, 1 sfeer, 1 concept en 1 beleving per restaurant. Alleen maaltijdtypes mag je er meerdere geven.
+Wees specifiek en realistisch. Als je het niet zeker weet op basis van de naam, kies dan de meest waarschijnlijke optie.`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -197,11 +198,12 @@ Wees specifiek en realistisch. Als je het niet zeker weet op basis van de naam, 
       if (!restaurant) continue;
 
       // Filter to only valid values
-      const validCuisines = classification.cuisines.filter(c => VALID_CUISINES.includes(c));
-      const validAmbience = classification.ambience_tags.filter(a => VALID_AMBIENCE.includes(a));
-      const validConcepts = classification.concepts.filter(c => VALID_CONCEPTS.includes(c));
+      // Free tier: limit to 1 tag per category (except meal_types)
+      const validCuisines = classification.cuisines.filter(c => VALID_CUISINES.includes(c)).slice(0, 1);
+      const validAmbience = classification.ambience_tags.filter(a => VALID_AMBIENCE.includes(a)).slice(0, 1);
+      const validConcepts = classification.concepts.filter(c => VALID_CONCEPTS.includes(c)).slice(0, 1);
       const validMealTypes = classification.meal_types.filter(m => VALID_MEAL_TYPES.includes(m));
-      const validExperiences = classification.experiences.filter(e => VALID_EXPERIENCES.includes(e));
+      const validExperiences = classification.experiences.filter(e => VALID_EXPERIENCES.includes(e)).slice(0, 1);
 
       const updateData: Record<string, any> = {};
       
