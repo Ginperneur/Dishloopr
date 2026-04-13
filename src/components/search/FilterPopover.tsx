@@ -96,6 +96,7 @@ const CUISINE_OPTIONS = [
   { value: 'steakhouse', key: 'cuisines.steakhouse' },
   { value: 'sushi', key: 'cuisines.sushi' },
   { value: 'mediterranean', key: 'cuisines.mediterranean' },
+  { value: 'surinamese', key: 'cuisines.surinamese' },
 ];
 
 const PRICE_OPTIONS = [
