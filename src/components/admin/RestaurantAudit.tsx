@@ -57,6 +57,8 @@ export function RestaurantAudit() {
   const [filterLevel, setFilterLevel] = useState<FilterLevel>('all');
   const [deactivating, setDeactivating] = useState<string | null>(null);
   const [fixing, setFixing] = useState<string | null>(null); // "restaurantId:flagLabel"
+  const [bulkFixing, setBulkFixing] = useState(false);
+  const [bulkFixProgress, setBulkFixProgress] = useState({ done: 0, total: 0 });
   const [approvedIds, setApprovedIds] = useState<Set<string>>(() => getStoredIds(APPROVED_STORAGE_KEY));
   const [rejectedIds, setRejectedIds] = useState<Set<string>>(() => getStoredIds(REJECTED_STORAGE_KEY));
 
@@ -443,6 +445,46 @@ export function RestaurantAudit() {
     }
   };
 
+  const restaurantsWithoutCuisine = useMemo(() =>
+    restaurants.filter(r => r.flags.some(f => f.label === 'Geen keuken')),
+    [restaurants]
+  );
+
+  const handleBulkFixCuisines = async () => {
+    const count = restaurantsWithoutCuisine.length;
+    if (count === 0) { toast.info('Alle restaurants hebben al een keuken'); return; }
+    if (!confirm(`AI-classificatie starten voor ${count} restaurants zonder keuken? Dit kan even duren.`)) return;
+
+    setBulkFixing(true);
+    setBulkFixProgress({ done: 0, total: count });
+    let totalUpdated = 0;
+    let remaining = count;
+
+    try {
+      while (remaining > 0) {
+        const { data, error } = await supabase.functions.invoke('classify-restaurants', {
+          body: { batch_size: 25 },
+        });
+        if (error) throw error;
+
+        const updated = data?.updated || 0;
+        remaining = data?.remaining || 0;
+        totalUpdated += updated;
+        setBulkFixProgress({ done: totalUpdated, total: count });
+
+        if (updated === 0) break; // nothing left to classify
+      }
+
+      toast.success(`${totalUpdated} restaurants geclassificeerd`);
+      runAudit(); // refresh
+    } catch (err: any) {
+      console.error('Bulk fix error:', err);
+      toast.error(`Fout bij bulk classificatie: ${err.message || 'Onbekende fout'}`);
+    } finally {
+      setBulkFixing(false);
+    }
+  };
+
   const getRiskBadge = (score: number) => {
     if (score >= 6) return <Badge variant="destructive" className="gap-1"><ShieldAlert className="h-3 w-3" />Hoog risico</Badge>;
     if (score >= 2) return <Badge variant="outline" className="gap-1 border-yellow-500 text-yellow-700 dark:text-yellow-400"><AlertTriangle className="h-3 w-3" />Let op</Badge>;
@@ -544,6 +586,26 @@ export function RestaurantAudit() {
                   <SelectItem value="rejected">❌ Geweigerd</SelectItem>
                 </SelectContent>
               </Select>
+              {restaurantsWithoutCuisine.length > 0 && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleBulkFixCuisines}
+                  disabled={bulkFixing}
+                >
+                  {bulkFixing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      {bulkFixProgress.done}/{bulkFixProgress.total}
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="h-4 w-4 mr-1" />
+                      Fix alle zonder keuken ({restaurantsWithoutCuisine.length})
+                    </>
+                  )}
+                </Button>
+              )}
               <Button variant="outline" size="sm" onClick={runAudit}>
                 <RefreshCw className="h-4 w-4 mr-1" />
                 Opnieuw scannen
