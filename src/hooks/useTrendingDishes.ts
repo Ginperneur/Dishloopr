@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/integrations/supabase/types';
 
-type Dish = Database['public']['Tables']['dishes']['Row'];
+export interface TrendingDish {
+  id: string;
+  name: string;
+  slug: string;
+  search_count: number;
+  seasonal_tags: string[];
+  restaurant_count: number;
+}
 
 export function useTrendingDishes(limit: number = 8) {
-  const [dishes, setDishes] = useState<Dish[]>([]);
+  const [dishes, setDishes] = useState<TrendingDish[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -13,16 +19,16 @@ export function useTrendingDishes(limit: number = 8) {
     const fetchDishes = async () => {
       setLoading(true);
       const { data, error: fetchError } = await supabase
-        .from('dishes')
-        .select('*')
-        .eq('is_active', true)
-        .order('search_count', { ascending: false })
-        .limit(limit);
+        .rpc('get_trending_dishes', { dish_limit: limit });
 
       if (fetchError) {
         setError(fetchError.message);
       } else {
-        setDishes(data || []);
+        setDishes((data || []).map((d: any) => ({
+          ...d,
+          seasonal_tags: d.seasonal_tags || [],
+          restaurant_count: Number(d.restaurant_count) || 0,
+        })));
       }
       setLoading(false);
     };
