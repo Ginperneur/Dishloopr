@@ -82,7 +82,12 @@
     "buffet": "Buffet",
     "omakase": "Omakase",
     "prixFixe": "Prix fixe",
-    "popUp": "Pop-up"
+    "popUp": "Pop-up",
+    "foodTruck": "Food truck",
+    "chefsTable": "Chef's table",
+    "streetFood": "Street food",
+    "winePairing": "Wijnpairing",
+    "farmToTable": "Farm-to-table"
   },
   "cuisines": {
     "japanese": "Japans",
@@ -97,13 +102,25 @@
     "korean": "Koreaans",
     "vietnamese": "Vietnamees",
     "american": "Amerikaans",
+    "turkish": "Turks",
+    "indonesian": "Indonesisch",
+    "moroccan": "Marokkaans",
+    "lebanese": "Libanees",
+    "persian": "Perzisch",
+    "caribbean": "Caribisch",
+    "portuguese": "Portugees",
+    "middleEastern": "Midden-Oosters",
+    "african": "Afrikaans",
+    "argentinian": "Argentijns",
+    "brazilian": "Braziliaans",
+    "filipino": "Filipijns",
+    "surinamese": "Surinaams",
     "vegetarian": "Vegetarisch",
     "vegan": "Veganistisch",
     "seafood": "Vis & zeevruchten",
     "steakhouse": "Steakhouse",
     "sushi": "Sushi",
-    "mediterranean": "Mediterraans",
-    "surinamese": "Surinaams"
+    "mediterranean": "Mediterraans"
   },
   "sort": {
     "bestMatch": "Beste match",
