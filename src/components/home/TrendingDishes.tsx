@@ -4,12 +4,10 @@ import { TrendingUp, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { formatDishName } from '@/lib/utils';
-import type { Database } from '@/integrations/supabase/types';
-
-type Dish = Database['public']['Tables']['dishes']['Row'];
+import type { TrendingDish } from '@/hooks/useTrendingDishes';
 
 interface TrendingDishesProps {
-  dishes: Dish[];
+  dishes: TrendingDish[];
   cityName?: string;
 }
 
@@ -68,7 +66,7 @@ export function TrendingDishes({ dishes, cityName }: TrendingDishesProps) {
                       {formatDishName(dish.name)}
                     </h3>
                     <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-                      {(dish.search_count || 0).toLocaleString()} {t('search.results').toLowerCase()}
+                      {dish.restaurant_count} {dish.restaurant_count === 1 ? 'restaurant' : 'restaurants'}
                     </p>
                   </div>
                   <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-accent flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors shrink-0">
@@ -82,7 +80,6 @@ export function TrendingDishes({ dishes, cityName }: TrendingDishesProps) {
           ))}
         </div>
 
-        {/* Link to SEO landing pages */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

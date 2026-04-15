@@ -7,6 +7,7 @@ interface TrendingDish {
   slug: string;
   search_count: number;
   seasonal_tags: string[];
+  restaurant_count: number;
 }
 
 export function useTrendingNow(cityId?: string) {
@@ -17,17 +18,13 @@ export function useTrendingNow(cityId?: string) {
     const fetchTrending = async () => {
       setLoading(true);
       try {
-        // Get most searched dishes
         const { data } = await supabase
-          .from('dishes')
-          .select('id, name, slug, search_count, seasonal_tags')
-          .eq('is_active', true)
-          .order('search_count', { ascending: false })
-          .limit(8);
+          .rpc('get_trending_dishes', { dish_limit: 8 });
 
-        setTrendingDishes((data || []).map(d => ({
+        setTrendingDishes((data || []).map((d: any) => ({
           ...d,
           seasonal_tags: d.seasonal_tags || [],
+          restaurant_count: Number(d.restaurant_count) || 0,
         })));
       } catch (err) {
         console.error('Failed to fetch trending dishes:', err);
@@ -39,7 +36,6 @@ export function useTrendingNow(cityId?: string) {
     fetchTrending();
   }, [cityId]);
 
-  // Get current season
   const getCurrentSeason = (): string => {
     const month = new Date().getMonth();
     if (month >= 2 && month <= 4) return 'spring';
