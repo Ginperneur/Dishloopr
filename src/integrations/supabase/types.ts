@@ -2902,6 +2902,17 @@ export type Database = {
         Args: { p_slot_id: string }
         Returns: number
       }
+      get_trending_dishes: {
+        Args: { dish_limit?: number }
+        Returns: {
+          id: string
+          name: string
+          restaurant_count: number
+          search_count: number
+          seasonal_tags: string[]
+          slug: string
+        }[]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
