@@ -80,7 +80,7 @@ export function TrendingNow({ cityId }: TrendingNowProps) {
                       </span>
                       <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                         <TrendingUp className="h-3 w-3 text-green-500" />
-                        <span>{dish.search_count} {t('trending.searches', 'zoekopdrachten')}</span>
+                        <span>{dish.restaurant_count} restaurants</span>
                       </div>
                     </div>
                     <Badge variant="secondary" className="text-xs shrink-0">
