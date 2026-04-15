@@ -52,6 +52,11 @@ const CONCEPT_OPTIONS = [
   { value: 'omakase', key: 'filters.omakase' },
   { value: 'prix fixe', key: 'filters.prixFixe' },
   { value: 'pop-up', key: 'filters.popUp' },
+  { value: 'food truck', key: 'filters.foodTruck' },
+  { value: 'chefs table', key: 'filters.chefsTable' },
+  { value: 'street food', key: 'filters.streetFood' },
+  { value: 'wine pairing', key: 'filters.winePairing' },
+  { value: 'farm-to-table', key: 'filters.farmToTable' },
 ];
 
 const MEAL_TYPE_OPTIONS = [
@@ -90,13 +95,25 @@ const CUISINE_OPTIONS = [
   { value: 'korean', key: 'cuisines.korean' },
   { value: 'vietnamese', key: 'cuisines.vietnamese' },
   { value: 'american', key: 'cuisines.american' },
+  { value: 'turkish', key: 'cuisines.turkish' },
+  { value: 'indonesian', key: 'cuisines.indonesian' },
+  { value: 'moroccan', key: 'cuisines.moroccan' },
+  { value: 'lebanese', key: 'cuisines.lebanese' },
+  { value: 'persian', key: 'cuisines.persian' },
+  { value: 'caribbean', key: 'cuisines.caribbean' },
+  { value: 'portuguese', key: 'cuisines.portuguese' },
+  { value: 'middle-eastern', key: 'cuisines.middleEastern' },
+  { value: 'african', key: 'cuisines.african' },
+  { value: 'argentinian', key: 'cuisines.argentinian' },
+  { value: 'brazilian', key: 'cuisines.brazilian' },
+  { value: 'filipino', key: 'cuisines.filipino' },
+  { value: 'surinamese', key: 'cuisines.surinamese' },
   { value: 'vegetarian', key: 'cuisines.vegetarian' },
   { value: 'vegan', key: 'cuisines.vegan' },
   { value: 'seafood', key: 'cuisines.seafood' },
   { value: 'steakhouse', key: 'cuisines.steakhouse' },
   { value: 'sushi', key: 'cuisines.sushi' },
   { value: 'mediterranean', key: 'cuisines.mediterranean' },
-  { value: 'surinamese', key: 'cuisines.surinamese' },
 ];
 
 const PRICE_OPTIONS = [

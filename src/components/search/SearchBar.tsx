@@ -402,12 +402,13 @@ export function SearchBar({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
               transition={{ duration: 0.15 }}
-              className="fixed left-4 right-4 top-[140px] z-[9999] md:hidden rounded-2xl overflow-hidden"
+              className="fixed left-4 right-4 z-[9999] md:hidden rounded-2xl overflow-hidden"
               style={{ 
                 backgroundColor: 'hsl(var(--background))',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)',
                 border: '2px solid hsl(var(--border))',
-                maxHeight: 'calc(100vh - 200px)'
+                bottom: '16px',
+                maxHeight: '45vh'
               }}
             >
               {/* Header */}
@@ -425,7 +426,7 @@ export function SearchBar({
               <div 
                 className="overflow-y-auto overscroll-contain"
                 style={{ 
-                  maxHeight: 'calc(100vh - 280px)',
+                  maxHeight: 'calc(45vh - 52px)',
                   WebkitOverflowScrolling: 'touch'
                 }}
               >
@@ -628,12 +629,14 @@ export function SearchBar({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="fixed left-4 right-4 bottom-4 z-[9999] md:hidden rounded-2xl overflow-hidden"
+              className="fixed left-0 right-0 bottom-0 z-[9999] md:hidden rounded-t-2xl overflow-hidden"
               style={{ 
                 backgroundColor: 'hsl(var(--background))',
                 boxShadow: '0 -25px 50px -12px rgba(0, 0, 0, 0.4)',
                 border: '2px solid hsl(var(--border))',
-                maxHeight: '60vh'
+                borderBottom: 'none',
+                maxHeight: '70vh',
+                paddingBottom: 'env(safe-area-inset-bottom, 16px)'
               }}
             >
               {/* Header */}
