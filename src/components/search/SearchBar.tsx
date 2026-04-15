@@ -425,7 +425,7 @@ export function SearchBar({
               <div 
                 className="overflow-y-auto overscroll-contain"
                 style={{ 
-                  maxHeight: 'calc(100vh - 280px)',
+                  maxHeight: 'calc(45vh - 52px)',
                   WebkitOverflowScrolling: 'touch'
                 }}
               >
