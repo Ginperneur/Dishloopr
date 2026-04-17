@@ -584,6 +584,7 @@ export default function AdminPanel() {
               {activeSection === 'data-export' && <DataExportManager />}
               {activeSection === 'bulk-import' && <BulkRestaurantUpload onSuccess={fetchData} />}
               {activeSection === 'audit' && <RestaurantAudit />}
+              {activeSection === 'discovery' && <RestaurantDiscovery />}
               {activeSection === 'broken-images' && <BrokenImageChecker />}
               {activeSection === 'duplicates' && <DuplicateMerger />}
               {activeSection === 'completeness' && <CompletenessScore />}
