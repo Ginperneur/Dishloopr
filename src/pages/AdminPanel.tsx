@@ -63,6 +63,7 @@ import { ClaimAnalytics } from '@/components/admin/ClaimAnalytics';
 import { UserProfileModal } from '@/components/admin/UserProfileModal';
 import { ReviewModerationManager } from '@/components/admin/ReviewModerationManager';
 import { NotificationManager } from '@/components/admin/NotificationManager';
+import { RestaurantDiscovery } from '@/components/admin/RestaurantDiscovery';
 
 interface Stats {
   totalUsers: number;
@@ -103,6 +104,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'seo': { title: "SEO Pages", description: "City×dish landing pages" },
   'notifications': { title: "Notificaties", description: "E-mail notificatie wachtrij" },
   'audit': { title: "Restaurant Audit", description: "Restaurantgegevens controleren" },
+  'discovery': { title: "Restaurant Discovery", description: "Nieuwe restaurants ontdekken via Google Places grid scan" },
   'broken-images': { title: "Broken Images", description: "Kapotte afbeeldingen opsporen" },
   'duplicates': { title: "Duplicaten", description: "Dubbele restaurants samenvoegen" },
   'completeness': { title: "Completeness", description: "Datakwaliteit per restaurant" },

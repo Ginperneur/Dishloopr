@@ -182,11 +182,11 @@ export function RestaurantDiscovery() {
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardDescription>In Review Queue</CardDescription></CardHeader>
-          <CardContent><div className="text-2xl font-bold text-orange-600">{stats.pending}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold text-primary">{stats.pending}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardDescription>Goedgekeurd</CardDescription></CardHeader>
-          <CardContent><div className="text-2xl font-bold text-green-600">{stats.approved}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold text-foreground">{stats.approved}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardDescription>Duplicaten</CardDescription></CardHeader>
@@ -245,7 +245,7 @@ export function RestaurantDiscovery() {
                         <TableCell>
                           {r.rating ? (
                             <div className="flex items-center gap-1 text-sm">
-                              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                              <Star className="h-3 w-3 fill-primary text-primary" />
                               {r.rating} ({r.user_ratings_total || 0})
                             </div>
                           ) : '—'}
