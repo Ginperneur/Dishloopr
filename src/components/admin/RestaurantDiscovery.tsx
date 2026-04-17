@@ -1,0 +1,350 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { toast } from 'sonner';
+import { Loader2, MapPin, Sparkles, Check, X, RefreshCw, Star, ExternalLink } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { nl } from 'date-fns/locale';
+
+interface GridPoint {
+  id: string;
+  name: string;
+  type: string;
+  lat: number;
+  lng: number;
+  radius_meters: number;
+  search_terms: string[];
+  last_scanned_at: string | null;
+  is_active: boolean;
+  city_id: string;
+}
+
+interface DiscoveryResult {
+  id: string;
+  place_id: string;
+  name: string;
+  address: string | null;
+  rating: number | null;
+  user_ratings_total: number | null;
+  price_level: number | null;
+  status: string;
+  matched_restaurant_id: string | null;
+  discovered_at: string;
+  source_grid_point_id: string | null;
+  photo_reference: string | null;
+}
+
+export function RestaurantDiscovery() {
+  const [gridPoints, setGridPoints] = useState<GridPoint[]>([]);
+  const [pendingResults, setPendingResults] = useState<DiscoveryResult[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [scanning, setScanning] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [stats, setStats] = useState({ pending: 0, approved: 0, duplicate: 0, total: 0 });
+
+  const loadData = async () => {
+    setLoading(true);
+    const [gpRes, resRes, statsRes] = await Promise.all([
+      supabase.from('discovery_grid_points').select('*').order('name'),
+      supabase.from('discovery_results').select('*').eq('status', 'pending').order('discovered_at', { ascending: false }).limit(100),
+      supabase.from('discovery_results').select('status'),
+    ]);
+
+    if (gpRes.data) setGridPoints(gpRes.data as GridPoint[]);
+    if (resRes.data) setPendingResults(resRes.data as DiscoveryResult[]);
+    if (statsRes.data) {
+      const s = { pending: 0, approved: 0, duplicate: 0, total: statsRes.data.length };
+      statsRes.data.forEach((r: any) => {
+        if (r.status === 'pending') s.pending++;
+        else if (r.status === 'approved') s.approved++;
+        else if (r.status === 'duplicate') s.duplicate++;
+      });
+      setStats(s);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const handleGenerateGrid = async () => {
+    setGenerating(true);
+    try {
+      const { data, error } = await supabase.rpc('generate_amsterdam_grid');
+      if (error) throw error;
+      toast.success(`${data} grid-punten gegenereerd voor Amsterdam`);
+      await loadData();
+    } catch (e: any) {
+      toast.error(e.message || 'Kon grid niet genereren');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleScan = async (gridPointId: string) => {
+    setScanning(gridPointId);
+    try {
+      const { data, error } = await supabase.functions.invoke('discover-restaurants', {
+        body: { grid_point_id: gridPointId },
+      });
+      if (error) throw error;
+      toast.success(`Scan voltooid: ${data.new_results} nieuw, ${data.duplicates} duplicaten (${data.api_calls_used} API calls)`);
+      await loadData();
+    } catch (e: any) {
+      toast.error(e.message || 'Scan mislukt');
+    } finally {
+      setScanning(null);
+    }
+  };
+
+  const handleApprove = async (result: DiscoveryResult) => {
+    try {
+      // Get city slug for restaurant slug generation
+      const { data: gridPoint } = await supabase
+        .from('discovery_grid_points')
+        .select('city_id, cities(slug)')
+        .eq('id', result.source_grid_point_id!)
+        .single();
+
+      const cityId = gridPoint?.city_id;
+      if (!cityId) throw new Error('City niet gevonden');
+
+      // Generate slug
+      const baseSlug = result.name.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+        .slice(0, 60);
+      const slug = `${baseSlug}-${result.place_id.slice(-6)}`;
+
+      // Insert restaurant
+      const { error: insErr } = await supabase.from('restaurants').insert({
+        name: result.name,
+        slug,
+        address: result.address || 'Onbekend',
+        city_id: cityId,
+        google_place_id: result.place_id,
+        geo_lat: (result as any).lat,
+        geo_lng: (result as any).lng,
+        google_rating: result.rating,
+        google_reviews_count: result.user_ratings_total,
+        price_level: result.price_level || 2,
+        is_active: false, // Inactive until enriched
+        added_by_source: 'discovery',
+      });
+
+      if (insErr) throw insErr;
+
+      // Mark result approved
+      await supabase
+        .from('discovery_results')
+        .update({ status: 'approved', reviewed_at: new Date().toISOString() })
+        .eq('id', result.id);
+
+      toast.success(`${result.name} toegevoegd (inactief, klaar voor verrijking)`);
+      await loadData();
+    } catch (e: any) {
+      toast.error(e.message || 'Goedkeuren mislukt');
+    }
+  };
+
+  const handleReject = async (result: DiscoveryResult) => {
+    try {
+      await supabase
+        .from('discovery_results')
+        .update({ status: 'rejected', reviewed_at: new Date().toISOString() })
+        .eq('id', result.id);
+      toast.success('Afgewezen');
+      await loadData();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-2"><CardDescription>Grid Punten</CardDescription></CardHeader>
+          <CardContent><div className="text-2xl font-bold">{gridPoints.length}</div></CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2"><CardDescription>In Review Queue</CardDescription></CardHeader>
+          <CardContent><div className="text-2xl font-bold text-orange-600">{stats.pending}</div></CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2"><CardDescription>Goedgekeurd</CardDescription></CardHeader>
+          <CardContent><div className="text-2xl font-bold text-green-600">{stats.approved}</div></CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2"><CardDescription>Duplicaten</CardDescription></CardHeader>
+          <CardContent><div className="text-2xl font-bold text-muted-foreground">{stats.duplicate}</div></CardContent>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="queue" className="w-full">
+        <TabsList>
+          <TabsTrigger value="queue">Review Queue ({stats.pending})</TabsTrigger>
+          <TabsTrigger value="grid">Grid Punten ({gridPoints.length})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="queue" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Ontdekte Restaurants — Review Queue</CardTitle>
+              <CardDescription>
+                Nieuwe restaurants gevonden via Google Places. Goedkeuren importeert ze als inactief (klaar voor AI-verrijking).
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {pendingResults.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Sparkles className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                  <p>Geen pending resultaten. Voer een scan uit op een grid-punt.</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Naam</TableHead>
+                      <TableHead>Adres</TableHead>
+                      <TableHead>Rating</TableHead>
+                      <TableHead>Ontdekt</TableHead>
+                      <TableHead className="text-right">Acties</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pendingResults.map((r) => (
+                      <TableRow key={r.id}>
+                        <TableCell className="font-medium">
+                          <div>{r.name}</div>
+                          <a
+                            href={`https://www.google.com/maps/place/?q=place_id:${r.place_id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1"
+                          >
+                            Google Maps <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
+                          {r.address || '—'}
+                        </TableCell>
+                        <TableCell>
+                          {r.rating ? (
+                            <div className="flex items-center gap-1 text-sm">
+                              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                              {r.rating} ({r.user_ratings_total || 0})
+                            </div>
+                          ) : '—'}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(new Date(r.discovered_at), { addSuffix: true, locale: nl })}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button size="sm" variant="default" onClick={() => handleApprove(r)}>
+                              <Check className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => handleReject(r)}>
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="grid" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Grid Configuratie</CardTitle>
+                <CardDescription>Zoekpunten over de stad — elk punt scant ±1.5km radius</CardDescription>
+              </div>
+              {gridPoints.length === 0 && (
+                <Button onClick={handleGenerateGrid} disabled={generating}>
+                  {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                  Genereer Amsterdam Grid (40 punten)
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent>
+              {gridPoints.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <MapPin className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                  <p>Nog geen grid-punten. Genereer het Amsterdam grid om te starten.</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Naam</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Locatie</TableHead>
+                      <TableHead>Radius</TableHead>
+                      <TableHead>Laatste Scan</TableHead>
+                      <TableHead className="text-right">Actie</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {gridPoints.map((gp) => (
+                      <TableRow key={gp.id}>
+                        <TableCell className="font-medium">{gp.name}</TableCell>
+                        <TableCell>
+                          <Badge variant={gp.type === 'hotspot' ? 'default' : 'secondary'}>
+                            {gp.type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {Number(gp.lat).toFixed(4)}, {Number(gp.lng).toFixed(4)}
+                        </TableCell>
+                        <TableCell>{gp.radius_meters}m</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {gp.last_scanned_at
+                            ? formatDistanceToNow(new Date(gp.last_scanned_at), { addSuffix: true, locale: nl })
+                            : 'Nooit'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleScan(gp.id)}
+                            disabled={scanning === gp.id}
+                          >
+                            {scanning === gp.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <RefreshCw className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
