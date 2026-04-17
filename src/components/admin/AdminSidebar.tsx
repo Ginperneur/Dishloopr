@@ -79,6 +79,7 @@ const navGroups = [
       { id: 'completeness', label: 'Completeness', icon: Eye },
       { id: 'bulk-import', label: 'Import', icon: Upload },
       { id: 'menu-scraper', label: 'Menu Scraper', icon: Globe },
+      { id: 'discovery', label: 'Discovery', icon: Search },
       { id: 'geocode', label: 'Geocode', icon: MapPin },
       { id: 'google-enrich', label: 'Google Verrijking', icon: Star },
       { id: 'photos', label: "Foto's", icon: Image },

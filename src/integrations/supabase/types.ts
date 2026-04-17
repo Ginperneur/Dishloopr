@@ -507,6 +507,213 @@ export type Database = {
           },
         ]
       }
+      discovery_grid_points: {
+        Row: {
+          city_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          last_scanned_at: string | null
+          lat: number
+          lng: number
+          name: string
+          radius_meters: number
+          search_terms: string[] | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          city_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_scanned_at?: string | null
+          lat: number
+          lng: number
+          name: string
+          radius_meters?: number
+          search_terms?: string[] | null
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          city_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_scanned_at?: string | null
+          lat?: number
+          lng?: number
+          name?: string
+          radius_meters?: number
+          search_terms?: string[] | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discovery_grid_points_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discovery_results: {
+        Row: {
+          address: string | null
+          city_id: string | null
+          discovered_at: string
+          id: string
+          lat: number | null
+          lng: number | null
+          matched_restaurant_id: string | null
+          name: string
+          photo_reference: string | null
+          place_id: string
+          price_level: number | null
+          rating: number | null
+          raw_data: Json | null
+          reject_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_grid_point_id: string | null
+          source_search_term: string | null
+          status: string
+          types: string[] | null
+          user_ratings_total: number | null
+        }
+        Insert: {
+          address?: string | null
+          city_id?: string | null
+          discovered_at?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          matched_restaurant_id?: string | null
+          name: string
+          photo_reference?: string | null
+          place_id: string
+          price_level?: number | null
+          rating?: number | null
+          raw_data?: Json | null
+          reject_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_grid_point_id?: string | null
+          source_search_term?: string | null
+          status?: string
+          types?: string[] | null
+          user_ratings_total?: number | null
+        }
+        Update: {
+          address?: string | null
+          city_id?: string | null
+          discovered_at?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          matched_restaurant_id?: string | null
+          name?: string
+          photo_reference?: string | null
+          place_id?: string
+          price_level?: number | null
+          rating?: number | null
+          raw_data?: Json | null
+          reject_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_grid_point_id?: string | null
+          source_search_term?: string | null
+          status?: string
+          types?: string[] | null
+          user_ratings_total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discovery_results_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discovery_results_matched_restaurant_id_fkey"
+            columns: ["matched_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discovery_results_source_grid_point_id_fkey"
+            columns: ["source_grid_point_id"]
+            isOneToOne: false
+            referencedRelation: "discovery_grid_points"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discovery_runs: {
+        Row: {
+          api_calls_used: number
+          city_id: string | null
+          completed_at: string | null
+          duplicates: number
+          error_message: string | null
+          grid_point_id: string | null
+          id: string
+          new_results: number
+          results_found: number
+          started_at: string
+          status: string
+          triggered_by: string | null
+        }
+        Insert: {
+          api_calls_used?: number
+          city_id?: string | null
+          completed_at?: string | null
+          duplicates?: number
+          error_message?: string | null
+          grid_point_id?: string | null
+          id?: string
+          new_results?: number
+          results_found?: number
+          started_at?: string
+          status?: string
+          triggered_by?: string | null
+        }
+        Update: {
+          api_calls_used?: number
+          city_id?: string | null
+          completed_at?: string | null
+          duplicates?: number
+          error_message?: string | null
+          grid_point_id?: string | null
+          id?: string
+          new_results?: number
+          results_found?: number
+          started_at?: string
+          status?: string
+          triggered_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discovery_runs_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discovery_runs_grid_point_id_fkey"
+            columns: ["grid_point_id"]
+            isOneToOne: false
+            referencedRelation: "discovery_grid_points"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dish_ratings: {
         Row: {
           created_at: string
@@ -1782,6 +1989,7 @@ export type Database = {
           featured_until: string | null
           geo_lat: number | null
           geo_lng: number | null
+          google_place_id: string | null
           google_rating: number | null
           google_reviews_count: number | null
           has_delivery: boolean
@@ -1833,6 +2041,7 @@ export type Database = {
           featured_until?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
+          google_place_id?: string | null
           google_rating?: number | null
           google_reviews_count?: number | null
           has_delivery?: boolean
@@ -1884,6 +2093,7 @@ export type Database = {
           featured_until?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
+          google_place_id?: string | null
           google_rating?: number | null
           google_reviews_count?: number | null
           has_delivery?: boolean
@@ -2897,6 +3107,7 @@ export type Database = {
       clear_expired_verification_codes: { Args: never; Returns: undefined }
       deduplicate_dishes: { Args: never; Returns: Json }
       deduplicate_restaurant_dishes: { Args: never; Returns: Json }
+      generate_amsterdam_grid: { Args: never; Returns: number }
       get_available_slots: { Args: { p_product_id: string }; Returns: number }
       get_featured_active_count: {
         Args: { p_slot_id: string }
