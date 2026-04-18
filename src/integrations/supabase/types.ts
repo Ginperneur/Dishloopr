@@ -3108,6 +3108,19 @@ export type Database = {
       deduplicate_dishes: { Args: never; Returns: Json }
       deduplicate_restaurant_dishes: { Args: never; Returns: Json }
       generate_amsterdam_grid: { Args: never; Returns: number }
+      generate_city_grid: {
+        Args: {
+          _center_lat: number
+          _center_lng: number
+          _city_id: string
+          _city_name: string
+          _cols: number
+          _radius_meters?: number
+          _rows: number
+          _spacing_km?: number
+        }
+        Returns: number
+      }
       get_available_slots: { Args: { p_product_id: string }; Returns: number }
       get_featured_active_count: {
         Args: { p_slot_id: string }
