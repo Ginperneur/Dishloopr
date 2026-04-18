@@ -194,8 +194,8 @@ export function RestaurantDiscovery() {
         </Card>
       </div>
 
-      <Tabs defaultValue="queue" className="w-full">
-        <TabsList>
+      <Tabs defaultValue={stats.pending > 0 ? 'queue' : 'grid'} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
           <TabsTrigger value="queue">Review Queue ({stats.pending})</TabsTrigger>
           <TabsTrigger value="grid">Grid Punten ({gridPoints.length})</TabsTrigger>
         </TabsList>
