@@ -1,12 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Loader2, MapPin, Sparkles, Check, X, RefreshCw, Star, ExternalLink } from 'lucide-react';
+import { Loader2, MapPin, Sparkles, Check, X, RefreshCw, Star, ExternalLink, Zap, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
@@ -45,6 +48,14 @@ export function RestaurantDiscovery() {
   const [scanning, setScanning] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [stats, setStats] = useState({ pending: 0, approved: 0, duplicate: 0, total: 0 });
+
+  // Bulk scan state
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkFilter, setBulkFilter] = useState<'never' | '7days' | '30days' | 'all'>('never');
+  const [bulkType, setBulkType] = useState<'all' | 'grid' | 'hotspot'>('all');
+  const [bulkRunning, setBulkRunning] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, newCount: 0, dupCount: 0, errors: 0 });
+  const [bulkCancelRequested, setBulkCancelRequested] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -101,6 +112,61 @@ export function RestaurantDiscovery() {
       setScanning(null);
     }
   };
+
+  // Compute which grid points match the bulk filter
+  const bulkTargets = useMemo(() => {
+    const now = Date.now();
+    const day = 24 * 60 * 60 * 1000;
+    return gridPoints.filter((gp) => {
+      if (!gp.is_active) return false;
+      if (bulkType !== 'all' && gp.type !== bulkType) return false;
+      const last = gp.last_scanned_at ? new Date(gp.last_scanned_at).getTime() : null;
+      if (bulkFilter === 'never') return last === null;
+      if (bulkFilter === '7days') return last === null || now - last > 7 * day;
+      if (bulkFilter === '30days') return last === null || now - last > 30 * day;
+      return true; // 'all'
+    });
+  }, [gridPoints, bulkFilter, bulkType]);
+
+  const handleBulkScan = async () => {
+    if (bulkTargets.length === 0) {
+      toast.error('Geen punten matchen je filter');
+      return;
+    }
+    setBulkRunning(true);
+    setBulkCancelRequested(false);
+    setBulkProgress({ current: 0, total: bulkTargets.length, newCount: 0, dupCount: 0, errors: 0 });
+
+    let newCount = 0;
+    let dupCount = 0;
+    let errors = 0;
+
+    for (let i = 0; i < bulkTargets.length; i++) {
+      if (bulkCancelRequested) {
+        toast.info(`Geannuleerd na ${i} van ${bulkTargets.length} punten`);
+        break;
+      }
+      const gp = bulkTargets[i];
+      try {
+        const { data, error } = await supabase.functions.invoke('discover-restaurants', {
+          body: { grid_point_id: gp.id },
+        });
+        if (error) throw error;
+        newCount += data?.new_results || 0;
+        dupCount += data?.duplicates || 0;
+      } catch (e) {
+        console.error(`Bulk scan failed for ${gp.name}:`, e);
+        errors++;
+      }
+      setBulkProgress({ current: i + 1, total: bulkTargets.length, newCount, dupCount, errors });
+      if (i < bulkTargets.length - 1) await new Promise((r) => setTimeout(r, 500));
+    }
+
+    setBulkRunning(false);
+    toast.success(`Bulk scan klaar: ${newCount} nieuw, ${dupCount} duplicaten, ${errors} fouten`);
+    await loadData();
+  };
+
 
   const handleApprove = async (result: DiscoveryResult) => {
     try {
@@ -274,17 +340,25 @@ export function RestaurantDiscovery() {
 
         <TabsContent value="grid" className="space-y-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between gap-4 flex-wrap">
               <div>
                 <CardTitle>Grid Configuratie</CardTitle>
                 <CardDescription>Zoekpunten over de stad — elk punt scant ±1.5km radius</CardDescription>
               </div>
-              {gridPoints.length === 0 && (
-                <Button onClick={handleGenerateGrid} disabled={generating}>
-                  {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-                  Genereer Amsterdam Grid (40 punten)
-                </Button>
-              )}
+              <div className="flex items-center gap-2">
+                {gridPoints.length === 0 && (
+                  <Button onClick={handleGenerateGrid} disabled={generating}>
+                    {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                    Genereer Amsterdam Grid (40 punten)
+                  </Button>
+                )}
+                {gridPoints.length > 0 && (
+                  <Button onClick={() => setBulkOpen(true)} variant="default">
+                    <Zap className="h-4 w-4 mr-2" />
+                    Bulk Scan
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {gridPoints.length === 0 ? (
@@ -345,6 +419,112 @@ export function RestaurantDiscovery() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Bulk Scan Dialog */}
+      <Dialog open={bulkOpen} onOpenChange={(o) => !bulkRunning && setBulkOpen(o)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Zap className="h-5 w-5 text-primary" />
+              Bulk Scan
+            </DialogTitle>
+            <DialogDescription>
+              Scan meerdere grid-punten tegelijk. Bestaande place_id's worden automatisch overgeslagen — geen duplicaten.
+            </DialogDescription>
+          </DialogHeader>
+
+          {!bulkRunning ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Welke punten scannen?</label>
+                <Select value={bulkFilter} onValueChange={(v: any) => setBulkFilter(v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="never">Nooit gescand (aanbevolen voor 1e run)</SelectItem>
+                    <SelectItem value="30days">Niet gescand in laatste 30 dagen</SelectItem>
+                    <SelectItem value="7days">Niet gescand in laatste 7 dagen</SelectItem>
+                    <SelectItem value="all">Alle actieve punten (forceer rescan)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Type</label>
+                <Select value={bulkType} onValueChange={(v: any) => setBulkType(v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Alle types</SelectItem>
+                    <SelectItem value="grid">Alleen grid-punten</SelectItem>
+                    <SelectItem value="hotspot">Alleen hotspots</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Punten geselecteerd</span>
+                  <span className="font-bold text-lg text-primary">{bulkTargets.length}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Geschatte API-kosten</span>
+                  <span>~${(bulkTargets.length * 0.034).toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Geschatte duur</span>
+                  <span>~{Math.ceil(bulkTargets.length * 2.5 / 60)} min</span>
+                </div>
+              </div>
+
+              {bulkTargets.length === 0 && (
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-muted text-sm">
+                  <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                  <span>Geen punten matchen je filter. Probeer een ander filter.</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="text-center space-y-2">
+                <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+                <p className="text-sm text-muted-foreground">
+                  Scannen... {bulkProgress.current} van {bulkProgress.total}
+                </p>
+              </div>
+              <Progress value={(bulkProgress.current / bulkProgress.total) * 100} />
+              <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                <div className="rounded-lg border p-2">
+                  <div className="text-2xl font-bold text-primary">{bulkProgress.newCount}</div>
+                  <div className="text-xs text-muted-foreground">Nieuw</div>
+                </div>
+                <div className="rounded-lg border p-2">
+                  <div className="text-2xl font-bold text-muted-foreground">{bulkProgress.dupCount}</div>
+                  <div className="text-xs text-muted-foreground">Duplicaat</div>
+                </div>
+                <div className="rounded-lg border p-2">
+                  <div className="text-2xl font-bold text-destructive">{bulkProgress.errors}</div>
+                  <div className="text-xs text-muted-foreground">Fouten</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            {!bulkRunning ? (
+              <>
+                <Button variant="outline" onClick={() => setBulkOpen(false)}>Annuleren</Button>
+                <Button onClick={handleBulkScan} disabled={bulkTargets.length === 0}>
+                  <Zap className="h-4 w-4 mr-2" />
+                  Start bulk scan ({bulkTargets.length})
+                </Button>
+              </>
+            ) : (
+              <Button variant="destructive" onClick={() => setBulkCancelRequested(true)}>
+                Stop na huidig punt
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
