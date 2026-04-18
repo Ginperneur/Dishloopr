@@ -47,7 +47,7 @@ export function RestaurantDiscovery() {
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
-  const [stats, setStats] = useState({ pending: 0, approved: 0, duplicate: 0, total: 0 });
+  const [stats, setStats] = useState({ pending: 0, approved: 0, duplicate: 0, rejected: 0, total: 0 });
 
   // Bulk scan state
   const [bulkOpen, setBulkOpen] = useState(false);
