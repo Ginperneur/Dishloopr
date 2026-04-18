@@ -635,6 +635,39 @@ export function RestaurantDiscovery() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Reject Reason Dialog */}
+      <Dialog open={!!rejectTarget} onOpenChange={(o) => !o && setRejectTarget(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Restaurant afwijzen</DialogTitle>
+            <DialogDescription>
+              <strong>{rejectTarget?.name}</strong> wordt bij volgende scans automatisch overgeslagen.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Reden</label>
+            <Select value={rejectReason} onValueChange={(v) => setRejectReason(v as any)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="closed">Gesloten / niet meer bestaand</SelectItem>
+                <SelectItem value="not_restaurant">Geen restaurant</SelectItem>
+                <SelectItem value="duplicate">Dubbel (al in database)</SelectItem>
+                <SelectItem value="other">Anders / niet relevant</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectTarget(null)}>Annuleren</Button>
+            <Button variant="destructive" onClick={confirmReject}>
+              <X className="h-4 w-4 mr-1" />
+              Afwijzen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
