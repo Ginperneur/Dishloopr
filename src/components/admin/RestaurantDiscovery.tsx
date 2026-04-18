@@ -229,12 +229,36 @@ export function RestaurantDiscovery() {
   };
 
   const handleReject = async (result: DiscoveryResult) => {
+    setRejectTarget(result);
+    setRejectReason('closed');
+  };
+
+  const confirmReject = async () => {
+    if (!rejectTarget) return;
     try {
       await supabase
         .from('discovery_results')
-        .update({ status: 'rejected', reviewed_at: new Date().toISOString() })
+        .update({
+          status: 'rejected',
+          reviewed_at: new Date().toISOString(),
+          reject_reason: rejectReason,
+        })
+        .eq('id', rejectTarget.id);
+      toast.success('Afgewezen — wordt niet opnieuw gescand');
+      setRejectTarget(null);
+      await loadData();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+  const handleRestore = async (result: DiscoveryResult) => {
+    try {
+      await supabase
+        .from('discovery_results')
+        .update({ status: 'pending', reviewed_at: null, reject_reason: null })
         .eq('id', result.id);
-      toast.success('Afgewezen');
+      toast.success('Teruggezet naar review queue');
       await loadData();
     } catch (e: any) {
       toast.error(e.message);
