@@ -275,7 +275,7 @@ export function RestaurantDiscovery() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="pb-2"><CardDescription>Grid Punten</CardDescription></CardHeader>
           <CardContent><div className="text-2xl font-bold">{gridPoints.length}</div></CardContent>
@@ -292,12 +292,17 @@ export function RestaurantDiscovery() {
           <CardHeader className="pb-2"><CardDescription>Duplicaten</CardDescription></CardHeader>
           <CardContent><div className="text-2xl font-bold text-muted-foreground">{stats.duplicate}</div></CardContent>
         </Card>
+        <Card>
+          <CardHeader className="pb-2"><CardDescription>Afgewezen</CardDescription></CardHeader>
+          <CardContent><div className="text-2xl font-bold text-destructive">{stats.rejected}</div></CardContent>
+        </Card>
       </div>
 
       <Tabs defaultValue={stats.pending > 0 ? 'queue' : 'grid'} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
+        <TabsList className="grid w-full grid-cols-3 max-w-2xl">
           <TabsTrigger value="queue">Review Queue ({stats.pending})</TabsTrigger>
           <TabsTrigger value="grid">Grid Punten ({gridPoints.length})</TabsTrigger>
+          <TabsTrigger value="rejected">Afgewezen ({stats.rejected})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="queue" className="space-y-4">
