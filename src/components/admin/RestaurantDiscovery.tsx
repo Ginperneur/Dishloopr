@@ -457,6 +457,77 @@ export function RestaurantDiscovery() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="rejected" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Afgewezen Restaurants</CardTitle>
+              <CardDescription>
+                Deze worden bij volgende scans automatisch overgeslagen. Klik op herstellen om terug te zetten naar de review queue.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {rejectedResults.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <X className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                  <p>Nog geen afgewezen restaurants.</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Naam</TableHead>
+                      <TableHead>Adres</TableHead>
+                      <TableHead>Reden</TableHead>
+                      <TableHead>Afgewezen</TableHead>
+                      <TableHead className="text-right">Actie</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rejectedResults.map((r) => (
+                      <TableRow key={r.id}>
+                        <TableCell className="font-medium">
+                          <div>{r.name}</div>
+                          <a
+                            href={`https://www.google.com/maps/place/?q=place_id:${r.place_id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1"
+                          >
+                            Google Maps <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
+                          {r.address || '—'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-xs">
+                            {r.reject_reason === 'closed' && 'Gesloten'}
+                            {r.reject_reason === 'not_restaurant' && 'Geen restaurant'}
+                            {r.reject_reason === 'duplicate' && 'Dubbel'}
+                            {r.reject_reason === 'other' && 'Anders'}
+                            {!r.reject_reason && '—'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {(r as any).reviewed_at
+                            ? formatDistanceToNow(new Date((r as any).reviewed_at), { addSuffix: true, locale: nl })
+                            : '—'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button size="sm" variant="outline" onClick={() => handleRestore(r)}>
+                            <RotateCcw className="h-4 w-4 mr-1" />
+                            Herstellen
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Bulk Scan Dialog */}
