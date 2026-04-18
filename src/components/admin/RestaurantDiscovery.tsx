@@ -49,6 +49,14 @@ export function RestaurantDiscovery() {
   const [generating, setGenerating] = useState(false);
   const [stats, setStats] = useState({ pending: 0, approved: 0, duplicate: 0, total: 0 });
 
+  // Bulk scan state
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkFilter, setBulkFilter] = useState<'never' | '7days' | '30days' | 'all'>('never');
+  const [bulkType, setBulkType] = useState<'all' | 'grid' | 'hotspot'>('all');
+  const [bulkRunning, setBulkRunning] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, newCount: 0, dupCount: 0, errors: 0 });
+  const [bulkCancelRequested, setBulkCancelRequested] = useState(false);
+
   const loadData = async () => {
     setLoading(true);
     const [gpRes, resRes, statsRes] = await Promise.all([
