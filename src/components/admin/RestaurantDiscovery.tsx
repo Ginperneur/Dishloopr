@@ -57,24 +57,34 @@ export function RestaurantDiscovery() {
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, newCount: 0, dupCount: 0, errors: 0 });
   const [bulkCancelRequested, setBulkCancelRequested] = useState(false);
 
+  // Reject dialog state
+  const [rejectTarget, setRejectTarget] = useState<DiscoveryResult | null>(null);
+  const [rejectReason, setRejectReason] = useState<'closed' | 'not_restaurant' | 'duplicate' | 'other'>('closed');
+
+  // Rejected list
+  const [rejectedResults, setRejectedResults] = useState<(DiscoveryResult & { reject_reason: string | null })[]>([]);
+
   const loadData = async () => {
     setLoading(true);
-    const [gpRes, resRes, statsRes] = await Promise.all([
+    const [gpRes, resRes, rejRes, statsRes] = await Promise.all([
       supabase.from('discovery_grid_points').select('*').order('name'),
       supabase.from('discovery_results').select('*').eq('status', 'pending').order('discovered_at', { ascending: false }).limit(100),
+      supabase.from('discovery_results').select('*').eq('status', 'rejected').order('reviewed_at', { ascending: false }).limit(200),
       supabase.from('discovery_results').select('status'),
     ]);
 
     if (gpRes.data) setGridPoints(gpRes.data as GridPoint[]);
     if (resRes.data) setPendingResults(resRes.data as DiscoveryResult[]);
+    if (rejRes.data) setRejectedResults(rejRes.data as any);
     if (statsRes.data) {
-      const s = { pending: 0, approved: 0, duplicate: 0, total: statsRes.data.length };
+      const s = { pending: 0, approved: 0, duplicate: 0, rejected: 0, total: statsRes.data.length };
       statsRes.data.forEach((r: any) => {
         if (r.status === 'pending') s.pending++;
         else if (r.status === 'approved') s.approved++;
         else if (r.status === 'duplicate') s.duplicate++;
+        else if (r.status === 'rejected') (s as any).rejected++;
       });
-      setStats(s);
+      setStats(s as any);
     }
     setLoading(false);
   };
