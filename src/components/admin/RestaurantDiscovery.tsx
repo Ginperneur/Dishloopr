@@ -340,17 +340,25 @@ export function RestaurantDiscovery() {
 
         <TabsContent value="grid" className="space-y-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between gap-4 flex-wrap">
               <div>
                 <CardTitle>Grid Configuratie</CardTitle>
                 <CardDescription>Zoekpunten over de stad — elk punt scant ±1.5km radius</CardDescription>
               </div>
-              {gridPoints.length === 0 && (
-                <Button onClick={handleGenerateGrid} disabled={generating}>
-                  {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-                  Genereer Amsterdam Grid (40 punten)
-                </Button>
-              )}
+              <div className="flex items-center gap-2">
+                {gridPoints.length === 0 && (
+                  <Button onClick={handleGenerateGrid} disabled={generating}>
+                    {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                    Genereer Amsterdam Grid (40 punten)
+                  </Button>
+                )}
+                {gridPoints.length > 0 && (
+                  <Button onClick={() => setBulkOpen(true)} variant="default">
+                    <Zap className="h-4 w-4 mr-2" />
+                    Bulk Scan
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {gridPoints.length === 0 ? (
