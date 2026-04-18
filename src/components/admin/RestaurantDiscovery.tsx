@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Loader2, MapPin, Sparkles, Check, X, RefreshCw, Star, ExternalLink, Zap, AlertCircle } from 'lucide-react';
+import { Loader2, MapPin, Sparkles, Check, X, RefreshCw, Star, ExternalLink, Zap, AlertCircle, RotateCcw } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
@@ -47,7 +47,7 @@ export function RestaurantDiscovery() {
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
-  const [stats, setStats] = useState({ pending: 0, approved: 0, duplicate: 0, total: 0 });
+  const [stats, setStats] = useState({ pending: 0, approved: 0, duplicate: 0, rejected: 0, total: 0 });
 
   // Bulk scan state
   const [bulkOpen, setBulkOpen] = useState(false);
@@ -57,24 +57,34 @@ export function RestaurantDiscovery() {
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, newCount: 0, dupCount: 0, errors: 0 });
   const [bulkCancelRequested, setBulkCancelRequested] = useState(false);
 
+  // Reject dialog state
+  const [rejectTarget, setRejectTarget] = useState<DiscoveryResult | null>(null);
+  const [rejectReason, setRejectReason] = useState<'closed' | 'not_restaurant' | 'duplicate' | 'other'>('closed');
+
+  // Rejected list
+  const [rejectedResults, setRejectedResults] = useState<(DiscoveryResult & { reject_reason: string | null })[]>([]);
+
   const loadData = async () => {
     setLoading(true);
-    const [gpRes, resRes, statsRes] = await Promise.all([
+    const [gpRes, resRes, rejRes, statsRes] = await Promise.all([
       supabase.from('discovery_grid_points').select('*').order('name'),
       supabase.from('discovery_results').select('*').eq('status', 'pending').order('discovered_at', { ascending: false }).limit(100),
+      supabase.from('discovery_results').select('*').eq('status', 'rejected').order('reviewed_at', { ascending: false }).limit(200),
       supabase.from('discovery_results').select('status'),
     ]);
 
     if (gpRes.data) setGridPoints(gpRes.data as GridPoint[]);
     if (resRes.data) setPendingResults(resRes.data as DiscoveryResult[]);
+    if (rejRes.data) setRejectedResults(rejRes.data as any);
     if (statsRes.data) {
-      const s = { pending: 0, approved: 0, duplicate: 0, total: statsRes.data.length };
+      const s = { pending: 0, approved: 0, duplicate: 0, rejected: 0, total: statsRes.data.length };
       statsRes.data.forEach((r: any) => {
         if (r.status === 'pending') s.pending++;
         else if (r.status === 'approved') s.approved++;
         else if (r.status === 'duplicate') s.duplicate++;
+        else if (r.status === 'rejected') (s as any).rejected++;
       });
-      setStats(s);
+      setStats(s as any);
     }
     setLoading(false);
   };
@@ -219,12 +229,36 @@ export function RestaurantDiscovery() {
   };
 
   const handleReject = async (result: DiscoveryResult) => {
+    setRejectTarget(result);
+    setRejectReason('closed');
+  };
+
+  const confirmReject = async () => {
+    if (!rejectTarget) return;
     try {
       await supabase
         .from('discovery_results')
-        .update({ status: 'rejected', reviewed_at: new Date().toISOString() })
+        .update({
+          status: 'rejected',
+          reviewed_at: new Date().toISOString(),
+          reject_reason: rejectReason,
+        })
+        .eq('id', rejectTarget.id);
+      toast.success('Afgewezen — wordt niet opnieuw gescand');
+      setRejectTarget(null);
+      await loadData();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+  const handleRestore = async (result: DiscoveryResult) => {
+    try {
+      await supabase
+        .from('discovery_results')
+        .update({ status: 'pending', reviewed_at: null, reject_reason: null })
         .eq('id', result.id);
-      toast.success('Afgewezen');
+      toast.success('Teruggezet naar review queue');
       await loadData();
     } catch (e: any) {
       toast.error(e.message);
@@ -241,7 +275,7 @@ export function RestaurantDiscovery() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="pb-2"><CardDescription>Grid Punten</CardDescription></CardHeader>
           <CardContent><div className="text-2xl font-bold">{gridPoints.length}</div></CardContent>
@@ -258,12 +292,17 @@ export function RestaurantDiscovery() {
           <CardHeader className="pb-2"><CardDescription>Duplicaten</CardDescription></CardHeader>
           <CardContent><div className="text-2xl font-bold text-muted-foreground">{stats.duplicate}</div></CardContent>
         </Card>
+        <Card>
+          <CardHeader className="pb-2"><CardDescription>Afgewezen</CardDescription></CardHeader>
+          <CardContent><div className="text-2xl font-bold text-destructive">{stats.rejected}</div></CardContent>
+        </Card>
       </div>
 
       <Tabs defaultValue={stats.pending > 0 ? 'queue' : 'grid'} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
+        <TabsList className="grid w-full grid-cols-3 max-w-2xl">
           <TabsTrigger value="queue">Review Queue ({stats.pending})</TabsTrigger>
           <TabsTrigger value="grid">Grid Punten ({gridPoints.length})</TabsTrigger>
+          <TabsTrigger value="rejected">Afgewezen ({stats.rejected})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="queue" className="space-y-4">
@@ -418,6 +457,77 @@ export function RestaurantDiscovery() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="rejected" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Afgewezen Restaurants</CardTitle>
+              <CardDescription>
+                Deze worden bij volgende scans automatisch overgeslagen. Klik op herstellen om terug te zetten naar de review queue.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {rejectedResults.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <X className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                  <p>Nog geen afgewezen restaurants.</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Naam</TableHead>
+                      <TableHead>Adres</TableHead>
+                      <TableHead>Reden</TableHead>
+                      <TableHead>Afgewezen</TableHead>
+                      <TableHead className="text-right">Actie</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rejectedResults.map((r) => (
+                      <TableRow key={r.id}>
+                        <TableCell className="font-medium">
+                          <div>{r.name}</div>
+                          <a
+                            href={`https://www.google.com/maps/place/?q=place_id:${r.place_id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1"
+                          >
+                            Google Maps <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
+                          {r.address || '—'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-xs">
+                            {r.reject_reason === 'closed' && 'Gesloten'}
+                            {r.reject_reason === 'not_restaurant' && 'Geen restaurant'}
+                            {r.reject_reason === 'duplicate' && 'Dubbel'}
+                            {r.reject_reason === 'other' && 'Anders'}
+                            {!r.reject_reason && '—'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {(r as any).reviewed_at
+                            ? formatDistanceToNow(new Date((r as any).reviewed_at), { addSuffix: true, locale: nl })
+                            : '—'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button size="sm" variant="outline" onClick={() => handleRestore(r)}>
+                            <RotateCcw className="h-4 w-4 mr-1" />
+                            Herstellen
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Bulk Scan Dialog */}
@@ -522,6 +632,39 @@ export function RestaurantDiscovery() {
                 Stop na huidig punt
               </Button>
             )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Reason Dialog */}
+      <Dialog open={!!rejectTarget} onOpenChange={(o) => !o && setRejectTarget(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Restaurant afwijzen</DialogTitle>
+            <DialogDescription>
+              <strong>{rejectTarget?.name}</strong> wordt bij volgende scans automatisch overgeslagen.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Reden</label>
+            <Select value={rejectReason} onValueChange={(v) => setRejectReason(v as any)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="closed">Gesloten / niet meer bestaand</SelectItem>
+                <SelectItem value="not_restaurant">Geen restaurant</SelectItem>
+                <SelectItem value="duplicate">Dubbel (al in database)</SelectItem>
+                <SelectItem value="other">Anders / niet relevant</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectTarget(null)}>Annuleren</Button>
+            <Button variant="destructive" onClick={confirmReject}>
+              <X className="h-4 w-4 mr-1" />
+              Afwijzen
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
