@@ -476,8 +476,8 @@ export function RestaurantDiscovery() {
               </div>
 
               {bulkTargets.length === 0 && (
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-yellow-500/10 text-sm">
-                  <AlertCircle className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-muted text-sm">
+                  <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                   <span>Geen punten matchen je filter. Probeer een ander filter.</span>
                 </div>
               )}
