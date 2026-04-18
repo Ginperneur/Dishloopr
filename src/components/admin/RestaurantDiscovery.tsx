@@ -419,6 +419,112 @@ export function RestaurantDiscovery() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Bulk Scan Dialog */}
+      <Dialog open={bulkOpen} onOpenChange={(o) => !bulkRunning && setBulkOpen(o)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Zap className="h-5 w-5 text-primary" />
+              Bulk Scan
+            </DialogTitle>
+            <DialogDescription>
+              Scan meerdere grid-punten tegelijk. Bestaande place_id's worden automatisch overgeslagen — geen duplicaten.
+            </DialogDescription>
+          </DialogHeader>
+
+          {!bulkRunning ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Welke punten scannen?</label>
+                <Select value={bulkFilter} onValueChange={(v: any) => setBulkFilter(v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="never">Nooit gescand (aanbevolen voor 1e run)</SelectItem>
+                    <SelectItem value="30days">Niet gescand in laatste 30 dagen</SelectItem>
+                    <SelectItem value="7days">Niet gescand in laatste 7 dagen</SelectItem>
+                    <SelectItem value="all">Alle actieve punten (forceer rescan)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Type</label>
+                <Select value={bulkType} onValueChange={(v: any) => setBulkType(v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Alle types</SelectItem>
+                    <SelectItem value="grid">Alleen grid-punten</SelectItem>
+                    <SelectItem value="hotspot">Alleen hotspots</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Punten geselecteerd</span>
+                  <span className="font-bold text-lg text-primary">{bulkTargets.length}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Geschatte API-kosten</span>
+                  <span>~${(bulkTargets.length * 0.034).toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Geschatte duur</span>
+                  <span>~{Math.ceil(bulkTargets.length * 2.5 / 60)} min</span>
+                </div>
+              </div>
+
+              {bulkTargets.length === 0 && (
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-yellow-500/10 text-sm">
+                  <AlertCircle className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
+                  <span>Geen punten matchen je filter. Probeer een ander filter.</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="text-center space-y-2">
+                <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+                <p className="text-sm text-muted-foreground">
+                  Scannen... {bulkProgress.current} van {bulkProgress.total}
+                </p>
+              </div>
+              <Progress value={(bulkProgress.current / bulkProgress.total) * 100} />
+              <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                <div className="rounded-lg border p-2">
+                  <div className="text-2xl font-bold text-primary">{bulkProgress.newCount}</div>
+                  <div className="text-xs text-muted-foreground">Nieuw</div>
+                </div>
+                <div className="rounded-lg border p-2">
+                  <div className="text-2xl font-bold text-muted-foreground">{bulkProgress.dupCount}</div>
+                  <div className="text-xs text-muted-foreground">Duplicaat</div>
+                </div>
+                <div className="rounded-lg border p-2">
+                  <div className="text-2xl font-bold text-destructive">{bulkProgress.errors}</div>
+                  <div className="text-xs text-muted-foreground">Fouten</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            {!bulkRunning ? (
+              <>
+                <Button variant="outline" onClick={() => setBulkOpen(false)}>Annuleren</Button>
+                <Button onClick={handleBulkScan} disabled={bulkTargets.length === 0}>
+                  <Zap className="h-4 w-4 mr-2" />
+                  Start bulk scan ({bulkTargets.length})
+                </Button>
+              </>
+            ) : (
+              <Button variant="destructive" onClick={() => setBulkCancelRequested(true)}>
+                Stop na huidig punt
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
