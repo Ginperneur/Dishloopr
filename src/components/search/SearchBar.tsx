@@ -67,7 +67,16 @@ export function SearchBar({
         supabase.from('cities').select('*').eq('is_active', true).order('name'),
         supabase.from('restaurants').select('*').eq('is_active', true).order('rating', { ascending: false }).limit(500),
       ]);
-      setCities(citiesRes.data || []);
+      // Sort: popular cities first (in defined order), then the rest alphabetically
+      const POPULAR_SLUGS = ['amsterdam', 'rotterdam', 'den-haag', 'utrecht', 'eindhoven', 'breda'];
+      const all = citiesRes.data || [];
+      const popular = POPULAR_SLUGS
+        .map(slug => all.find(c => c.slug === slug))
+        .filter((c): c is City => Boolean(c));
+      const rest = all
+        .filter(c => !POPULAR_SLUGS.includes(c.slug))
+        .sort((a, b) => a.name.localeCompare(b.name, 'nl'));
+      setCities([...popular, ...rest]);
       setAllRestaurants(restaurantsRes.data || []);
     };
     fetchData();
