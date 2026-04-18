@@ -113,6 +113,61 @@ export function RestaurantDiscovery() {
     }
   };
 
+  // Compute which grid points match the bulk filter
+  const bulkTargets = useMemo(() => {
+    const now = Date.now();
+    const day = 24 * 60 * 60 * 1000;
+    return gridPoints.filter((gp) => {
+      if (!gp.is_active) return false;
+      if (bulkType !== 'all' && gp.type !== bulkType) return false;
+      const last = gp.last_scanned_at ? new Date(gp.last_scanned_at).getTime() : null;
+      if (bulkFilter === 'never') return last === null;
+      if (bulkFilter === '7days') return last === null || now - last > 7 * day;
+      if (bulkFilter === '30days') return last === null || now - last > 30 * day;
+      return true; // 'all'
+    });
+  }, [gridPoints, bulkFilter, bulkType]);
+
+  const handleBulkScan = async () => {
+    if (bulkTargets.length === 0) {
+      toast.error('Geen punten matchen je filter');
+      return;
+    }
+    setBulkRunning(true);
+    setBulkCancelRequested(false);
+    setBulkProgress({ current: 0, total: bulkTargets.length, newCount: 0, dupCount: 0, errors: 0 });
+
+    let newCount = 0;
+    let dupCount = 0;
+    let errors = 0;
+
+    for (let i = 0; i < bulkTargets.length; i++) {
+      if (bulkCancelRequested) {
+        toast.info(`Geannuleerd na ${i} van ${bulkTargets.length} punten`);
+        break;
+      }
+      const gp = bulkTargets[i];
+      try {
+        const { data, error } = await supabase.functions.invoke('discover-restaurants', {
+          body: { grid_point_id: gp.id },
+        });
+        if (error) throw error;
+        newCount += data?.new_results || 0;
+        dupCount += data?.duplicates || 0;
+      } catch (e) {
+        console.error(`Bulk scan failed for ${gp.name}:`, e);
+        errors++;
+      }
+      setBulkProgress({ current: i + 1, total: bulkTargets.length, newCount, dupCount, errors });
+      if (i < bulkTargets.length - 1) await new Promise((r) => setTimeout(r, 500));
+    }
+
+    setBulkRunning(false);
+    toast.success(`Bulk scan klaar: ${newCount} nieuw, ${dupCount} duplicaten, ${errors} fouten`);
+    await loadData();
+  };
+
+
   const handleApprove = async (result: DiscoveryResult) => {
     try {
       // Get city slug for restaurant slug generation
