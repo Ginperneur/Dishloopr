@@ -438,6 +438,13 @@ export function RestaurantDiscovery() {
                   </TableBody>
                 </Table>
               )}
+              {pendingResults.length >= queueLimit && (
+                <div className="flex justify-center pt-4">
+                  <Button variant="outline" onClick={() => setQueueLimit((n) => n + 100)}>
+                    Laad meer (+100)
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
