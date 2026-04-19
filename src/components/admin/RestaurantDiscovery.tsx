@@ -39,6 +39,7 @@ interface DiscoveryResult {
   discovered_at: string;
   source_grid_point_id: string | null;
   photo_reference: string | null;
+  city_id: string | null;
 }
 
 export function RestaurantDiscovery() {
