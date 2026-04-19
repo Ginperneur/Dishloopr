@@ -111,7 +111,8 @@ export function RestaurantDiscovery() {
 
   useEffect(() => {
     loadData();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queueCityFilter, queueLimit]);
 
   const handleGenerateGrid = async () => {
     setGenerating(true);
