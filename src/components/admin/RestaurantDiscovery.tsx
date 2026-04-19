@@ -68,12 +68,25 @@ export function RestaurantDiscovery() {
   // Cities for filter
   const [cities, setCities] = useState<{ id: string; name: string }[]>([]);
   const [gridCityFilter, setGridCityFilter] = useState<string>('all');
+  const [queueCityFilter, setQueueCityFilter] = useState<string>('all');
+  const [bulkCityFilter, setBulkCityFilter] = useState<string>('all');
+  const [queueLimit, setQueueLimit] = useState<number>(100);
 
   const loadData = async () => {
     setLoading(true);
+    let queueQuery = supabase
+      .from('discovery_results')
+      .select('*')
+      .eq('status', 'pending')
+      .order('discovered_at', { ascending: false })
+      .limit(queueLimit);
+    if (queueCityFilter !== 'all') {
+      queueQuery = queueQuery.eq('city_id', queueCityFilter);
+    }
+
     const [gpRes, resRes, rejRes, statsRes, citiesRes] = await Promise.all([
       supabase.from('discovery_grid_points').select('*').order('name'),
-      supabase.from('discovery_results').select('*').eq('status', 'pending').order('discovered_at', { ascending: false }).limit(100),
+      queueQuery,
       supabase.from('discovery_results').select('*').eq('status', 'rejected').order('reviewed_at', { ascending: false }).limit(200),
       supabase.from('discovery_results').select('status'),
       supabase.from('cities').select('id, name').eq('is_active', true).order('name'),
