@@ -64,15 +64,21 @@ export function RestaurantDiscovery() {
   // Rejected list
   const [rejectedResults, setRejectedResults] = useState<(DiscoveryResult & { reject_reason: string | null })[]>([]);
 
+  // Cities for filter
+  const [cities, setCities] = useState<{ id: string; name: string }[]>([]);
+  const [gridCityFilter, setGridCityFilter] = useState<string>('all');
+
   const loadData = async () => {
     setLoading(true);
-    const [gpRes, resRes, rejRes, statsRes] = await Promise.all([
+    const [gpRes, resRes, rejRes, statsRes, citiesRes] = await Promise.all([
       supabase.from('discovery_grid_points').select('*').order('name'),
       supabase.from('discovery_results').select('*').eq('status', 'pending').order('discovered_at', { ascending: false }).limit(100),
       supabase.from('discovery_results').select('*').eq('status', 'rejected').order('reviewed_at', { ascending: false }).limit(200),
       supabase.from('discovery_results').select('status'),
+      supabase.from('cities').select('id, name').eq('is_active', true).order('name'),
     ]);
 
+    if (citiesRes.data) setCities(citiesRes.data);
     if (gpRes.data) setGridPoints(gpRes.data as GridPoint[]);
     if (resRes.data) setPendingResults(resRes.data as DiscoveryResult[]);
     if (rejRes.data) setRejectedResults(rejRes.data as any);
@@ -384,7 +390,20 @@ export function RestaurantDiscovery() {
                 <CardTitle>Grid Configuratie</CardTitle>
                 <CardDescription>Zoekpunten over de stad — elk punt scant ±1.5km radius</CardDescription>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                {gridPoints.length > 0 && (
+                  <Select value={gridCityFilter} onValueChange={setGridCityFilter}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Filter stad" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Alle steden</SelectItem>
+                      {cities.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
                 {gridPoints.length === 0 && (
                   <Button onClick={handleGenerateGrid} disabled={generating}>
                     {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
@@ -410,6 +429,7 @@ export function RestaurantDiscovery() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Naam</TableHead>
+                      <TableHead>Stad</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Locatie</TableHead>
                       <TableHead>Radius</TableHead>
@@ -418,9 +438,14 @@ export function RestaurantDiscovery() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {gridPoints.map((gp) => (
+                    {gridPoints
+                      .filter((gp) => gridCityFilter === 'all' || gp.city_id === gridCityFilter)
+                      .map((gp) => (
                       <TableRow key={gp.id}>
                         <TableCell className="font-medium">{gp.name}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {cities.find((c) => c.id === gp.city_id)?.name || '—'}
+                        </TableCell>
                         <TableCell>
                           <Badge variant={gp.type === 'hotspot' ? 'default' : 'secondary'}>
                             {gp.type}
