@@ -39,6 +39,7 @@ interface DiscoveryResult {
   discovered_at: string;
   source_grid_point_id: string | null;
   photo_reference: string | null;
+  city_id: string | null;
 }
 
 export function RestaurantDiscovery() {
@@ -67,12 +68,25 @@ export function RestaurantDiscovery() {
   // Cities for filter
   const [cities, setCities] = useState<{ id: string; name: string }[]>([]);
   const [gridCityFilter, setGridCityFilter] = useState<string>('all');
+  const [queueCityFilter, setQueueCityFilter] = useState<string>('all');
+  const [bulkCityFilter, setBulkCityFilter] = useState<string>('all');
+  const [queueLimit, setQueueLimit] = useState<number>(100);
 
   const loadData = async () => {
     setLoading(true);
+    let queueQuery = supabase
+      .from('discovery_results')
+      .select('*')
+      .eq('status', 'pending')
+      .order('discovered_at', { ascending: false })
+      .limit(queueLimit);
+    if (queueCityFilter !== 'all') {
+      queueQuery = queueQuery.eq('city_id', queueCityFilter);
+    }
+
     const [gpRes, resRes, rejRes, statsRes, citiesRes] = await Promise.all([
       supabase.from('discovery_grid_points').select('*').order('name'),
-      supabase.from('discovery_results').select('*').eq('status', 'pending').order('discovered_at', { ascending: false }).limit(100),
+      queueQuery,
       supabase.from('discovery_results').select('*').eq('status', 'rejected').order('reviewed_at', { ascending: false }).limit(200),
       supabase.from('discovery_results').select('status'),
       supabase.from('cities').select('id, name').eq('is_active', true).order('name'),
@@ -97,7 +111,8 @@ export function RestaurantDiscovery() {
 
   useEffect(() => {
     loadData();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queueCityFilter, queueLimit]);
 
   const handleGenerateGrid = async () => {
     setGenerating(true);
@@ -136,13 +151,14 @@ export function RestaurantDiscovery() {
     return gridPoints.filter((gp) => {
       if (!gp.is_active) return false;
       if (bulkType !== 'all' && gp.type !== bulkType) return false;
+      if (bulkCityFilter !== 'all' && gp.city_id !== bulkCityFilter) return false;
       const last = gp.last_scanned_at ? new Date(gp.last_scanned_at).getTime() : null;
       if (bulkFilter === 'never') return last === null;
       if (bulkFilter === '7days') return last === null || now - last > 7 * day;
       if (bulkFilter === '30days') return last === null || now - last > 30 * day;
       return true; // 'all'
     });
-  }, [gridPoints, bulkFilter, bulkType]);
+  }, [gridPoints, bulkFilter, bulkType, bulkCityFilter]);
 
   const handleBulkScan = async () => {
     if (bulkTargets.length === 0) {
@@ -163,19 +179,34 @@ export function RestaurantDiscovery() {
         break;
       }
       const gp = bulkTargets[i];
-      try {
-        const { data, error } = await supabase.functions.invoke('discover-restaurants', {
-          body: { grid_point_id: gp.id },
-        });
-        if (error) throw error;
-        newCount += data?.new_results || 0;
-        dupCount += data?.duplicates || 0;
-      } catch (e) {
-        console.error(`Bulk scan failed for ${gp.name}:`, e);
+      let attempt = 0;
+      let lastErr: any = null;
+      while (attempt < 3) {
+        try {
+          const { data, error } = await supabase.functions.invoke('discover-restaurants', {
+            body: { grid_point_id: gp.id },
+          });
+          if (error) throw error;
+          newCount += data?.new_results || 0;
+          dupCount += data?.duplicates || 0;
+          lastErr = null;
+          break;
+        } catch (e) {
+          lastErr = e;
+          attempt++;
+          if (attempt < 3) {
+            // Exponential backoff: 1.5s, 3s
+            await new Promise((r) => setTimeout(r, 1500 * attempt));
+          }
+        }
+      }
+      if (lastErr) {
+        console.error(`Bulk scan failed for ${gp.name} after 3 attempts:`, lastErr);
         errors++;
       }
       setBulkProgress({ current: i + 1, total: bulkTargets.length, newCount, dupCount, errors });
-      if (i < bulkTargets.length - 1) await new Promise((r) => setTimeout(r, 500));
+      // Throttle to avoid edge function cold-start / rate limiting
+      if (i < bulkTargets.length - 1) await new Promise((r) => setTimeout(r, 1000));
     }
 
     setBulkRunning(false);
@@ -313,17 +344,35 @@ export function RestaurantDiscovery() {
 
         <TabsContent value="queue" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Ontdekte Restaurants — Review Queue</CardTitle>
-              <CardDescription>
-                Nieuwe restaurants gevonden via Google Places. Goedkeuren importeert ze als inactief (klaar voor AI-verrijking).
-              </CardDescription>
+            <CardHeader className="flex flex-row items-start justify-between gap-4 flex-wrap">
+              <div>
+                <CardTitle>Ontdekte Restaurants — Review Queue</CardTitle>
+                <CardDescription>
+                  Nieuwe restaurants gevonden via Google Places. Goedkeuren importeert ze als inactief (klaar voor AI-verrijking).
+                  {stats.pending > pendingResults.length && (
+                    <span className="block mt-1 text-xs">
+                      Toont {pendingResults.length} van {stats.pending} — gebruik de stadfilter of laad meer.
+                    </span>
+                  )}
+                </CardDescription>
+              </div>
+              <Select value={queueCityFilter} onValueChange={setQueueCityFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter stad" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alle steden</SelectItem>
+                  {cities.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </CardHeader>
             <CardContent>
               {pendingResults.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <Sparkles className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                  <p>Geen pending resultaten. Voer een scan uit op een grid-punt.</p>
+                  <p>Geen pending resultaten {queueCityFilter !== 'all' ? 'voor deze stad' : ''}. Voer een scan uit op een grid-punt.</p>
                 </div>
               ) : (
                 <Table>
@@ -378,6 +427,13 @@ export function RestaurantDiscovery() {
                     ))}
                   </TableBody>
                 </Table>
+              )}
+              {pendingResults.length >= queueLimit && (
+                <div className="flex justify-center pt-4">
+                  <Button variant="outline" onClick={() => setQueueLimit((n) => n + 100)}>
+                    Laad meer (+100)
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -591,6 +647,19 @@ export function RestaurantDiscovery() {
                     <SelectItem value="all">Alle types</SelectItem>
                     <SelectItem value="grid">Alleen grid-punten</SelectItem>
                     <SelectItem value="hotspot">Alleen hotspots</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Stad</label>
+                <Select value={bulkCityFilter} onValueChange={setBulkCityFilter}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Alle steden</SelectItem>
+                    {cities.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
