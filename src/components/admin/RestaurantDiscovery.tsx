@@ -651,6 +651,19 @@ export function RestaurantDiscovery() {
                 </Select>
               </div>
 
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Stad</label>
+                <Select value={bulkCityFilter} onValueChange={setBulkCityFilter}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Alle steden</SelectItem>
+                    {cities.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Punten geselecteerd</span>
