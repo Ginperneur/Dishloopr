@@ -70,23 +70,35 @@ export function RestaurantDiscovery() {
   const [gridCityFilter, setGridCityFilter] = useState<string>('all');
   const [queueCityFilter, setQueueCityFilter] = useState<string>('all');
   const [bulkCityFilter, setBulkCityFilter] = useState<string>('all');
-  const [queueLimit, setQueueLimit] = useState<number>(100);
 
   const loadData = async () => {
     setLoading(true);
-    let queueQuery = supabase
-      .from('discovery_results')
-      .select('*')
-      .eq('status', 'pending')
-      .order('discovered_at', { ascending: false })
-      .limit(queueLimit);
-    if (queueCityFilter !== 'all') {
-      queueQuery = queueQuery.eq('city_id', queueCityFilter);
-    }
 
-    const [gpRes, resRes, rejRes, statsRes, citiesRes] = await Promise.all([
+    // Batch-fetch ALL pending results (Supabase caps at 1000 per query)
+    const fetchAllPending = async (): Promise<DiscoveryResult[]> => {
+      const all: DiscoveryResult[] = [];
+      const pageSize = 1000;
+      let from = 0;
+      while (true) {
+        let q = supabase
+          .from('discovery_results')
+          .select('*')
+          .eq('status', 'pending')
+          .order('discovered_at', { ascending: false })
+          .range(from, from + pageSize - 1);
+        if (queueCityFilter !== 'all') q = q.eq('city_id', queueCityFilter);
+        const { data, error } = await q;
+        if (error || !data) break;
+        all.push(...(data as DiscoveryResult[]));
+        if (data.length < pageSize) break;
+        from += pageSize;
+      }
+      return all;
+    };
+
+    const [gpRes, allPending, rejRes, statsRes, citiesRes] = await Promise.all([
       supabase.from('discovery_grid_points').select('*').order('name'),
-      queueQuery,
+      fetchAllPending(),
       supabase.from('discovery_results').select('*').eq('status', 'rejected').order('reviewed_at', { ascending: false }).limit(200),
       supabase.from('discovery_results').select('status'),
       supabase.from('cities').select('id, name').eq('is_active', true).order('name'),
@@ -94,7 +106,7 @@ export function RestaurantDiscovery() {
 
     if (citiesRes.data) setCities(citiesRes.data);
     if (gpRes.data) setGridPoints(gpRes.data as GridPoint[]);
-    if (resRes.data) setPendingResults(resRes.data as DiscoveryResult[]);
+    setPendingResults(allPending);
     if (rejRes.data) setRejectedResults(rejRes.data as any);
     if (statsRes.data) {
       const s = { pending: 0, approved: 0, duplicate: 0, rejected: 0, total: statsRes.data.length };
@@ -112,7 +124,7 @@ export function RestaurantDiscovery() {
   useEffect(() => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queueCityFilter, queueLimit]);
+  }, [queueCityFilter]);
 
   const handleGenerateGrid = async () => {
     setGenerating(true);
@@ -349,11 +361,9 @@ export function RestaurantDiscovery() {
                 <CardTitle>Ontdekte Restaurants — Review Queue</CardTitle>
                 <CardDescription>
                   Nieuwe restaurants gevonden via Google Places. Goedkeuren importeert ze als inactief (klaar voor AI-verrijking).
-                  {stats.pending > pendingResults.length && (
-                    <span className="block mt-1 text-xs">
-                      Toont {pendingResults.length} van {stats.pending} — gebruik de stadfilter of laad meer.
-                    </span>
-                  )}
+                  <span className="block mt-1 text-xs">
+                    {pendingResults.length.toLocaleString('nl-NL')} pending {queueCityFilter !== 'all' ? 'in deze stad' : 'totaal'}
+                  </span>
                 </CardDescription>
               </div>
               <Select value={queueCityFilter} onValueChange={setQueueCityFilter}>
@@ -427,13 +437,6 @@ export function RestaurantDiscovery() {
                     ))}
                   </TableBody>
                 </Table>
-              )}
-              {pendingResults.length >= queueLimit && (
-                <div className="flex justify-center pt-4">
-                  <Button variant="outline" onClick={() => setQueueLimit((n) => n + 100)}>
-                    Laad meer (+100)
-                  </Button>
-                </div>
               )}
             </CardContent>
           </Card>
