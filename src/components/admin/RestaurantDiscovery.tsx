@@ -179,19 +179,34 @@ export function RestaurantDiscovery() {
         break;
       }
       const gp = bulkTargets[i];
-      try {
-        const { data, error } = await supabase.functions.invoke('discover-restaurants', {
-          body: { grid_point_id: gp.id },
-        });
-        if (error) throw error;
-        newCount += data?.new_results || 0;
-        dupCount += data?.duplicates || 0;
-      } catch (e) {
-        console.error(`Bulk scan failed for ${gp.name}:`, e);
+      let attempt = 0;
+      let lastErr: any = null;
+      while (attempt < 3) {
+        try {
+          const { data, error } = await supabase.functions.invoke('discover-restaurants', {
+            body: { grid_point_id: gp.id },
+          });
+          if (error) throw error;
+          newCount += data?.new_results || 0;
+          dupCount += data?.duplicates || 0;
+          lastErr = null;
+          break;
+        } catch (e) {
+          lastErr = e;
+          attempt++;
+          if (attempt < 3) {
+            // Exponential backoff: 1.5s, 3s
+            await new Promise((r) => setTimeout(r, 1500 * attempt));
+          }
+        }
+      }
+      if (lastErr) {
+        console.error(`Bulk scan failed for ${gp.name} after 3 attempts:`, lastErr);
         errors++;
       }
       setBulkProgress({ current: i + 1, total: bulkTargets.length, newCount, dupCount, errors });
-      if (i < bulkTargets.length - 1) await new Promise((r) => setTimeout(r, 500));
+      // Throttle to avoid edge function cold-start / rate limiting
+      if (i < bulkTargets.length - 1) await new Promise((r) => setTimeout(r, 1000));
     }
 
     setBulkRunning(false);
