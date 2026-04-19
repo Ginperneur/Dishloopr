@@ -359,9 +359,11 @@ export function RestaurantDiscovery() {
                 <CardTitle>Ontdekte Restaurants — Review Queue</CardTitle>
                 <CardDescription>
                   Nieuwe restaurants gevonden via Google Places. Goedkeuren importeert ze als inactief (klaar voor AI-verrijking).
-                  <span className="block mt-1 text-xs">
-                    {pendingResults.length.toLocaleString('nl-NL')} pending {queueCityFilter !== 'all' ? 'in deze stad' : 'totaal'}
-                  </span>
+                  {stats.pending > pendingResults.length && (
+                    <span className="block mt-1 text-xs">
+                      Toont {pendingResults.length} van {stats.pending.toLocaleString('nl-NL')} — laad meer hieronder.
+                    </span>
+                  )}
                 </CardDescription>
               </div>
               <Select value={queueCityFilter} onValueChange={setQueueCityFilter}>
