@@ -151,13 +151,14 @@ export function RestaurantDiscovery() {
     return gridPoints.filter((gp) => {
       if (!gp.is_active) return false;
       if (bulkType !== 'all' && gp.type !== bulkType) return false;
+      if (bulkCityFilter !== 'all' && gp.city_id !== bulkCityFilter) return false;
       const last = gp.last_scanned_at ? new Date(gp.last_scanned_at).getTime() : null;
       if (bulkFilter === 'never') return last === null;
       if (bulkFilter === '7days') return last === null || now - last > 7 * day;
       if (bulkFilter === '30days') return last === null || now - last > 30 * day;
       return true; // 'all'
     });
-  }, [gridPoints, bulkFilter, bulkType]);
+  }, [gridPoints, bulkFilter, bulkType, bulkCityFilter]);
 
   const handleBulkScan = async () => {
     if (bulkTargets.length === 0) {
