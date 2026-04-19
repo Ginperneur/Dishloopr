@@ -64,15 +64,21 @@ export function RestaurantDiscovery() {
   // Rejected list
   const [rejectedResults, setRejectedResults] = useState<(DiscoveryResult & { reject_reason: string | null })[]>([]);
 
+  // Cities for filter
+  const [cities, setCities] = useState<{ id: string; name: string }[]>([]);
+  const [gridCityFilter, setGridCityFilter] = useState<string>('all');
+
   const loadData = async () => {
     setLoading(true);
-    const [gpRes, resRes, rejRes, statsRes] = await Promise.all([
+    const [gpRes, resRes, rejRes, statsRes, citiesRes] = await Promise.all([
       supabase.from('discovery_grid_points').select('*').order('name'),
       supabase.from('discovery_results').select('*').eq('status', 'pending').order('discovered_at', { ascending: false }).limit(100),
       supabase.from('discovery_results').select('*').eq('status', 'rejected').order('reviewed_at', { ascending: false }).limit(200),
       supabase.from('discovery_results').select('status'),
+      supabase.from('cities').select('id, name').eq('is_active', true).order('name'),
     ]);
 
+    if (citiesRes.data) setCities(citiesRes.data);
     if (gpRes.data) setGridPoints(gpRes.data as GridPoint[]);
     if (resRes.data) setPendingResults(resRes.data as DiscoveryResult[]);
     if (rejRes.data) setRejectedResults(rejRes.data as any);
