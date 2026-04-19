@@ -344,17 +344,35 @@ export function RestaurantDiscovery() {
 
         <TabsContent value="queue" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Ontdekte Restaurants — Review Queue</CardTitle>
-              <CardDescription>
-                Nieuwe restaurants gevonden via Google Places. Goedkeuren importeert ze als inactief (klaar voor AI-verrijking).
-              </CardDescription>
+            <CardHeader className="flex flex-row items-start justify-between gap-4 flex-wrap">
+              <div>
+                <CardTitle>Ontdekte Restaurants — Review Queue</CardTitle>
+                <CardDescription>
+                  Nieuwe restaurants gevonden via Google Places. Goedkeuren importeert ze als inactief (klaar voor AI-verrijking).
+                  {stats.pending > pendingResults.length && (
+                    <span className="block mt-1 text-xs">
+                      Toont {pendingResults.length} van {stats.pending} — gebruik de stadfilter of laad meer.
+                    </span>
+                  )}
+                </CardDescription>
+              </div>
+              <Select value={queueCityFilter} onValueChange={setQueueCityFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter stad" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alle steden</SelectItem>
+                  {cities.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </CardHeader>
             <CardContent>
               {pendingResults.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <Sparkles className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                  <p>Geen pending resultaten. Voer een scan uit op een grid-punt.</p>
+                  <p>Geen pending resultaten {queueCityFilter !== 'all' ? 'voor deze stad' : ''}. Voer een scan uit op een grid-punt.</p>
                 </div>
               ) : (
                 <Table>
