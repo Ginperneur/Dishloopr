@@ -289,12 +289,18 @@ export function DishApprovalManager() {
       query = query.eq('restaurant_id', selectedRestaurant);
     }
 
-    const { error, count } = await query.select('id');
+    const { data, error } = await query.select('id');
 
     if (error) {
-      toast.error('Bulk goedkeuring mislukt');
+      console.error('Bulk approve error:', error);
+      toast.error(`Bulk goedkeuring mislukt: ${error.message}`);
     } else {
-      toast.success(`${count || 0} gerechten goedgekeurd`);
+      const updated = data?.length || 0;
+      if (updated === 0) {
+        toast.info('Geen gerechten gevonden met confidence ≥85%');
+      } else {
+        toast.success(`${updated} gerechten goedgekeurd`);
+      }
     }
     await Promise.all([fetchDishes(), fetchStatusCounts()]);
     setLoading(false);
@@ -317,12 +323,18 @@ export function DishApprovalManager() {
       query = query.eq('restaurant_id', selectedRestaurant);
     }
 
-    const { error, count } = await query.select('id');
+    const { data, error } = await query.select('id');
 
     if (error) {
-      toast.error('Bulk afwijzing mislukt');
+      console.error('Bulk reject error:', error);
+      toast.error(`Bulk afwijzing mislukt: ${error.message}`);
     } else {
-      toast.success(`${count || 0} gerechten afgewezen`);
+      const updated = data?.length || 0;
+      if (updated === 0) {
+        toast.info('Geen gerechten gevonden met confidence ≤40%');
+      } else {
+        toast.success(`${updated} gerechten afgewezen`);
+      }
     }
     await Promise.all([fetchDishes(), fetchStatusCounts()]);
     setLoading(false);
