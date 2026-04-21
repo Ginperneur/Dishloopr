@@ -46,6 +46,7 @@ import { AdminNotifications } from '@/components/admin/AdminNotifications';
 import { NewsletterManager } from '@/components/admin/NewsletterManager';
 import { MenuScraper } from '@/components/admin/MenuScraper';
 import { ManualMenuUpload } from '@/components/admin/ManualMenuUpload';
+import { EmptyDishesManager } from '@/components/admin/EmptyDishesManager';
 import { DataExportManager } from '@/components/admin/DataExportManager';
 import { RestaurantAudit } from '@/components/admin/RestaurantAudit';
 import { KpiDashboard } from '@/components/admin/KpiDashboard';
