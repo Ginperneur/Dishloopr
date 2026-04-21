@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-type ScrapeFilter = 'all' | 'missing' | 'no_approved' | 'never_scraped';
+type ScrapeFilter = 'all' | 'missing' | 'no_approved' | 'never_scraped' | 'scrape_failed';
 
 interface ScrapeResult {
   restaurantId: string;
@@ -26,6 +26,7 @@ const FILTER_LABELS: Record<ScrapeFilter, { label: string; description: string }
   missing: { label: 'Zonder gerechten', description: 'Alleen restaurants zonder enig gerecht' },
   no_approved: { label: 'Zonder goedgekeurde gerechten', description: 'Restaurants zonder goedgekeurde gerechten' },
   never_scraped: { label: 'Nog nooit gescraped', description: 'Restaurants zonder eerdere scrape-poging' },
+  scrape_failed: { label: 'Scrape mislukt', description: 'Vorige scrape-poging faalde — overweeg handmatige upload' },
 };
 
 export function MenuScraper() {
@@ -124,6 +125,40 @@ export function MenuScraper() {
     return ids;
   };
 
+  const fetchFailedScrapeRestaurantIds = async (restaurantIds: string[]): Promise<Set<string>> => {
+    // Get the latest scrape run per restaurant; keep those whose latest status is not 'success'
+    const latestStatusByRestaurant = new Map<string, string>();
+    const chunkSize = 200;
+
+    for (let i = 0; i < restaurantIds.length; i += chunkSize) {
+      const chunk = restaurantIds.slice(i, i + chunkSize);
+      let from = 0;
+      const pageSize = 1000;
+      while (true) {
+        const { data } = await supabase
+          .from('menu_scrape_runs')
+          .select('restaurant_id, status, created_at')
+          .in('restaurant_id', chunk)
+          .order('created_at', { ascending: false })
+          .range(from, from + pageSize - 1);
+        if (!data || data.length === 0) break;
+        for (const row of data) {
+          if (!latestStatusByRestaurant.has(row.restaurant_id)) {
+            latestStatusByRestaurant.set(row.restaurant_id, row.status);
+          }
+        }
+        if (data.length < pageSize) break;
+        from += pageSize;
+      }
+    }
+
+    const failed = new Set<string>();
+    latestStatusByRestaurant.forEach((status, id) => {
+      if (status !== 'success') failed.add(id);
+    });
+    return failed;
+  };
+
   const fetchFilteredRestaurants = async () => {
     // First get all restaurants with website
     const { data: restaurants, error } = await supabase
@@ -160,6 +195,11 @@ export function MenuScraper() {
     if (filter === 'never_scraped') {
       const idsWithAnyScrapeAttempt = await fetchDistinctScrapeRunRestaurantIds(restaurantIds);
       return { data: restaurants.filter(r => !idsWithAnyScrapeAttempt.has(r.id)), error: null };
+    }
+
+    if (filter === 'scrape_failed') {
+      const failedIds = await fetchFailedScrapeRestaurantIds(restaurantIds);
+      return { data: restaurants.filter(r => failedIds.has(r.id)), error: null };
     }
 
     return { data: restaurants, error: null };

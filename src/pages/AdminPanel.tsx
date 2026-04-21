@@ -45,6 +45,7 @@ import { AmbiancePricingManager } from '@/components/admin/AmbiancePricingManage
 import { AdminNotifications } from '@/components/admin/AdminNotifications';
 import { NewsletterManager } from '@/components/admin/NewsletterManager';
 import { MenuScraper } from '@/components/admin/MenuScraper';
+import { ManualMenuUpload } from '@/components/admin/ManualMenuUpload';
 import { DataExportManager } from '@/components/admin/DataExportManager';
 import { RestaurantAudit } from '@/components/admin/RestaurantAudit';
 import { KpiDashboard } from '@/components/admin/KpiDashboard';
@@ -110,6 +111,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'completeness': { title: "Completeness", description: "Datakwaliteit per restaurant" },
   'bulk-import': { title: "Bulk Import", description: "CSV restaurants importeren" },
   'menu-scraper': { title: "Menu Scraper", description: "Gerechten van websites scrapen" },
+  'manual-menu': { title: "Handmatig Menu", description: "Foto of PDF uploaden voor restaurants waar scrapen niet werkt" },
   'geocode': { title: "Geocode", description: "Coördinaten toekennen" },
   'google-enrich': { title: "Google Verrijking", description: "Ratings & openingstijden importeren" },
   'ai-classify': { title: "AI Classificatie", description: "Keuken, sfeer & concept via AI" },
@@ -581,6 +583,7 @@ export default function AdminPanel() {
                 </Card>
               )}
               {activeSection === 'menu-scraper' && <MenuScraper />}
+              {activeSection === 'manual-menu' && <ManualMenuUpload />}
               {activeSection === 'data-export' && <DataExportManager />}
               {activeSection === 'bulk-import' && <BulkRestaurantUpload onSuccess={fetchData} />}
               {activeSection === 'audit' && <RestaurantAudit />}
