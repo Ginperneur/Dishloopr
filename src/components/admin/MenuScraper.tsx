@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-type ScrapeFilter = 'all' | 'missing' | 'no_approved' | 'never_scraped';
+type ScrapeFilter = 'all' | 'missing' | 'no_approved' | 'never_scraped' | 'scrape_failed';
 
 interface ScrapeResult {
   restaurantId: string;
@@ -26,6 +26,7 @@ const FILTER_LABELS: Record<ScrapeFilter, { label: string; description: string }
   missing: { label: 'Zonder gerechten', description: 'Alleen restaurants zonder enig gerecht' },
   no_approved: { label: 'Zonder goedgekeurde gerechten', description: 'Restaurants zonder goedgekeurde gerechten' },
   never_scraped: { label: 'Nog nooit gescraped', description: 'Restaurants zonder eerdere scrape-poging' },
+  scrape_failed: { label: 'Scrape mislukt', description: 'Vorige scrape-poging faalde — overweeg handmatige upload' },
 };
 
 export function MenuScraper() {
