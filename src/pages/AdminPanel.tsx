@@ -583,6 +583,7 @@ export default function AdminPanel() {
                 </Card>
               )}
               {activeSection === 'menu-scraper' && <MenuScraper />}
+              {activeSection === 'manual-menu' && <ManualMenuUpload />}
               {activeSection === 'data-export' && <DataExportManager />}
               {activeSection === 'bulk-import' && <BulkRestaurantUpload onSuccess={fetchData} />}
               {activeSection === 'audit' && <RestaurantAudit />}
