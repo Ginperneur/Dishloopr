@@ -586,6 +586,7 @@ export default function AdminPanel() {
               )}
               {activeSection === 'menu-scraper' && <MenuScraper />}
               {activeSection === 'manual-menu' && <ManualMenuUpload />}
+              {activeSection === 'empty-dishes' && <EmptyDishesManager onNavigateToTab={handleNavigateToTab} />}
               {activeSection === 'data-export' && <DataExportManager />}
               {activeSection === 'bulk-import' && <BulkRestaurantUpload onSuccess={fetchData} />}
               {activeSection === 'audit' && <RestaurantAudit />}
