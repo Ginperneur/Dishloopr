@@ -125,6 +125,40 @@ export function MenuScraper() {
     return ids;
   };
 
+  const fetchFailedScrapeRestaurantIds = async (restaurantIds: string[]): Promise<Set<string>> => {
+    // Get the latest scrape run per restaurant; keep those whose latest status is not 'success'
+    const latestStatusByRestaurant = new Map<string, string>();
+    const chunkSize = 200;
+
+    for (let i = 0; i < restaurantIds.length; i += chunkSize) {
+      const chunk = restaurantIds.slice(i, i + chunkSize);
+      let from = 0;
+      const pageSize = 1000;
+      while (true) {
+        const { data } = await supabase
+          .from('menu_scrape_runs')
+          .select('restaurant_id, status, created_at')
+          .in('restaurant_id', chunk)
+          .order('created_at', { ascending: false })
+          .range(from, from + pageSize - 1);
+        if (!data || data.length === 0) break;
+        for (const row of data) {
+          if (!latestStatusByRestaurant.has(row.restaurant_id)) {
+            latestStatusByRestaurant.set(row.restaurant_id, row.status);
+          }
+        }
+        if (data.length < pageSize) break;
+        from += pageSize;
+      }
+    }
+
+    const failed = new Set<string>();
+    latestStatusByRestaurant.forEach((status, id) => {
+      if (status !== 'success') failed.add(id);
+    });
+    return failed;
+  };
+
   const fetchFilteredRestaurants = async () => {
     // First get all restaurants with website
     const { data: restaurants, error } = await supabase
