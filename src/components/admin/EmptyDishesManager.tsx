@@ -62,18 +62,30 @@ export function EmptyDishesManager({ onNavigateToTab }: Props) {
   const load = async () => {
     setLoading(true);
     try {
-      // 1. Alle actieve restaurants + city
-      const restaurants = await fetchAll<{
+      // 1. Alle actieve restaurants (zonder embed — die kan falen op grote sets)
+      const restaurantsRaw = await fetchAll<{
         id: string; name: string; address: string | null; website_url: string | null;
         city_id: string | null; rating: number | null; is_active: boolean; created_at: string;
-        cities: { name: string } | null;
       }>(() =>
         supabase
           .from('restaurants')
-          .select('id, name, address, website_url, city_id, rating, is_active, created_at, cities:city_id(name)')
+          .select('id, name, address, website_url, city_id, rating, is_active, created_at')
           .eq('is_active', true)
           .order('name')
       );
+
+      // 1b. Steden los ophalen en mappen
+      const { data: citiesData, error: citiesErr } = await supabase
+        .from('cities')
+        .select('id, name');
+      if (citiesErr) throw citiesErr;
+      const cityMap = new Map<string, string>();
+      (citiesData || []).forEach(c => cityMap.set(c.id, c.name));
+
+      const restaurants = restaurantsRaw.map(r => ({
+        ...r,
+        city_name: r.city_id ? cityMap.get(r.city_id) || null : null,
+      }));
 
       const restIds = restaurants.map(r => r.id);
 
@@ -87,15 +99,19 @@ export function EmptyDishesManager({ onNavigateToTab }: Props) {
         dishRows.forEach(d => dishIds.add(d.restaurant_id));
       }
 
-      // 3. Laatste scrape status per restaurant
-      const scrapeRows = await fetchAll<{ restaurant_id: string; status: string; created_at: string }>(
-        () => supabase.from('menu_scrape_runs').select('restaurant_id, status, created_at').order('created_at', { ascending: false })
-      );
+      // 3. Laatste scrape status per restaurant (best-effort — als tabel niet bestaat, sla over)
       const lastScrape = new Map<string, { status: string; at: string }>();
-      for (const r of scrapeRows) {
-        if (!lastScrape.has(r.restaurant_id)) {
-          lastScrape.set(r.restaurant_id, { status: r.status, at: r.created_at });
+      try {
+        const scrapeRows = await fetchAll<{ restaurant_id: string; status: string; created_at: string }>(
+          () => supabase.from('menu_scrape_runs').select('restaurant_id, status, created_at').order('created_at', { ascending: false })
+        );
+        for (const r of scrapeRows) {
+          if (!lastScrape.has(r.restaurant_id)) {
+            lastScrape.set(r.restaurant_id, { status: r.status, at: r.created_at });
+          }
         }
+      } catch (scrapeErr) {
+        console.warn('Kon menu_scrape_runs niet ophalen:', scrapeErr);
       }
 
       const empty: EmptyRow[] = restaurants
@@ -106,7 +122,7 @@ export function EmptyDishesManager({ onNavigateToTab }: Props) {
           address: r.address,
           website_url: r.website_url,
           city_id: r.city_id,
-          city_name: r.cities?.name || null,
+          city_name: r.city_name,
           rating: r.rating,
           is_active: r.is_active,
           last_scrape_status: lastScrape.get(r.id)?.status || null,
@@ -115,9 +131,9 @@ export function EmptyDishesManager({ onNavigateToTab }: Props) {
         }));
 
       setRows(empty);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast.error('Laden mislukt');
+      toast.error(`Laden mislukt: ${err?.message || 'onbekende fout'}`);
     } finally {
       setLoading(false);
     }

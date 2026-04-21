@@ -412,13 +412,14 @@ export function SearchBar({
               exit={{ opacity: 0, y: 10 }}
               transition={{ duration: 0.15 }}
               className="fixed left-4 right-4 z-[9999] md:hidden rounded-2xl overflow-hidden"
-              style={{ 
+              style={{
                 backgroundColor: 'hsl(var(--background))',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)',
                 border: '2px solid hsl(var(--border))',
-                bottom: '16px',
-                maxHeight: '45vh'
+                top: dropdownPosition.top,
+                maxHeight: `min(45vh, ${Math.max(dropdownPosition.maxHeight, 220)}px)`,
               }}
+              onMouseDown={(e) => e.preventDefault()}
             >
               {/* Header */}
               <div className="flex items-center justify-between px-4 py-3 bg-muted/50 border-b border-border">
