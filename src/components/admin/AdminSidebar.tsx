@@ -4,7 +4,7 @@ import {
   Store, UtensilsCrossed, Check, Sparkles,
   MessageSquare, FileText,
   Bell, Star,
-  ShieldAlert, Image, Eye, Upload, Globe, Download, Zap, Clock, Settings
+  ShieldAlert, Image, Eye, Upload, Globe, Download, Zap, Clock, Settings, UtensilsCrossed as Utensils
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
