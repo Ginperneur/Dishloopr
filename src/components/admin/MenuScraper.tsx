@@ -197,6 +197,11 @@ export function MenuScraper() {
       return { data: restaurants.filter(r => !idsWithAnyScrapeAttempt.has(r.id)), error: null };
     }
 
+    if (filter === 'scrape_failed') {
+      const failedIds = await fetchFailedScrapeRestaurantIds(restaurantIds);
+      return { data: restaurants.filter(r => failedIds.has(r.id)), error: null };
+    }
+
     return { data: restaurants, error: null };
   };
 
