@@ -80,6 +80,7 @@ const navGroups = [
       { id: 'bulk-import', label: 'Import', icon: Upload },
       { id: 'menu-scraper', label: 'Menu Scraper', icon: Globe },
       { id: 'manual-menu', label: 'Handmatig Menu', icon: Upload },
+      { id: 'empty-dishes', label: '0 Gerechten', icon: AlertCircle },
       { id: 'discovery', label: 'Discovery', icon: Search },
       { id: 'geocode', label: 'Geocode', icon: MapPin },
       { id: 'google-enrich', label: 'Google Verrijking', icon: Star },
