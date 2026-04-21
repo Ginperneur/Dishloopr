@@ -111,6 +111,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'completeness': { title: "Completeness", description: "Datakwaliteit per restaurant" },
   'bulk-import': { title: "Bulk Import", description: "CSV restaurants importeren" },
   'menu-scraper': { title: "Menu Scraper", description: "Gerechten van websites scrapen" },
+  'manual-menu': { title: "Handmatig Menu", description: "Foto of PDF uploaden voor restaurants waar scrapen niet werkt" },
   'geocode': { title: "Geocode", description: "Coördinaten toekennen" },
   'google-enrich': { title: "Google Verrijking", description: "Ratings & openingstijden importeren" },
   'ai-classify': { title: "AI Classificatie", description: "Keuken, sfeer & concept via AI" },
