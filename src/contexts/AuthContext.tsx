@@ -21,23 +21,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    let mounted = true;
+
+    // Set up auth state listener FIRST so we catch SIGNED_IN, TOKEN_REFRESHED, SIGNED_OUT, etc.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+      (_event, newSession) => {
+        if (!mounted) return;
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
         setLoading(false);
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    // THEN check for existing session. If the access token is expired,
+    // try to refresh it so the user stays logged in across visits.
+    (async () => {
+      try {
+        const { data: { session: existing } } = await supabase.auth.getSession();
 
-    return () => subscription.unsubscribe();
+        if (existing) {
+          // If token expires within the next 60s, proactively refresh.
+          const expiresAt = (existing.expires_at ?? 0) * 1000;
+          if (expiresAt && expiresAt - Date.now() < 60_000) {
+            const { data: refreshed } = await supabase.auth.refreshSession();
+            if (mounted) {
+              const s = refreshed.session ?? existing;
+              setSession(s);
+              setUser(s?.user ?? null);
+            }
+          } else if (mounted) {
+            setSession(existing);
+            setUser(existing.user);
+          }
+        }
+      } catch (err) {
+        console.warn('[Auth] Failed to restore session:', err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
