@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { lovable } from '@/integrations/lovable/index';
@@ -36,6 +37,7 @@ export default function LoginPage() {
   
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   
   // Form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -81,7 +83,7 @@ export default function LoginPage() {
     }
 
     setIsLoading(true);
-    const { error } = await signIn(loginEmail, loginPassword);
+    const { error } = await signIn(loginEmail, loginPassword, rememberMe);
     setIsLoading(false);
 
     if (error) {
@@ -246,6 +248,20 @@ export default function LoginPage() {
                   <Button type="submit" className="w-full h-11" size="lg" disabled={isLoading}>
                     {isLoading ? t('common.loading') : t('nav.login')}
                   </Button>
+
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="remember-me"
+                      checked={rememberMe}
+                      onCheckedChange={(checked) => setRememberMe(checked === true)}
+                    />
+                    <Label
+                      htmlFor="remember-me"
+                      className="text-sm font-normal text-muted-foreground cursor-pointer"
+                    >
+                      Ingelogd blijven op dit apparaat
+                    </Label>
+                  </div>
 
                   <div className="relative my-4">
                     <div className="absolute inset-0 flex items-center">
