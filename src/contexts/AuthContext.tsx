@@ -2,11 +2,35 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+const REMEMBER_ME_KEY = 'auth-remember-me';
+
+// Find the Supabase auth storage key in localStorage (sb-<ref>-auth-token)
+function findSupabaseAuthKey(): string | null {
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
+        return key;
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+function clearSupabaseAuthFromLocalStorage() {
+  const key = findSupabaseAuthKey();
+  if (key) {
+    try { localStorage.removeItem(key); } catch { /* ignore */ }
+  }
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string, rememberMe?: boolean) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, name: string, accountType?: 'user' | 'restaurant') => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
