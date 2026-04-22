@@ -249,6 +249,20 @@ export default function LoginPage() {
                     {isLoading ? t('common.loading') : t('nav.login')}
                   </Button>
 
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="remember-me"
+                      checked={rememberMe}
+                      onCheckedChange={(checked) => setRememberMe(checked === true)}
+                    />
+                    <Label
+                      htmlFor="remember-me"
+                      className="text-sm font-normal text-muted-foreground cursor-pointer"
+                    >
+                      Ingelogd blijven op dit apparaat
+                    </Label>
+                  </div>
+
                   <div className="relative my-4">
                     <div className="absolute inset-0 flex items-center">
                       <span className="w-full border-t border-border" />
