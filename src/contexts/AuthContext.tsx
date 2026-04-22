@@ -47,6 +47,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
+    // If user previously chose NOT to be remembered, clear any persisted
+    // session token immediately on app load BEFORE Supabase reads it.
+    // This way the user starts logged out on a new browser session.
+    try {
+      const remember = localStorage.getItem(REMEMBER_ME_KEY);
+      const sessionFlag = sessionStorage.getItem('auth-session-active');
+      if (remember === 'false' && !sessionFlag) {
+        clearSupabaseAuthFromLocalStorage();
+      }
+    } catch {
+      // ignore
+    }
+
     // Set up auth state listener FIRST so we catch SIGNED_IN, TOKEN_REFRESHED, SIGNED_OUT, etc.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, newSession) => {
@@ -54,6 +67,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(newSession);
         setUser(newSession?.user ?? null);
         setLoading(false);
+
+        // Mark this browser tab as having an active auth session, so a
+        // page reload within the same tab does NOT log the user out
+        // even if "remember me" is off.
+        try {
+          if (newSession) sessionStorage.setItem('auth-session-active', '1');
+          else sessionStorage.removeItem('auth-session-active');
+        } catch { /* ignore */ }
       }
     );
 
