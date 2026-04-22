@@ -112,7 +112,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, rememberMe: boolean = true) => {
+    // Persist the user's preference so we know on next app load whether to
+    // restore the session or not.
+    try {
+      localStorage.setItem(REMEMBER_ME_KEY, rememberMe ? 'true' : 'false');
+    } catch { /* ignore */ }
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -138,6 +144,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    try {
+      localStorage.removeItem(REMEMBER_ME_KEY);
+      sessionStorage.removeItem('auth-session-active');
+    } catch { /* ignore */ }
     await supabase.auth.signOut();
   };
 
