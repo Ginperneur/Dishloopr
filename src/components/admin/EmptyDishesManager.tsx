@@ -66,7 +66,7 @@ export function EmptyDishesManager({ onNavigateToTab }: Props) {
   const load = async () => {
     setLoading(true);
     try {
-      // 1. Alle actieve restaurants (zonder embed — die kan falen op grote sets)
+      // 1. Alle actieve restaurants
       const restaurantsRaw = await fetchAll<{
         id: string; name: string; address: string | null; website_url: string | null;
         city_id: string | null; rating: number | null; is_active: boolean; created_at: string;
@@ -78,11 +78,8 @@ export function EmptyDishesManager({ onNavigateToTab }: Props) {
           .order('name')
       );
 
-      // 1b. Steden los ophalen en mappen
-      const { data: citiesData, error: citiesErr } = await supabase
-        .from('cities')
-        .select('id, name');
-      if (citiesErr) throw citiesErr;
+      // 2. Steden
+      const { data: citiesData } = await supabase.from('cities').select('id, name');
       const cityMap = new Map<string, string>();
       (citiesData || []).forEach(c => cityMap.set(c.id, c.name));
 
@@ -91,23 +88,21 @@ export function EmptyDishesManager({ onNavigateToTab }: Props) {
         city_name: r.city_id ? cityMap.get(r.city_id) || null : null,
       }));
 
-      const restIds = restaurants.map(r => r.id);
-
-      // 2. Restaurants met >=1 gerecht (gechunked)
+      // 3. Alle restaurant_dishes — gewoon volledig pagineren, zonder .in() filter (die maakt de URL te lang).
+      const dishRows = await fetchAll<{ restaurant_id: string }>(
+        () => supabase.from('restaurant_dishes').select('restaurant_id')
+      );
       const dishIds = new Set<string>();
-      for (let i = 0; i < restIds.length; i += 1000) {
-        const chunk = restIds.slice(i, i + 1000);
-        const dishRows = await fetchAll<{ restaurant_id: string }>(
-          () => supabase.from('restaurant_dishes').select('restaurant_id').in('restaurant_id', chunk)
-        );
-        dishRows.forEach(d => dishIds.add(d.restaurant_id));
-      }
+      dishRows.forEach(d => dishIds.add(d.restaurant_id));
 
-      // 3. Laatste scrape status per restaurant (best-effort — als tabel niet bestaat, sla over)
+      // 4. Laatste scrape per restaurant — best-effort, met LIMIT-bescherming.
       const lastScrape = new Map<string, { status: string; at: string }>();
       try {
         const scrapeRows = await fetchAll<{ restaurant_id: string; status: string; created_at: string }>(
-          () => supabase.from('menu_scrape_runs').select('restaurant_id, status, created_at').order('created_at', { ascending: false })
+          () => supabase
+            .from('menu_scrape_runs')
+            .select('restaurant_id, status, created_at')
+            .order('created_at', { ascending: false })
         );
         for (const r of scrapeRows) {
           if (!lastScrape.has(r.restaurant_id)) {
