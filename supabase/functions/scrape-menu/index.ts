@@ -284,9 +284,14 @@ Regels:
         });
       }
 
-      await logRun({ status: 'ai_failed', errorMessage: aiErrorText.slice(0, 500), scrapedUrl: urlToScrape });
-      return new Response(JSON.stringify({ error: 'AI analyse mislukt' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      await logRun({ status: 'ai_failed', errorMessage: `${aiResponse.status}: ${aiErrorText.slice(0, 500)}`, scrapedUrl: urlToScrape });
+      return new Response(JSON.stringify({
+        success: false,
+        error: `AI analyse mislukt (${aiResponse.status})`,
+        details: aiErrorText.slice(0, 300),
+        scrapedUrl: urlToScrape,
+      }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
