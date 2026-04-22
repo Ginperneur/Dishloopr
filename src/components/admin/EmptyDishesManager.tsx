@@ -54,7 +54,10 @@ export function EmptyDishesManager({ onNavigateToTab }: Props) {
     const pageSize = 1000;
     while (true) {
       const { data, error } = await builder().range(from, from + pageSize - 1);
-      if (error) throw error;
+      if (error) {
+        console.error('fetchAll error at offset', from, error);
+        throw new Error(`${error.message || 'Bad Request'} (offset ${from})`);
+      }
       if (!data || data.length === 0) break;
       all.push(...data);
       if (data.length < pageSize) break;
@@ -66,7 +69,7 @@ export function EmptyDishesManager({ onNavigateToTab }: Props) {
   const load = async () => {
     setLoading(true);
     try {
-      // 1. Alle actieve restaurants (zonder embed — die kan falen op grote sets)
+      // 1. Alle actieve restaurants
       const restaurantsRaw = await fetchAll<{
         id: string; name: string; address: string | null; website_url: string | null;
         city_id: string | null; rating: number | null; is_active: boolean; created_at: string;
@@ -78,11 +81,8 @@ export function EmptyDishesManager({ onNavigateToTab }: Props) {
           .order('name')
       );
 
-      // 1b. Steden los ophalen en mappen
-      const { data: citiesData, error: citiesErr } = await supabase
-        .from('cities')
-        .select('id, name');
-      if (citiesErr) throw citiesErr;
+      // 2. Steden
+      const { data: citiesData } = await supabase.from('cities').select('id, name');
       const cityMap = new Map<string, string>();
       (citiesData || []).forEach(c => cityMap.set(c.id, c.name));
 
@@ -91,23 +91,21 @@ export function EmptyDishesManager({ onNavigateToTab }: Props) {
         city_name: r.city_id ? cityMap.get(r.city_id) || null : null,
       }));
 
-      const restIds = restaurants.map(r => r.id);
-
-      // 2. Restaurants met >=1 gerecht (gechunked)
+      // 3. Alle restaurant_dishes — pagineren met stabiele order voor consistente results.
+      const dishRows = await fetchAll<{ restaurant_id: string }>(
+        () => supabase.from('restaurant_dishes').select('restaurant_id').order('restaurant_id')
+      );
       const dishIds = new Set<string>();
-      for (let i = 0; i < restIds.length; i += 1000) {
-        const chunk = restIds.slice(i, i + 1000);
-        const dishRows = await fetchAll<{ restaurant_id: string }>(
-          () => supabase.from('restaurant_dishes').select('restaurant_id').in('restaurant_id', chunk)
-        );
-        dishRows.forEach(d => dishIds.add(d.restaurant_id));
-      }
+      dishRows.forEach(d => dishIds.add(d.restaurant_id));
 
-      // 3. Laatste scrape status per restaurant (best-effort — als tabel niet bestaat, sla over)
+      // 4. Laatste scrape per restaurant — best-effort, met LIMIT-bescherming.
       const lastScrape = new Map<string, { status: string; at: string }>();
       try {
         const scrapeRows = await fetchAll<{ restaurant_id: string; status: string; created_at: string }>(
-          () => supabase.from('menu_scrape_runs').select('restaurant_id, status, created_at').order('created_at', { ascending: false })
+          () => supabase
+            .from('menu_scrape_runs')
+            .select('restaurant_id, status, created_at')
+            .order('created_at', { ascending: false })
         );
         for (const r of scrapeRows) {
           if (!lastScrape.has(r.restaurant_id)) {
@@ -216,11 +214,12 @@ export function EmptyDishesManager({ onNavigateToTab }: Props) {
       setAutoProgress(p => ({ ...p, current: i + 1, currentName: r.name }));
       try {
         const { data, error } = await supabase.functions.invoke('scrape-menu', {
-          body: { restaurantId: r.id },
+          body: { restaurantId: r.id, websiteUrl: r.website_url },
         });
         if (error) throw error;
-        if (data?.success && (data?.dishesAdded ?? 0) > 0) {
-          added += data.dishesAdded;
+        const addedNow = data?.results?.added ?? 0;
+        if (data?.success && addedNow > 0) {
+          added += addedNow;
         } else if (!data?.success) {
           failed += 1;
         }
