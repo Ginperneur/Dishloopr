@@ -211,11 +211,12 @@ export function EmptyDishesManager({ onNavigateToTab }: Props) {
       setAutoProgress(p => ({ ...p, current: i + 1, currentName: r.name }));
       try {
         const { data, error } = await supabase.functions.invoke('scrape-menu', {
-          body: { restaurantId: r.id },
+          body: { restaurantId: r.id, websiteUrl: r.website_url },
         });
         if (error) throw error;
-        if (data?.success && (data?.dishesAdded ?? 0) > 0) {
-          added += data.dishesAdded;
+        const addedNow = data?.results?.added ?? 0;
+        if (data?.success && addedNow > 0) {
+          added += addedNow;
         } else if (!data?.success) {
           failed += 1;
         }
