@@ -194,6 +194,50 @@ export function EmptyDishesManager({ onNavigateToTab }: Props) {
     return <Badge variant="destructive" className="text-[10px]">Scrape mislukt</Badge>;
   };
 
+  const runAutoFill = async () => {
+    // Doel: alle restaurants in huidige filter MET website, automatisch scrapen
+    const targets = filtered.filter(r => !!r.website_url);
+    if (targets.length === 0) {
+      toast.error('Geen restaurants met website in huidige filter.');
+      return;
+    }
+    if (!confirm(`Auto-vul ${targets.length} restaurants via menu-scraper?\n\nDit kan enkele minuten duren. Je kunt op elk moment stoppen.`)) return;
+
+    setAutoRunning(true);
+    setAutoCancel(false);
+    setAutoProgress({ current: 0, total: targets.length, added: 0, failed: 0, currentName: '' });
+
+    let added = 0;
+    let failed = 0;
+
+    for (let i = 0; i < targets.length; i++) {
+      if (autoCancel) break;
+      const r = targets[i];
+      setAutoProgress(p => ({ ...p, current: i + 1, currentName: r.name }));
+      try {
+        const { data, error } = await supabase.functions.invoke('scrape-menu', {
+          body: { restaurantId: r.id },
+        });
+        if (error) throw error;
+        if (data?.success && (data?.dishesAdded ?? 0) > 0) {
+          added += data.dishesAdded;
+        } else if (!data?.success) {
+          failed += 1;
+        }
+      } catch (err) {
+        console.warn('Scrape failed for', r.name, err);
+        failed += 1;
+      }
+      setAutoProgress(p => ({ ...p, added, failed }));
+      // Korte pauze om de Firecrawl API niet te overspoelen
+      await new Promise(res => setTimeout(res, 800));
+    }
+
+    setAutoRunning(false);
+    toast.success(`Auto-vul klaar: ${added} gerechten toegevoegd, ${failed} mislukt.`);
+    await load();
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -207,10 +251,38 @@ export function EmptyDishesManager({ onNavigateToTab }: Props) {
               {loading ? 'Laden…' : `${rows.length} restaurants hebben 0 gerechten in de database.`}
             </CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />Vernieuwen
-          </Button>
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={runAutoFill}
+              disabled={loading || autoRunning}
+              title="Scrape automatisch alle restaurants met website in huidige filter"
+            >
+              <Sparkles className="h-4 w-4 mr-2" />Auto-vul ({filtered.filter(r => r.website_url).length})
+            </Button>
+            <Button variant="outline" size="sm" onClick={load} disabled={loading || autoRunning}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />Vernieuwen
+            </Button>
+          </div>
         </div>
+        {autoRunning && (
+          <div className="mt-3 p-3 rounded-md border bg-muted/30 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-medium">
+                Bezig: {autoProgress.current}/{autoProgress.total} — {autoProgress.currentName}
+              </span>
+              <Button size="sm" variant="ghost" className="h-6 px-2" onClick={() => setAutoCancel(true)}>
+                <X className="h-3 w-3 mr-1" />Stop
+              </Button>
+            </div>
+            <Progress value={(autoProgress.current / autoProgress.total) * 100} className="h-1.5" />
+            <div className="flex gap-3 text-[11px] text-muted-foreground">
+              <span>✅ {autoProgress.added} gerechten toegevoegd</span>
+              <span>❌ {autoProgress.failed} mislukt</span>
+            </div>
+          </div>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Stats per stad */}
