@@ -54,7 +54,10 @@ export function EmptyDishesManager({ onNavigateToTab }: Props) {
     const pageSize = 1000;
     while (true) {
       const { data, error } = await builder().range(from, from + pageSize - 1);
-      if (error) throw error;
+      if (error) {
+        console.error('fetchAll error at offset', from, error);
+        throw new Error(`${error.message || 'Bad Request'} (offset ${from})`);
+      }
       if (!data || data.length === 0) break;
       all.push(...data);
       if (data.length < pageSize) break;
