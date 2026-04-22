@@ -40,6 +40,9 @@ export function EmptyDishesManager({ onNavigateToTab }: Props) {
   const [websiteFilter, setWebsiteFilter] = useState<'all' | 'with' | 'without'>('all');
   const [sortKey, setSortKey] = useState<SortKey>('city');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [autoRunning, setAutoRunning] = useState(false);
+  const [autoCancel, setAutoCancel] = useState(false);
+  const [autoProgress, setAutoProgress] = useState({ current: 0, total: 0, added: 0, failed: 0, currentName: '' });
 
   useEffect(() => {
     load();
