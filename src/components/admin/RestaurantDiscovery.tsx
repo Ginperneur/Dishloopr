@@ -249,7 +249,7 @@ export function RestaurantDiscovery() {
     }
   };
 
-  const runPipelineBatch = async () => {
+  const runPipelineBatch = async (modeOverride?: 'pending' | 'enrich_existing') => {
     setPipelineRunning(true);
     setPipelineCancel(false);
     let dishes = 0;
@@ -257,7 +257,8 @@ export function RestaurantDiscovery() {
 
     let targets: Array<{ id: string; name: string; payload: any }> = [];
 
-    if (pipelineMode === 'pending') {
+    const mode = modeOverride ?? pipelineMode;
+    if (mode === 'pending') {
       // Approve all pending in current city filter
       let q = supabase
         .from('discovery_results')
@@ -411,7 +412,7 @@ export function RestaurantDiscovery() {
                 <Button
                   variant="default"
                   disabled={pipelineRunning || stats.pending === 0}
-                  onClick={() => { setPipelineMode('pending'); runPipelineBatch(); }}
+                  onClick={() => { setPipelineMode('pending'); runPipelineBatch('pending'); }}
                 >
                   <Zap className="h-4 w-4 mr-1" />
                   Bulk goedkeuren ({queueCityFilter !== 'all' ? 'stad' : 'alles'})
@@ -419,7 +420,7 @@ export function RestaurantDiscovery() {
                 <Button
                   variant="outline"
                   disabled={pipelineRunning}
-                  onClick={() => { setPipelineMode('enrich_existing'); runPipelineBatch(); }}
+                  onClick={() => { setPipelineMode('enrich_existing'); runPipelineBatch('enrich_existing'); }}
                 >
                   <RefreshCw className="h-4 w-4 mr-1" />
                   Verrijk reeds goedgekeurde
