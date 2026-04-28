@@ -388,7 +388,7 @@ export function RestaurantDiscovery() {
               <div>
                 <CardTitle>Ontdekte Restaurants — Review Queue</CardTitle>
                 <CardDescription>
-                  Nieuwe restaurants gevonden via Google Places. Goedkeuren importeert ze als inactief (klaar voor AI-verrijking).
+                  Nieuwe restaurants gevonden via Google Places. Goedkeuren = volledige pipeline: import → verrijk → AI-classificeer → menu scrapen → activeren.
                   {stats.pending > pendingResults.length && (
                     <span className="block mt-1 text-xs">
                       Toont {pendingResults.length} van {stats.pending.toLocaleString('nl-NL')} — laad meer hieronder.
@@ -396,18 +396,47 @@ export function RestaurantDiscovery() {
                   )}
                 </CardDescription>
               </div>
-              <Select value={queueCityFilter} onValueChange={setQueueCityFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter stad" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Alle steden</SelectItem>
-                  {cities.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Select value={queueCityFilter} onValueChange={setQueueCityFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filter stad" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Alle steden</SelectItem>
+                    {cities.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="default"
+                  disabled={pipelineRunning || stats.pending === 0}
+                  onClick={() => { setPipelineMode('pending'); runPipelineBatch(); }}
+                >
+                  <Zap className="h-4 w-4 mr-1" />
+                  Bulk goedkeuren ({queueCityFilter !== 'all' ? 'stad' : 'alles'})
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={pipelineRunning}
+                  onClick={() => { setPipelineMode('enrich_existing'); runPipelineBatch(); }}
+                >
+                  <RefreshCw className="h-4 w-4 mr-1" />
+                  Verrijk reeds goedgekeurde
+                </Button>
+              </div>
             </CardHeader>
+            {pipelineRunning && (
+              <CardContent className="border-t bg-muted/30">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm font-medium">
+                    Pipeline: {pipelineProgress.current}/{pipelineProgress.total} • {pipelineProgress.dishes} gerechten • {pipelineProgress.errors} fouten
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => setPipelineCancel(true)}>Stop</Button>
+                </div>
+                <Progress value={pipelineProgress.total > 0 ? (pipelineProgress.current / pipelineProgress.total) * 100 : 0} />
+              </CardContent>
+            )}
             <CardContent>
               {pendingResults.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
@@ -455,10 +484,10 @@ export function RestaurantDiscovery() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
-                            <Button size="sm" variant="default" onClick={() => handleApprove(r)}>
-                              <Check className="h-4 w-4" />
+                            <Button size="sm" variant="default" disabled={approving === r.id} onClick={() => handleApprove(r)}>
+                              {approving === r.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => handleReject(r)}>
+                            <Button size="sm" variant="outline" disabled={approving === r.id} onClick={() => handleReject(r)}>
                               <X className="h-4 w-4" />
                             </Button>
                           </div>
