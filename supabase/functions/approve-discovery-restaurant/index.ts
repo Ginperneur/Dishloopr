@@ -188,7 +188,7 @@ Deno.serve(async (req) => {
           'Authorization': `Bearer ${serviceKey}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ restaurantIds: [restaurantId], force: true }),
+        body: JSON.stringify({ batch_size: 5 }),
       });
       const classifyData = await classifyRes.json().catch(() => ({}));
       steps.push({
