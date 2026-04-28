@@ -249,7 +249,7 @@ export function RestaurantDiscovery() {
     }
   };
 
-  const runPipelineBatch = async () => {
+  const runPipelineBatch = async (modeOverride?: 'pending' | 'enrich_existing') => {
     setPipelineRunning(true);
     setPipelineCancel(false);
     let dishes = 0;
@@ -257,7 +257,8 @@ export function RestaurantDiscovery() {
 
     let targets: Array<{ id: string; name: string; payload: any }> = [];
 
-    if (pipelineMode === 'pending') {
+    const mode = modeOverride ?? pipelineMode;
+    if (mode === 'pending') {
       // Approve all pending in current city filter
       let q = supabase
         .from('discovery_results')
