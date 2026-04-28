@@ -62,6 +62,13 @@ export function RestaurantDiscovery() {
   const [rejectTarget, setRejectTarget] = useState<DiscoveryResult | null>(null);
   const [rejectReason, setRejectReason] = useState<'closed' | 'not_restaurant' | 'duplicate' | 'other'>('closed');
 
+  // Pipeline state
+  const [approving, setApproving] = useState<string | null>(null);
+  const [pipelineRunning, setPipelineRunning] = useState(false);
+  const [pipelineProgress, setPipelineProgress] = useState({ current: 0, total: 0, dishes: 0, errors: 0 });
+  const [pipelineCancel, setPipelineCancel] = useState(false);
+  const [pipelineMode, setPipelineMode] = useState<'pending' | 'enrich_existing'>('pending');
+
   // Rejected list
   const [rejectedResults, setRejectedResults] = useState<(DiscoveryResult & { reject_reason: string | null })[]>([]);
 
@@ -226,53 +233,76 @@ export function RestaurantDiscovery() {
 
 
   const handleApprove = async (result: DiscoveryResult) => {
+    setApproving(result.id);
     try {
-      // Get city slug for restaurant slug generation
-      const { data: gridPoint } = await supabase
-        .from('discovery_grid_points')
-        .select('city_id, cities(slug)')
-        .eq('id', result.source_grid_point_id!)
-        .single();
-
-      const cityId = gridPoint?.city_id;
-      if (!cityId) throw new Error('City niet gevonden');
-
-      // Generate slug
-      const baseSlug = result.name.toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '')
-        .slice(0, 60);
-      const slug = `${baseSlug}-${result.place_id.slice(-6)}`;
-
-      // Insert restaurant
-      const { error: insErr } = await supabase.from('restaurants').insert({
-        name: result.name,
-        slug,
-        address: result.address || 'Onbekend',
-        city_id: cityId,
-        google_place_id: result.place_id,
-        geo_lat: (result as any).lat,
-        geo_lng: (result as any).lng,
-        google_rating: result.rating,
-        google_reviews_count: result.user_ratings_total,
-        price_level: result.price_level || 2,
-        is_active: false, // Inactive until enriched
-        added_by_source: 'discovery',
+      const { data, error } = await supabase.functions.invoke('approve-discovery-restaurant', {
+        body: { discoveryResultId: result.id },
       });
-
-      if (insErr) throw insErr;
-
-      // Mark result approved
-      await supabase
-        .from('discovery_results')
-        .update({ status: 'approved', reviewed_at: new Date().toISOString() })
-        .eq('id', result.id);
-
-      toast.success(`${result.name} toegevoegd (inactief, klaar voor verrijking)`);
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Pipeline mislukt');
+      toast.success(`${result.name}: ${data.dishesAdded} gerechten, ${data.steps?.filter((s: any) => s.ok).length}/${data.steps?.length} stappen ok`);
       await loadData();
     } catch (e: any) {
       toast.error(e.message || 'Goedkeuren mislukt');
+    } finally {
+      setApproving(null);
     }
+  };
+
+  const runPipelineBatch = async () => {
+    setPipelineRunning(true);
+    setPipelineCancel(false);
+    let dishes = 0;
+    let errors = 0;
+
+    let targets: Array<{ id: string; name: string; payload: any }> = [];
+
+    if (pipelineMode === 'pending') {
+      // Approve all pending in current city filter
+      let q = supabase
+        .from('discovery_results')
+        .select('id, name, place_id')
+        .eq('status', 'pending')
+        .order('discovered_at', { ascending: false })
+        .limit(500);
+      if (queueCityFilter !== 'all') q = q.eq('city_id', queueCityFilter);
+      const { data } = await q;
+      targets = (data || []).map((r) => ({ id: r.id, name: r.name, payload: { discoveryResultId: r.id } }));
+    } else {
+      // Enrich already-approved discovery restaurants that lack website/menu
+      const { data } = await supabase
+        .from('restaurants')
+        .select('id, name, website_url')
+        .eq('added_by_source', 'discovery')
+        .or('website_url.is.null,is_active.eq.false')
+        .limit(500);
+      targets = (data || []).map((r) => ({ id: r.id, name: r.name, payload: { restaurantId: r.id } }));
+    }
+
+    setPipelineProgress({ current: 0, total: targets.length, dishes: 0, errors: 0 });
+
+    for (let i = 0; i < targets.length; i++) {
+      if (pipelineCancel) break;
+      const t = targets[i];
+      try {
+        const { data, error } = await supabase.functions.invoke('approve-discovery-restaurant', {
+          body: t.payload,
+        });
+        if (error || !data?.success) {
+          errors++;
+        } else {
+          dishes += data.dishesAdded || 0;
+        }
+      } catch {
+        errors++;
+      }
+      setPipelineProgress({ current: i + 1, total: targets.length, dishes, errors });
+      await new Promise((r) => setTimeout(r, 600));
+    }
+
+    setPipelineRunning(false);
+    toast.success(`Pipeline klaar: ${dishes} gerechten toegevoegd, ${errors} fouten`);
+    await loadData();
   };
 
   const handleReject = async (result: DiscoveryResult) => {
