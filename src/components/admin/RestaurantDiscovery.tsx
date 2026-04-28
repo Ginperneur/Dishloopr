@@ -62,6 +62,13 @@ export function RestaurantDiscovery() {
   const [rejectTarget, setRejectTarget] = useState<DiscoveryResult | null>(null);
   const [rejectReason, setRejectReason] = useState<'closed' | 'not_restaurant' | 'duplicate' | 'other'>('closed');
 
+  // Pipeline state
+  const [approving, setApproving] = useState<string | null>(null);
+  const [pipelineRunning, setPipelineRunning] = useState(false);
+  const [pipelineProgress, setPipelineProgress] = useState({ current: 0, total: 0, dishes: 0, errors: 0 });
+  const [pipelineCancel, setPipelineCancel] = useState(false);
+  const [pipelineMode, setPipelineMode] = useState<'pending' | 'enrich_existing'>('pending');
+
   // Rejected list
   const [rejectedResults, setRejectedResults] = useState<(DiscoveryResult & { reject_reason: string | null })[]>([]);
 
@@ -226,53 +233,76 @@ export function RestaurantDiscovery() {
 
 
   const handleApprove = async (result: DiscoveryResult) => {
+    setApproving(result.id);
     try {
-      // Get city slug for restaurant slug generation
-      const { data: gridPoint } = await supabase
-        .from('discovery_grid_points')
-        .select('city_id, cities(slug)')
-        .eq('id', result.source_grid_point_id!)
-        .single();
-
-      const cityId = gridPoint?.city_id;
-      if (!cityId) throw new Error('City niet gevonden');
-
-      // Generate slug
-      const baseSlug = result.name.toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '')
-        .slice(0, 60);
-      const slug = `${baseSlug}-${result.place_id.slice(-6)}`;
-
-      // Insert restaurant
-      const { error: insErr } = await supabase.from('restaurants').insert({
-        name: result.name,
-        slug,
-        address: result.address || 'Onbekend',
-        city_id: cityId,
-        google_place_id: result.place_id,
-        geo_lat: (result as any).lat,
-        geo_lng: (result as any).lng,
-        google_rating: result.rating,
-        google_reviews_count: result.user_ratings_total,
-        price_level: result.price_level || 2,
-        is_active: false, // Inactive until enriched
-        added_by_source: 'discovery',
+      const { data, error } = await supabase.functions.invoke('approve-discovery-restaurant', {
+        body: { discoveryResultId: result.id },
       });
-
-      if (insErr) throw insErr;
-
-      // Mark result approved
-      await supabase
-        .from('discovery_results')
-        .update({ status: 'approved', reviewed_at: new Date().toISOString() })
-        .eq('id', result.id);
-
-      toast.success(`${result.name} toegevoegd (inactief, klaar voor verrijking)`);
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Pipeline mislukt');
+      toast.success(`${result.name}: ${data.dishesAdded} gerechten, ${data.steps?.filter((s: any) => s.ok).length}/${data.steps?.length} stappen ok`);
       await loadData();
     } catch (e: any) {
       toast.error(e.message || 'Goedkeuren mislukt');
+    } finally {
+      setApproving(null);
     }
+  };
+
+  const runPipelineBatch = async () => {
+    setPipelineRunning(true);
+    setPipelineCancel(false);
+    let dishes = 0;
+    let errors = 0;
+
+    let targets: Array<{ id: string; name: string; payload: any }> = [];
+
+    if (pipelineMode === 'pending') {
+      // Approve all pending in current city filter
+      let q = supabase
+        .from('discovery_results')
+        .select('id, name, place_id')
+        .eq('status', 'pending')
+        .order('discovered_at', { ascending: false })
+        .limit(500);
+      if (queueCityFilter !== 'all') q = q.eq('city_id', queueCityFilter);
+      const { data } = await q;
+      targets = (data || []).map((r) => ({ id: r.id, name: r.name, payload: { discoveryResultId: r.id } }));
+    } else {
+      // Enrich already-approved discovery restaurants that lack website/menu
+      const { data } = await supabase
+        .from('restaurants')
+        .select('id, name, website_url')
+        .eq('added_by_source', 'discovery')
+        .or('website_url.is.null,is_active.eq.false')
+        .limit(500);
+      targets = (data || []).map((r) => ({ id: r.id, name: r.name, payload: { restaurantId: r.id } }));
+    }
+
+    setPipelineProgress({ current: 0, total: targets.length, dishes: 0, errors: 0 });
+
+    for (let i = 0; i < targets.length; i++) {
+      if (pipelineCancel) break;
+      const t = targets[i];
+      try {
+        const { data, error } = await supabase.functions.invoke('approve-discovery-restaurant', {
+          body: t.payload,
+        });
+        if (error || !data?.success) {
+          errors++;
+        } else {
+          dishes += data.dishesAdded || 0;
+        }
+      } catch {
+        errors++;
+      }
+      setPipelineProgress({ current: i + 1, total: targets.length, dishes, errors });
+      await new Promise((r) => setTimeout(r, 600));
+    }
+
+    setPipelineRunning(false);
+    toast.success(`Pipeline klaar: ${dishes} gerechten toegevoegd, ${errors} fouten`);
+    await loadData();
   };
 
   const handleReject = async (result: DiscoveryResult) => {
@@ -358,7 +388,7 @@ export function RestaurantDiscovery() {
               <div>
                 <CardTitle>Ontdekte Restaurants — Review Queue</CardTitle>
                 <CardDescription>
-                  Nieuwe restaurants gevonden via Google Places. Goedkeuren importeert ze als inactief (klaar voor AI-verrijking).
+                  Nieuwe restaurants gevonden via Google Places. Goedkeuren = volledige pipeline: import → verrijk → AI-classificeer → menu scrapen → activeren.
                   {stats.pending > pendingResults.length && (
                     <span className="block mt-1 text-xs">
                       Toont {pendingResults.length} van {stats.pending.toLocaleString('nl-NL')} — laad meer hieronder.
@@ -366,18 +396,47 @@ export function RestaurantDiscovery() {
                   )}
                 </CardDescription>
               </div>
-              <Select value={queueCityFilter} onValueChange={setQueueCityFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter stad" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Alle steden</SelectItem>
-                  {cities.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Select value={queueCityFilter} onValueChange={setQueueCityFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filter stad" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Alle steden</SelectItem>
+                    {cities.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="default"
+                  disabled={pipelineRunning || stats.pending === 0}
+                  onClick={() => { setPipelineMode('pending'); runPipelineBatch(); }}
+                >
+                  <Zap className="h-4 w-4 mr-1" />
+                  Bulk goedkeuren ({queueCityFilter !== 'all' ? 'stad' : 'alles'})
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={pipelineRunning}
+                  onClick={() => { setPipelineMode('enrich_existing'); runPipelineBatch(); }}
+                >
+                  <RefreshCw className="h-4 w-4 mr-1" />
+                  Verrijk reeds goedgekeurde
+                </Button>
+              </div>
             </CardHeader>
+            {pipelineRunning && (
+              <CardContent className="border-t bg-muted/30">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm font-medium">
+                    Pipeline: {pipelineProgress.current}/{pipelineProgress.total} • {pipelineProgress.dishes} gerechten • {pipelineProgress.errors} fouten
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => setPipelineCancel(true)}>Stop</Button>
+                </div>
+                <Progress value={pipelineProgress.total > 0 ? (pipelineProgress.current / pipelineProgress.total) * 100 : 0} />
+              </CardContent>
+            )}
             <CardContent>
               {pendingResults.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
@@ -425,10 +484,10 @@ export function RestaurantDiscovery() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
-                            <Button size="sm" variant="default" onClick={() => handleApprove(r)}>
-                              <Check className="h-4 w-4" />
+                            <Button size="sm" variant="default" disabled={approving === r.id} onClick={() => handleApprove(r)}>
+                              {approving === r.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => handleReject(r)}>
+                            <Button size="sm" variant="outline" disabled={approving === r.id} onClick={() => handleReject(r)}>
                               <X className="h-4 w-4" />
                             </Button>
                           </div>
