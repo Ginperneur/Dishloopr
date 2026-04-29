@@ -497,6 +497,17 @@ export function RestaurantDiscovery() {
                     ))}
                   </SelectContent>
                 </Select>
+                <Select value={queueCategoryFilter} onValueChange={(v: any) => setQueueCategoryFilter(v)}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filter type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Alle types</SelectItem>
+                    <SelectItem value="restaurant">Restaurants</SelectItem>
+                    <SelectItem value="cafe">Koffie / Lunch / Brasserie</SelectItem>
+                    <SelectItem value="bakery">Bakkerijen</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Button
                   variant="default"
                   disabled={pipelineRunning || stats.pending === 0}
@@ -545,6 +556,7 @@ export function RestaurantDiscovery() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Naam</TableHead>
+                    <TableHead>Type</TableHead>
                       <TableHead>Adres</TableHead>
                       <TableHead>Rating</TableHead>
                       <TableHead>Ontdekt</TableHead>
@@ -565,6 +577,13 @@ export function RestaurantDiscovery() {
                             Google Maps <ExternalLink className="h-3 w-3" />
                           </a>
                         </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-xs whitespace-nowrap">
+                          {r.venue_category === 'cafe' && 'Koffie/Lunch'}
+                          {r.venue_category === 'bakery' && 'Bakkerij'}
+                          {(!r.venue_category || r.venue_category === 'restaurant') && 'Restaurant'}
+                        </Badge>
+                      </TableCell>
                         <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
                           {r.address || '—'}
                         </TableCell>
