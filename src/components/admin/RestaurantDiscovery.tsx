@@ -370,9 +370,9 @@ export function RestaurantDiscovery() {
       } else {
         q = q.lt('user_ratings_total', bulkRejectMinReviews);
       }
-      const { error, count } = await q.select('id', { count: 'exact' });
+      const { data, error } = await q.select('id');
       if (error) throw error;
-      toast.success(`${count ?? 0} restaurants afgewezen`);
+      toast.success(`${data?.length ?? 0} restaurants afgewezen`);
       setBulkRejectOpen(false);
       setBulkRejectPreview(null);
       await loadData();
