@@ -40,6 +40,7 @@ interface DiscoveryResult {
   source_grid_point_id: string | null;
   photo_reference: string | null;
   city_id: string | null;
+  venue_category?: string | null;
 }
 
 export function RestaurantDiscovery() {
@@ -85,6 +86,8 @@ export function RestaurantDiscovery() {
   const [queueCityFilter, setQueueCityFilter] = useState<string>('all');
   const [bulkCityFilter, setBulkCityFilter] = useState<string>('all');
   const [queueLimit, setQueueLimit] = useState<number>(100);
+  const [queueCategoryFilter, setQueueCategoryFilter] = useState<'all' | 'restaurant' | 'cafe' | 'bakery'>('all');
+  const [bulkCategories, setBulkCategories] = useState<Array<'restaurant' | 'cafe' | 'bakery'>>(['restaurant', 'cafe', 'bakery']);
 
   const loadData = async () => {
     setLoading(true);
@@ -97,6 +100,9 @@ export function RestaurantDiscovery() {
       .limit(queueLimit);
     if (queueCityFilter !== 'all') {
       queueQuery = queueQuery.eq('city_id', queueCityFilter);
+    }
+    if (queueCategoryFilter !== 'all') {
+      queueQuery = queueQuery.eq('venue_category', queueCategoryFilter);
     }
 
     // Accurate counts (head:true bypasses 1000-row cap)
@@ -136,7 +142,7 @@ export function RestaurantDiscovery() {
   useEffect(() => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queueCityFilter, queueLimit]);
+  }, [queueCityFilter, queueLimit, queueCategoryFilter]);
 
   const handleGenerateGrid = async () => {
     setGenerating(true);
@@ -156,7 +162,7 @@ export function RestaurantDiscovery() {
     setScanning(gridPointId);
     try {
       const { data, error } = await supabase.functions.invoke('discover-restaurants', {
-        body: { grid_point_id: gridPointId },
+        body: { grid_point_id: gridPointId, categories: bulkCategories },
       });
       if (error) throw error;
       toast.success(`Scan voltooid: ${data.new_results} nieuw, ${data.duplicates} duplicaten (${data.api_calls_used} API calls)`);
@@ -208,7 +214,7 @@ export function RestaurantDiscovery() {
       while (attempt < 3) {
         try {
           const { data, error } = await supabase.functions.invoke('discover-restaurants', {
-            body: { grid_point_id: gp.id },
+            body: { grid_point_id: gp.id, categories: bulkCategories },
           });
           if (error) throw error;
           newCount += data?.new_results || 0;
