@@ -62,6 +62,13 @@ export function RestaurantDiscovery() {
   const [rejectTarget, setRejectTarget] = useState<DiscoveryResult | null>(null);
   const [rejectReason, setRejectReason] = useState<'closed' | 'not_restaurant' | 'duplicate' | 'other'>('closed');
 
+  // Bulk reject by min reviews
+  const [bulkRejectOpen, setBulkRejectOpen] = useState(false);
+  const [bulkRejectMinReviews, setBulkRejectMinReviews] = useState<number>(10);
+  const [bulkRejectIncludeNull, setBulkRejectIncludeNull] = useState<boolean>(true);
+  const [bulkRejectRunning, setBulkRejectRunning] = useState(false);
+  const [bulkRejectPreview, setBulkRejectPreview] = useState<number | null>(null);
+
   // Pipeline state
   const [approving, setApproving] = useState<string | null>(null);
   const [pipelineRunning, setPipelineRunning] = useState(false);
@@ -330,6 +337,52 @@ export function RestaurantDiscovery() {
     }
   };
 
+  const previewBulkReject = async () => {
+    let q = supabase
+      .from('discovery_results')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending');
+    if (queueCityFilter !== 'all') q = q.eq('city_id', queueCityFilter);
+    if (bulkRejectIncludeNull) {
+      q = q.or(`user_ratings_total.lt.${bulkRejectMinReviews},user_ratings_total.is.null`);
+    } else {
+      q = q.lt('user_ratings_total', bulkRejectMinReviews);
+    }
+    const { count, error } = await q;
+    if (error) { toast.error(error.message); return; }
+    setBulkRejectPreview(count ?? 0);
+  };
+
+  const confirmBulkReject = async () => {
+    setBulkRejectRunning(true);
+    try {
+      let q = supabase
+        .from('discovery_results')
+        .update({
+          status: 'rejected',
+          reviewed_at: new Date().toISOString(),
+          reject_reason: `low_reviews_lt_${bulkRejectMinReviews}`,
+        })
+        .eq('status', 'pending');
+      if (queueCityFilter !== 'all') q = q.eq('city_id', queueCityFilter);
+      if (bulkRejectIncludeNull) {
+        q = q.or(`user_ratings_total.lt.${bulkRejectMinReviews},user_ratings_total.is.null`);
+      } else {
+        q = q.lt('user_ratings_total', bulkRejectMinReviews);
+      }
+      const { data, error } = await q.select('id');
+      if (error) throw error;
+      toast.success(`${data?.length ?? 0} restaurants afgewezen`);
+      setBulkRejectOpen(false);
+      setBulkRejectPreview(null);
+      await loadData();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setBulkRejectRunning(false);
+    }
+  };
+
   const handleRestore = async (result: DiscoveryResult) => {
     try {
       await supabase
@@ -424,6 +477,14 @@ export function RestaurantDiscovery() {
                 >
                   <RefreshCw className="h-4 w-4 mr-1" />
                   Verrijk reeds goedgekeurde
+                </Button>
+                <Button
+                  variant="destructive"
+                  disabled={pipelineRunning || stats.pending === 0}
+                  onClick={() => { setBulkRejectPreview(null); setBulkRejectOpen(true); }}
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Bulk afwijzen (weinig reviews)
                 </Button>
               </div>
             </CardHeader>
@@ -828,6 +889,63 @@ export function RestaurantDiscovery() {
             <Button variant="destructive" onClick={confirmReject}>
               <X className="h-4 w-4 mr-1" />
               Afwijzen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Reject by min reviews */}
+      <Dialog open={bulkRejectOpen} onOpenChange={(o) => { if (!o) { setBulkRejectOpen(false); setBulkRejectPreview(null); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Bulk afwijzen op aantal reviews</DialogTitle>
+            <DialogDescription>
+              Wijst alle pending restaurants af met minder dan het opgegeven aantal Google reviews
+              {queueCityFilter !== 'all' ? ' (alleen geselecteerde stad)' : ' (alle steden)'}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-medium">Minimum aantal reviews</label>
+              <input
+                type="number"
+                min={0}
+                value={bulkRejectMinReviews}
+                onChange={(e) => { setBulkRejectMinReviews(parseInt(e.target.value) || 0); setBulkRejectPreview(null); }}
+                className="mt-1 w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Restaurants met minder dan {bulkRejectMinReviews} reviews worden afgewezen.
+              </p>
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={bulkRejectIncludeNull}
+                onChange={(e) => { setBulkRejectIncludeNull(e.target.checked); setBulkRejectPreview(null); }}
+              />
+              Ook restaurants zonder review-data meenemen
+            </label>
+            <Button variant="outline" size="sm" onClick={previewBulkReject} disabled={bulkRejectRunning}>
+              Aantal voorbekijken
+            </Button>
+            {bulkRejectPreview !== null && (
+              <div className="p-3 rounded-md bg-muted text-sm">
+                <strong>{bulkRejectPreview.toLocaleString('nl-NL')}</strong> restaurants worden afgewezen.
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setBulkRejectOpen(false); setBulkRejectPreview(null); }} disabled={bulkRejectRunning}>
+              Annuleren
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmBulkReject}
+              disabled={bulkRejectRunning || bulkRejectPreview === 0}
+            >
+              {bulkRejectRunning ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <X className="h-4 w-4 mr-1" />}
+              Definitief afwijzen
             </Button>
           </DialogFooter>
         </DialogContent>
