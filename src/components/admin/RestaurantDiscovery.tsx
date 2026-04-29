@@ -337,6 +337,52 @@ export function RestaurantDiscovery() {
     }
   };
 
+  const previewBulkReject = async () => {
+    let q = supabase
+      .from('discovery_results')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending');
+    if (queueCityFilter !== 'all') q = q.eq('city_id', queueCityFilter);
+    if (bulkRejectIncludeNull) {
+      q = q.or(`user_ratings_total.lt.${bulkRejectMinReviews},user_ratings_total.is.null`);
+    } else {
+      q = q.lt('user_ratings_total', bulkRejectMinReviews);
+    }
+    const { count, error } = await q;
+    if (error) { toast.error(error.message); return; }
+    setBulkRejectPreview(count ?? 0);
+  };
+
+  const confirmBulkReject = async () => {
+    setBulkRejectRunning(true);
+    try {
+      let q = supabase
+        .from('discovery_results')
+        .update({
+          status: 'rejected',
+          reviewed_at: new Date().toISOString(),
+          reject_reason: `low_reviews_lt_${bulkRejectMinReviews}`,
+        })
+        .eq('status', 'pending');
+      if (queueCityFilter !== 'all') q = q.eq('city_id', queueCityFilter);
+      if (bulkRejectIncludeNull) {
+        q = q.or(`user_ratings_total.lt.${bulkRejectMinReviews},user_ratings_total.is.null`);
+      } else {
+        q = q.lt('user_ratings_total', bulkRejectMinReviews);
+      }
+      const { error, count } = await q.select('id', { count: 'exact' });
+      if (error) throw error;
+      toast.success(`${count ?? 0} restaurants afgewezen`);
+      setBulkRejectOpen(false);
+      setBulkRejectPreview(null);
+      await loadData();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setBulkRejectRunning(false);
+    }
+  };
+
   const handleRestore = async (result: DiscoveryResult) => {
     try {
       await supabase
