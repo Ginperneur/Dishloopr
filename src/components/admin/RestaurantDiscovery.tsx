@@ -40,6 +40,7 @@ interface DiscoveryResult {
   source_grid_point_id: string | null;
   photo_reference: string | null;
   city_id: string | null;
+  venue_category?: string | null;
 }
 
 export function RestaurantDiscovery() {
@@ -85,6 +86,8 @@ export function RestaurantDiscovery() {
   const [queueCityFilter, setQueueCityFilter] = useState<string>('all');
   const [bulkCityFilter, setBulkCityFilter] = useState<string>('all');
   const [queueLimit, setQueueLimit] = useState<number>(100);
+  const [queueCategoryFilter, setQueueCategoryFilter] = useState<'all' | 'restaurant' | 'cafe' | 'bakery'>('all');
+  const [bulkCategories, setBulkCategories] = useState<Array<'restaurant' | 'cafe' | 'bakery'>>(['restaurant', 'cafe', 'bakery']);
 
   const loadData = async () => {
     setLoading(true);
@@ -97,6 +100,9 @@ export function RestaurantDiscovery() {
       .limit(queueLimit);
     if (queueCityFilter !== 'all') {
       queueQuery = queueQuery.eq('city_id', queueCityFilter);
+    }
+    if (queueCategoryFilter !== 'all') {
+      queueQuery = queueQuery.eq('venue_category', queueCategoryFilter);
     }
 
     // Accurate counts (head:true bypasses 1000-row cap)
@@ -136,7 +142,7 @@ export function RestaurantDiscovery() {
   useEffect(() => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queueCityFilter, queueLimit]);
+  }, [queueCityFilter, queueLimit, queueCategoryFilter]);
 
   const handleGenerateGrid = async () => {
     setGenerating(true);
@@ -156,7 +162,7 @@ export function RestaurantDiscovery() {
     setScanning(gridPointId);
     try {
       const { data, error } = await supabase.functions.invoke('discover-restaurants', {
-        body: { grid_point_id: gridPointId },
+        body: { grid_point_id: gridPointId, categories: bulkCategories },
       });
       if (error) throw error;
       toast.success(`Scan voltooid: ${data.new_results} nieuw, ${data.duplicates} duplicaten (${data.api_calls_used} API calls)`);
@@ -208,7 +214,7 @@ export function RestaurantDiscovery() {
       while (attempt < 3) {
         try {
           const { data, error } = await supabase.functions.invoke('discover-restaurants', {
-            body: { grid_point_id: gp.id },
+            body: { grid_point_id: gp.id, categories: bulkCategories },
           });
           if (error) throw error;
           newCount += data?.new_results || 0;
@@ -491,6 +497,17 @@ export function RestaurantDiscovery() {
                     ))}
                   </SelectContent>
                 </Select>
+                <Select value={queueCategoryFilter} onValueChange={(v: any) => setQueueCategoryFilter(v)}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filter type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Alle types</SelectItem>
+                    <SelectItem value="restaurant">Restaurants</SelectItem>
+                    <SelectItem value="cafe">Koffie / Lunch / Brasserie</SelectItem>
+                    <SelectItem value="bakery">Bakkerijen</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Button
                   variant="default"
                   disabled={pipelineRunning || stats.pending === 0}
@@ -539,6 +556,7 @@ export function RestaurantDiscovery() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Naam</TableHead>
+                    <TableHead>Type</TableHead>
                       <TableHead>Adres</TableHead>
                       <TableHead>Rating</TableHead>
                       <TableHead>Ontdekt</TableHead>
@@ -559,6 +577,13 @@ export function RestaurantDiscovery() {
                             Google Maps <ExternalLink className="h-3 w-3" />
                           </a>
                         </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-xs whitespace-nowrap">
+                          {r.venue_category === 'cafe' && 'Koffie/Lunch'}
+                          {r.venue_category === 'bakery' && 'Bakkerij'}
+                          {(!r.venue_category || r.venue_category === 'restaurant') && 'Restaurant'}
+                        </Badge>
+                      </TableCell>
                         <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
                           {r.address || '—'}
                         </TableCell>
@@ -822,6 +847,35 @@ export function RestaurantDiscovery() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Wat zoeken?</label>
+                <div className="flex flex-col gap-2 rounded-md border p-3">
+                  {([
+                    { key: 'restaurant', label: 'Restaurants' },
+                    { key: 'cafe', label: 'Koffietentjes / Lunchrooms / Brasseries' },
+                    { key: 'bakery', label: 'Bakkerijen' },
+                  ] as const).map((opt) => (
+                    <label key={opt.key} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={bulkCategories.includes(opt.key)}
+                        onChange={(e) => {
+                          setBulkCategories((prev) =>
+                            e.target.checked
+                              ? Array.from(new Set([...prev, opt.key]))
+                              : prev.filter((c) => c !== opt.key)
+                          );
+                        }}
+                      />
+                      {opt.label}
+                    </label>
+                  ))}
+                  <p className="text-xs text-muted-foreground">
+                    Tip: meer categorieën = meer Google API calls per grid-punt.
+                  </p>
+                </div>
               </div>
 
               <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
