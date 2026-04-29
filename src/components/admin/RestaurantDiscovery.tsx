@@ -893,6 +893,63 @@ export function RestaurantDiscovery() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk Reject by min reviews */}
+      <Dialog open={bulkRejectOpen} onOpenChange={(o) => { if (!o) { setBulkRejectOpen(false); setBulkRejectPreview(null); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Bulk afwijzen op aantal reviews</DialogTitle>
+            <DialogDescription>
+              Wijst alle pending restaurants af met minder dan het opgegeven aantal Google reviews
+              {queueCityFilter !== 'all' ? ' (alleen geselecteerde stad)' : ' (alle steden)'}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-medium">Minimum aantal reviews</label>
+              <input
+                type="number"
+                min={0}
+                value={bulkRejectMinReviews}
+                onChange={(e) => { setBulkRejectMinReviews(parseInt(e.target.value) || 0); setBulkRejectPreview(null); }}
+                className="mt-1 w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Restaurants met minder dan {bulkRejectMinReviews} reviews worden afgewezen.
+              </p>
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={bulkRejectIncludeNull}
+                onChange={(e) => { setBulkRejectIncludeNull(e.target.checked); setBulkRejectPreview(null); }}
+              />
+              Ook restaurants zonder review-data meenemen
+            </label>
+            <Button variant="outline" size="sm" onClick={previewBulkReject} disabled={bulkRejectRunning}>
+              Aantal voorbekijken
+            </Button>
+            {bulkRejectPreview !== null && (
+              <div className="p-3 rounded-md bg-muted text-sm">
+                <strong>{bulkRejectPreview.toLocaleString('nl-NL')}</strong> restaurants worden afgewezen.
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setBulkRejectOpen(false); setBulkRejectPreview(null); }} disabled={bulkRejectRunning}>
+              Annuleren
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmBulkReject}
+              disabled={bulkRejectRunning || bulkRejectPreview === 0}
+            >
+              {bulkRejectRunning ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <X className="h-4 w-4 mr-1" />}
+              Definitief afwijzen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
