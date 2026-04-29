@@ -849,6 +849,35 @@ export function RestaurantDiscovery() {
                 </Select>
               </div>
 
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Wat zoeken?</label>
+                <div className="flex flex-col gap-2 rounded-md border p-3">
+                  {([
+                    { key: 'restaurant', label: 'Restaurants' },
+                    { key: 'cafe', label: 'Koffietentjes / Lunchrooms / Brasseries' },
+                    { key: 'bakery', label: 'Bakkerijen' },
+                  ] as const).map((opt) => (
+                    <label key={opt.key} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={bulkCategories.includes(opt.key)}
+                        onChange={(e) => {
+                          setBulkCategories((prev) =>
+                            e.target.checked
+                              ? Array.from(new Set([...prev, opt.key]))
+                              : prev.filter((c) => c !== opt.key)
+                          );
+                        }}
+                      />
+                      {opt.label}
+                    </label>
+                  ))}
+                  <p className="text-xs text-muted-foreground">
+                    Tip: meer categorieën = meer Google API calls per grid-punt.
+                  </p>
+                </div>
+              </div>
+
               <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Punten geselecteerd</span>
