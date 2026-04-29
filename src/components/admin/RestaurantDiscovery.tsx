@@ -338,41 +338,70 @@ export function RestaurantDiscovery() {
   };
 
   const previewBulkReject = async () => {
-    let q = supabase
-      .from('discovery_results')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'pending');
-    if (queueCityFilter !== 'all') q = q.eq('city_id', queueCityFilter);
-    if (bulkRejectIncludeNull) {
-      q = q.or(`user_ratings_total.lt.${bulkRejectMinReviews},user_ratings_total.is.null`);
-    } else {
-      q = q.lt('user_ratings_total', bulkRejectMinReviews);
+    try {
+      let countLow = 0;
+      let countNull = 0;
+
+      let qLow = supabase
+        .from('discovery_results')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending')
+        .lt('user_ratings_total', bulkRejectMinReviews);
+      if (queueCityFilter !== 'all') qLow = qLow.eq('city_id', queueCityFilter);
+      const { count: cLow, error: eLow } = await qLow;
+      if (eLow) throw eLow;
+      countLow = cLow ?? 0;
+
+      if (bulkRejectIncludeNull) {
+        let qNull = supabase
+          .from('discovery_results')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'pending')
+          .is('user_ratings_total', null);
+        if (queueCityFilter !== 'all') qNull = qNull.eq('city_id', queueCityFilter);
+        const { count: cNull, error: eNull } = await qNull;
+        if (eNull) throw eNull;
+        countNull = cNull ?? 0;
+      }
+      setBulkRejectPreview(countLow + countNull);
+    } catch (e: any) {
+      toast.error(e.message);
     }
-    const { count, error } = await q;
-    if (error) { toast.error(error.message); return; }
-    setBulkRejectPreview(count ?? 0);
   };
 
   const confirmBulkReject = async () => {
     setBulkRejectRunning(true);
     try {
-      let q = supabase
+      const payload = {
+        status: 'rejected',
+        reviewed_at: new Date().toISOString(),
+        reject_reason: `low_reviews_lt_${bulkRejectMinReviews}`,
+      };
+      let total = 0;
+
+      let qLow = supabase
         .from('discovery_results')
-        .update({
-          status: 'rejected',
-          reviewed_at: new Date().toISOString(),
-          reject_reason: `low_reviews_lt_${bulkRejectMinReviews}`,
-        })
-        .eq('status', 'pending');
-      if (queueCityFilter !== 'all') q = q.eq('city_id', queueCityFilter);
+        .update(payload)
+        .eq('status', 'pending')
+        .lt('user_ratings_total', bulkRejectMinReviews);
+      if (queueCityFilter !== 'all') qLow = qLow.eq('city_id', queueCityFilter);
+      const { data: dLow, error: eLow } = await qLow.select('id');
+      if (eLow) throw eLow;
+      total += dLow?.length ?? 0;
+
       if (bulkRejectIncludeNull) {
-        q = q.or(`user_ratings_total.lt.${bulkRejectMinReviews},user_ratings_total.is.null`);
-      } else {
-        q = q.lt('user_ratings_total', bulkRejectMinReviews);
+        let qNull = supabase
+          .from('discovery_results')
+          .update(payload)
+          .eq('status', 'pending')
+          .is('user_ratings_total', null);
+        if (queueCityFilter !== 'all') qNull = qNull.eq('city_id', queueCityFilter);
+        const { data: dNull, error: eNull } = await qNull.select('id');
+        if (eNull) throw eNull;
+        total += dNull?.length ?? 0;
       }
-      const { data, error } = await q.select('id');
-      if (error) throw error;
-      toast.success(`${data?.length ?? 0} restaurants afgewezen`);
+
+      toast.success(`${total} restaurants afgewezen`);
       setBulkRejectOpen(false);
       setBulkRejectPreview(null);
       await loadData();
