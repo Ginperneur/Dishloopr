@@ -62,6 +62,13 @@ export function RestaurantDiscovery() {
   const [rejectTarget, setRejectTarget] = useState<DiscoveryResult | null>(null);
   const [rejectReason, setRejectReason] = useState<'closed' | 'not_restaurant' | 'duplicate' | 'other'>('closed');
 
+  // Bulk reject by min reviews
+  const [bulkRejectOpen, setBulkRejectOpen] = useState(false);
+  const [bulkRejectMinReviews, setBulkRejectMinReviews] = useState<number>(10);
+  const [bulkRejectIncludeNull, setBulkRejectIncludeNull] = useState<boolean>(true);
+  const [bulkRejectRunning, setBulkRejectRunning] = useState(false);
+  const [bulkRejectPreview, setBulkRejectPreview] = useState<number | null>(null);
+
   // Pipeline state
   const [approving, setApproving] = useState<string | null>(null);
   const [pipelineRunning, setPipelineRunning] = useState(false);
