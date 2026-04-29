@@ -583,6 +583,7 @@ export type Database = {
           status: string
           types: string[] | null
           user_ratings_total: number | null
+          venue_category: string
         }
         Insert: {
           address?: string | null
@@ -606,6 +607,7 @@ export type Database = {
           status?: string
           types?: string[] | null
           user_ratings_total?: number | null
+          venue_category?: string
         }
         Update: {
           address?: string | null
@@ -629,6 +631,7 @@ export type Database = {
           status?: string
           types?: string[] | null
           user_ratings_total?: number | null
+          venue_category?: string
         }
         Relationships: [
           {
