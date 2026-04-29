@@ -478,6 +478,14 @@ export function RestaurantDiscovery() {
                   <RefreshCw className="h-4 w-4 mr-1" />
                   Verrijk reeds goedgekeurde
                 </Button>
+                <Button
+                  variant="destructive"
+                  disabled={pipelineRunning || stats.pending === 0}
+                  onClick={() => { setBulkRejectPreview(null); setBulkRejectOpen(true); }}
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Bulk afwijzen (weinig reviews)
+                </Button>
               </div>
             </CardHeader>
             {pipelineRunning && (
