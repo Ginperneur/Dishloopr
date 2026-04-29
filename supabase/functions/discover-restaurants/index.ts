@@ -8,6 +8,8 @@ const corsHeaders = {
 
 interface DiscoverRequest {
   grid_point_id: string;
+  // Optional: limit which venue categories to scan. Defaults to all.
+  categories?: Array<'restaurant' | 'cafe' | 'bakery'>;
 }
 
 interface PlaceResult {
@@ -77,12 +79,22 @@ serve(async (req) => {
       });
     }
 
-    const { grid_point_id }: DiscoverRequest = await req.json();
+    const { grid_point_id, categories }: DiscoverRequest = await req.json();
     if (!grid_point_id) {
       return new Response(JSON.stringify({ error: 'grid_point_id required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+
+    // Determine which Google Places types to scan.
+    // - restaurant: traditional restaurants
+    // - cafe: coffee bars, lunchrooms, brasseries
+    // - bakery: bakeries (often have lunch/breakfast offerings)
+    const VALID_CATS = ['restaurant', 'cafe', 'bakery'] as const;
+    const scanCategories: Array<'restaurant' | 'cafe' | 'bakery'> =
+      Array.isArray(categories) && categories.length > 0
+        ? categories.filter((c) => (VALID_CATS as readonly string[]).includes(c)) as any
+        : ['restaurant', 'cafe', 'bakery'];
 
     const apiKey = Deno.env.get('GOOGLE_PLACES_API_KEY');
     if (!apiKey) {
@@ -116,68 +128,88 @@ serve(async (req) => {
       .select()
       .single();
 
-    let allPlaces: PlaceResult[] = [];
+    // Each place tagged with its discovered venue_category.
+    let allPlaces: Array<PlaceResult & { _venue_category: string }> = [];
     let apiCalls = 0;
 
     try {
       if (gridPoint.type === 'grid') {
-        // Nearby search with pagination
-        let nextPageToken: string | undefined;
-        let pages = 0;
-        do {
-          const url = new URL('https://maps.googleapis.com/maps/api/place/nearbysearch/json');
-          if (nextPageToken) {
-            url.searchParams.set('pagetoken', nextPageToken);
-            await sleep(2000); // Required delay before using next_page_token
-          } else {
-            url.searchParams.set('location', `${gridPoint.lat},${gridPoint.lng}`);
-            url.searchParams.set('radius', String(gridPoint.radius_meters));
-            url.searchParams.set('type', 'restaurant');
-            url.searchParams.set('language', 'nl');
-          }
-          url.searchParams.set('key', apiKey);
+        // Run a Nearby Search for each requested venue category.
+        // Google's Nearby Search only accepts ONE type per request.
+        for (const cat of scanCategories) {
+          let nextPageToken: string | undefined;
+          let pages = 0;
+          do {
+            const url = new URL('https://maps.googleapis.com/maps/api/place/nearbysearch/json');
+            if (nextPageToken) {
+              url.searchParams.set('pagetoken', nextPageToken);
+              await sleep(2000); // Required delay before using next_page_token
+            } else {
+              url.searchParams.set('location', `${gridPoint.lat},${gridPoint.lng}`);
+              url.searchParams.set('radius', String(gridPoint.radius_meters));
+              url.searchParams.set('type', cat);
+              url.searchParams.set('language', 'nl');
+            }
+            url.searchParams.set('key', apiKey);
 
-          const res = await fetch(url.toString());
-          const data = await res.json();
-          apiCalls++;
+            const res = await fetch(url.toString());
+            const data = await res.json();
+            apiCalls++;
 
-          if (data.status === 'OK' || data.status === 'ZERO_RESULTS') {
-            allPlaces.push(...(data.results || []));
-            nextPageToken = data.next_page_token;
-          } else {
-            console.error('Nearby search failed:', data.status, data.error_message);
-            break;
-          }
-          pages++;
-        } while (nextPageToken && pages < 3); // Max 60 results (3 pages × 20)
+            if (data.status === 'OK' || data.status === 'ZERO_RESULTS') {
+              const tagged = (data.results || []).map((r: any) => ({ ...r, _venue_category: cat }));
+              allPlaces.push(...tagged);
+              nextPageToken = data.next_page_token;
+            } else {
+              console.error(`Nearby search failed for type=${cat}:`, data.status, data.error_message);
+              break;
+            }
+            pages++;
+          } while (nextPageToken && pages < 3); // Max 60 results per type
+        }
       } else {
-        // Hotspot mode: text search per term
+        // Hotspot mode: text search per term, scoped to all selected categories.
         const terms = gridPoint.search_terms?.length ? gridPoint.search_terms : ['restaurant'];
-        for (const term of terms) {
-          const query = `${term} ${gridPoint.name} Amsterdam`;
-          const url = new URL('https://maps.googleapis.com/maps/api/place/textsearch/json');
-          url.searchParams.set('query', query);
-          url.searchParams.set('type', 'restaurant');
-          url.searchParams.set('language', 'nl');
-          url.searchParams.set('region', 'nl');
-          url.searchParams.set('key', apiKey);
+        for (const cat of scanCategories) {
+          for (const term of terms) {
+            const query = `${term} ${gridPoint.name} Amsterdam`;
+            const url = new URL('https://maps.googleapis.com/maps/api/place/textsearch/json');
+            url.searchParams.set('query', query);
+            url.searchParams.set('type', cat);
+            url.searchParams.set('language', 'nl');
+            url.searchParams.set('region', 'nl');
+            url.searchParams.set('key', apiKey);
 
-          const res = await fetch(url.toString());
-          const data = await res.json();
-          apiCalls++;
+            const res = await fetch(url.toString());
+            const data = await res.json();
+            apiCalls++;
 
-          if (data.status === 'OK' || data.status === 'ZERO_RESULTS') {
-            const results = (data.results || []).map((r: any) => ({ ...r, _source_term: term }));
-            allPlaces.push(...results);
+            if (data.status === 'OK' || data.status === 'ZERO_RESULTS') {
+              const results = (data.results || []).map((r: any) => ({
+                ...r,
+                _source_term: term,
+                _venue_category: cat,
+              }));
+              allPlaces.push(...results);
+            }
+            await sleep(200);
           }
-          await sleep(200);
         }
       }
 
-      // Deduplicate by place_id within this batch
-      const uniquePlaces = Array.from(
-        new Map(allPlaces.map((p) => [p.place_id, p])).values()
-      );
+      // Deduplicate by place_id within this batch.
+      // If the same place appears under multiple categories, prefer 'restaurant' > 'cafe' > 'bakery'.
+      const catPriority: Record<string, number> = { restaurant: 3, cafe: 2, bakery: 1 };
+      const dedup = new Map<string, PlaceResult & { _venue_category: string }>();
+      for (const p of allPlaces) {
+        const existing = dedup.get(p.place_id);
+        if (!existing) {
+          dedup.set(p.place_id, p);
+        } else if ((catPriority[p._venue_category] || 0) > (catPriority[existing._venue_category] || 0)) {
+          dedup.set(p.place_id, p);
+        }
+      }
+      const uniquePlaces = Array.from(dedup.values());
 
       // Get existing place_ids in restaurants and discovery_results
       const placeIds = uniquePlaces.map((p) => p.place_id);
@@ -238,6 +270,7 @@ serve(async (req) => {
           city_id: gridPoint.city_id,
           source_grid_point_id: gridPoint.id,
           source_search_term: (place as any)._source_term || null,
+          venue_category: (place as any)._venue_category || 'restaurant',
           status,
           matched_restaurant_id: matchedRestaurantId,
           raw_data: place,
