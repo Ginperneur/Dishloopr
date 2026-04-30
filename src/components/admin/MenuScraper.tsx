@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Globe, Loader2, CheckCircle2, AlertCircle, Play } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Globe, Loader2, CheckCircle2, AlertCircle, Play, ListPlus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -35,6 +35,36 @@ export function MenuScraper() {
   const [progress, setProgress] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [filter, setFilter] = useState<ScrapeFilter>('missing');
+  const [queueing, setQueueing] = useState(false);
+  const [queueStats, setQueueStats] = useState({ queued: 0, processing: 0, done: 0, failed: 0 });
+  const [queueRecent, setQueueRecent] = useState<any[]>([]);
+
+  // Poll queue stats every 5s
+  useEffect(() => {
+    const fetchQueueStatus = async () => {
+      const { data } = await supabase
+        .from('scrape_queue')
+        .select('status');
+      if (data) {
+        const stats = { queued: 0, processing: 0, done: 0, failed: 0 };
+        data.forEach((r: any) => {
+          if (stats[r.status as keyof typeof stats] !== undefined) {
+            stats[r.status as keyof typeof stats]++;
+          }
+        });
+        setQueueStats(stats);
+      }
+      const { data: recent } = await supabase
+        .from('scrape_queue')
+        .select('id, restaurant_name, status, error, added_dishes, finished_at, started_at')
+        .order('updated_at', { ascending: false })
+        .limit(15);
+      setQueueRecent(recent || []);
+    };
+    fetchQueueStatus();
+    const interval = setInterval(fetchQueueStatus, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const scrapeRestaurant = async (restaurantId: string, websiteUrl: string): Promise<ScrapeResult & { restaurantName: string }> => {
     const { data, error } = await supabase.functions.invoke('scrape-menu', {
@@ -254,22 +284,152 @@ export function MenuScraper() {
     setIsRunning(false);
   };
 
+  const handleAddToQueue = async () => {
+    setQueueing(true);
+    const { data: restaurants, error } = await fetchFilteredRestaurants();
+    if (error || !restaurants?.length) {
+      toast.error(error || 'Geen restaurants gevonden voor dit filter');
+      setQueueing(false);
+      return;
+    }
+
+    // Check which restaurants are already in queue (queued/processing)
+    const { data: existing } = await supabase
+      .from('scrape_queue')
+      .select('restaurant_id')
+      .in('restaurant_id', restaurants.map((r) => r.id))
+      .in('status', ['queued', 'processing']);
+    const existingIds = new Set((existing || []).map((e: any) => e.restaurant_id));
+
+    const toInsert = restaurants
+      .filter((r) => !existingIds.has(r.id))
+      .map((r) => ({
+        restaurant_id: r.id,
+        restaurant_name: r.name,
+        website_url: r.website_url!,
+        source: 'menu_scraper',
+      }));
+
+    if (toInsert.length === 0) {
+      toast.info('Alle restaurants staan al in de queue');
+      setQueueing(false);
+      return;
+    }
+
+    // Insert in chunks of 500
+    const chunkSize = 500;
+    let inserted = 0;
+    for (let i = 0; i < toInsert.length; i += chunkSize) {
+      const chunk = toInsert.slice(i, i + chunkSize);
+      const { error: insertErr } = await supabase.from('scrape_queue').insert(chunk);
+      if (!insertErr) inserted += chunk.length;
+    }
+
+    toast.success(`${inserted} restaurants toegevoegd aan queue. Worker verwerkt ze automatisch op de achtergrond.`);
+    setQueueing(false);
+  };
+
+  const handleClearCompleted = async () => {
+    if (!confirm('Verwijder alle voltooide en mislukte items uit de queue?')) return;
+    const { error } = await supabase
+      .from('scrape_queue')
+      .delete()
+      .in('status', ['done', 'failed']);
+    if (error) toast.error(error.message);
+    else toast.success('Voltooide items verwijderd');
+  };
+
+  const handleRetryFailed = async () => {
+    const { error } = await supabase
+      .from('scrape_queue')
+      .update({ status: 'queued', attempts: 0, error: null, finished_at: null })
+      .eq('status', 'failed');
+    if (error) toast.error(error.message);
+    else toast.success('Mislukte items opnieuw in de queue');
+  };
+
   const totalAdded = results.filter(r => r.status === 'success').reduce((sum, r) => sum + (r.added || 0), 0);
   const totalExisting = results.filter(r => r.status === 'success').reduce((sum, r) => sum + (r.existing || 0), 0);
   const errorCount = results.filter(r => r.status === 'error').length;
   const successCount = results.filter(r => r.status === 'success').length;
 
   return (
+    <div className="space-y-4">
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <ListPlus className="h-5 w-5" />
+          Background Queue
+        </CardTitle>
+        <CardDescription>
+          Voeg restaurants toe aan de queue. Een worker verwerkt automatisch elke minuut een paar items — je kunt de tab gewoon sluiten.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="outline">⏳ {queueStats.queued} wachtrij</Badge>
+          <Badge variant="secondary">⚙️ {queueStats.processing} bezig</Badge>
+          <Badge variant="default">✅ {queueStats.done} klaar</Badge>
+          {queueStats.failed > 0 && (
+            <Badge variant="destructive">❌ {queueStats.failed} mislukt</Badge>
+          )}
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={handleAddToQueue} disabled={queueing} variant="default">
+            {queueing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ListPlus className="h-4 w-4 mr-2" />}
+            Voeg "{FILTER_LABELS[filter].label}" toe aan queue
+          </Button>
+          {queueStats.failed > 0 && (
+            <Button onClick={handleRetryFailed} variant="outline" size="sm">
+              <Play className="h-4 w-4 mr-2" />
+              Probeer mislukte opnieuw
+            </Button>
+          )}
+          {(queueStats.done > 0 || queueStats.failed > 0) && (
+            <Button onClick={handleClearCompleted} variant="ghost" size="sm">
+              <Trash2 className="h-4 w-4 mr-2" />
+              Verwijder voltooide
+            </Button>
+          )}
+        </div>
+
+        {queueRecent.length > 0 && (
+          <ScrollArea className="h-[200px] border rounded-md p-2">
+            <div className="space-y-1">
+              {queueRecent.map((item) => (
+                <div key={item.id} className="flex items-center justify-between text-sm p-2 rounded hover:bg-muted/50">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {item.status === 'queued' && <div className="h-2 w-2 rounded-full bg-muted-foreground" />}
+                    {item.status === 'processing' && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
+                    {item.status === 'done' && <CheckCircle2 className="h-3 w-3 text-primary" />}
+                    {item.status === 'failed' && <AlertCircle className="h-3 w-3 text-destructive" />}
+                    <span className="truncate">{item.restaurant_name}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground shrink-0">
+                    {item.status === 'done' && `+${item.added_dishes ?? 0} gerechten`}
+                    {item.status === 'failed' && (item.error?.slice(0, 40) || 'fout')}
+                    {item.status === 'processing' && 'Bezig...'}
+                    {item.status === 'queued' && 'In wachtrij'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        )}
+      </CardContent>
+    </Card>
+
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <CardTitle className="flex items-center gap-2">
               <Globe className="h-5 w-5" />
-              Menu Scraper
+              Menu Scraper (Live)
             </CardTitle>
             <CardDescription>
-              Scrape automatisch menu's van restaurant websites met Firecrawl + AI
+              Live scrapen — tab moet open blijven. Voor grote batches: gebruik de Background Queue hierboven.
             </CardDescription>
           </div>
           <div className="flex items-center gap-3">
@@ -364,5 +524,6 @@ export function MenuScraper() {
         )}
       </CardContent>
     </Card>
+    </div>
   );
 }
