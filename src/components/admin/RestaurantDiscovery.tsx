@@ -8,8 +8,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Loader2, MapPin, Sparkles, Check, X, RefreshCw, Star, ExternalLink, Zap, AlertCircle, RotateCcw } from 'lucide-react';
+import { Loader2, MapPin, Sparkles, Check, X, RefreshCw, Star, ExternalLink, Zap, AlertCircle, RotateCcw, Search } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
@@ -88,6 +90,11 @@ export function RestaurantDiscovery() {
   const [queueLimit, setQueueLimit] = useState<number>(100);
   const [queueCategoryFilter, setQueueCategoryFilter] = useState<'all' | 'restaurant' | 'cafe' | 'bakery'>('all');
   const [bulkCategories, setBulkCategories] = useState<Array<'restaurant' | 'cafe' | 'bakery'>>(['restaurant', 'cafe', 'bakery']);
+
+  // Search + multi-select for queue
+  const [queueSearch, setQueueSearch] = useState<string>('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkSelectionRunning, setBulkSelectionRunning] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -343,6 +350,97 @@ export function RestaurantDiscovery() {
     }
   };
 
+  // ---- Multi-select bulk actions on filtered queue ----
+  const filteredPending = useMemo(() => {
+    const q = queueSearch.trim().toLowerCase();
+    if (!q) return pendingResults;
+    return pendingResults.filter((r) =>
+      r.name.toLowerCase().includes(q) ||
+      (r.address || '').toLowerCase().includes(q)
+    );
+  }, [pendingResults, queueSearch]);
+
+  const allFilteredSelected = filteredPending.length > 0 && filteredPending.every((r) => selectedIds.has(r.id));
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAllFiltered = () => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allFilteredSelected) {
+        filteredPending.forEach((r) => next.delete(r.id));
+      } else {
+        filteredPending.forEach((r) => next.add(r.id));
+      }
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const approveSelected = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!confirm(`Weet je zeker dat je ${ids.length} restaurant(s) wilt goedkeuren? Dit start de volledige pipeline.`)) return;
+    setBulkSelectionRunning(true);
+    setPipelineRunning(true);
+    setPipelineCancel(false);
+    setPipelineProgress({ current: 0, total: ids.length, dishes: 0, errors: 0 });
+    let dishes = 0;
+    let errors = 0;
+    for (let i = 0; i < ids.length; i++) {
+      if (pipelineCancel) break;
+      try {
+        const { data, error } = await supabase.functions.invoke('approve-discovery-restaurant', {
+          body: { discoveryResultId: ids[i] },
+        });
+        if (error || !data?.success) errors++;
+        else dishes += data.dishesAdded || 0;
+      } catch {
+        errors++;
+      }
+      setPipelineProgress({ current: i + 1, total: ids.length, dishes, errors });
+      await new Promise((r) => setTimeout(r, 600));
+    }
+    setPipelineRunning(false);
+    setBulkSelectionRunning(false);
+    clearSelection();
+    toast.success(`Klaar: ${dishes} gerechten, ${errors} fouten`);
+    await loadData();
+  };
+
+  const rejectSelected = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!confirm(`Weet je zeker dat je ${ids.length} restaurant(s) wilt afwijzen?`)) return;
+    setBulkSelectionRunning(true);
+    try {
+      const { error } = await supabase
+        .from('discovery_results')
+        .update({
+          status: 'rejected',
+          reviewed_at: new Date().toISOString(),
+          reject_reason: 'other',
+        })
+        .in('id', ids);
+      if (error) throw error;
+      toast.success(`${ids.length} afgewezen`);
+      clearSelection();
+      await loadData();
+    } catch (e: any) {
+      toast.error(e.message || 'Bulk afwijzen mislukt');
+    } finally {
+      setBulkSelectionRunning(false);
+    }
+  };
+
   const previewBulkReject = async () => {
     try {
       let countLow = 0;
@@ -546,15 +644,64 @@ export function RestaurantDiscovery() {
               </CardContent>
             )}
             <CardContent>
-              {pendingResults.length === 0 ? (
+              {/* Zoekbalk + selectie-acties */}
+              <div className="flex flex-col sm:flex-row gap-2 mb-4 items-stretch sm:items-center">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Zoek op naam of adres..."
+                    value={queueSearch}
+                    onChange={(e) => setQueueSearch(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+                {selectedIds.size > 0 && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="secondary">{selectedIds.size} geselecteerd</Badge>
+                    <Button
+                      size="sm"
+                      variant="default"
+                      disabled={bulkSelectionRunning || pipelineRunning}
+                      onClick={approveSelected}
+                    >
+                      <Check className="h-4 w-4 mr-1" />
+                      Goedkeuren
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      disabled={bulkSelectionRunning}
+                      onClick={rejectSelected}
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      Afwijzen
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={clearSelection}>
+                      Wis selectie
+                    </Button>
+                  </div>
+                )}
+              </div>
+              {filteredPending.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <Sparkles className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                  <p>Geen pending resultaten {queueCityFilter !== 'all' ? 'voor deze stad' : ''}. Voer een scan uit op een grid-punt.</p>
+                  <p>
+                    {queueSearch
+                      ? `Geen resultaten voor "${queueSearch}".`
+                      : `Geen pending resultaten ${queueCityFilter !== 'all' ? 'voor deze stad' : ''}. Voer een scan uit op een grid-punt.`}
+                  </p>
                 </div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-10">
+                        <Checkbox
+                          checked={allFilteredSelected}
+                          onCheckedChange={toggleSelectAllFiltered}
+                          aria-label="Selecteer alles"
+                        />
+                      </TableHead>
                       <TableHead>Naam</TableHead>
                     <TableHead>Type</TableHead>
                       <TableHead>Adres</TableHead>
@@ -564,8 +711,15 @@ export function RestaurantDiscovery() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {pendingResults.map((r) => (
+                    {filteredPending.map((r) => (
                       <TableRow key={r.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedIds.has(r.id)}
+                            onCheckedChange={() => toggleSelect(r.id)}
+                            aria-label={`Selecteer ${r.name}`}
+                          />
+                        </TableCell>
                         <TableCell className="font-medium">
                           <div>{r.name}</div>
                           <a
