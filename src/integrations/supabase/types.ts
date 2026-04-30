@@ -2211,6 +2211,62 @@ export type Database = {
           },
         ]
       }
+      scrape_queue: {
+        Row: {
+          added_dishes: number | null
+          attempts: number
+          created_at: string
+          error: string | null
+          finished_at: string | null
+          id: string
+          restaurant_id: string
+          restaurant_name: string
+          source: string | null
+          started_at: string | null
+          status: string
+          updated_at: string
+          website_url: string
+        }
+        Insert: {
+          added_dishes?: number | null
+          attempts?: number
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          restaurant_id: string
+          restaurant_name: string
+          source?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          website_url: string
+        }
+        Update: {
+          added_dishes?: number | null
+          attempts?: number
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          restaurant_id?: string
+          restaurant_name?: string
+          source?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          website_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scrape_queue_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       seo_landing_pages: {
         Row: {
           canonical_url: string | null
