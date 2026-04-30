@@ -93,8 +93,25 @@ export function RestaurantDiscovery() {
 
   // Search + multi-select for queue
   const [queueSearch, setQueueSearch] = useState<string>('');
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const SELECTION_STORAGE_KEY = 'discovery_selected_ids';
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => {
+    try {
+      const raw = typeof window !== 'undefined' ? localStorage.getItem(SELECTION_STORAGE_KEY) : null;
+      if (!raw) return new Set();
+      const parsed = JSON.parse(raw);
+      return new Set(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      return new Set();
+    }
+  });
   const [bulkSelectionRunning, setBulkSelectionRunning] = useState(false);
+
+  // Persist selection across refresh / navigation
+  useEffect(() => {
+    try {
+      localStorage.setItem(SELECTION_STORAGE_KEY, JSON.stringify(Array.from(selectedIds)));
+    } catch {}
+  }, [selectedIds]);
 
   const loadData = async () => {
     setLoading(true);
