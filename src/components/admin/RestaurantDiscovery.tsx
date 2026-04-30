@@ -644,15 +644,64 @@ export function RestaurantDiscovery() {
               </CardContent>
             )}
             <CardContent>
-              {pendingResults.length === 0 ? (
+              {/* Zoekbalk + selectie-acties */}
+              <div className="flex flex-col sm:flex-row gap-2 mb-4 items-stretch sm:items-center">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Zoek op naam of adres..."
+                    value={queueSearch}
+                    onChange={(e) => setQueueSearch(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+                {selectedIds.size > 0 && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="secondary">{selectedIds.size} geselecteerd</Badge>
+                    <Button
+                      size="sm"
+                      variant="default"
+                      disabled={bulkSelectionRunning || pipelineRunning}
+                      onClick={approveSelected}
+                    >
+                      <Check className="h-4 w-4 mr-1" />
+                      Goedkeuren
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      disabled={bulkSelectionRunning}
+                      onClick={rejectSelected}
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      Afwijzen
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={clearSelection}>
+                      Wis selectie
+                    </Button>
+                  </div>
+                )}
+              </div>
+              {filteredPending.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <Sparkles className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                  <p>Geen pending resultaten {queueCityFilter !== 'all' ? 'voor deze stad' : ''}. Voer een scan uit op een grid-punt.</p>
+                  <p>
+                    {queueSearch
+                      ? `Geen resultaten voor "${queueSearch}".`
+                      : `Geen pending resultaten ${queueCityFilter !== 'all' ? 'voor deze stad' : ''}. Voer een scan uit op een grid-punt.`}
+                  </p>
                 </div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-10">
+                        <Checkbox
+                          checked={allFilteredSelected}
+                          onCheckedChange={toggleSelectAllFiltered}
+                          aria-label="Selecteer alles"
+                        />
+                      </TableHead>
                       <TableHead>Naam</TableHead>
                     <TableHead>Type</TableHead>
                       <TableHead>Adres</TableHead>
@@ -662,8 +711,15 @@ export function RestaurantDiscovery() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {pendingResults.map((r) => (
+                    {filteredPending.map((r) => (
                       <TableRow key={r.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedIds.has(r.id)}
+                            onCheckedChange={() => toggleSelect(r.id)}
+                            aria-label={`Selecteer ${r.name}`}
+                          />
+                        </TableCell>
                         <TableCell className="font-medium">
                           <div>{r.name}</div>
                           <a
