@@ -350,6 +350,97 @@ export function RestaurantDiscovery() {
     }
   };
 
+  // ---- Multi-select bulk actions on filtered queue ----
+  const filteredPending = useMemo(() => {
+    const q = queueSearch.trim().toLowerCase();
+    if (!q) return pendingResults;
+    return pendingResults.filter((r) =>
+      r.name.toLowerCase().includes(q) ||
+      (r.address || '').toLowerCase().includes(q)
+    );
+  }, [pendingResults, queueSearch]);
+
+  const allFilteredSelected = filteredPending.length > 0 && filteredPending.every((r) => selectedIds.has(r.id));
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAllFiltered = () => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allFilteredSelected) {
+        filteredPending.forEach((r) => next.delete(r.id));
+      } else {
+        filteredPending.forEach((r) => next.add(r.id));
+      }
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const approveSelected = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!confirm(`Weet je zeker dat je ${ids.length} restaurant(s) wilt goedkeuren? Dit start de volledige pipeline.`)) return;
+    setBulkSelectionRunning(true);
+    setPipelineRunning(true);
+    setPipelineCancel(false);
+    setPipelineProgress({ current: 0, total: ids.length, dishes: 0, errors: 0 });
+    let dishes = 0;
+    let errors = 0;
+    for (let i = 0; i < ids.length; i++) {
+      if (pipelineCancel) break;
+      try {
+        const { data, error } = await supabase.functions.invoke('approve-discovery-restaurant', {
+          body: { discoveryResultId: ids[i] },
+        });
+        if (error || !data?.success) errors++;
+        else dishes += data.dishesAdded || 0;
+      } catch {
+        errors++;
+      }
+      setPipelineProgress({ current: i + 1, total: ids.length, dishes, errors });
+      await new Promise((r) => setTimeout(r, 600));
+    }
+    setPipelineRunning(false);
+    setBulkSelectionRunning(false);
+    clearSelection();
+    toast.success(`Klaar: ${dishes} gerechten, ${errors} fouten`);
+    await loadData();
+  };
+
+  const rejectSelected = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!confirm(`Weet je zeker dat je ${ids.length} restaurant(s) wilt afwijzen?`)) return;
+    setBulkSelectionRunning(true);
+    try {
+      const { error } = await supabase
+        .from('discovery_results')
+        .update({
+          status: 'rejected',
+          reviewed_at: new Date().toISOString(),
+          reject_reason: 'other',
+        })
+        .in('id', ids);
+      if (error) throw error;
+      toast.success(`${ids.length} afgewezen`);
+      clearSelection();
+      await loadData();
+    } catch (e: any) {
+      toast.error(e.message || 'Bulk afwijzen mislukt');
+    } finally {
+      setBulkSelectionRunning(false);
+    }
+  };
+
   const previewBulkReject = async () => {
     try {
       let countLow = 0;
