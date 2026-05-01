@@ -388,6 +388,9 @@ export function MenuScraper() {
           {queueStats.failed > 0 && (
             <Badge variant="destructive">❌ {queueStats.failed} mislukt</Badge>
           )}
+          {queueStats.canceled > 0 && (
+            <Badge variant="outline">⛔ {queueStats.canceled} geannuleerd</Badge>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -401,7 +404,13 @@ export function MenuScraper() {
               Probeer mislukte opnieuw
             </Button>
           )}
-          {(queueStats.done > 0 || queueStats.failed > 0) && (
+          {(queueStats.queued > 0 || queueStats.processing > 0) && (
+            <Button onClick={handleCancelQueue} variant="destructive" size="sm">
+              <XCircle className="h-4 w-4 mr-2" />
+              Annuleer queue
+            </Button>
+          )}
+          {(queueStats.done > 0 || queueStats.failed > 0 || queueStats.canceled > 0) && (
             <Button onClick={handleClearCompleted} variant="ghost" size="sm">
               <Trash2 className="h-4 w-4 mr-2" />
               Verwijder voltooide
@@ -419,11 +428,13 @@ export function MenuScraper() {
                     {item.status === 'processing' && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
                     {item.status === 'done' && <CheckCircle2 className="h-3 w-3 text-primary" />}
                     {item.status === 'failed' && <AlertCircle className="h-3 w-3 text-destructive" />}
+                    {item.status === 'canceled' && <XCircle className="h-3 w-3 text-muted-foreground" />}
                     <span className="truncate">{item.restaurant_name}</span>
                   </div>
                   <span className="text-xs text-muted-foreground shrink-0">
                     {item.status === 'done' && `+${item.added_dishes ?? 0} gerechten`}
                     {item.status === 'failed' && (item.error?.slice(0, 40) || 'fout')}
+                    {item.status === 'canceled' && 'Geannuleerd'}
                     {item.status === 'processing' && 'Bezig...'}
                     {item.status === 'queued' && 'In wachtrij'}
                   </span>
