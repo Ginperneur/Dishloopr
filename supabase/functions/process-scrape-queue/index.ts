@@ -54,6 +54,17 @@ Deno.serve(async (req) => {
     for (const item of items) {
       const newAttempts = item.attempts + 1;
       try {
+        const { data: currentItem } = await supabase
+          .from('scrape_queue')
+          .select('status')
+          .eq('id', item.id)
+          .maybeSingle();
+
+        if (currentItem?.status === 'canceled') {
+          results.push({ id: item.id, name: item.restaurant_name, ok: false, canceled: true });
+          continue;
+        }
+
         const scrapeRes = await fetch(`${supabaseUrl}/functions/v1/scrape-menu`, {
           method: 'POST',
           headers: {
