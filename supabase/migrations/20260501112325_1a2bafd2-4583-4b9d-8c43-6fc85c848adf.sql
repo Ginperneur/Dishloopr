@@ -1,0 +1,1 @@
+DELETE FROM public.scrape_queue WHERE status = 'failed' AND error = 'Unauthorized';
