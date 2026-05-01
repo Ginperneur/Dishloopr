@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Globe, Loader2, CheckCircle2, AlertCircle, Play, ListPlus, Trash2 } from 'lucide-react';
+import { Globe, Loader2, CheckCircle2, AlertCircle, Play, ListPlus, Trash2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -36,7 +36,7 @@ export function MenuScraper() {
   const [totalCount, setTotalCount] = useState(0);
   const [filter, setFilter] = useState<ScrapeFilter>('missing');
   const [queueing, setQueueing] = useState(false);
-  const [queueStats, setQueueStats] = useState({ queued: 0, processing: 0, done: 0, failed: 0 });
+  const [queueStats, setQueueStats] = useState({ queued: 0, processing: 0, done: 0, failed: 0, canceled: 0 });
   const [queueRecent, setQueueRecent] = useState<any[]>([]);
 
   // Poll queue stats every 5s
@@ -46,7 +46,7 @@ export function MenuScraper() {
         .from('scrape_queue')
         .select('status');
       if (data) {
-        const stats = { queued: 0, processing: 0, done: 0, failed: 0 };
+        const stats = { queued: 0, processing: 0, done: 0, failed: 0, canceled: 0 };
         data.forEach((r: any) => {
           if (stats[r.status as keyof typeof stats] !== undefined) {
             stats[r.status as keyof typeof stats]++;
