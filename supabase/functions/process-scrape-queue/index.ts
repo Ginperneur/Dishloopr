@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const BATCH_SIZE = 3;
+const BATCH_SIZE = 1;
 const MAX_ATTEMPTS = 2;
 
 Deno.serve(async (req) => {
@@ -78,6 +78,16 @@ Deno.serve(async (req) => {
         });
 
         const data = await scrapeRes.json().catch(() => ({}));
+        const { data: afterScrapeItem } = await supabase
+          .from('scrape_queue')
+          .select('status')
+          .eq('id', item.id)
+          .maybeSingle();
+
+        if (afterScrapeItem?.status === 'canceled') {
+          results.push({ id: item.id, name: item.restaurant_name, ok: false, canceled: true });
+          continue;
+        }
 
         if (!scrapeRes.ok || !data?.success) {
           const errMsg = data?.error || `HTTP ${scrapeRes.status}`;
@@ -114,6 +124,17 @@ Deno.serve(async (req) => {
       } catch (e: any) {
         const errMsg = e?.message || 'Unknown error';
         const shouldRetry = newAttempts < MAX_ATTEMPTS;
+        const { data: afterErrorItem } = await supabase
+          .from('scrape_queue')
+          .select('status')
+          .eq('id', item.id)
+          .maybeSingle();
+
+        if (afterErrorItem?.status === 'canceled') {
+          results.push({ id: item.id, name: item.restaurant_name, ok: false, canceled: true });
+          continue;
+        }
+
         await supabase
           .from('scrape_queue')
           .update({
