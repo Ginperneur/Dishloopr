@@ -10,6 +10,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 type ScrapeFilter = 'all' | 'missing' | 'no_approved' | 'never_scraped' | 'scrape_failed';
+type QueueStatus = 'queued' | 'processing' | 'done' | 'failed' | 'canceled';
+
+interface QueueRecentItem {
+  id: string;
+  restaurant_name: string;
+  status: QueueStatus;
+  error: string | null;
+  added_dishes: number | null;
+  finished_at: string | null;
+  started_at: string | null;
+}
 
 interface ScrapeResult {
   restaurantId: string;
@@ -37,7 +48,7 @@ export function MenuScraper() {
   const [filter, setFilter] = useState<ScrapeFilter>('missing');
   const [queueing, setQueueing] = useState(false);
   const [queueStats, setQueueStats] = useState({ queued: 0, processing: 0, done: 0, failed: 0, canceled: 0 });
-  const [queueRecent, setQueueRecent] = useState<any[]>([]);
+  const [queueRecent, setQueueRecent] = useState<QueueRecentItem[]>([]);
 
   // Poll queue stats every 5s
   useEffect(() => {
@@ -47,9 +58,10 @@ export function MenuScraper() {
         .select('status');
       if (data) {
         const stats = { queued: 0, processing: 0, done: 0, failed: 0, canceled: 0 };
-        data.forEach((r: any) => {
-          if (stats[r.status as keyof typeof stats] !== undefined) {
-            stats[r.status as keyof typeof stats]++;
+        data.forEach((r) => {
+          const status = r.status as QueueStatus;
+          if (stats[status] !== undefined) {
+            stats[status]++;
           }
         });
         setQueueStats(stats);
