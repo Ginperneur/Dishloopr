@@ -53,19 +53,20 @@ export function MenuScraper() {
   // Poll queue stats every 5s
   useEffect(() => {
     const fetchQueueStatus = async () => {
-      const { data } = await supabase
-        .from('scrape_queue')
-        .select('status');
-      if (data) {
-        const stats = { queued: 0, processing: 0, done: 0, failed: 0, canceled: 0 };
-        data.forEach((r) => {
-          const status = r.status as QueueStatus;
-          if (stats[status] !== undefined) {
-            stats[status]++;
-          }
-        });
-        setQueueStats(stats);
-      }
+      // Count per status using head:true + count:'exact' (no rows transferred)
+      const statuses: QueueStatus[] = ['queued', 'processing', 'done', 'failed', 'canceled'];
+      const stats = { queued: 0, processing: 0, done: 0, failed: 0, canceled: 0 };
+      await Promise.all(
+        statuses.map(async (s) => {
+          const { count } = await supabase
+            .from('scrape_queue')
+            .select('id', { count: 'exact', head: true })
+            .eq('status', s);
+          stats[s] = count || 0;
+        })
+      );
+      setQueueStats(stats);
+
       const { data: recent } = await supabase
         .from('scrape_queue')
         .select('id, restaurant_name, status, error, added_dishes, finished_at, started_at')
@@ -77,7 +78,8 @@ export function MenuScraper() {
       })));
     };
     fetchQueueStatus();
-    const interval = setInterval(fetchQueueStatus, 5000);
+    // Slower poll (15s) to reduce load on admin page
+    const interval = setInterval(fetchQueueStatus, 15000);
     return () => clearInterval(interval);
   }, []);
 
