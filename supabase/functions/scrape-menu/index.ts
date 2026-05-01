@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
   }
 
   let parsedRestaurantId: string | null = null;
-  let adminSupabase: any = null;
+  let adminSupabase: ReturnType<typeof createClient> | null = null;
   let runStartedAt = new Date().toISOString();
   let scrapedUrlForLog: string | null = null;
 
@@ -93,27 +93,32 @@ Deno.serve(async (req) => {
       });
     }
 
+    const token = authHeader.replace('Bearer ', '');
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const isInternalWorker = token === supabaseServiceKey;
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: claims, error: authError } = await authClient.auth.getUser(token);
-    if (authError || !claims?.user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    if (!isInternalWorker) {
+      const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } }
       });
-    }
 
-    const { data: hasAdminRole } = await authClient.rpc('has_role', {
-      _user_id: claims.user.id, _role: 'admin'
-    });
-    if (!hasAdminRole) {
-      return new Response(JSON.stringify({ error: 'Admin access required' }), {
-        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      const { data: claims, error: authError } = await authClient.auth.getUser(token);
+      if (authError || !claims?.user) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      const { data: hasAdminRole } = await authClient.rpc('has_role', {
+        _user_id: claims.user.id, _role: 'admin'
       });
+      if (!hasAdminRole) {
+        return new Response(JSON.stringify({ error: 'Admin access required' }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
     }
 
     const { restaurantId, websiteUrl } = await req.json();
@@ -126,7 +131,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     adminSupabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');

@@ -5,8 +5,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const BATCH_SIZE = 3;
+const BATCH_SIZE = 1;
 const MAX_ATTEMPTS = 2;
+
+type WorkerResult = {
+  id: string;
+  name: string;
+  ok: boolean;
+  added?: number;
+  error?: string;
+  canceled?: boolean;
+};
+
+const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : 'Unknown error';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -48,12 +59,23 @@ Deno.serve(async (req) => {
       .update({ status: 'processing', started_at: new Date().toISOString() })
       .in('id', ids);
 
-    const results: any[] = [];
+    const results: WorkerResult[] = [];
 
     // Process sequentially to avoid hammering Firecrawl/Gemini
     for (const item of items) {
       const newAttempts = item.attempts + 1;
       try {
+        const { data: currentItem } = await supabase
+          .from('scrape_queue')
+          .select('status')
+          .eq('id', item.id)
+          .maybeSingle();
+
+        if (currentItem?.status === 'canceled') {
+          results.push({ id: item.id, name: item.restaurant_name, ok: false, canceled: true });
+          continue;
+        }
+
         const scrapeRes = await fetch(`${supabaseUrl}/functions/v1/scrape-menu`, {
           method: 'POST',
           headers: {
@@ -67,6 +89,16 @@ Deno.serve(async (req) => {
         });
 
         const data = await scrapeRes.json().catch(() => ({}));
+        const { data: afterScrapeItem } = await supabase
+          .from('scrape_queue')
+          .select('status')
+          .eq('id', item.id)
+          .maybeSingle();
+
+        if (afterScrapeItem?.status === 'canceled') {
+          results.push({ id: item.id, name: item.restaurant_name, ok: false, canceled: true });
+          continue;
+        }
 
         if (!scrapeRes.ok || !data?.success) {
           const errMsg = data?.error || `HTTP ${scrapeRes.status}`;
@@ -100,9 +132,20 @@ Deno.serve(async (req) => {
             added: data.results?.added || 0,
           });
         }
-      } catch (e: any) {
-        const errMsg = e?.message || 'Unknown error';
+      } catch (e: unknown) {
+        const errMsg = getErrorMessage(e);
         const shouldRetry = newAttempts < MAX_ATTEMPTS;
+        const { data: afterErrorItem } = await supabase
+          .from('scrape_queue')
+          .select('status')
+          .eq('id', item.id)
+          .maybeSingle();
+
+        if (afterErrorItem?.status === 'canceled') {
+          results.push({ id: item.id, name: item.restaurant_name, ok: false, canceled: true });
+          continue;
+        }
+
         await supabase
           .from('scrape_queue')
           .update({
@@ -120,8 +163,8 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ processed: items.length, results }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-  } catch (e: any) {
-    return new Response(JSON.stringify({ error: e?.message || 'Worker failed' }), {
+  } catch (e: unknown) {
+    return new Response(JSON.stringify({ error: getErrorMessage(e) || 'Worker failed' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
