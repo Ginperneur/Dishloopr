@@ -106,7 +106,7 @@ export function MenuScraper() {
 
   const fetchDistinctRestaurantIds = async (
     restaurantIds: string[],
-    extraFilter?: { column: string; value: string | string[] }
+    extraFilter?: { column: 'status'; value: string | string[] }
   ): Promise<Set<string>> => {
     // Batch in chunks of 200 IDs to avoid URL length limits,
     // and paginate each chunk to avoid the 1000-row default limit
@@ -119,16 +119,31 @@ export function MenuScraper() {
       const pageSize = 1000;
 
       while (true) {
-        const baseQuery = supabase
-          .from('restaurant_dishes')
-          .select('restaurant_id')
-          .in('restaurant_id', chunk);
-
-        const { data } = extraFilter
-          ? Array.isArray(extraFilter.value)
-            ? await baseQuery.in(extraFilter.column, extraFilter.value).range(from, from + pageSize - 1)
-            : await baseQuery.eq(extraFilter.column, extraFilter.value).range(from, from + pageSize - 1)
-          : await baseQuery.range(from, from + pageSize - 1);
+        let data: { restaurant_id: string }[] | null = null;
+        if (!extraFilter) {
+          const response = await supabase
+            .from('restaurant_dishes')
+            .select('restaurant_id')
+            .in('restaurant_id', chunk)
+            .range(from, from + pageSize - 1);
+          data = response.data;
+        } else if (Array.isArray(extraFilter.value)) {
+          const response = await supabase
+            .from('restaurant_dishes')
+            .select('restaurant_id')
+            .in('restaurant_id', chunk)
+            .in(extraFilter.column, extraFilter.value)
+            .range(from, from + pageSize - 1);
+          data = response.data;
+        } else {
+          const response = await supabase
+            .from('restaurant_dishes')
+            .select('restaurant_id')
+            .in('restaurant_id', chunk)
+            .eq(extraFilter.column, extraFilter.value)
+            .range(from, from + pageSize - 1);
+          data = response.data;
+        }
         if (!data || data.length === 0) break;
         data.forEach(d => ids.add(d.restaurant_id));
         if (data.length < pageSize) break;
