@@ -71,7 +71,10 @@ export function MenuScraper() {
         .select('id, restaurant_name, status, error, added_dishes, finished_at, started_at')
         .order('updated_at', { ascending: false })
         .limit(15);
-      setQueueRecent(recent || []);
+      setQueueRecent((recent || []).map((item) => ({
+        ...item,
+        status: item.status as QueueStatus,
+      })));
     };
     fetchQueueStatus();
     const interval = setInterval(fetchQueueStatus, 5000);
@@ -116,21 +119,16 @@ export function MenuScraper() {
       const pageSize = 1000;
 
       while (true) {
-        let query: any = supabase
+        const baseQuery = supabase
           .from('restaurant_dishes')
           .select('restaurant_id')
-          .in('restaurant_id', chunk)
-          .range(from, from + pageSize - 1);
+          .in('restaurant_id', chunk);
 
-        if (extraFilter) {
-          if (Array.isArray(extraFilter.value)) {
-            query = query.in(extraFilter.column, extraFilter.value);
-          } else {
-            query = query.eq(extraFilter.column, extraFilter.value);
-          }
-        }
-
-        const { data } = await query;
+        const { data } = extraFilter
+          ? Array.isArray(extraFilter.value)
+            ? await baseQuery.in(extraFilter.column, extraFilter.value).range(from, from + pageSize - 1)
+            : await baseQuery.eq(extraFilter.column, extraFilter.value).range(from, from + pageSize - 1)
+          : await baseQuery.range(from, from + pageSize - 1);
         if (!data || data.length === 0) break;
         data.forEach(d => ids.add(d.restaurant_id));
         if (data.length < pageSize) break;
@@ -311,7 +309,7 @@ export function MenuScraper() {
       .select('restaurant_id')
       .in('restaurant_id', restaurants.map((r) => r.id))
       .in('status', ['queued', 'processing']);
-    const existingIds = new Set((existing || []).map((e: any) => e.restaurant_id));
+    const existingIds = new Set((existing || []).map((e) => e.restaurant_id));
 
     const toInsert = restaurants
       .filter((r) => !existingIds.has(r.id))
