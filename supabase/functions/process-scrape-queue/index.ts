@@ -8,6 +8,17 @@ const corsHeaders = {
 const BATCH_SIZE = 1;
 const MAX_ATTEMPTS = 2;
 
+type WorkerResult = {
+  id: string;
+  name: string;
+  ok: boolean;
+  added?: number;
+  error?: string;
+  canceled?: boolean;
+};
+
+const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : 'Unknown error';
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -48,7 +59,7 @@ Deno.serve(async (req) => {
       .update({ status: 'processing', started_at: new Date().toISOString() })
       .in('id', ids);
 
-    const results: any[] = [];
+    const results: WorkerResult[] = [];
 
     // Process sequentially to avoid hammering Firecrawl/Gemini
     for (const item of items) {
@@ -121,8 +132,8 @@ Deno.serve(async (req) => {
             added: data.results?.added || 0,
           });
         }
-      } catch (e: any) {
-        const errMsg = e?.message || 'Unknown error';
+      } catch (e: unknown) {
+        const errMsg = getErrorMessage(e);
         const shouldRetry = newAttempts < MAX_ATTEMPTS;
         const { data: afterErrorItem } = await supabase
           .from('scrape_queue')
@@ -152,8 +163,8 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ processed: items.length, results }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-  } catch (e: any) {
-    return new Response(JSON.stringify({ error: e?.message || 'Worker failed' }), {
+  } catch (e: unknown) {
+    return new Response(JSON.stringify({ error: getErrorMessage(e) || 'Worker failed' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
