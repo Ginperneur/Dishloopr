@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
   }
 
   let parsedRestaurantId: string | null = null;
-  let adminSupabase: any = null;
+  let adminSupabase: ReturnType<typeof createClient> | null = null;
   let runStartedAt = new Date().toISOString();
   let scrapedUrlForLog: string | null = null;
 
