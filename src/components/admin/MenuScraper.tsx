@@ -330,13 +330,28 @@ export function MenuScraper() {
   };
 
   const handleClearCompleted = async () => {
-    if (!confirm('Verwijder alle voltooide en mislukte items uit de queue?')) return;
+    if (!confirm('Verwijder alle voltooide, mislukte en geannuleerde items uit de queue?')) return;
     const { error } = await supabase
       .from('scrape_queue')
       .delete()
-      .in('status', ['done', 'failed']);
+      .in('status', ['done', 'failed', 'canceled']);
     if (error) toast.error(error.message);
     else toast.success('Voltooide items verwijderd');
+  };
+
+  const handleCancelQueue = async () => {
+    if (!confirm('Annuleer alle wachtende en lopende scrape-items? Het item dat nu bezig is kan nog afronden, maar wordt niet opnieuw opgepakt.')) return;
+    const { error } = await supabase
+      .from('scrape_queue')
+      .update({
+        status: 'canceled',
+        error: 'Handmatig geannuleerd',
+        started_at: null,
+        finished_at: new Date().toISOString(),
+      })
+      .in('status', ['queued', 'processing']);
+    if (error) toast.error(error.message);
+    else toast.success('Queue geannuleerd');
   };
 
   const handleRetryFailed = async () => {
