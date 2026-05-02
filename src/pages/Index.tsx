@@ -9,6 +9,7 @@ import { UpcomingEvents } from '@/components/home/UpcomingEvents';
 import { SocialProof } from '@/components/home/SocialProof';
 import { RecentlyViewed } from '@/components/home/RecentlyViewed';
 import { SeasonalSuggestions } from '@/components/home/SeasonalSuggestions';
+import { ExploreCities } from '@/components/home/ExploreCities';
 import { DatabaseRestaurantCard } from '@/components/restaurant/DatabaseRestaurantCard';
 import { SurpriseMe } from '@/components/ai/SurpriseMe';
 import { PersonalizedRecommendations } from '@/components/ai/PersonalizedRecommendations';
@@ -120,6 +121,10 @@ const Index = () => {
 
       {/* Recently Viewed */}
       <RecentlyViewed />
+
+      {/* Always-on discovery block — guarantees the page has meaningful content
+          even when featured/trending sections are empty (P0 empty-state fix). */}
+      <ExploreCities />
 
       {/* Social Proof Stats */}
       <SocialProof />

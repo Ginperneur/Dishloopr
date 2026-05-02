@@ -27,7 +27,8 @@ i18n
       escapeValue: false,
     },
     detection: {
-      order: ['querystring', 'localStorage', 'navigator'],
+      // Default to Dutch for all visitors; only override via ?lang= or saved preference.
+      order: ['querystring', 'localStorage'],
       lookupQuerystring: 'lang',
       caches: ['localStorage'],
     },
