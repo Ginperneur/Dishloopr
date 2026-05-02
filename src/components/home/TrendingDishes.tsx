@@ -14,6 +14,7 @@ interface TrendingDishesProps {
 export function TrendingDishes({ dishes, cityName }: TrendingDishesProps) {
   const { t } = useTranslation();
 
+  // Hide section when there is no data (handled by parent fallback to keep page meaningful)
   if (dishes.length === 0) return null;
 
   return (
