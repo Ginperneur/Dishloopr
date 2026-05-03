@@ -60,37 +60,15 @@ export function SocialProof() {
     fetchStats();
   }, []);
 
-  // Hide stats with weak social proof (e.g. "1+ Reviews" sends a negative signal)
-  const REVIEW_THRESHOLD = 25;
-  const DISH_THRESHOLD = 10;
-  const CITY_THRESHOLD = 3;
-  const RESTAURANT_THRESHOLD = 10;
-
+  // Always show all four stats — even small numbers signal real activity
+  // and beat an empty section.
   const items = [
-    ...(stats.restaurants >= RESTAURANT_THRESHOLD
-      ? [{ icon: Utensils, value: stats.restaurants, label: 'Restaurants', suffix: '+' }]
-      : []),
-    ...(stats.reviews >= REVIEW_THRESHOLD
-      ? [{ icon: Star, value: stats.reviews, label: 'Reviews', suffix: '+' }]
-      : []),
-    ...(stats.cities >= CITY_THRESHOLD
-      ? [{ icon: MapPin, value: stats.cities, label: 'Steden', suffix: '' }]
-      : []),
-    ...(stats.dishes >= DISH_THRESHOLD
-      ? [{ icon: ChefHat, value: stats.dishes, label: 'Gerechten', suffix: '+' }]
-      : []),
+    { icon: Utensils, value: stats.restaurants, label: 'Restaurants', suffix: '+' },
+    { icon: Star, value: stats.reviews, label: 'Reviews', suffix: '+' },
+    { icon: MapPin, value: stats.cities, label: 'Steden', suffix: '' },
+    { icon: ChefHat, value: stats.dishes, label: 'Gerechten', suffix: '+' },
   ];
-
-  // If we have fewer than 2 trustworthy stats, hide the section entirely
-  if (items.length < 2) return null;
-
-  // Adapt grid columns to number of items so layout stays balanced
-  const gridColsClass =
-    items.length === 2
-      ? 'grid-cols-2'
-      : items.length === 3
-      ? 'grid-cols-3'
-      : 'grid-cols-2 md:grid-cols-4';
+  const gridColsClass = 'grid-cols-2 md:grid-cols-4';
 
   return (
     <section className="py-6 md:py-10 border-y border-border/50">
