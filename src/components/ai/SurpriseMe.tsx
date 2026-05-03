@@ -72,8 +72,9 @@ export function SurpriseMe({ variant = 'button', className = '', city }: Surpris
     return (
       <>
         <Button
+          variant="ghost"
           onClick={() => setIsOpen(true)}
-          className={`group bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-400 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 ${className}`}
+          className={`group text-primary hover:text-primary hover:bg-primary/5 font-medium ${className}`}
         >
           <Sparkles className="w-4 h-4 mr-2 group-hover:animate-pulse" />
           {t('ai.surpriseMe', 'Verras me!')}
