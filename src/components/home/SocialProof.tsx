@@ -68,28 +68,58 @@ export function SocialProof() {
     { icon: MapPin, value: stats.cities, label: 'Steden', suffix: '' },
     { icon: ChefHat, value: stats.dishes, label: 'Gerechten', suffix: '+' },
   ];
-  const gridColsClass = 'grid-cols-2 md:grid-cols-4';
 
   return (
-    <section className="py-6 md:py-10 border-y border-border/50">
+    <section className="py-4 md:py-6 border-y border-border/50 bg-muted/20">
       <div className="container px-4 md:px-6">
+        {/* Mobile: horizontal scroll strip */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 6 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className={`grid ${gridColsClass} gap-6 md:gap-8`}
+          className="md:hidden -mx-4 px-4"
         >
-          {items.map((item) => (
-            <div key={item.label} className="text-center">
-              <div className="inline-flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary/10 text-primary mb-2 md:mb-3">
-                <item.icon className="h-5 w-5 md:h-6 md:w-6" />
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory">
+            {items.map((item) => (
+              <div
+                key={item.label}
+                className="shrink-0 snap-start inline-flex items-center gap-2 px-3 py-2 rounded-full bg-card border border-border"
+              >
+                <item.icon className="h-3.5 w-3.5 text-primary" />
+                <span className="text-sm font-bold text-foreground tabular-nums">
+                  <AnimatedCounter value={item.value} suffix={item.suffix} />
+                </span>
+                <span className="text-xs text-muted-foreground font-medium">
+                  {item.label}
+                </span>
               </div>
-              <div className="text-2xl md:text-3xl font-extrabold text-foreground font-display">
-                <AnimatedCounter value={item.value} suffix={item.suffix} />
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Desktop: centered inline strip */}
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="hidden md:flex items-center justify-center gap-8 lg:gap-12"
+        >
+          {items.map((item, idx) => (
+            <div key={item.label} className="flex items-center gap-3">
+              <div className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary/10 text-primary">
+                <item.icon className="h-4 w-4" />
               </div>
-              <div className="text-xs md:text-sm text-muted-foreground font-medium mt-0.5">
-                {item.label}
+              <div className="flex flex-col leading-tight">
+                <span className="text-lg font-extrabold text-foreground font-display">
+                  <AnimatedCounter value={item.value} suffix={item.suffix} />
+                </span>
+                <span className="text-xs text-muted-foreground font-medium">
+                  {item.label}
+                </span>
               </div>
+              {idx < items.length - 1 && (
+                <div className="hidden lg:block h-8 w-px bg-border ml-4" />
+              )}
             </div>
           ))}
         </motion.div>

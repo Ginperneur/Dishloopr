@@ -10,6 +10,7 @@ import { SocialProof } from '@/components/home/SocialProof';
 import { RecentlyViewed } from '@/components/home/RecentlyViewed';
 import { SeasonalSuggestions } from '@/components/home/SeasonalSuggestions';
 import { ExploreCities } from '@/components/home/ExploreCities';
+import { HowItWorks } from '@/components/home/HowItWorks';
 import { DatabaseRestaurantCard } from '@/components/restaurant/DatabaseRestaurantCard';
 import { SurpriseMe } from '@/components/ai/SurpriseMe';
 import { PersonalizedRecommendations } from '@/components/ai/PersonalizedRecommendations';
@@ -146,6 +147,9 @@ const Index = () => {
 
       {/* Social Proof Stats */}
       <SocialProof />
+
+      {/* How it works — explains the dish-first value prop */}
+      <HowItWorks />
 
       {/* Featured Restaurants */}
       <section className="relative py-6 md:py-10 lg:py-14 bg-muted/30">
