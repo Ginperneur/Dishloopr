@@ -86,25 +86,43 @@ const Index = () => {
 
           <SearchBar variant="hero" />
 
-          {/* Popular Cuisines Quick Links */}
+          {/* Popular Cuisines — horizontal scroll on mobile, wrap on desktop */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.4 }}
-            className="flex flex-wrap justify-center gap-1.5 sm:gap-2 mt-3 md:mt-5 max-w-3xl mx-auto"
+            className="mt-3 md:mt-5 max-w-3xl mx-auto"
           >
-            <span className="text-xs sm:text-sm text-muted-foreground mr-1 hidden sm:inline self-center">
-              {t('home.popular', 'Populair')}:
-            </span>
-            {POPULAR_CUISINES.map((cuisine) => (
-              <button
-                key={cuisine.value}
-                onClick={() => handleCuisineClick(cuisine.value)}
-                className="px-3 py-1.5 sm:py-1.5 text-xs sm:text-sm font-medium rounded-full bg-card border border-border hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors touch-manipulation min-h-[36px] flex items-center"
-              >
-                {cuisine.label}
-              </button>
-            ))}
+            {/* Mobile: edge-to-edge horizontal scroll */}
+            <div className="sm:hidden -mx-4 px-4">
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1">
+                {POPULAR_CUISINES.map((cuisine) => (
+                  <button
+                    key={cuisine.value}
+                    onClick={() => handleCuisineClick(cuisine.value)}
+                    className="shrink-0 snap-start px-3.5 py-2 text-xs font-medium rounded-full bg-card border border-border hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors touch-manipulation min-h-[36px] flex items-center"
+                  >
+                    {cuisine.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Desktop: centered wrapping chips */}
+            <div className="hidden sm:flex flex-wrap justify-center gap-2">
+              <span className="text-sm text-muted-foreground mr-1 self-center">
+                {t('home.popular', 'Populair')}:
+              </span>
+              {POPULAR_CUISINES.map((cuisine) => (
+                <button
+                  key={cuisine.value}
+                  onClick={() => handleCuisineClick(cuisine.value)}
+                  className="px-3 py-1.5 text-sm font-medium rounded-full bg-card border border-border hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors touch-manipulation min-h-[36px] flex items-center"
+                >
+                  {cuisine.label}
+                </button>
+              ))}
+            </div>
           </motion.div>
           
           {/* AI Surprise Button */}
