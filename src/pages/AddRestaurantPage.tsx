@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { 
   Store, MapPin, Phone, Globe, Upload, Loader2, CheckCircle, ArrowLeft, 
-  Info, Search, Star, Clock, ChevronRight, FileEdit, Database, ExternalLink 
+  Info, Search, Star, Clock, ChevronRight, FileEdit, Database, ExternalLink, Mail
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -90,6 +90,8 @@ export default function AddRestaurantPage() {
   // Proof docs
   const [proofFiles, setProofFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [sendingMagicLink, setSendingMagicLink] = useState(false);
 
   const handleSearch = useCallback(async () => {
     if (!searchName.trim()) {
@@ -340,6 +342,8 @@ export default function AddRestaurantPage() {
 
       setStep('done');
       toast.success('Restaurant ingediend voor review!');
+      // Auto-send magic link so the owner has a one-click way back to the dashboard
+      sendMagicLink(true);
     } catch (error: any) {
       console.error('Error submitting:', error);
       toast.error('Er ging iets mis: ' + (error.message || 'Probeer het opnieuw'));
@@ -348,6 +352,25 @@ export default function AddRestaurantPage() {
       setLoading(false);
     }
   };
+
+  const sendMagicLink = useCallback(async (silent = false) => {
+    if (!user?.email) return;
+    setSendingMagicLink(true);
+    try {
+      const redirectUrl = `${window.location.origin}/owner`;
+      const { error } = await supabase.auth.signInWithOtp({
+        email: user.email,
+        options: { emailRedirectTo: redirectUrl, shouldCreateUser: false },
+      });
+      if (error) throw error;
+      setMagicLinkSent(true);
+      if (!silent) toast.success('Toegangslink verstuurd. Check je inbox!');
+    } catch (err: any) {
+      if (!silent) toast.error('Kon link niet versturen: ' + (err.message || 'probeer opnieuw'));
+    } finally {
+      setSendingMagicLink(false);
+    }
+  }, [user?.email]);
 
   // ─── Auth Guards ───────────────────────────────────────────
   if (authLoading) {
