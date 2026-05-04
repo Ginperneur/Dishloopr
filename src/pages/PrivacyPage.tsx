@@ -21,7 +21,8 @@ export default function PrivacyPage() {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-3xl mx-auto"
         >
-          <h1 className="text-4xl font-bold mb-8">Privacybeleid</h1>
+          <h1 className="text-4xl font-bold mb-2">Privacybeleid</h1>
+          <p className="text-sm text-muted-foreground mb-8">Laatst bijgewerkt: 4 mei 2026</p>
           
           <div className="prose prose-lg dark:prose-invert max-w-none space-y-8">
             <section>
