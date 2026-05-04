@@ -182,7 +182,12 @@ const Index = () => {
           >
             {/* Mobile: edge-to-edge horizontal scroll */}
             <div className="sm:hidden -mx-4 px-4">
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1">
+              <div
+                role="region"
+                aria-roledescription="carousel"
+                aria-label="Populaire keukens"
+                className="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1"
+              >
                 {POPULAR_CUISINES.map((cuisine) => (
                   <button
                     key={cuisine.value}
@@ -360,7 +365,12 @@ const Index = () => {
           
           {/* Mobile: horizontal scrollable cards */}
           <div className="sm:hidden -mx-4 px-4">
-            <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
+            <div
+              role="region"
+              aria-roledescription="carousel"
+              aria-label="Uitgelichte restaurants"
+              className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide"
+            >
               {featuredLoading ? (
                 <>
                   <div className="min-w-[280px] snap-start"><SkeletonCard /></div>
