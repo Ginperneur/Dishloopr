@@ -3,6 +3,7 @@ import {
   Crown, 
   Search, 
   Shield, 
+  ShieldCheck,
   User,
   Store,
   Plus,
@@ -23,7 +24,7 @@ import { useActivityLog } from '@/hooks/useActivityLog';
 interface UserRole {
   id: string;
   user_id: string;
-  role: 'user' | 'owner' | 'admin';
+  role: 'user' | 'owner' | 'admin' | 'moderator';
   created_at: string;
   profiles?: {
     name: string | null;
@@ -39,6 +40,7 @@ interface UserRolesManagerProps {
 const ROLE_INFO = {
   user: { label: 'Gebruiker', icon: User, color: 'bg-blue-500/10 text-blue-600' },
   owner: { label: 'Eigenaar', icon: Store, color: 'bg-purple-500/10 text-purple-600' },
+  moderator: { label: 'Moderator', icon: ShieldCheck, color: 'bg-amber-500/10 text-amber-600' },
   admin: { label: 'Admin', icon: Shield, color: 'bg-red-500/10 text-red-600' }
 };
 
@@ -48,7 +50,7 @@ export function UserRolesManager({ users, onUpdate }: UserRolesManagerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState('');
-  const [selectedRole, setSelectedRole] = useState<'user' | 'owner' | 'admin'>('owner');
+  const [selectedRole, setSelectedRole] = useState<'user' | 'owner' | 'admin' | 'moderator'>('owner');
   const { logActivity } = useActivityLog();
 
   useEffect(() => {
@@ -210,6 +212,12 @@ export function UserRolesManager({ users, onUpdate }: UserRolesManagerProps) {
                           <div className="flex items-center gap-2">
                             <Store className="h-4 w-4" />
                             Eigenaar
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="moderator">
+                          <div className="flex items-center gap-2">
+                            <ShieldCheck className="h-4 w-4" />
+                            Moderator
                           </div>
                         </SelectItem>
                         <SelectItem value="admin">
