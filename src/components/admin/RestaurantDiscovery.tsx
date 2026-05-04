@@ -128,6 +128,11 @@ export function RestaurantDiscovery() {
     if (queueCategoryFilter !== 'all') {
       queueQuery = queueQuery.eq('venue_category', queueCategoryFilter);
     }
+    const qSearch = queueSearch.trim();
+    if (qSearch) {
+      const safe = qSearch.replace(/[%,]/g, ' ');
+      queueQuery = queueQuery.or(`name.ilike.%${safe}%,address.ilike.%${safe}%`);
+    }
 
     // Accurate counts (head:true bypasses 1000-row cap)
     const countByStatus = async (status: string) => {
@@ -166,7 +171,7 @@ export function RestaurantDiscovery() {
   useEffect(() => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queueCityFilter, queueLimit, queueCategoryFilter]);
+  }, [queueCityFilter, queueLimit, queueCategoryFilter, queueSearch]);
 
   const handleGenerateGrid = async () => {
     setGenerating(true);
