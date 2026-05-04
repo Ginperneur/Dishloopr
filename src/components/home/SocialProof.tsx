@@ -70,7 +70,10 @@ export function SocialProof() {
   ];
 
   return (
-    <section className="py-4 md:py-6 border-y border-border/50 bg-muted/20">
+    <section
+      className="py-4 md:py-6 border-y border-border/50 bg-muted/20"
+      aria-label="Statistieken over Dishloopr"
+    >
       <div className="container px-4 md:px-6">
         {/* Mobile: horizontal scroll strip */}
         <motion.div
@@ -79,22 +82,22 @@ export function SocialProof() {
           viewport={{ once: true }}
           className="md:hidden -mx-4 px-4"
         >
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory">
+          <ul className="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory list-none m-0 p-0">
             {items.map((item) => (
-              <div
+              <li
                 key={item.label}
                 className="shrink-0 snap-start inline-flex items-center gap-2 px-3 py-2 rounded-full bg-card border border-border"
               >
-                <item.icon className="h-3.5 w-3.5 text-primary" />
+                <item.icon className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
                 <span className="text-sm font-bold text-foreground tabular-nums">
                   <AnimatedCounter value={item.value} suffix={item.suffix} />
                 </span>
                 <span className="text-xs text-muted-foreground font-medium">
                   {item.label}
                 </span>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </motion.div>
 
         {/* Desktop: centered inline strip */}
@@ -106,7 +109,7 @@ export function SocialProof() {
         >
           {items.map((item, idx) => (
             <div key={item.label} className="flex items-center gap-3">
-              <div className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary/10 text-primary">
+              <div className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary/10 text-primary" aria-hidden="true">
                 <item.icon className="h-4 w-4" />
               </div>
               <div className="flex flex-col leading-tight">

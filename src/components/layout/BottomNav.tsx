@@ -31,7 +31,7 @@ export function BottomNav() {
       className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/95 backdrop-blur-lg border-t border-border safe-area-bottom"
       aria-label="Mobiele navigatie"
     >
-      <div className="flex items-center justify-around h-14 px-1">
+      <div className="flex items-center justify-around h-16 px-1">
         {items.map((item) => {
           // Strip query for path comparison
           const itemPath = item.path.split('?')[0];
@@ -55,7 +55,7 @@ export function BottomNav() {
               key={item.path}
               to={item.path}
               className={cn(
-                'flex flex-col items-center justify-center gap-0.5 min-w-[3rem] py-1 px-2 rounded-lg transition-colors',
+                'flex flex-col items-center justify-center gap-0.5 min-w-[3rem] min-h-[44px] py-1.5 px-2 rounded-lg transition-colors',
                 'active:scale-95 touch-manipulation',
                 isActive 
                   ? 'text-primary' 
