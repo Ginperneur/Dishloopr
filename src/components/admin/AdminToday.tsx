@@ -33,8 +33,8 @@ const QUEUES: Array<{
   { key: 'dishes', label: 'Gerecht-suggesties', description: 'Door bezoekers/eigenaren ingediend', icon: UtensilsCrossed, section: 'dish-approval', tone: 'warning' },
   { key: 'newRestaurants', label: 'Nieuwe restaurants', description: 'Inactief, wacht op review', icon: Store, section: 'restaurants', tone: 'warning' },
   { key: 'reviews', label: 'Reviews', description: 'In moderatie wachtrij', icon: MessageSquare, section: 'reviews', tone: 'warning' },
-  { key: 'emptyDishes', label: 'Restaurants zonder gerechten', description: 'Menu-scrape nodig', icon: AlertTriangle, section: 'empty-dishes', tone: 'info' },
   { key: 'failedScrapes', label: 'Mislukte scrapes', description: 'Handmatig menu of opnieuw proberen', icon: AlertTriangle, section: 'menu-scraper', tone: 'info' },
+  { key: 'emptyDishes', label: 'Restaurants zonder gerechten', description: 'Menu-scrape nodig', icon: AlertTriangle, section: 'empty-dishes', tone: 'info' },
 ];
 
 const toneClass = (t: 'urgent' | 'warning' | 'info') =>
@@ -51,15 +51,13 @@ export function AdminToday({ onNavigate }: AdminTodayProps) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [c1, c2, dishes, newR, reviews, failedScrapes, emptyDishes] = await Promise.all([
-        supabase.from('restaurant_claims').select('id', { count: 'exact', head: true }).in('status', ['pending', 'email_verified', 'phone_verified']),
-        supabase.from('claim_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.from('restaurant_dishes').select('id', { count: 'exact', head: true }).eq('status', 'suggested'),
-        supabase.from('restaurants').select('id', { count: 'exact', head: true }).eq('is_active', false).not('claimed_by_owner_id', 'is', null),
-        supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.from('scrape_queue').select('id', { count: 'exact', head: true }).eq('status', 'failed'),
-        supabase.from('restaurants').select('id', { count: 'exact', head: true }).eq('is_active', true).eq('dish_count', 0),
-      ]);
+      const headOpts = { count: 'exact' as const, head: true };
+      const c1 = await supabase.from('restaurant_claims').select('id', headOpts).in('status', ['pending', 'email_verified', 'phone_verified']);
+      const c2 = await supabase.from('claim_requests').select('id', headOpts).eq('status', 'pending');
+      const dishes = await supabase.from('restaurant_dishes').select('id', headOpts).eq('status', 'suggested');
+      const newR = await supabase.from('restaurants').select('id', headOpts).eq('is_active', false).not('claimed_by_owner_id', 'is', null);
+      const reviews = await supabase.from('reviews').select('id', headOpts).eq('status', 'pending');
+      const failedScrapes = await supabase.from('scrape_queue').select('id', headOpts).eq('status', 'failed');
       if (cancelled) return;
       setCounts({
         claims: (c1.count || 0) + (c2.count || 0),
@@ -67,7 +65,7 @@ export function AdminToday({ onNavigate }: AdminTodayProps) {
         newRestaurants: newR.count || 0,
         reviews: reviews.count || 0,
         failedScrapes: failedScrapes.count || 0,
-        emptyDishes: emptyDishes.count || 0,
+        emptyDishes: 0,
       });
       setLoading(false);
     })();
