@@ -867,6 +867,45 @@ export type Database = {
         }
         Relationships: []
       }
+      error_logs: {
+        Row: {
+          app_version: string | null
+          component_stack: string | null
+          created_at: string
+          id: string
+          message: string
+          metadata: Json
+          route: string | null
+          stack: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          app_version?: string | null
+          component_stack?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          metadata?: Json
+          route?: string | null
+          stack?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          app_version?: string | null
+          component_stack?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          metadata?: Json
+          route?: string | null
+          stack?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string

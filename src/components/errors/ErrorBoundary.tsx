@@ -1,6 +1,7 @@
 import { Component, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
   children: ReactNode;
@@ -24,6 +25,24 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    // Fire-and-forget crash report (non-blocking)
+    try {
+      supabase
+        .from('error_logs')
+        .insert({
+          message: error.message?.slice(0, 2000) || 'Unknown error',
+          stack: error.stack?.slice(0, 8000) || null,
+          component_stack: errorInfo.componentStack?.slice(0, 8000) || null,
+          route: typeof window !== 'undefined' ? window.location.pathname + window.location.search : null,
+          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+          app_version: (import.meta.env.VITE_APP_VERSION as string | undefined) || null,
+        })
+        .then(({ error: logErr }) => {
+          if (logErr) console.warn('Failed to log error:', logErr.message);
+        });
+    } catch (e) {
+      // never let logging break the boundary
+    }
   }
 
   handleRetry = () => {

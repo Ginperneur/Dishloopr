@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { 
   Store, MapPin, Phone, Globe, Upload, Loader2, CheckCircle, ArrowLeft, 
-  Info, Search, Star, Clock, ChevronRight, FileEdit, Database, ExternalLink 
+  Info, Search, Star, Clock, ChevronRight, FileEdit, Database, ExternalLink, Mail
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -90,6 +90,8 @@ export default function AddRestaurantPage() {
   // Proof docs
   const [proofFiles, setProofFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [sendingMagicLink, setSendingMagicLink] = useState(false);
 
   const handleSearch = useCallback(async () => {
     if (!searchName.trim()) {
@@ -340,6 +342,8 @@ export default function AddRestaurantPage() {
 
       setStep('done');
       toast.success('Restaurant ingediend voor review!');
+      // Auto-send magic link so the owner has a one-click way back to the dashboard
+      sendMagicLink(true);
     } catch (error: any) {
       console.error('Error submitting:', error);
       toast.error('Er ging iets mis: ' + (error.message || 'Probeer het opnieuw'));
@@ -348,6 +352,25 @@ export default function AddRestaurantPage() {
       setLoading(false);
     }
   };
+
+  const sendMagicLink = useCallback(async (silent = false) => {
+    if (!user?.email) return;
+    setSendingMagicLink(true);
+    try {
+      const redirectUrl = `${window.location.origin}/owner`;
+      const { error } = await supabase.auth.signInWithOtp({
+        email: user.email,
+        options: { emailRedirectTo: redirectUrl, shouldCreateUser: false },
+      });
+      if (error) throw error;
+      setMagicLinkSent(true);
+      if (!silent) toast.success('Toegangslink verstuurd. Check je inbox!');
+    } catch (err: any) {
+      if (!silent) toast.error('Kon link niet versturen: ' + (err.message || 'probeer opnieuw'));
+    } finally {
+      setSendingMagicLink(false);
+    }
+  }, [user?.email]);
 
   // ─── Auth Guards ───────────────────────────────────────────
   if (authLoading) {
@@ -802,9 +825,33 @@ export default function AddRestaurantPage() {
                       📸 Foto's worden automatisch opgehaald van Google.
                     </p>
                   )}
+                  <div className="bg-background/60 border rounded-lg p-3 text-sm mb-4 max-w-sm mx-auto">
+                    <div className="flex items-start gap-2 text-left">
+                      <Mail className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                      <div className="text-muted-foreground">
+                        {magicLinkSent ? (
+                          <>We hebben een <span className="font-medium text-foreground">toegangslink</span> naar <span className="font-medium text-foreground">{user?.email}</span> gestuurd. Klik in de mail om direct in je dashboard te komen — geen wachtwoord nodig.</>
+                        ) : (
+                          <>We sturen je een toegangslink per e-mail zodat je later met één klik terug in je dashboard komt.</>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                   <div className="space-y-3 max-w-xs mx-auto">
                     <Button asChild className="w-full">
                       <Link to="/owner">Naar mijn dashboard</Link>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => sendMagicLink(false)}
+                      disabled={sendingMagicLink}
+                    >
+                      {sendingMagicLink ? (
+                        <><Loader2 className="h-4 w-4 animate-spin mr-2" />Versturen...</>
+                      ) : (
+                        <><Mail className="h-4 w-4 mr-2" />{magicLinkSent ? 'Link opnieuw sturen' : 'Stuur toegangslink'}</>
+                      )}
                     </Button>
                     <Button asChild variant="outline" className="w-full">
                       <Link to="/for-restaurants">Terug naar informatie</Link>
