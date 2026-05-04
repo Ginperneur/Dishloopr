@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Navigation, Loader2 } from 'lucide-react';
+import { ArrowRight, Navigation, Loader2, BookmarkCheck, X } from 'lucide-react';
 import { SearchBar } from '@/components/search/SearchBar';
 import { Layout } from '@/components/layout/Layout';
 import { TrendingDishes } from '@/components/home/TrendingDishes';
@@ -21,6 +21,7 @@ import { SkeletonCard } from '@/components/ui/skeleton-card';
 import { useFeaturedRestaurants } from '@/hooks/useFeaturedRestaurants';
 import { useTrendingDishes } from '@/hooks/useTrendingDishes';
 import { useGeolocation } from '@/hooks/useGeolocation';
+import { useSavedSearches } from '@/hooks/useSavedSearches';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -42,6 +43,7 @@ const Index = () => {
   const { dishes: trendingDishes, loading: dishesLoading } = useTrendingDishes();
   const { restaurants: featuredRestaurants, loading: featuredLoading } = useFeaturedRestaurants(3);
   const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation } = useGeolocation();
+  const { saved: savedSearches, remove: removeSavedSearch } = useSavedSearches();
   const [showHowItWorks, setShowHowItWorks] = useState(false);
 
   // Show "How it works" only for first-time visitors
@@ -115,6 +117,47 @@ const Index = () => {
           </motion.div>
 
           <SearchBar variant="hero" />
+
+          {/* Saved searches — quick re-entry for returning users (P4 retention) */}
+          {savedSearches.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25, duration: 0.4 }}
+              className="mt-3 max-w-3xl mx-auto"
+              aria-label="Opgeslagen zoekopdrachten"
+            >
+              <div className="flex items-center gap-2 mb-1.5 px-1">
+                <BookmarkCheck className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                <span className="text-xs font-medium text-muted-foreground">
+                  Jouw opgeslagen zoekopdrachten
+                </span>
+              </div>
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:overflow-visible">
+                {savedSearches.map((s) => (
+                  <span
+                    key={s.id}
+                    className="shrink-0 snap-start inline-flex items-center gap-1 pl-3 pr-1 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium border border-primary/20"
+                  >
+                    <Link
+                      to={s.url}
+                      className="min-h-[28px] flex items-center"
+                    >
+                      {s.label}
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => removeSavedSearch(s.id)}
+                      className="p-1 rounded-full hover:bg-primary/20 transition-colors"
+                      aria-label={`Verwijder ${s.label}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </motion.div>
+          )}
 
           {/* Popular Cuisines — horizontal scroll on mobile, wrap on desktop */}
           <motion.div
