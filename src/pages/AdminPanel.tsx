@@ -66,6 +66,7 @@ import { UserProfileModal } from '@/components/admin/UserProfileModal';
 import { ReviewModerationManager } from '@/components/admin/ReviewModerationManager';
 import { NotificationManager } from '@/components/admin/NotificationManager';
 import { RestaurantDiscovery } from '@/components/admin/RestaurantDiscovery';
+import { AdminToday } from '@/components/admin/AdminToday';
 
 interface Stats {
   totalUsers: number;
@@ -82,6 +83,7 @@ const ITEMS_PER_PAGE = 25;
 
 // Section title mapping
 const sectionTitles: Record<string, { title: string; description: string }> = {
+  'today': { title: 'Vandaag', description: 'Centrale wachtrij — alles wat aandacht nodig heeft' },
   'kpi': { title: "KPI Dashboard", description: "Platform groei en kerncijfers" },
   'revenue': { title: "Omzet Dashboard", description: "MRR, betalingen en top-spenders" },
   'user-insights': { title: "User Insights", description: "Gebruikersactiviteit en retentie" },
@@ -143,7 +145,7 @@ export default function AdminPanel() {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [userModalOpen, setUserModalOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState('kpi');
+  const [activeSection, setActiveSection] = useState('today');
   
   // Pagination states
   const [restaurantPage, setRestaurantPage] = useState(1);
@@ -362,6 +364,7 @@ export default function AdminPanel() {
               )}
 
               {/* Section content */}
+              {activeSection === 'today' && <AdminToday onNavigate={handleNavigateToTab} />}
               {activeSection === 'kpi' && <KpiDashboard />}
               {activeSection === 'revenue' && <RevenueDashboard />}
               {activeSection === 'user-insights' && <UserInsights />}

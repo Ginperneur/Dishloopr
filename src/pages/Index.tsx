@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Navigation, Loader2, BookmarkCheck, X } from 'lucide-react';
+import { ArrowRight, Navigation, Loader2, BookmarkCheck, X, Bell, BellOff } from 'lucide-react';
 import { SearchBar } from '@/components/search/SearchBar';
 import { Layout } from '@/components/layout/Layout';
 import { TrendingDishes } from '@/components/home/TrendingDishes';
@@ -44,7 +44,7 @@ const Index = () => {
   const { dishes: trendingDishes, loading: dishesLoading } = useTrendingDishes();
   const { restaurants: featuredRestaurants, loading: featuredLoading } = useFeaturedRestaurants(3);
   const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, clearLocation } = useGeolocation();
-  const { saved: savedSearches, remove: removeSavedSearch } = useSavedSearches();
+  const { saved: savedSearches, remove: removeSavedSearch, setAlerts: setSavedAlerts } = useSavedSearches();
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [nearbyRequested, setNearbyRequested] = useState(false);
   const [feedTab, setFeedTab] = useState<'foryou' | 'nearby'>('foryou');
@@ -159,6 +159,25 @@ const Index = () => {
                     >
                       {s.label}
                     </Link>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const enabled = !s.alertsEnabled;
+                        const ok = await setSavedAlerts(s.id, enabled);
+                        if (enabled && !ok) {
+                          toast.error('Notificaties geblokkeerd in de browser');
+                        } else if (enabled) {
+                          toast.success('Je krijgt een melding bij nieuwe matches');
+                        } else {
+                          toast('Meldingen uitgezet');
+                        }
+                      }}
+                      className="p-1 rounded-full hover:bg-primary/20 transition-colors"
+                      aria-label={s.alertsEnabled ? `Meldingen uit voor ${s.label}` : `Meldingen aan voor ${s.label}`}
+                      aria-pressed={!!s.alertsEnabled}
+                    >
+                      {s.alertsEnabled ? <Bell className="h-3 w-3" /> : <BellOff className="h-3 w-3 opacity-60" />}
+                    </button>
                     <button
                       type="button"
                       onClick={() => removeSavedSearch(s.id)}

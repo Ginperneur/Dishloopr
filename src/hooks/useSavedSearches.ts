@@ -12,6 +12,7 @@ export interface SavedSearch {
   cuisine?: string;
   url: string; // /search?dish=...&city=...
   createdAt: number;
+  alertsEnabled?: boolean;
 }
 
 function buildId(s: Omit<SavedSearch, 'id' | 'createdAt' | 'url' | 'label'>): string {
@@ -80,5 +81,20 @@ export function useSavedSearches() {
 
   const clearAll = useCallback(() => persist([]), []);
 
-  return { saved, isSaved, save, remove, toggle, clearAll };
+  const setAlerts = useCallback(
+    async (id: string, enabled: boolean) => {
+      if (enabled && typeof Notification !== 'undefined' && Notification.permission === 'default') {
+        try { await Notification.requestPermission(); } catch { /* ignore */ }
+      }
+      const granted = typeof Notification === 'undefined' ? false : Notification.permission === 'granted';
+      const next = saved.map((s) =>
+        s.id === id ? { ...s, alertsEnabled: enabled && granted } : s
+      );
+      persist(next);
+      return enabled && granted;
+    },
+    [saved]
+  );
+
+  return { saved, isSaved, save, remove, toggle, clearAll, setAlerts };
 }
