@@ -294,6 +294,39 @@ export default function SearchPage() {
       </div>
 
       <div className="container px-4 md:px-6 py-4 md:py-8">
+        {/* Breadcrumb — preserve back-context */}
+        <nav aria-label="Kruimelpad" className="text-xs md:text-sm text-muted-foreground mb-2">
+          <ol className="flex items-center gap-1.5 flex-wrap">
+            <li>
+              <button
+                onClick={() => navigate('/')}
+                className="hover:text-foreground transition-colors"
+              >
+                Home
+              </button>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li>
+              <button
+                onClick={() => navigate('/search')}
+                className="hover:text-foreground transition-colors"
+              >
+                Zoeken
+              </button>
+            </li>
+            {(dishQuery || (selectedCityName && selectedCityId !== 'all')) && (
+              <>
+                <li aria-hidden="true">/</li>
+                <li className="text-foreground font-medium truncate max-w-[60vw]">
+                  {dishQuery && <span>{dishQuery}</span>}
+                  {dishQuery && selectedCityName && <span> in </span>}
+                  {selectedCityName && <span>{selectedCityName}</span>}
+                </li>
+              </>
+            )}
+          </ol>
+        </nav>
+
         {/* Results Header */}
         <div className="flex flex-col gap-3 mb-4 md:mb-6">
           {/* Title row */}
