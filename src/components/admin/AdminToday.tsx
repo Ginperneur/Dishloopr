@@ -155,7 +155,7 @@ export function AdminToday({ onNavigate }: AdminTodayProps) {
         const { error } = await supabase.from('restaurant_dishes').update({ status }).in('id', ids);
         if (error) throw error;
       } else if (key === 'reviews') {
-        const status = action === 'approve' ? 'published' : 'rejected';
+        const status = action === 'approve' ? 'published' as const : 'flagged' as const;
         const { error } = await supabase.from('reviews').update({ status }).in('id', ids);
         if (error) throw error;
       } else if (key === 'newRestaurants') {
@@ -163,7 +163,7 @@ export function AdminToday({ onNavigate }: AdminTodayProps) {
           const { error } = await supabase.from('restaurants').update({ is_active: true }).in('id', ids);
           if (error) throw error;
         } else {
-          const { error } = await supabase.from('restaurants').update({ is_active: false, claim_status: 'rejected' }).in('id', ids);
+          const { error } = await supabase.from('restaurants').update({ is_active: false, claim_status: 'disputed' as const }).in('id', ids);
           if (error) throw error;
         }
       }
