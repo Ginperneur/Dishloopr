@@ -24,6 +24,7 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { useSavedSearches } from '@/hooks/useSavedSearches';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // Popular cuisines to show as quick links in hero
 const POPULAR_CUISINES = [
@@ -46,6 +47,7 @@ const Index = () => {
   const { saved: savedSearches, remove: removeSavedSearch } = useSavedSearches();
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [nearbyRequested, setNearbyRequested] = useState(false);
+  const [feedTab, setFeedTab] = useState<'foryou' | 'nearby'>('foryou');
 
   // Show "How it works" only for first-time visitors
   useEffect(() => {
@@ -238,6 +240,37 @@ const Index = () => {
 
       {/* Recently Viewed */}
       <RecentlyViewed />
+
+      {/* Feed tab switcher: For You vs Nearby (P2 hierarchy) */}
+      <section
+        aria-label="Aanbevolen content"
+        className="container px-4 md:px-6 pt-4 sm:pt-6"
+      >
+        <Tabs
+          value={feedTab}
+          onValueChange={(v) => {
+            if (v === 'nearby') {
+              handleNearbyClick();
+            } else {
+              setFeedTab('foryou');
+            }
+          }}
+        >
+          <TabsList className="w-full max-w-md mx-auto grid grid-cols-2">
+            <TabsTrigger value="foryou" aria-label="Persoonlijke aanbevelingen">
+              Voor jou
+            </TabsTrigger>
+            <TabsTrigger value="nearby" aria-label="Restaurants in de buurt">
+              {geoLoading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+              ) : (
+                <Navigation className="h-3.5 w-3.5 mr-1.5" />
+              )}
+              In de buurt
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </section>
 
       {/* Mobile quick-jump strip — reduces perceived page length by giving
           immediate access to key sections (P2 content hierarchy). */}
