@@ -10,6 +10,7 @@ import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OnboardingDialog } from "@/components/onboarding/OnboardingDialog";
+import { CookieConsent } from "@/components/legal/CookieConsent";
 
 // Eagerly load critical routes
 import Index from "./pages/Index";
@@ -81,6 +82,7 @@ const App = () => (
             <BrowserRouter>
               <Suspense fallback={<PageLoader />}>
                 <OnboardingDialog />
+                <CookieConsent />
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/search" element={<SearchPage />} />

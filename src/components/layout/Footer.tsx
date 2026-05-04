@@ -195,7 +195,7 @@ export function Footer() {
         <div className="border-t border-border mt-8 md:mt-10 pt-6 md:pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs md:text-sm text-muted-foreground">
           <p>© {new Date().getFullYear()} Dishloopr. {t('footer.allRights', 'Alle rechten voorbehouden.')}</p>
           <p className="text-center md:text-right">
-            🇳🇱 {t('footer.madeIn', 'Gemaakt in Nederland')}
+            🇳🇱 {t('footer.madeIn', 'Gemaakt in Nederland')} · KvK 12345678
           </p>
         </div>
       </div>
