@@ -25,6 +25,15 @@ export function Header() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [scrolled, setScrolled] = useState(false);
+
+  // Scroll-shrink behavior on mobile
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -68,12 +77,26 @@ export function Header() {
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.4 }}
-      className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 safe-area-top"
+      className={`sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 safe-area-top transition-[border-color,box-shadow] ${
+        scrolled ? 'border-border shadow-sm' : 'border-border/40'
+      }`}
     >
-      <div className="container flex h-14 md:h-16 items-center justify-between px-4">
+      <div
+        className={`container flex items-center justify-between px-4 transition-[height] duration-200 ${
+          scrolled ? 'h-12 md:h-14' : 'h-14 md:h-16'
+        }`}
+      >
         {/* Logo */}
         <Link to="/" className="flex items-center shrink-0" aria-label="Ga naar home">
-          <img src={logo} alt="Dishloopr" className="h-8 md:h-10 w-auto" loading="eager" decoding="async" />
+          <img
+            src={logo}
+            alt="Dishloopr"
+            className={`w-auto transition-[height] duration-200 ${
+              scrolled ? 'h-7 md:h-8' : 'h-8 md:h-10'
+            }`}
+            loading="eager"
+            decoding="async"
+          />
         </Link>
 
         {/* Desktop Navigation */}
