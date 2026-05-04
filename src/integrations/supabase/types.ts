@@ -3260,7 +3260,7 @@ export type Database = {
       update_user_badges: { Args: { p_user_id: string }; Returns: undefined }
     }
     Enums: {
-      app_role: "user" | "owner" | "admin"
+      app_role: "user" | "owner" | "admin" | "moderator"
       dish_source:
         | "cuisine_rules"
         | "website_hints"
@@ -3420,7 +3420,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["user", "owner", "admin"],
+      app_role: ["user", "owner", "admin", "moderator"],
       dish_source: [
         "cuisine_rules",
         "website_hints",
