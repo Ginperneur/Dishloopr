@@ -1,12 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, Heart, User, Utensils } from 'lucide-react';
+import { Home, Search, Heart, User, Map } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
   { path: '/', icon: Home, label: 'Home' },
   { path: '/search', icon: Search, label: 'Zoeken' },
-  { path: '/collections', icon: Utensils, label: 'Collecties' },
+  { path: '/search?view=map', icon: Map, label: 'Kaart' },
   { path: '/favorites', icon: Heart, label: 'Favorieten', requiresAuth: true },
   { path: '/profile', icon: User, label: 'Profiel', requiresAuth: true },
 ];
@@ -33,8 +33,21 @@ export function BottomNav() {
     >
       <div className="flex items-center justify-around h-14 px-1">
         {items.map((item) => {
-          const isActive = location.pathname === item.path || 
-            (item.path !== '/' && location.pathname.startsWith(item.path));
+          // Strip query for path comparison
+          const itemPath = item.path.split('?')[0];
+          const itemQuery = item.path.includes('?view=map');
+          const currentQuery = location.search.includes('view=map');
+          let isActive = false;
+          if (itemQuery) {
+            // Map tab is active only when on /search with view=map
+            isActive = location.pathname === '/search' && currentQuery;
+          } else if (itemPath === '/search') {
+            // Search tab is active on /search WITHOUT view=map
+            isActive = location.pathname === '/search' && !currentQuery;
+          } else {
+            isActive = location.pathname === itemPath ||
+              (itemPath !== '/' && location.pathname.startsWith(itemPath));
+          }
           const Icon = item.icon;
           
           return (
