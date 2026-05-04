@@ -297,7 +297,7 @@ const Index = () => {
       <PersonalizedRecommendations />
 
       {/* Samengestelde Collecties */}
-      <section className="py-8 md:py-16">
+      <section id="collections" className="py-8 md:py-16 scroll-mt-24">
         <div className="container px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -319,13 +319,17 @@ const Index = () => {
       </section>
 
       {/* Upcoming Events */}
-      <UpcomingEvents />
+      <div id="events" className="scroll-mt-24">
+        <UpcomingEvents />
+      </div>
 
       {/* Seasonal Suggestions */}
       <SeasonalSuggestions />
 
       {/* Trending Dishes */}
-      <TrendingDishes dishes={trendingDishes} />
+      <div id="trending" className="scroll-mt-24">
+        <TrendingDishes dishes={trendingDishes} />
+      </div>
     </Layout>
   );
 };
