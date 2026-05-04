@@ -184,9 +184,38 @@ const Index = () => {
       {/* Recently Viewed */}
       <RecentlyViewed />
 
+      {/* Mobile quick-jump strip — reduces perceived page length by giving
+          immediate access to key sections (P2 content hierarchy). */}
+      <nav
+        aria-label="Snelle navigatie"
+        className="sm:hidden sticky top-12 z-30 bg-background/95 backdrop-blur border-b border-border"
+      >
+        <div className="-mx-0 px-4">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory py-2">
+            {[
+              { label: 'Uitgelicht', href: '#featured' },
+              { label: 'Trending', href: '#trending' },
+              { label: 'Collecties', href: '#collections' },
+              { label: 'Steden', href: '#cities' },
+              { label: 'Events', href: '#events' },
+            ].map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className="shrink-0 snap-start px-3 py-1.5 text-xs font-medium rounded-full bg-card border border-border hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors min-h-[32px] flex items-center"
+              >
+                {item.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      </nav>
+
       {/* Always-on discovery block — guarantees the page has meaningful content
           even when featured/trending sections are empty (P0 empty-state fix). */}
-      <ExploreCities />
+      <div id="cities">
+        <ExploreCities />
+      </div>
 
       {/* Social Proof Stats */}
       <SocialProof />
@@ -195,7 +224,7 @@ const Index = () => {
       {showHowItWorks && <HowItWorks />}
 
       {/* Featured Restaurants */}
-      <section className="relative py-6 md:py-10 lg:py-14 bg-muted/30">
+      <section id="featured" className="relative py-6 md:py-10 lg:py-14 bg-muted/30 scroll-mt-24">
         <div className="container px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 15 }}
