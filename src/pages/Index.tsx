@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Navigation, Loader2 } from 'lucide-react';
 import { SearchBar } from '@/components/search/SearchBar';
 import { Layout } from '@/components/layout/Layout';
 import { TrendingDishes } from '@/components/home/TrendingDishes';
@@ -20,6 +20,9 @@ import { Button } from '@/components/ui/button';
 import { SkeletonCard } from '@/components/ui/skeleton-card';
 import { useFeaturedRestaurants } from '@/hooks/useFeaturedRestaurants';
 import { useTrendingDishes } from '@/hooks/useTrendingDishes';
+import { useGeolocation } from '@/hooks/useGeolocation';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 // Popular cuisines to show as quick links in hero
 const POPULAR_CUISINES = [
@@ -38,6 +41,32 @@ const Index = () => {
   const navigate = useNavigate();
   const { dishes: trendingDishes, loading: dishesLoading } = useTrendingDishes();
   const { restaurants: featuredRestaurants, loading: featuredLoading } = useFeaturedRestaurants(3);
+  const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation } = useGeolocation();
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
+
+  // Show "How it works" only for first-time visitors
+  useEffect(() => {
+    try {
+      const seen = localStorage.getItem('dl_seen_how_it_works');
+      if (!seen) {
+        setShowHowItWorks(true);
+        localStorage.setItem('dl_seen_how_it_works', '1');
+      }
+    } catch {
+      setShowHowItWorks(true);
+    }
+  }, []);
+
+  // Navigate to map view when location resolves
+  useEffect(() => {
+    if (latitude && longitude) {
+      navigate(`/search?view=map&near=${latitude.toFixed(5)},${longitude.toFixed(5)}`);
+    }
+  }, [latitude, longitude, navigate]);
+
+  useEffect(() => {
+    if (geoError) toast.error(geoError);
+  }, [geoError]);
 
   const handleCuisineClick = (cuisine: string) => {
     // Some items are dishes (sushi), others are cuisines (italiaans)
@@ -131,9 +160,23 @@ const Index = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.4 }}
-            className="flex justify-center mt-3 md:mt-5"
+            className="flex flex-wrap justify-center items-center gap-2 mt-3 md:mt-5"
           >
             <SurpriseMe />
+            <button
+              type="button"
+              onClick={requestLocation}
+              disabled={geoLoading}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border border-border bg-card hover:bg-muted transition-colors min-h-[36px] disabled:opacity-60"
+              aria-label="Zoek restaurants in mijn buurt"
+            >
+              {geoLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Navigation className="h-4 w-4 text-primary" />
+              )}
+              <span>Bij mij in de buurt</span>
+            </button>
           </motion.div>
         </div>
       </section>
@@ -141,18 +184,47 @@ const Index = () => {
       {/* Recently Viewed */}
       <RecentlyViewed />
 
+      {/* Mobile quick-jump strip — reduces perceived page length by giving
+          immediate access to key sections (P2 content hierarchy). */}
+      <nav
+        aria-label="Snelle navigatie"
+        className="sm:hidden sticky top-12 z-30 bg-background/95 backdrop-blur border-b border-border"
+      >
+        <div className="-mx-0 px-4">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory py-2">
+            {[
+              { label: 'Uitgelicht', href: '#featured' },
+              { label: 'Trending', href: '#trending' },
+              { label: 'Collecties', href: '#collections' },
+              { label: 'Steden', href: '#cities' },
+              { label: 'Events', href: '#events' },
+            ].map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className="shrink-0 snap-start px-3 py-1.5 text-xs font-medium rounded-full bg-card border border-border hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors min-h-[32px] flex items-center"
+              >
+                {item.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      </nav>
+
       {/* Always-on discovery block — guarantees the page has meaningful content
           even when featured/trending sections are empty (P0 empty-state fix). */}
-      <ExploreCities />
+      <div id="cities">
+        <ExploreCities />
+      </div>
 
       {/* Social Proof Stats */}
       <SocialProof />
 
-      {/* How it works — explains the dish-first value prop */}
-      <HowItWorks />
+      {/* How it works — only for first-time visitors */}
+      {showHowItWorks && <HowItWorks />}
 
       {/* Featured Restaurants */}
-      <section className="relative py-6 md:py-10 lg:py-14 bg-muted/30">
+      <section id="featured" className="relative py-6 md:py-10 lg:py-14 bg-muted/30 scroll-mt-24">
         <div className="container px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 15 }}
@@ -225,7 +297,7 @@ const Index = () => {
       <PersonalizedRecommendations />
 
       {/* Samengestelde Collecties */}
-      <section className="py-8 md:py-16">
+      <section id="collections" className="py-8 md:py-16 scroll-mt-24">
         <div className="container px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -247,13 +319,17 @@ const Index = () => {
       </section>
 
       {/* Upcoming Events */}
-      <UpcomingEvents />
+      <div id="events" className="scroll-mt-24">
+        <UpcomingEvents />
+      </div>
 
       {/* Seasonal Suggestions */}
       <SeasonalSuggestions />
 
       {/* Trending Dishes */}
-      <TrendingDishes dishes={trendingDishes} />
+      <div id="trending" className="scroll-mt-24">
+        <TrendingDishes dishes={trendingDishes} />
+      </div>
     </Layout>
   );
 };

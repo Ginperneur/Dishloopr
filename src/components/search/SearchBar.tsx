@@ -60,6 +60,24 @@ export function SearchBar({
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const cityButtonRef = useRef<HTMLButtonElement>(null);
 
+  // Rotating placeholder hints — surface intent + examples
+  const placeholderHints = [
+    'Probeer: sushi in Amsterdam',
+    'Probeer: ramen, vegan',
+    'Probeer: halal burger',
+    'Probeer: pizza in Rotterdam',
+    'Probeer: poké bowl',
+    'Probeer: surinaams roti',
+  ];
+  const [hintIndex, setHintIndex] = useState(0);
+  useEffect(() => {
+    if (selectedDishes.length > 0 || query.length > 0) return;
+    const id = setInterval(() => {
+      setHintIndex((i) => (i + 1) % placeholderHints.length);
+    }, 2800);
+    return () => clearInterval(id);
+  }, [selectedDishes.length, query.length]);
+
   // Fetch cities and restaurants on mount (dishes are searched server-side)
   useEffect(() => {
     const fetchData = async () => {
@@ -311,7 +329,7 @@ export function SearchBar({
                   setShowSuggestions(true);
                 }
               }}
-              placeholder={selectedDishes.length > 0 ? 'Nog een gerecht...' : t('hero.searchPlaceholder')}
+              placeholder={selectedDishes.length > 0 ? 'Nog een gerecht...' : placeholderHints[hintIndex]}
               className={`flex-1 min-w-[60px] bg-transparent border-0 outline-none placeholder:text-muted-foreground ${
                 isHero 
                   ? 'py-1 text-sm md:text-lg' 
