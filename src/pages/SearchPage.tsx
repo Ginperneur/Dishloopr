@@ -2,7 +2,7 @@ import { useState, useEffect, lazy, Suspense, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Map, LayoutGrid, Navigation, Loader2, ArrowUp, UtensilsCrossed } from 'lucide-react';
+import { X, Map, LayoutGrid, Navigation, Loader2, ArrowUp, UtensilsCrossed, Bookmark, BookmarkCheck } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { SearchBar } from '@/components/search/SearchBar';
 import { DatabaseRestaurantCard } from '@/components/restaurant/DatabaseRestaurantCard';
@@ -22,6 +22,7 @@ import {
 import { useSearch } from '@/hooks/useSearch';
 import { useGeolocation, calculateDistance } from '@/hooks/useGeolocation';
 import { toast } from 'sonner';
+import { useSavedSearches } from '@/hooks/useSavedSearches';
 
 // Lazy load the map component
 const RestaurantMap = lazy(() => import('@/components/map/RestaurantMap').then(m => ({ default: m.RestaurantMap })));
@@ -46,6 +47,7 @@ export default function SearchPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { search, results, loading, cities, dishes } = useSearch();
+  const { isSaved, toggle: toggleSavedSearch } = useSavedSearches();
   
   const dishQuery = searchParams.get('dish') || '';
   const cityParam = searchParams.get('city') || 'all';
@@ -374,21 +376,53 @@ export default function SearchPage() {
 
           {/* Sort & View controls row */}
           <div className="flex items-center justify-between gap-2">
-            {/* Near Me Button */}
-            <Button
-              variant={sortBy === 'nearest' ? 'default' : 'outline'}
-              size="sm"
-              onClick={handleNearMe}
-              disabled={locationLoading}
-              className="shrink-0"
-            >
-              {locationLoading ? (
-                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-              ) : (
-                <Navigation className="h-4 w-4 mr-1.5" />
-              )}
-              <span className="hidden sm:inline">Bij mij</span>
-            </Button>
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Near Me Button */}
+              <Button
+                variant={sortBy === 'nearest' ? 'default' : 'outline'}
+                size="sm"
+                onClick={handleNearMe}
+                disabled={locationLoading}
+              >
+                {locationLoading ? (
+                  <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                ) : (
+                  <Navigation className="h-4 w-4 mr-1.5" />
+                )}
+                <span className="hidden sm:inline">Bij mij</span>
+              </Button>
+
+              {/* Save Search Button — only meaningful when there is a query/city */}
+              {(dishQuery || (selectedCityId && selectedCityId !== 'all') || cuisineParam) && (() => {
+                const parts = {
+                  dish: dishQuery || undefined,
+                  city: selectedCityId !== 'all' ? selectedCityId : undefined,
+                  cityName: selectedCityName || undefined,
+                  cuisine: cuisineParam || undefined,
+                };
+                const saved = isSaved(parts);
+                const label = [dishQuery, selectedCityName].filter(Boolean).join(' • ') || cuisineParam || 'Zoekopdracht';
+                const url = `/search?${searchParams.toString()}`;
+                return (
+                  <Button
+                    variant={saved ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      const nowSaved = toggleSavedSearch({ ...parts, label, url });
+                      toast.success(nowSaved ? 'Zoekopdracht opgeslagen' : 'Zoekopdracht verwijderd');
+                    }}
+                    aria-pressed={saved}
+                  >
+                    {saved ? (
+                      <BookmarkCheck className="h-4 w-4 mr-1.5" />
+                    ) : (
+                      <Bookmark className="h-4 w-4 mr-1.5" />
+                    )}
+                    <span className="hidden sm:inline">{saved ? 'Opgeslagen' : 'Bewaar'}</span>
+                  </Button>
+                );
+              })()}
+            </div>
 
             <div className="flex items-center gap-2">
               {/* View Mode Toggle */}
