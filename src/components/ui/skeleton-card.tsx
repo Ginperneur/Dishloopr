@@ -6,7 +6,13 @@ interface SkeletonCardProps {
 
 export function SkeletonCard({ className }: SkeletonCardProps) {
   return (
-    <div className={cn('restaurant-card rounded-2xl overflow-hidden', className)}>
+    <div
+      className={cn('restaurant-card rounded-2xl overflow-hidden', className)}
+      role="status"
+      aria-busy="true"
+      aria-live="polite"
+      aria-label="Restaurant wordt geladen"
+    >
       {/* Image Skeleton */}
       <div className="relative aspect-[16/10] bg-muted overflow-hidden">
         <div className="absolute inset-0 shimmer-effect" />
