@@ -24,6 +24,7 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { useSavedSearches } from '@/hooks/useSavedSearches';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // Popular cuisines to show as quick links in hero
 const POPULAR_CUISINES = [
@@ -42,9 +43,11 @@ const Index = () => {
   const navigate = useNavigate();
   const { dishes: trendingDishes, loading: dishesLoading } = useTrendingDishes();
   const { restaurants: featuredRestaurants, loading: featuredLoading } = useFeaturedRestaurants(3);
-  const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation } = useGeolocation();
+  const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, clearLocation } = useGeolocation();
   const { saved: savedSearches, remove: removeSavedSearch } = useSavedSearches();
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [nearbyRequested, setNearbyRequested] = useState(false);
+  const [feedTab, setFeedTab] = useState<'foryou' | 'nearby'>('foryou');
 
   // Show "How it works" only for first-time visitors
   useEffect(() => {
@@ -59,12 +62,23 @@ const Index = () => {
     }
   }, []);
 
-  // Navigate to map view when location resolves
+  // Navigate to map view ONLY when user explicitly requested nearby search.
+  // This prevents an infinite redirect loop when geolocation is cached and the
+  // user navigates back to the homepage.
   useEffect(() => {
-    if (latitude && longitude) {
-      navigate(`/search?view=map&near=${latitude.toFixed(5)},${longitude.toFixed(5)}`);
+    if (nearbyRequested && latitude && longitude) {
+      setNearbyRequested(false);
+      const lat = latitude.toFixed(5);
+      const lng = longitude.toFixed(5);
+      clearLocation();
+      navigate(`/search?view=map&near=${lat},${lng}`);
     }
-  }, [latitude, longitude, navigate]);
+  }, [nearbyRequested, latitude, longitude, navigate, clearLocation]);
+
+  const handleNearbyClick = () => {
+    setNearbyRequested(true);
+    requestLocation();
+  };
 
   useEffect(() => {
     if (geoError) toast.error(geoError);
@@ -168,7 +182,12 @@ const Index = () => {
           >
             {/* Mobile: edge-to-edge horizontal scroll */}
             <div className="sm:hidden -mx-4 px-4">
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1">
+              <div
+                role="region"
+                aria-roledescription="carousel"
+                aria-label="Populaire keukens"
+                className="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1"
+              >
                 {POPULAR_CUISINES.map((cuisine) => (
                   <button
                     key={cuisine.value}
@@ -208,7 +227,7 @@ const Index = () => {
             <SurpriseMe />
             <button
               type="button"
-              onClick={requestLocation}
+              onClick={handleNearbyClick}
               disabled={geoLoading}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border border-border bg-card hover:bg-muted transition-colors min-h-[36px] disabled:opacity-60"
               aria-label="Zoek restaurants in mijn buurt"
@@ -226,6 +245,37 @@ const Index = () => {
 
       {/* Recently Viewed */}
       <RecentlyViewed />
+
+      {/* Feed tab switcher: For You vs Nearby (P2 hierarchy) */}
+      <section
+        aria-label="Aanbevolen content"
+        className="container px-4 md:px-6 pt-4 sm:pt-6"
+      >
+        <Tabs
+          value={feedTab}
+          onValueChange={(v) => {
+            if (v === 'nearby') {
+              handleNearbyClick();
+            } else {
+              setFeedTab('foryou');
+            }
+          }}
+        >
+          <TabsList className="w-full max-w-md mx-auto grid grid-cols-2">
+            <TabsTrigger value="foryou" aria-label="Persoonlijke aanbevelingen">
+              Voor jou
+            </TabsTrigger>
+            <TabsTrigger value="nearby" aria-label="Restaurants in de buurt">
+              {geoLoading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+              ) : (
+                <Navigation className="h-3.5 w-3.5 mr-1.5" />
+              )}
+              In de buurt
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </section>
 
       {/* Mobile quick-jump strip — reduces perceived page length by giving
           immediate access to key sections (P2 content hierarchy). */}
@@ -315,7 +365,12 @@ const Index = () => {
           
           {/* Mobile: horizontal scrollable cards */}
           <div className="sm:hidden -mx-4 px-4">
-            <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide">
+            <div
+              role="region"
+              aria-roledescription="carousel"
+              aria-label="Uitgelichte restaurants"
+              className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide"
+            >
               {featuredLoading ? (
                 <>
                   <div className="min-w-[280px] snap-start"><SkeletonCard /></div>

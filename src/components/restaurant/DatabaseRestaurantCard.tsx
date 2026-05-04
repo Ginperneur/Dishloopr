@@ -1,13 +1,14 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Star, MapPin, Heart, Sparkles, Trophy, ImageOff, UtensilsCrossed } from 'lucide-react';
+import { Star, MapPin, Heart, Sparkles, Trophy, ImageOff, UtensilsCrossed, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { useState } from 'react';
 import type { Database } from '@/integrations/supabase/types';
 import { SponsoredBadge } from '@/components/sponsored/SponsoredBadge';
+import { isOpenNow } from '@/lib/openingHours';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 
@@ -60,6 +61,7 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
   const isFeatured = restaurant.is_featured || restaurant.is_top_listing;
   const hasImage = restaurant.images && restaurant.images.length > 0 && restaurant.images[0];
   const wasViewed = isRecentlyViewed(restaurant.slug);
+  const openStatus = isOpenNow((restaurant as any).opening_hours);
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -114,6 +116,25 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
             {wasViewed && !isSponsored && !restaurant.is_top_listing && !restaurant.is_featured && (
               <Badge variant="secondary" className="text-[10px] border-0 bg-background/80 backdrop-blur">
                 Bezocht
+              </Badge>
+            )}
+            {openStatus === true && (
+              <Badge
+                className="text-[10px] border-0 bg-tag-family/90 text-white backdrop-blur gap-1"
+                aria-label="Nu geopend"
+              >
+                <Clock className="h-3 w-3" />
+                Nu open
+              </Badge>
+            )}
+            {openStatus === false && (
+              <Badge
+                variant="secondary"
+                className="text-[10px] border-0 bg-background/80 backdrop-blur text-muted-foreground gap-1"
+                aria-label="Momenteel gesloten"
+              >
+                <Clock className="h-3 w-3" />
+                Gesloten
               </Badge>
             )}
           </div>
