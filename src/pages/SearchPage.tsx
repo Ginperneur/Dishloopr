@@ -78,7 +78,9 @@ export default function SearchPage() {
     dietaryOptions: [],
   });
   const [sortBy, setSortBy] = useState<SortOption>('bestMatch');
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [viewMode, setViewMode] = useState<ViewMode>(
+    searchParams.get('view') === 'map' ? 'map' : 'grid'
+  );
   const [displayCount, setDisplayCount] = useState(12);
   const [showScrollTop, setShowScrollTop] = useState(false);
   
