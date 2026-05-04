@@ -42,9 +42,10 @@ const Index = () => {
   const navigate = useNavigate();
   const { dishes: trendingDishes, loading: dishesLoading } = useTrendingDishes();
   const { restaurants: featuredRestaurants, loading: featuredLoading } = useFeaturedRestaurants(3);
-  const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation } = useGeolocation();
+  const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, clearLocation } = useGeolocation();
   const { saved: savedSearches, remove: removeSavedSearch } = useSavedSearches();
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [nearbyRequested, setNearbyRequested] = useState(false);
 
   // Show "How it works" only for first-time visitors
   useEffect(() => {
@@ -59,12 +60,23 @@ const Index = () => {
     }
   }, []);
 
-  // Navigate to map view when location resolves
+  // Navigate to map view ONLY when user explicitly requested nearby search.
+  // This prevents an infinite redirect loop when geolocation is cached and the
+  // user navigates back to the homepage.
   useEffect(() => {
-    if (latitude && longitude) {
-      navigate(`/search?view=map&near=${latitude.toFixed(5)},${longitude.toFixed(5)}`);
+    if (nearbyRequested && latitude && longitude) {
+      setNearbyRequested(false);
+      const lat = latitude.toFixed(5);
+      const lng = longitude.toFixed(5);
+      clearLocation();
+      navigate(`/search?view=map&near=${lat},${lng}`);
     }
-  }, [latitude, longitude, navigate]);
+  }, [nearbyRequested, latitude, longitude, navigate, clearLocation]);
+
+  const handleNearbyClick = () => {
+    setNearbyRequested(true);
+    requestLocation();
+  };
 
   useEffect(() => {
     if (geoError) toast.error(geoError);
@@ -208,7 +220,7 @@ const Index = () => {
             <SurpriseMe />
             <button
               type="button"
-              onClick={requestLocation}
+              onClick={handleNearbyClick}
               disabled={geoLoading}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border border-border bg-card hover:bg-muted transition-colors min-h-[36px] disabled:opacity-60"
               aria-label="Zoek restaurants in mijn buurt"
