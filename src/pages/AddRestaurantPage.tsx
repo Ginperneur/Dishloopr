@@ -825,9 +825,33 @@ export default function AddRestaurantPage() {
                       📸 Foto's worden automatisch opgehaald van Google.
                     </p>
                   )}
+                  <div className="bg-background/60 border rounded-lg p-3 text-sm mb-4 max-w-sm mx-auto">
+                    <div className="flex items-start gap-2 text-left">
+                      <Mail className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                      <div className="text-muted-foreground">
+                        {magicLinkSent ? (
+                          <>We hebben een <span className="font-medium text-foreground">toegangslink</span> naar <span className="font-medium text-foreground">{user?.email}</span> gestuurd. Klik in de mail om direct in je dashboard te komen — geen wachtwoord nodig.</>
+                        ) : (
+                          <>We sturen je een toegangslink per e-mail zodat je later met één klik terug in je dashboard komt.</>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                   <div className="space-y-3 max-w-xs mx-auto">
                     <Button asChild className="w-full">
                       <Link to="/owner">Naar mijn dashboard</Link>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => sendMagicLink(false)}
+                      disabled={sendingMagicLink}
+                    >
+                      {sendingMagicLink ? (
+                        <><Loader2 className="h-4 w-4 animate-spin mr-2" />Versturen...</>
+                      ) : (
+                        <><Mail className="h-4 w-4 mr-2" />{magicLinkSent ? 'Link opnieuw sturen' : 'Stuur toegangslink'}</>
+                      )}
                     </Button>
                     <Button asChild variant="outline" className="w-full">
                       <Link to="/for-restaurants">Terug naar informatie</Link>
