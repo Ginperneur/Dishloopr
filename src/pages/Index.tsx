@@ -224,7 +224,11 @@ const Index = () => {
       {showHowItWorks && <HowItWorks />}
 
       {/* Featured Restaurants */}
-      <section id="featured" className="relative py-6 md:py-10 lg:py-14 bg-muted/30 scroll-mt-24">
+      <section
+        id="featured"
+        className="relative py-6 md:py-10 lg:py-14 bg-muted/30 scroll-mt-24"
+        aria-labelledby="featured-heading"
+      >
         <div className="container px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 15 }}
@@ -232,7 +236,7 @@ const Index = () => {
             viewport={{ once: true }}
             className="flex items-center justify-between mb-4 md:mb-8"
           >
-            <h2 className="text-lg sm:text-xl md:text-3xl font-bold">
+            <h2 id="featured-heading" className="text-lg sm:text-xl md:text-3xl font-bold">
               {t('home.featuredRestaurants')}
             </h2>
             <Button variant="ghost" size="sm" asChild className="text-xs sm:text-sm">
@@ -297,7 +301,11 @@ const Index = () => {
       <PersonalizedRecommendations />
 
       {/* Samengestelde Collecties */}
-      <section id="collections" className="py-8 md:py-16 scroll-mt-24">
+      <section
+        id="collections"
+        className="py-8 md:py-16 scroll-mt-24"
+        aria-labelledby="collections-heading"
+      >
         <div className="container px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -305,7 +313,7 @@ const Index = () => {
             viewport={{ once: true }}
             className="flex items-center justify-between mb-4 md:mb-6"
           >
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">{t('home.ourCollections')}</h2>
+            <h2 id="collections-heading" className="text-xl sm:text-2xl md:text-3xl font-bold">{t('home.ourCollections')}</h2>
             <Button variant="ghost" size="sm" asChild className="text-sm">
               <Link to="/collections" className="flex items-center gap-1 md:gap-2">
                 {t('home.viewAll')}
