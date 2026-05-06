@@ -95,6 +95,7 @@ const navGroups = [
       { id: 'seo-health', label: 'SEO Health', icon: Globe },
       { id: 'bulk-actions', label: 'Bulk Acties', icon: Zap },
       { id: 'audit-trail', label: 'Audit Trail', icon: Clock },
+      { id: 'error-logs', label: 'Error Logs', icon: AlertCircle },
       { id: 'activity', label: 'Activiteit', icon: Settings },
       { id: 'settings', label: 'Instellingen', icon: Settings },
     ],
