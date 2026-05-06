@@ -294,13 +294,13 @@ export default function SearchPage() {
           { name: pageTitle, url: 'https://dishloopr.com/search' },
         ])}
       />
-      {/* Search Header */}
-      <div className="sticky top-[3.5rem] md:top-[4rem] z-40 bg-background border-b border-border py-3 md:py-4">
+      {/* Search Header — non-sticky on mobile to free vertical space */}
+      <div className="md:sticky md:top-[4rem] z-40 bg-background border-b border-border py-3 md:py-4">
         <div className="container px-4 md:px-6">
           <div className="flex items-center gap-3">
             <div className="flex-1">
-              <SearchBar 
-                variant="compact" 
+              <SearchBar
+                variant="compact"
                 initialQuery={dishQuery}
                 initialCity={selectedCityId}
                 onSearch={handleSearch}
