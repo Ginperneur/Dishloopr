@@ -2,7 +2,7 @@ import { useState, useEffect, lazy, Suspense, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Map, LayoutGrid, Navigation, Loader2, ArrowUp, UtensilsCrossed, Bookmark, BookmarkCheck } from 'lucide-react';
+import { X, Map, LayoutGrid, Navigation, Loader2, ArrowUp, UtensilsCrossed, Bookmark, BookmarkCheck, Clock } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { SearchBar } from '@/components/search/SearchBar';
 import { DatabaseRestaurantCard } from '@/components/restaurant/DatabaseRestaurantCard';
@@ -405,6 +405,22 @@ export default function SearchPage() {
                   <Navigation className="h-4 w-4 mr-1.5" />
                 )}
                 <span className="hidden sm:inline">Bij mij</span>
+              </Button>
+
+              {/* Open Now quick filter — surfaced early in the flow */}
+              <Button
+                variant={filters.openNow ? 'default' : 'outline'}
+                size="sm"
+                onClick={() =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    openNow: prev.openNow ? undefined : true,
+                  }))
+                }
+                aria-pressed={!!filters.openNow}
+              >
+                <Clock className="h-4 w-4 mr-1.5" />
+                <span>Open nu</span>
               </Button>
 
               {/* Save Search Button — only meaningful when there is a query/city */}
