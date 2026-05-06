@@ -85,6 +85,21 @@ export default function SearchPage() {
   );
   const [displayCount, setDisplayCount] = useState(12);
   const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // Keep viewMode in sync with URL (?view=map) so BottomNav Map/Search tabs work
+  useEffect(() => {
+    const next: ViewMode = searchParams.get('view') === 'map' ? 'map' : 'grid';
+    setViewMode((prev) => (prev === next ? prev : next));
+  }, [searchParams]);
+
+  // When user toggles view via the buttons, reflect it in the URL
+  const handleViewModeChange = (next: ViewMode) => {
+    setViewMode(next);
+    const params = new URLSearchParams(searchParams);
+    if (next === 'map') params.set('view', 'map');
+    else params.delete('view');
+    setSearchParams(params, { replace: true });
+  };
   
   // Geolocation for "near me" feature
   const { latitude, longitude, loading: locationLoading, requestLocation } = useGeolocation();
@@ -431,7 +446,7 @@ export default function SearchPage() {
                   variant={viewMode === 'grid' ? 'default' : 'ghost'}
                   size="sm"
                   className="h-7 px-2"
-                  onClick={() => setViewMode('grid')}
+                  onClick={() => handleViewModeChange('grid')}
                 >
                   <LayoutGrid className="h-4 w-4" />
                 </Button>
@@ -439,7 +454,7 @@ export default function SearchPage() {
                   variant={viewMode === 'map' ? 'default' : 'ghost'}
                   size="sm"
                   className="h-7 px-2"
-                  onClick={() => setViewMode('map')}
+                  onClick={() => handleViewModeChange('map')}
                 >
                   <Map className="h-4 w-4" />
                 </Button>
