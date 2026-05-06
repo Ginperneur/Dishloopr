@@ -568,7 +568,7 @@ export default function SearchPage() {
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           }>
-            <div className="h-[60vh] rounded-xl overflow-hidden">
+            <div className="h-[calc(100svh-12rem)] md:h-[60vh] min-h-[400px] rounded-xl overflow-hidden border border-border">
               <RestaurantMap
                 restaurants={sortedResults.map(r => ({
                   id: r.id,

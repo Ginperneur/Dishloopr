@@ -224,13 +224,17 @@ export function RestaurantMap({ restaurants, userLocation, onClose, className = 
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 z-[1000] inline-flex h-10 w-10 items-center justify-center rounded-md border border-border bg-secondary text-secondary-foreground shadow-lg"
+          className="absolute top-3 right-3 z-[1000] inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-lg active:scale-95 touch-manipulation"
           aria-label="Sluit kaart"
         >
           ✕
         </button>
       )}
-      <div ref={containerRef} style={{ height: '100%', width: '100%', minHeight: '400px' }} />
+      <div
+        ref={containerRef}
+        className="touch-manipulation"
+        style={{ height: '100%', width: '100%', minHeight: '400px' }}
+      />
     </div>
   );
 }
