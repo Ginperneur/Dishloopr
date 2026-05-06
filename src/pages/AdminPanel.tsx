@@ -67,6 +67,7 @@ import { ReviewModerationManager } from '@/components/admin/ReviewModerationMana
 import { NotificationManager } from '@/components/admin/NotificationManager';
 import { RestaurantDiscovery } from '@/components/admin/RestaurantDiscovery';
 import { AdminToday } from '@/components/admin/AdminToday';
+import { ErrorLogsViewer } from '@/components/admin/ErrorLogsViewer';
 
 interface Stats {
   totalUsers: number;
@@ -126,6 +127,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'audit-trail': { title: "Audit Trail", description: "Alle admin-acties" },
   'activity': { title: "Activiteit", description: "Activity log" },
   'settings': { title: "Instellingen", description: "Platform configuratie" },
+  'error-logs': { title: "Error Logs", description: "Frontend crashes en errors van gebruikers" },
 };
 
 export default function AdminPanel() {
@@ -604,6 +606,7 @@ export default function AdminPanel() {
               {activeSection === 'seo-health' && <SeoHealthMonitor />}
               {activeSection === 'bulk-actions' && <BulkActionsManager />}
               {activeSection === 'audit-trail' && <AuditTrail />}
+              {activeSection === 'error-logs' && <ErrorLogsViewer />}
             </div>
           </main>
         </div>

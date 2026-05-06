@@ -246,7 +246,7 @@ export function Header() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden border-t border-border bg-background overflow-hidden"
+            className="md:hidden border-t border-border bg-background overflow-y-auto max-h-[calc(100svh-3.5rem)] pb-[calc(5rem+env(safe-area-inset-bottom))]"
           >
             <nav className="container py-4 flex flex-col gap-2 px-4">
               <Link to="/search" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors" onClick={() => setMobileMenuOpen(false)}>
