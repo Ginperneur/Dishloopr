@@ -491,17 +491,17 @@ export function DishApprovalManager() {
           )}
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="suggested">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto gap-1">
+              <TabsTrigger value="suggested" className="text-xs sm:text-sm whitespace-normal sm:whitespace-nowrap py-2 px-2 leading-tight">
                 Voorgesteld ({statusCounts.suggested || 0})
               </TabsTrigger>
-              <TabsTrigger value="approved">
+              <TabsTrigger value="approved" className="text-xs sm:text-sm whitespace-normal sm:whitespace-nowrap py-2 px-2 leading-tight">
                 Goedgekeurd ({statusCounts.approved_by_admin || 0})
               </TabsTrigger>
-              <TabsTrigger value="verified">
+              <TabsTrigger value="verified" className="text-xs sm:text-sm whitespace-normal sm:whitespace-nowrap py-2 px-2 leading-tight">
                 Bevestigd ({statusCounts.verified_by_owner || 0})
               </TabsTrigger>
-              <TabsTrigger value="rejected">
+              <TabsTrigger value="rejected" className="text-xs sm:text-sm whitespace-normal sm:whitespace-nowrap py-2 px-2 leading-tight">
                 Afgewezen ({statusCounts.rejected || 0})
               </TabsTrigger>
             </TabsList>
