@@ -386,7 +386,7 @@ export default function AddRestaurantPage() {
   if (!user) {
     return (
       <Layout>
-        <SEOHead title="Restaurant Toevoegen | Dishloopr" description="Log in om je restaurant toe te voegen aan Dishloopr." />
+        <SEOHead title="Restaurant Toevoegen | Dishloopr" description="Log in om je restaurant toe te voegen aan Dishloopr." noindex />
         <div className="container py-16">
           <Card className="max-w-md mx-auto">
             <CardContent className="py-12 text-center">
@@ -415,6 +415,7 @@ export default function AddRestaurantPage() {
       <SEOHead
         title="Restaurant Toevoegen | Dishloopr"
         description="Voeg je restaurant toe aan Dishloopr en bereik nieuwe gasten"
+        noindex
       />
 
       <div className="container py-8 max-w-2xl">
