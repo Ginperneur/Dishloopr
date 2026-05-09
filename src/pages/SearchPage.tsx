@@ -389,9 +389,9 @@ export default function SearchPage() {
             </div>
           )}
 
-          {/* Sort & View controls row */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 shrink-0">
+          {/* Sort & View controls row — stacks on mobile to prevent overflow */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {/* Near Me Button */}
               <Button
                 variant={sortBy === 'nearest' ? 'default' : 'outline'}
@@ -455,7 +455,7 @@ export default function SearchPage() {
               })()}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
               {/* View Mode Toggle */}
               <div className="flex items-center border border-border rounded-lg p-0.5">
                 <Button
@@ -478,7 +478,7 @@ export default function SearchPage() {
 
               {/* Sort */}
               <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-                <SelectTrigger className="w-[130px] sm:w-44">
+                <SelectTrigger className="flex-1 sm:flex-none sm:w-44 min-w-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
