@@ -299,3 +299,50 @@
     }
   }
 }
+
+@layer base {
+  /* ============================================================
+   * MOBILE OVERLAP PREVENTION
+   * Global guards to stop the most common mobile layout breakages:
+   * - Long words / URLs blowing out containers (horizontal scroll)
+   * - Images overflowing their parent
+   * - Tables wider than the viewport
+   * - Tab/segmented controls clipping their last item
+   * - Fixed/sticky elements colliding with the BottomNav
+   * ============================================================ */
+  @media (max-width: 767px) {
+    /* Prevent any direct page child from forcing horizontal scroll */
+    main, main > *, section, article, header, footer, aside {
+      max-width: 100%;
+    }
+
+    /* Long words / URLs / emails should wrap, not overflow */
+    p, h1, h2, h3, h4, h5, h6, span, a, li, dt, dd, label, figcaption {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    /* Media never exceeds its container */
+    img, video, canvas, svg, iframe {
+      max-width: 100%;
+      height: auto;
+    }
+    iframe { display: block; }
+
+    /* Tables become scrollable instead of pushing layout */
+    table { display: block; max-width: 100%; overflow-x: auto; }
+
+    /* Code blocks scroll horizontally instead of overflowing */
+    pre { max-width: 100%; overflow-x: auto; }
+
+    /* Any explicitly sticky/fixed footer-style bar must clear the BottomNav */
+    .mobile-clear-bottom-nav {
+      bottom: calc(4rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+  }
+
+  /* Ensure scroll-anchored content (with id) is not hidden under sticky headers */
+  :target {
+    scroll-margin-top: 5rem;
+  }
+}
