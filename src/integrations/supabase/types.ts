@@ -3092,15 +3092,12 @@ export type Database = {
     Views: {
       featured_subscriptions_public: {
         Row: {
-          ambiance_addon_price: number | null
           consecutive_months: number | null
-          cooling_off_until: string | null
           created_at: string | null
           expires_at: string | null
           extra_ambiances: string[] | null
           id: string | null
           included_ambiance: string | null
-          max_duration_months: number | null
           monthly_price: number | null
           restaurant_id: string | null
           slot_id: string | null
@@ -3109,20 +3106,15 @@ export type Database = {
             | Database["public"]["Enums"]["featured_subscription_status"]
             | null
           total_clicks: number | null
-          total_monthly_price: number | null
           total_views: number | null
-          updated_at: string | null
         }
         Insert: {
-          ambiance_addon_price?: number | null
           consecutive_months?: number | null
-          cooling_off_until?: string | null
           created_at?: string | null
           expires_at?: string | null
           extra_ambiances?: string[] | null
           id?: string | null
           included_ambiance?: string | null
-          max_duration_months?: number | null
           monthly_price?: number | null
           restaurant_id?: string | null
           slot_id?: string | null
@@ -3131,20 +3123,15 @@ export type Database = {
             | Database["public"]["Enums"]["featured_subscription_status"]
             | null
           total_clicks?: number | null
-          total_monthly_price?: number | null
           total_views?: number | null
-          updated_at?: string | null
         }
         Update: {
-          ambiance_addon_price?: number | null
           consecutive_months?: number | null
-          cooling_off_until?: string | null
           created_at?: string | null
           expires_at?: string | null
           extra_ambiances?: string[] | null
           id?: string | null
           included_ambiance?: string | null
-          max_duration_months?: number | null
           monthly_price?: number | null
           restaurant_id?: string | null
           slot_id?: string | null
@@ -3153,9 +3140,7 @@ export type Database = {
             | Database["public"]["Enums"]["featured_subscription_status"]
             | null
           total_clicks?: number | null
-          total_monthly_price?: number | null
           total_views?: number | null
-          updated_at?: string | null
         }
         Relationships: [
           {
@@ -3246,6 +3231,51 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "tag_confirmations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sponsored_purchases_public: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string | null
+          is_active: boolean | null
+          product_id: string | null
+          restaurant_id: string | null
+          starts_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          product_id?: string | null
+          restaurant_id?: string | null
+          starts_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          product_id?: string | null
+          restaurant_id?: string | null
+          starts_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sponsored_purchases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "sponsored_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_purchases_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
