@@ -1,6 +1,7 @@
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { BottomNav } from './BottomNav';
+import { SupportChat } from '@/components/support/SupportChat';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -26,6 +27,7 @@ export function Layout({ children, showFooter = true }: LayoutProps) {
       </main>
       {showFooter && <Footer />}
       <BottomNav />
+      <SupportChat />
     </div>
   );
 }
