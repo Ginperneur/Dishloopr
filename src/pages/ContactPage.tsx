@@ -6,27 +6,49 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { SEOHead, createBreadcrumbSchema } from '@/components/seo/SEOHead';
+import { contactSchema, validateWithErrors } from '@/lib/validations';
 
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const renderedAt = useRef<number>(Date.now());
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     
     const formData = new FormData(e.target as HTMLFormElement);
-    const name = formData.get('name') as string;
-    const email = formData.get('email') as string;
-    const subject = formData.get('subject') as string;
-    const message = formData.get('message') as string;
+    const payload = {
+      name: formData.get('name') as string,
+      email: formData.get('email') as string,
+      subject: formData.get('subject') as string,
+      message: formData.get('message') as string,
+      website: (formData.get('website') as string) || '',
+    };
+
+    // Time-trap: real users take >2s to fill the form
+    if (Date.now() - renderedAt.current < 2000) {
+      toast.success('Bericht verzonden! We nemen zo snel mogelijk contact met je op.');
+      (e.target as HTMLFormElement).reset();
+      setIsSubmitting(false);
+      return;
+    }
+
+    const validation = validateWithErrors(contactSchema, payload);
+    if (!validation.success) {
+      toast.error(validation.errors[0]);
+      setIsSubmitting(false);
+      return;
+    }
+
+    const { website, ...clean } = validation.data;
 
     try {
       const { error } = await supabase
         .from('contact_messages' as any)
-        .insert({ name, email, subject, message });
+        .insert(clean);
 
       if (error) throw error;
       toast.success('Bericht verzonden! We nemen zo snel mogelijk contact met je op.');
@@ -145,7 +167,14 @@ export default function ContactPage() {
                 required 
                 placeholder="Schrijf hier je bericht..."
                 rows={5}
+                maxLength={5000}
               />
+            </div>
+
+            {/* Honeypot field - hidden from real users, bots fill it */}
+            <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}>
+              <Label htmlFor="website">Website (laat leeg)</Label>
+              <Input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
             </div>
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
