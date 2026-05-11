@@ -270,13 +270,17 @@ export default function SearchPage() {
     ? t('search.featuredTitle', 'Uitgelichte restaurants')
     : dishQuery 
       ? selectedCityName
-        ? `Beste ${dishQuery} in ${selectedCityName}`
-        : `${dishQuery} restaurants in Nederland`
+        ? t('search.bestDishInCity', { dish: dishQuery, city: selectedCityName, defaultValue: `Beste ${dishQuery} in ${selectedCityName}` })
+        : t('search.dishRestaurantsInCountry', { dish: dishQuery, defaultValue: `${dishQuery} restaurants in Europa` })
       : t('search.defaultTitle', 'Zoek restaurants');
 
   const pageDescription = dishQuery
-    ? `Vind de beste ${dishQuery} restaurants${selectedCityName ? ` in ${selectedCityName}` : ' in Nederland'}. Vergelijk opties, bekijk reviews en reserveer direct.`
-    : `Zoek en ontdek restaurants${selectedCityName ? ` in ${selectedCityName}` : ' in Nederland'}. Filter op gerecht, sfeer en prijs.`;
+    ? selectedCityName
+      ? t('search.descDishInCity', { dish: dishQuery, city: selectedCityName, defaultValue: `Vind de beste ${dishQuery} restaurants in ${selectedCityName}.` })
+      : t('search.descDishInCountry', { dish: dishQuery, defaultValue: `Vind de beste ${dishQuery} restaurants in Europa.` })
+    : selectedCityName
+      ? t('search.descSearchInCity', { city: selectedCityName, defaultValue: `Zoek en ontdek restaurants in ${selectedCityName}.` })
+      : t('search.descSearchInCountry', 'Zoek en ontdek restaurants in Europa. Filter op gerecht, sfeer en prijs.');
 
   // Always use clean canonical to avoid duplicate indexing of filtered views
   const hasFilters = !!(dishQuery || (selectedCityId && selectedCityId !== 'all'));
