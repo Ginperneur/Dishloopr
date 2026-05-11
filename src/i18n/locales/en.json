@@ -87,7 +87,16 @@
     "chefsTable": "Chef's table",
     "streetFood": "Street food",
     "winePairing": "Wine pairing",
-    "farmToTable": "Farm-to-table"
+    "farmToTable": "Farm-to-table",
+    "modern": "Modern",
+    "traditional": "Traditional",
+    "industrial": "Industrial",
+    "classic": "Classic",
+    "warm": "Warm",
+    "fineDining": "Fine Dining",
+    "minimalist": "Minimalist",
+    "vibrant": "Vibrant",
+    "bohemian": "Bohemian"
   },
   "cuisines": {
     "japanese": "Japanese",
@@ -169,7 +178,13 @@
   "search": {
     "results": "results",
     "noResults": "No restaurants found",
-    "tryDifferent": "Try a different dish or adjust your filters"
+    "tryDifferent": "Try a different dish or adjust your filters",
+    "bestDishInCity": "Best {{dish}} in {{city}}",
+    "dishRestaurantsInCountry": "{{dish}} restaurants in Europe",
+    "descDishInCity": "Find the best {{dish}} restaurants in {{city}}. Compare options, read reviews and reserve directly.",
+    "descDishInCountry": "Find the best {{dish}} restaurants in Europe. Compare options, read reviews and reserve directly.",
+    "descSearchInCity": "Search and discover restaurants in {{city}}. Filter by dish, ambience and price.",
+    "descSearchInCountry": "Search and discover restaurants in Europe. Filter by dish, ambience and price."
   },
   "common": {
     "loading": "Loading...",
