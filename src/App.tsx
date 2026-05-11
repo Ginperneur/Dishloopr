@@ -115,6 +115,9 @@ const App = () => (
                   <Route path="/eten/:slug" element={<DishCityPage />} />
                   <Route path="/steden" element={<CityIndexPage />} />
                   <Route path="/steden/:citySlug" element={<CityDetailPage />} />
+                  {/* Legacy /stad/* URLs → 301-style redirect to canonical /steden/* */}
+                  <Route path="/stad" element={<Navigate to="/steden" replace />} />
+                  <Route path="/stad/:citySlug" element={<RedirectStadToSteden />} />
                   <Route path="/events" element={<EventsPage />} />
                   <Route path="/vote/:shareCode" element={<VotePage />} />
                   <Route path="*" element={<NotFound />} />
