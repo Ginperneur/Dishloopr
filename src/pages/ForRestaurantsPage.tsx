@@ -28,9 +28,26 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function ForRestaurantsPage() {
   const { t } = useTranslation();
+  const [restaurantCount, setRestaurantCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    supabase
+      .from('restaurants')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_active', true)
+      .then(({ count }) => {
+        if (typeof count === 'number') setRestaurantCount(count);
+      });
+  }, []);
+
+  const restaurantStatValue = restaurantCount
+    ? `${Math.floor(restaurantCount / 100) * 100}+`
+    : '1.600+';
 
   const fadeIn = {
     initial: { opacity: 0, y: 20 },
@@ -40,7 +57,7 @@ export default function ForRestaurantsPage() {
 
   // Stats for social proof
   const stats = [
-    { value: '900+', label: t('forRestaurants.statsRestaurants', 'Restaurants'), icon: Building2 },
+    { value: restaurantStatValue, label: t('forRestaurants.statsRestaurants', 'Restaurants'), icon: Building2 },
     { value: '50K+', label: t('forRestaurants.statsSearches', 'Zoekopdrachten/maand'), icon: Eye },
     { value: '4.8', label: t('forRestaurants.statsRating', 'Gem. rating'), icon: Star },
     { value: '32%', label: t('forRestaurants.statsConversion', 'Klik-naar-bezoek ratio'), icon: TrendingUp },
