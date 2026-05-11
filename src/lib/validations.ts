@@ -37,6 +37,18 @@ export const restaurantSchema = z.object({
 
 export type RestaurantInput = z.infer<typeof restaurantSchema>;
 
+// Contact form validation
+export const contactSchema = z.object({
+  name: z.string().trim().min(2, 'Naam is te kort').max(100, 'Naam mag maximaal 100 tekens zijn'),
+  email: z.string().trim().email('Ongeldig e-mailadres').max(255, 'E-mail te lang'),
+  subject: z.string().trim().min(2, 'Onderwerp is te kort').max(200, 'Onderwerp mag maximaal 200 tekens zijn'),
+  message: z.string().trim().min(10, 'Bericht moet minimaal 10 tekens zijn').max(5000, 'Bericht mag maximaal 5000 tekens zijn'),
+  // Honeypot: must be empty. Bots fill all fields.
+  website: z.string().max(0, 'Spam gedetecteerd').optional().or(z.literal('')),
+});
+
+export type ContactInput = z.infer<typeof contactSchema>;
+
 // Validation result type
 export type ValidationResult<T> = 
   | { success: true; data: T; errors?: never } 
