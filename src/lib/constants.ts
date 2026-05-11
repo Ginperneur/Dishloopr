@@ -25,6 +25,28 @@ export const AMBIENCE_TAG_STYLES: { [key: string]: string } = {
   'lively': 'tag-romantic',
   'intimate': 'tag-romantic',
   'relaxed': 'tag-cozy',
+  // Dutch DB values
+  'Romantisch': 'tag-romantic',
+  'Kindvriendelijk': 'tag-family',
+  'Gezinsvriendelijk': 'tag-family',
+  'High-end': 'tag-highend',
+  'Gezellig': 'tag-cozy',
+  'Zakelijk': 'tag-business',
+  'Trendy': 'tag-cozy',
+  'Casual': 'tag-family',
+  'Levendig': 'tag-romantic',
+  'Intiem': 'tag-romantic',
+  'Ontspannen': 'tag-cozy',
+  'Modern': 'tag-cozy',
+  'Traditioneel': 'tag-family',
+  'Industrieel': 'tag-business',
+  'Klassiek': 'tag-highend',
+  'Warm': 'tag-cozy',
+  'Fine Dining': 'tag-highend',
+  'Minimalistisch': 'tag-business',
+  'Bruisend': 'tag-romantic',
+  'Bohemian': 'tag-cozy',
+  'Luxe': 'tag-highend',
 };
 
 // Mapping from database tag values to i18n keys
