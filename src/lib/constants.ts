@@ -39,6 +39,28 @@ export const AMBIENCE_TAG_I18N_KEYS: { [key: string]: string } = {
   'lively': 'filters.lively',
   'intimate': 'filters.intimate',
   'relaxed': 'filters.relaxed',
+  // Dutch capitalized DB values (current normalization)
+  'Romantisch': 'filters.romantic',
+  'Kindvriendelijk': 'filters.familyFriendly',
+  'Gezinsvriendelijk': 'filters.familyFriendly',
+  'High-end': 'filters.highEnd',
+  'Gezellig': 'filters.cozy',
+  'Zakelijk': 'filters.business',
+  'Trendy': 'filters.trendy',
+  'Casual': 'filters.casual',
+  'Levendig': 'filters.lively',
+  'Intiem': 'filters.intimate',
+  'Ontspannen': 'filters.relaxed',
+  'Modern': 'filters.modern',
+  'Traditioneel': 'filters.traditional',
+  'Industrieel': 'filters.industrial',
+  'Klassiek': 'filters.classic',
+  'Warm': 'filters.warm',
+  'Fine Dining': 'filters.fineDining',
+  'Minimalistisch': 'filters.minimalist',
+  'Bruisend': 'filters.vibrant',
+  'Bohemian': 'filters.bohemian',
+  'Luxe': 'filters.luxury',
 };
 
 export const LANGUAGES = [
