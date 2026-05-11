@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import '@/i18n';
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
@@ -47,6 +47,12 @@ const ForRestaurantsPage = lazy(() => import("./pages/ForRestaurantsPage"));
 const AddRestaurantPage = lazy(() => import("./pages/AddRestaurantPage"));
 const EventsPage = lazy(() => import("./pages/EventsPage"));
 const VotePage = lazy(() => import("./pages/VotePage"));
+
+// Legacy /stad/:citySlug → canonical /steden/:citySlug redirect (preserves slug)
+const RedirectStadToSteden = () => {
+  const { citySlug } = useParams();
+  return <Navigate to={`/steden/${citySlug ?? ''}`} replace />;
+};
 
 // Page loading fallback
 function PageLoader() {
