@@ -400,7 +400,7 @@ export function useSearch() {
     if (matchingDishes.length > 0 && cityId && cityId !== 'all') {
       const dishIds = matchingDishes.map(d => d.id);
       const { data: sponsoredData } = await supabase
-        .from('sponsored_purchases')
+        .from('sponsored_purchases_public' as any)
         .select('restaurant_id, sponsored_products!inner(dish_id, city_id)')
         .eq('is_active', true)
         .gt('expires_at', now.toISOString());

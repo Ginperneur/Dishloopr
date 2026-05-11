@@ -58,7 +58,7 @@ export function FeaturedRestaurantsSection({
     try {
       // Get active featured subscriptions with restaurant data
       let query = supabase
-        .from('featured_subscriptions')
+        .from('featured_subscriptions_public' as any)
         .select(`
           id,
           included_ambiance,
