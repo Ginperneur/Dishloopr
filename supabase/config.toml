@@ -77,3 +77,6 @@ verify_jwt = false
 
 [functions.scrape-menu]
 verify_jwt = false
+
+[functions.support-chat]
+verify_jwt = false
