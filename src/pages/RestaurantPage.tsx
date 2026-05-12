@@ -527,6 +527,7 @@ export default function RestaurantPage() {
               restaurantName={restaurant.name}
               cityName={restaurant.city?.name}
               cityId={restaurant.city_id}
+              citySlug={restaurant.city?.slug}
               cuisines={restaurant.cuisines || []}
               dishes={restaurant.dishes || []}
             />
