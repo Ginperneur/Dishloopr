@@ -1,20 +1,22 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight } from 'lucide-react';
-import { formatDishName } from '@/lib/utils';
+import { formatDishName, slugify } from '@/lib/utils';
 
 interface RelatedLinksProps {
   restaurantName: string;
   cityName?: string;
   cityId?: string;
+  citySlug?: string;
   cuisines?: string[];
-  dishes?: { id: string; name: string }[];
+  dishes?: { id: string; name: string; slug?: string }[];
 }
 
 export function RelatedLinks({ 
   restaurantName, 
   cityName, 
   cityId,
+  citySlug,
   cuisines = [], 
   dishes = [],
 }: RelatedLinksProps) {
@@ -36,7 +38,7 @@ export function RelatedLinks({
             {dishes.slice(0, 5).map((dish) => (
               <Link
                 key={dish.id}
-                to={`/search?dish=${encodeURIComponent(dish.name)}`}
+                to={dish.slug ? `/eten/gerecht/${dish.slug}` : `/search?dish=${encodeURIComponent(dish.name.toLowerCase())}`}
                 className="inline-flex items-center gap-1 px-3 py-1 text-sm rounded-full border border-border hover:bg-primary/10 transition-colors"
               >
                 {formatDishName(dish.name)} {cityName ? `in ${cityName}` : ''}
@@ -57,7 +59,7 @@ export function RelatedLinks({
             {cuisines.slice(0, 4).map((cuisine) => (
               <Link
                 key={cuisine}
-                to={`/search?dish=${encodeURIComponent(cuisine)}&city=${cityId || ''}`}
+                to={`/search?dish=${encodeURIComponent(cuisine.toLowerCase())}${citySlug ? `&city=${citySlug}` : ''}`}
                 className="inline-flex items-center gap-1 px-3 py-1 text-sm rounded-full border border-border hover:bg-primary/10 transition-colors capitalize"
               >
                 {cuisine} in {cityName}
@@ -76,7 +78,7 @@ export function RelatedLinks({
           </h4>
           <div className="flex flex-wrap gap-2">
             <Link
-              to={`/search?city=${cityId}`}
+              to={citySlug ? `/steden/${citySlug}` : `/search?city=${cityId}`}
               className="inline-flex items-center gap-1 px-3 py-1 text-sm rounded-full border border-border hover:bg-primary/10 transition-colors"
             >
               Alle restaurants in {cityName}
