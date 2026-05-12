@@ -70,7 +70,7 @@ export function TrendingNow({ cityId }: TrendingNowProps) {
                 transition={{ delay: index * 0.1 }}
               >
                 <Link
-                  to={`/search?dish=${encodeURIComponent(dish.name)}`}
+                  to={dish.slug ? `/eten/gerecht/${dish.slug}` : `/search?dish=${encodeURIComponent(dish.name.toLowerCase())}`}
                   className="block p-4 rounded-xl border border-border bg-card hover:border-primary/50 hover:bg-accent/50 transition-all group"
                 >
                   <div className="flex items-start justify-between">
@@ -117,7 +117,7 @@ export function TrendingNow({ cityId }: TrendingNowProps) {
                 {seasonalDishes.map((dish) => (
                   <Link
                     key={dish.id}
-                    to={`/search?dish=${encodeURIComponent(dish.name)}`}
+                    to={dish.slug ? `/eten/gerecht/${dish.slug}` : `/search?dish=${encodeURIComponent(dish.name.toLowerCase())}`}
                     className="px-4 py-2 rounded-full bg-background border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-sm font-medium"
                   >
                     {formatDishName(dish.name)}
