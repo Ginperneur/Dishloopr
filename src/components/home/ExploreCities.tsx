@@ -70,7 +70,7 @@ export function ExploreCities() {
               >
                 {c ? (
                   <Link
-                    to={`/search?city=${encodeURIComponent(c.slug)}`}
+                    to={`/steden/${c.slug}`}
                     className="flex items-center gap-2 px-3 py-3 rounded-xl bg-card border border-border hover:border-primary hover:bg-primary/5 transition-colors min-h-[52px] touch-manipulation"
                   >
                     <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary flex-shrink-0">
