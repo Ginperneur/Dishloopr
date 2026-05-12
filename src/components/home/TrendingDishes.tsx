@@ -58,7 +58,7 @@ export function TrendingDishes({ dishes, cityName }: TrendingDishesProps) {
               transition={{ delay: index * 0.05 }}
             >
               <Link
-                to={`/search?dish=${encodeURIComponent(dish.name)}`}
+                to={dish.slug ? `/eten/gerecht/${dish.slug}` : `/search?dish=${encodeURIComponent(dish.name.toLowerCase())}`}
                 className="block p-3 md:p-4 rounded-xl md:rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-card transition-all group"
               >
                 <div className="flex items-center justify-between gap-2">

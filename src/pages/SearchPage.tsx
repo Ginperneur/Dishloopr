@@ -23,6 +23,8 @@ import { useSearch } from '@/hooks/useSearch';
 import { useGeolocation, calculateDistance } from '@/hooks/useGeolocation';
 import { toast } from 'sonner';
 import { useSavedSearches } from '@/hooks/useSavedSearches';
+import { slugify } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 // Lazy load the map component
 const RestaurantMap = lazy(() => import('@/components/map/RestaurantMap').then(m => ({ default: m.RestaurantMap })));
@@ -109,6 +111,52 @@ export default function SearchPage() {
   useEffect(() => {
     setSelectedCityId(resolvedCityId);
   }, [resolvedCityId]);
+
+  // 301-style canonical redirect: /search?dish=X (no other filters) → /eten/gerecht/{slug}
+  // and /search?city=X (no other filters) → /steden/{slug}
+  useEffect(() => {
+    const hasCuisine = !!cuisineParam;
+    const hasFeatured = featuredOnly;
+    const hasView = searchParams.get('view') === 'map';
+    if (hasCuisine || hasFeatured || hasView) return;
+
+    // Normalize dish to lowercase slug and try canonical pillar
+    if (dishQuery && (!cityParam || cityParam === 'all')) {
+      const lower = dishQuery.toLowerCase().trim();
+      const slug = slugify(lower);
+      if (!slug) return;
+      let cancelled = false;
+      (async () => {
+        const { data } = await supabase
+          .from('dishes')
+          .select('slug')
+          .or(`slug.eq.${slug},name.ilike.${lower}`)
+          .eq('is_active', true)
+          .limit(1)
+          .maybeSingle();
+        if (cancelled) return;
+        if (data?.slug) {
+          navigate(`/eten/gerecht/${data.slug}`, { replace: true });
+        } else if (dishQuery !== lower) {
+          // At minimum normalize to lowercase to avoid case duplicates
+          const params = new URLSearchParams(searchParams);
+          params.set('dish', lower);
+          setSearchParams(params, { replace: true });
+        }
+      })();
+      return () => { cancelled = true; };
+    }
+
+    // City-only → /steden/{slug}
+    if (!dishQuery && cityParam && cityParam !== 'all') {
+      const match = cities.find(c =>
+        c.id === cityParam || c.slug === cityParam || c.name.toLowerCase() === cityParam.toLowerCase()
+      );
+      if (match?.slug) {
+        navigate(`/steden/${match.slug}`, { replace: true });
+      }
+    }
+  }, [dishQuery, cityParam, cuisineParam, featuredOnly, searchParams, cities, navigate, setSearchParams]);
 
   // Show scroll-to-top button after scrolling
   useEffect(() => {
@@ -292,7 +340,7 @@ export default function SearchPage() {
         description={pageDescription}
         keywords={[dishQuery || 'restaurants', 'eten', 'uit eten', selectedCityName || 'Nederland', 'reviews'].filter(Boolean) as string[]}
         canonical="https://dishloopr.com/search"
-        noindex={hasFilters}
+        noindex={true}
         structuredData={createBreadcrumbSchema([
           { name: 'Home', url: 'https://dishloopr.com' },
           { name: pageTitle, url: 'https://dishloopr.com/search' },

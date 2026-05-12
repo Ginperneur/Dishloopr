@@ -29,3 +29,18 @@ export function toTitleCase(text: string): string {
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 }
+
+/**
+ * Generates a URL-safe lowercase slug from arbitrary text.
+ * Strips diacritics, replaces non-alphanumerics with dashes.
+ */
+export function slugify(text: string): string {
+  if (!text || typeof text !== 'string') return '';
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
