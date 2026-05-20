@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Loader2, MapPin, Sparkles, Check, X, RefreshCw, Star, ExternalLink, Zap, AlertCircle, RotateCcw, Search } from 'lucide-react';
+import { Loader2, MapPin, Sparkles, Check, X, RefreshCw, Star, ExternalLink, Zap, AlertCircle, RotateCcw, Search, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
@@ -105,6 +105,9 @@ export function RestaurantDiscovery() {
     }
   });
   const [bulkSelectionRunning, setBulkSelectionRunning] = useState(false);
+
+  // Delete duplicates state
+  const [deletingDuplicates, setDeletingDuplicates] = useState(false);
 
   // Persist selection across refresh / navigation
   useEffect(() => {
@@ -407,6 +410,42 @@ export function RestaurantDiscovery() {
 
   const clearSelection = () => setSelectedIds(new Set());
 
+  const handleDeleteDuplicates = async () => {
+    if (stats.duplicate === 0) {
+      toast.info('Geen duplicaten om te verwijderen');
+      return;
+    }
+    if (!confirm(`Weet je zeker dat je ${stats.duplicate.toLocaleString('nl-NL')} duplicaat-resultaten uit de discovery queue wilt verwijderen?\n\nDe gekoppelde restaurants blijven bestaan — alleen de discovery_results records worden opgeruimd.`)) return;
+    setDeletingDuplicates(true);
+    try {
+      // Delete in batches to avoid timeouts on large datasets
+      let totalDeleted = 0;
+      while (true) {
+        const { data: batch, error: selErr } = await supabase
+          .from('discovery_results')
+          .select('id')
+          .eq('status', 'duplicate')
+          .limit(1000);
+        if (selErr) throw selErr;
+        if (!batch || batch.length === 0) break;
+        const ids = batch.map((r) => r.id);
+        const { error: delErr } = await supabase
+          .from('discovery_results')
+          .delete()
+          .in('id', ids);
+        if (delErr) throw delErr;
+        totalDeleted += ids.length;
+        if (batch.length < 1000) break;
+      }
+      toast.success(`${totalDeleted.toLocaleString('nl-NL')} duplicaten verwijderd uit de discovery queue`);
+      await loadData();
+    } catch (e: any) {
+      toast.error(e.message || 'Verwijderen mislukt');
+    } finally {
+      setDeletingDuplicates(false);
+    }
+  };
+
   const approveSelected = async () => {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
@@ -576,7 +615,23 @@ export function RestaurantDiscovery() {
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardDescription>Duplicaten</CardDescription></CardHeader>
-          <CardContent><div className="text-2xl font-bold text-muted-foreground">{stats.duplicate}</div></CardContent>
+          <CardContent className="space-y-2">
+            <div className="text-2xl font-bold text-muted-foreground">{stats.duplicate}</div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full h-7 text-xs"
+              onClick={handleDeleteDuplicates}
+              disabled={deletingDuplicates || stats.duplicate === 0}
+            >
+              {deletingDuplicates ? (
+                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+              ) : (
+                <Trash2 className="h-3 w-3 mr-1" />
+              )}
+              Opruimen
+            </Button>
+          </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardDescription>Afgewezen</CardDescription></CardHeader>
