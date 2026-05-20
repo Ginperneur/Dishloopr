@@ -30,7 +30,8 @@ import {
   ChevronRight,
   Rocket,
   CheckCircle2,
-  PartyPopper
+  PartyPopper,
+  Instagram
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -66,6 +67,7 @@ import { NeighborhoodAnalysis } from '@/components/owner/NeighborhoodAnalysis';
 import { PeakHoursInsight } from '@/components/owner/PeakHoursInsight';
 import { PromotionROI } from '@/components/owner/PromotionROI';
 import { OwnerEventsManager } from '@/components/owner/OwnerEventsManager';
+import { SocialLinksManager } from '@/components/owner/SocialLinksManager';
 import { NewsletterPlacement } from '@/components/owner/NewsletterPlacement';
 import { QRCodeGenerator } from '@/components/owner/QRCodeGenerator';
 import { CompetitorBenchmark } from '@/components/owner/CompetitorBenchmark';
@@ -753,6 +755,30 @@ export default function OwnerDashboard() {
                 <OwnerEventsManager restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
               ) : (
                 <Card><CardContent className="py-8 text-center"><p className="text-muted-foreground text-sm">Selecteer een restaurant</p></CardContent></Card>
+              )}
+            </div>
+
+            {/* Social Media (verified owners only) */}
+            <div className="border-t pt-8">
+              <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                <Instagram className="h-5 w-5 text-primary" />
+                Social Media
+              </h3>
+              {isVerified && selectedRestaurant ? (
+                <SocialLinksManager
+                  restaurantId={selectedRestaurant.id}
+                  instagramUrl={(selectedRestaurant as any).instagram_url || ''}
+                  tiktokUrl={(selectedRestaurant as any).tiktok_url || ''}
+                  onUpdate={(ig, tk) =>
+                    setSelectedRestaurant({ ...selectedRestaurant, instagram_url: ig, tiktok_url: tk } as any)
+                  }
+                />
+              ) : (
+                <LockedFeatureOverlay
+                  featureName="Social Media koppelen"
+                  description="Koppel je Instagram en TikTok zodat bezoekers je accounts direct vanaf je restaurantpagina kunnen vinden."
+                  onRequestVerification={() => setVerificationDialogOpen(true)}
+                />
               )}
             </div>
           </TabsContent>
