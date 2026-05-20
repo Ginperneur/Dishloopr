@@ -704,20 +704,40 @@ export function RestaurantDiscovery() {
           <CardHeader className="pb-2"><CardDescription>Duplicaten</CardDescription></CardHeader>
           <CardContent className="space-y-2">
             <div className="text-2xl font-bold text-muted-foreground">{stats.duplicate}</div>
-            <Button
-              size="sm"
-              variant="outline"
-              className="w-full h-7 text-xs"
-              onClick={handleDeleteDuplicates}
-              disabled={deletingDuplicates || stats.duplicate === 0}
-            >
-              {deletingDuplicates ? (
-                <Loader2 className="h-3 w-3 animate-spin mr-1" />
-              ) : (
-                <Trash2 className="h-3 w-3 mr-1" />
-              )}
-              Opruimen
-            </Button>
+            <div className="grid grid-cols-3 gap-1">
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs px-1"
+                onClick={() => setRulesDialogOpen(true)}
+                title="Duplicate-regels instellen"
+              >
+                <Settings className="h-3 w-3" />
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs px-1"
+                onClick={runRescan}
+                disabled={rescanning}
+                title="Pending opnieuw scannen met huidige regels"
+              >
+                {rescanning ? <Loader2 className="h-3 w-3 animate-spin" /> : <ScanSearch className="h-3 w-3" />}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs px-1"
+                onClick={handleDeleteDuplicates}
+                disabled={deletingDuplicates || stats.duplicate === 0}
+                title="Alle duplicates verwijderen"
+              >
+                {deletingDuplicates ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+              </Button>
+            </div>
+            {(deletingDuplicates || rescanning) && (
+              <Progress value={undefined as any} className="h-1 animate-pulse" />
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -727,10 +747,11 @@ export function RestaurantDiscovery() {
       </div>
 
       <Tabs defaultValue={stats.pending > 0 ? 'queue' : 'grid'} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 max-w-2xl">
+        <TabsList className="grid w-full grid-cols-4 max-w-2xl">
           <TabsTrigger value="queue">Review Queue ({stats.pending})</TabsTrigger>
           <TabsTrigger value="grid">Grid Punten ({gridPoints.length})</TabsTrigger>
           <TabsTrigger value="rejected">Afgewezen ({stats.rejected})</TabsTrigger>
+          <TabsTrigger value="audit">Opruim-log</TabsTrigger>
         </TabsList>
 
         <TabsContent value="queue" className="space-y-4">
