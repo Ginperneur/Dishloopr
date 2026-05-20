@@ -10,8 +10,11 @@ import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Loader2, MapPin, Sparkles, Check, X, RefreshCw, Star, ExternalLink, Zap, AlertCircle, RotateCcw, Search, Trash2 } from 'lucide-react';
+import { Loader2, MapPin, Sparkles, Check, X, RefreshCw, Star, ExternalLink, Zap, AlertCircle, RotateCcw, Search, Trash2, Settings, History, ScanSearch } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
@@ -108,6 +111,104 @@ export function RestaurantDiscovery() {
 
   // Delete duplicates state
   const [deletingDuplicates, setDeletingDuplicates] = useState(false);
+
+  // Duplicate rules & rescan state
+  type DupRules = {
+    match_by_place_id: boolean;
+    match_by_name: boolean;
+    name_min_similarity: number;
+    same_city_required: boolean;
+    radius_meters: number;
+  };
+  const DEFAULT_RULES: DupRules = {
+    match_by_place_id: true,
+    match_by_name: true,
+    name_min_similarity: 0.85,
+    same_city_required: true,
+    radius_meters: 150,
+  };
+  const [rules, setRules] = useState<DupRules>(DEFAULT_RULES);
+  const [rulesDialogOpen, setRulesDialogOpen] = useState(false);
+  const [savingRules, setSavingRules] = useState(false);
+  const [rescanning, setRescanning] = useState(false);
+
+  // Audit log
+  type AuditRow = {
+    id: string;
+    user_id: string;
+    action_type: string;
+    created_at: string;
+    details: any;
+  };
+  const [auditLogs, setAuditLogs] = useState<AuditRow[]>([]);
+
+  // Load duplicate rules from app_settings
+  const loadRules = async () => {
+    const { data } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'discovery_duplicate_rules')
+      .maybeSingle();
+    if (data?.value) {
+      try {
+        const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+        setRules({ ...DEFAULT_RULES, ...parsed });
+      } catch {
+        /* keep defaults */
+      }
+    }
+  };
+
+  // Load audit log for cleanup/rescan
+  const loadAuditLogs = async () => {
+    const { data } = await supabase
+      .from('admin_activity_logs')
+      .select('id, user_id, action_type, created_at, details')
+      .in('action_type', ['discovery_cleanup_duplicates', 'discovery_rescan_duplicates'])
+      .order('created_at', { ascending: false })
+      .limit(25);
+    setAuditLogs((data || []) as AuditRow[]);
+  };
+
+  useEffect(() => {
+    loadRules();
+    loadAuditLogs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const saveRules = async () => {
+    setSavingRules(true);
+    try {
+      const { error } = await supabase
+        .from('app_settings')
+        .update({ value: JSON.stringify(rules), updated_at: new Date().toISOString() })
+        .eq('key', 'discovery_duplicate_rules');
+      if (error) throw error;
+      toast.success('Duplicate-regels opgeslagen');
+    } catch (e: any) {
+      toast.error(e.message || 'Opslaan mislukt');
+    } finally {
+      setSavingRules(false);
+    }
+  };
+
+  const runRescan = async () => {
+    if (!confirm('De huidige duplicate-regels worden toegepast op alle pending discovery-resultaten. Doorgaan?')) return;
+    setRescanning(true);
+    try {
+      const { data, error } = await supabase.rpc('rescan_discovery_duplicates', {
+        p_rules: rules as any,
+      });
+      if (error) throw error;
+      const d: any = data || {};
+      toast.success(`Re-scan klaar: ${d.checked || 0} gecheckt, ${d.marked || 0} als duplicate gemarkeerd (${d.took_ms || 0} ms)`);
+      await Promise.all([loadData(), loadAuditLogs()]);
+    } catch (e: any) {
+      toast.error(e.message || 'Re-scan mislukt');
+    } finally {
+      setRescanning(false);
+    }
+  };
 
   // Persist selection across refresh / navigation
   useEffect(() => {
@@ -418,27 +519,13 @@ export function RestaurantDiscovery() {
     if (!confirm(`Weet je zeker dat je ${stats.duplicate.toLocaleString('nl-NL')} duplicaat-resultaten uit de discovery queue wilt verwijderen?\n\nDe gekoppelde restaurants blijven bestaan — alleen de discovery_results records worden opgeruimd.`)) return;
     setDeletingDuplicates(true);
     try {
-      // Delete in batches to avoid timeouts on large datasets
-      let totalDeleted = 0;
-      while (true) {
-        const { data: batch, error: selErr } = await supabase
-          .from('discovery_results')
-          .select('id')
-          .eq('status', 'duplicate')
-          .limit(1000);
-        if (selErr) throw selErr;
-        if (!batch || batch.length === 0) break;
-        const ids = batch.map((r) => r.id);
-        const { error: delErr } = await supabase
-          .from('discovery_results')
-          .delete()
-          .in('id', ids);
-        if (delErr) throw delErr;
-        totalDeleted += ids.length;
-        if (batch.length < 1000) break;
-      }
-      toast.success(`${totalDeleted.toLocaleString('nl-NL')} duplicaten verwijderd uit de discovery queue`);
-      await loadData();
+      const { data, error } = await supabase.rpc('cleanup_discovery_duplicates', {
+        p_rules: rules as any,
+      });
+      if (error) throw error;
+      const d: any = data || {};
+      toast.success(`${(d.deleted_count || 0).toLocaleString('nl-NL')} duplicaten verwijderd (${d.took_ms || 0} ms)`);
+      await Promise.all([loadData(), loadAuditLogs()]);
     } catch (e: any) {
       toast.error(e.message || 'Verwijderen mislukt');
     } finally {
@@ -617,20 +704,40 @@ export function RestaurantDiscovery() {
           <CardHeader className="pb-2"><CardDescription>Duplicaten</CardDescription></CardHeader>
           <CardContent className="space-y-2">
             <div className="text-2xl font-bold text-muted-foreground">{stats.duplicate}</div>
-            <Button
-              size="sm"
-              variant="outline"
-              className="w-full h-7 text-xs"
-              onClick={handleDeleteDuplicates}
-              disabled={deletingDuplicates || stats.duplicate === 0}
-            >
-              {deletingDuplicates ? (
-                <Loader2 className="h-3 w-3 animate-spin mr-1" />
-              ) : (
-                <Trash2 className="h-3 w-3 mr-1" />
-              )}
-              Opruimen
-            </Button>
+            <div className="grid grid-cols-3 gap-1">
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs px-1"
+                onClick={() => setRulesDialogOpen(true)}
+                title="Duplicate-regels instellen"
+              >
+                <Settings className="h-3 w-3" />
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs px-1"
+                onClick={runRescan}
+                disabled={rescanning}
+                title="Pending opnieuw scannen met huidige regels"
+              >
+                {rescanning ? <Loader2 className="h-3 w-3 animate-spin" /> : <ScanSearch className="h-3 w-3" />}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs px-1"
+                onClick={handleDeleteDuplicates}
+                disabled={deletingDuplicates || stats.duplicate === 0}
+                title="Alle duplicates verwijderen"
+              >
+                {deletingDuplicates ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+              </Button>
+            </div>
+            {(deletingDuplicates || rescanning) && (
+              <Progress value={undefined as any} className="h-1 animate-pulse" />
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -640,10 +747,11 @@ export function RestaurantDiscovery() {
       </div>
 
       <Tabs defaultValue={stats.pending > 0 ? 'queue' : 'grid'} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 max-w-2xl">
+        <TabsList className="grid w-full grid-cols-4 max-w-2xl">
           <TabsTrigger value="queue">Review Queue ({stats.pending})</TabsTrigger>
           <TabsTrigger value="grid">Grid Punten ({gridPoints.length})</TabsTrigger>
           <TabsTrigger value="rejected">Afgewezen ({stats.rejected})</TabsTrigger>
+          <TabsTrigger value="audit">Opruim-log</TabsTrigger>
         </TabsList>
 
         <TabsContent value="queue" className="space-y-4">
@@ -1025,7 +1133,169 @@ export function RestaurantDiscovery() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="audit" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-start justify-between gap-4 flex-wrap">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <History className="h-5 w-5" />
+                  Opruim-historie
+                </CardTitle>
+                <CardDescription>
+                  Laatste 25 opruim- en re-scanacties op discovery-resultaten.
+                </CardDescription>
+              </div>
+              <Button variant="outline" size="sm" onClick={loadAuditLogs}>
+                <RefreshCw className="h-4 w-4 mr-1" />
+                Vernieuwen
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {auditLogs.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-8 text-center">
+                  Nog geen opruim- of re-scanacties geregistreerd.
+                </p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Wanneer</TableHead>
+                      <TableHead>Actie</TableHead>
+                      <TableHead className="text-right">Resultaat</TableHead>
+                      <TableHead>Regels</TableHead>
+                      <TableHead>Uitgevoerd door</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {auditLogs.map((log) => {
+                      const d = log.details || {};
+                      const isCleanup = log.action_type === 'discovery_cleanup_duplicates';
+                      const result = isCleanup
+                        ? `${(d.deleted_count ?? 0).toLocaleString('nl-NL')} verwijderd`
+                        : `${(d.marked ?? 0).toLocaleString('nl-NL')} / ${(d.checked ?? 0).toLocaleString('nl-NL')} gemarkeerd`;
+                      const ruleSummary = d.rules
+                        ? `sim≥${d.rules.name_min_similarity ?? '-'}${d.rules.same_city_required ? ', zelfde stad' : ''}${d.rules.radius_meters ? `, ${d.rules.radius_meters}m` : ''}`
+                        : '—';
+                      return (
+                        <TableRow key={log.id}>
+                          <TableCell className="text-xs whitespace-nowrap">
+                            {formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: nl })}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={isCleanup ? 'destructive' : 'secondary'} className="text-xs">
+                              {isCleanup ? 'Verwijderd' : 'Re-scan'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right font-medium text-sm">{result}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{ruleSummary}</TableCell>
+                          <TableCell className="text-xs font-mono text-muted-foreground">
+                            {log.user_id?.slice(0, 8) || '—'}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
+
+      {/* Duplicate Rules Dialog */}
+      <Dialog open={rulesDialogOpen} onOpenChange={setRulesDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-primary" />
+              Duplicate-detectie regels
+            </DialogTitle>
+            <DialogDescription>
+              Bepaal wanneer een gevonden restaurant als duplicaat van een bestaand restaurant wordt gemarkeerd.
+              Wijzigingen gelden voor toekomstige scans en re-scans.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5 py-2">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Match op Google place_id</Label>
+                <p className="text-xs text-muted-foreground">Exacte match — meest betrouwbaar.</p>
+              </div>
+              <Switch
+                checked={rules.match_by_place_id}
+                onCheckedChange={(v) => setRules((r) => ({ ...r, match_by_place_id: v }))}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Match op naam (fuzzy)</Label>
+                <p className="text-xs text-muted-foreground">Vergelijkt restaurant-namen met trigram-similarity.</p>
+              </div>
+              <Switch
+                checked={rules.match_by_name}
+                onCheckedChange={(v) => setRules((r) => ({ ...r, match_by_name: v }))}
+              />
+            </div>
+
+            <div className={`space-y-2 ${!rules.match_by_name ? 'opacity-50 pointer-events-none' : ''}`}>
+              <div className="flex items-center justify-between">
+                <Label>Minimale naam-overeenkomst</Label>
+                <span className="text-sm font-mono">{rules.name_min_similarity.toFixed(2)}</span>
+              </div>
+              <Slider
+                value={[rules.name_min_similarity]}
+                onValueChange={([v]) => setRules((r) => ({ ...r, name_min_similarity: Math.round(v * 100) / 100 }))}
+                min={0.5}
+                max={1.0}
+                step={0.01}
+              />
+              <p className="text-xs text-muted-foreground">
+                0.50 = soepel (meer matches), 1.00 = identiek. Aanbevolen: 0.80–0.90.
+              </p>
+            </div>
+
+            <div className={`flex items-center justify-between ${!rules.match_by_name ? 'opacity-50 pointer-events-none' : ''}`}>
+              <div className="space-y-0.5">
+                <Label>Zelfde stad vereist</Label>
+                <p className="text-xs text-muted-foreground">Beperkt match tot restaurants in dezelfde stad.</p>
+              </div>
+              <Switch
+                checked={rules.same_city_required}
+                onCheckedChange={(v) => setRules((r) => ({ ...r, same_city_required: v }))}
+              />
+            </div>
+
+            <div className={`space-y-2 ${!rules.match_by_name ? 'opacity-50 pointer-events-none' : ''}`}>
+              <Label htmlFor="radius">Maximale afstand (meters)</Label>
+              <Input
+                id="radius"
+                type="number"
+                min={0}
+                step={10}
+                value={rules.radius_meters}
+                onChange={(e) => setRules((r) => ({ ...r, radius_meters: Math.max(0, parseInt(e.target.value || '0', 10)) }))}
+              />
+              <p className="text-xs text-muted-foreground">
+                Match alleen als locaties binnen deze straal liggen. 0 = afstand negeren.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setRules(DEFAULT_RULES)} disabled={savingRules}>
+              <RotateCcw className="h-4 w-4 mr-1" />
+              Standaard
+            </Button>
+            <Button onClick={saveRules} disabled={savingRules}>
+              {savingRules ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Check className="h-4 w-4 mr-1" />}
+              Opslaan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Bulk Scan Dialog */}
       <Dialog open={bulkOpen} onOpenChange={(o) => !bulkRunning && setBulkOpen(o)}>

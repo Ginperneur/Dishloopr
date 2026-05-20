@@ -3300,6 +3300,7 @@ export type Database = {
         Returns: number
       }
       can_create_claim: { Args: { _user_id: string }; Returns: boolean }
+      cleanup_discovery_duplicates: { Args: { p_rules?: Json }; Returns: Json }
       clear_expired_verification_codes: { Args: never; Returns: undefined }
       deduplicate_dishes: { Args: never; Returns: Json }
       deduplicate_restaurant_dishes: { Args: never; Returns: Json }
@@ -3369,6 +3370,7 @@ export type Database = {
         Args: { _restaurant_id: string; _user_id: string }
         Returns: boolean
       }
+      rescan_discovery_duplicates: { Args: { p_rules?: Json }; Returns: Json }
       search_dishes_by_term: {
         Args: { search_term: string }
         Returns: {
@@ -3395,6 +3397,8 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       update_user_badges: { Args: { p_user_id: string }; Returns: undefined }
     }
     Enums: {
