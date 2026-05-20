@@ -635,7 +635,9 @@ export function SearchBar({
             </motion.div>
           </>
         )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Mobile City Dropdown Overlay */}
       <AnimatePresence>
