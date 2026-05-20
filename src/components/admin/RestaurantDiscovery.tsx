@@ -1133,7 +1133,169 @@ export function RestaurantDiscovery() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="audit" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-start justify-between gap-4 flex-wrap">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <History className="h-5 w-5" />
+                  Opruim-historie
+                </CardTitle>
+                <CardDescription>
+                  Laatste 25 opruim- en re-scanacties op discovery-resultaten.
+                </CardDescription>
+              </div>
+              <Button variant="outline" size="sm" onClick={loadAuditLogs}>
+                <RefreshCw className="h-4 w-4 mr-1" />
+                Vernieuwen
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {auditLogs.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-8 text-center">
+                  Nog geen opruim- of re-scanacties geregistreerd.
+                </p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Wanneer</TableHead>
+                      <TableHead>Actie</TableHead>
+                      <TableHead className="text-right">Resultaat</TableHead>
+                      <TableHead>Regels</TableHead>
+                      <TableHead>Uitgevoerd door</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {auditLogs.map((log) => {
+                      const d = log.details || {};
+                      const isCleanup = log.action_type === 'discovery_cleanup_duplicates';
+                      const result = isCleanup
+                        ? `${(d.deleted_count ?? 0).toLocaleString('nl-NL')} verwijderd`
+                        : `${(d.marked ?? 0).toLocaleString('nl-NL')} / ${(d.checked ?? 0).toLocaleString('nl-NL')} gemarkeerd`;
+                      const ruleSummary = d.rules
+                        ? `sim≥${d.rules.name_min_similarity ?? '-'}${d.rules.same_city_required ? ', zelfde stad' : ''}${d.rules.radius_meters ? `, ${d.rules.radius_meters}m` : ''}`
+                        : '—';
+                      return (
+                        <TableRow key={log.id}>
+                          <TableCell className="text-xs whitespace-nowrap">
+                            {formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: nl })}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={isCleanup ? 'destructive' : 'secondary'} className="text-xs">
+                              {isCleanup ? 'Verwijderd' : 'Re-scan'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right font-medium text-sm">{result}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{ruleSummary}</TableCell>
+                          <TableCell className="text-xs font-mono text-muted-foreground">
+                            {log.user_id?.slice(0, 8) || '—'}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
+
+      {/* Duplicate Rules Dialog */}
+      <Dialog open={rulesDialogOpen} onOpenChange={setRulesDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-primary" />
+              Duplicate-detectie regels
+            </DialogTitle>
+            <DialogDescription>
+              Bepaal wanneer een gevonden restaurant als duplicaat van een bestaand restaurant wordt gemarkeerd.
+              Wijzigingen gelden voor toekomstige scans en re-scans.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5 py-2">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Match op Google place_id</Label>
+                <p className="text-xs text-muted-foreground">Exacte match — meest betrouwbaar.</p>
+              </div>
+              <Switch
+                checked={rules.match_by_place_id}
+                onCheckedChange={(v) => setRules((r) => ({ ...r, match_by_place_id: v }))}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Match op naam (fuzzy)</Label>
+                <p className="text-xs text-muted-foreground">Vergelijkt restaurant-namen met trigram-similarity.</p>
+              </div>
+              <Switch
+                checked={rules.match_by_name}
+                onCheckedChange={(v) => setRules((r) => ({ ...r, match_by_name: v }))}
+              />
+            </div>
+
+            <div className={`space-y-2 ${!rules.match_by_name ? 'opacity-50 pointer-events-none' : ''}`}>
+              <div className="flex items-center justify-between">
+                <Label>Minimale naam-overeenkomst</Label>
+                <span className="text-sm font-mono">{rules.name_min_similarity.toFixed(2)}</span>
+              </div>
+              <Slider
+                value={[rules.name_min_similarity]}
+                onValueChange={([v]) => setRules((r) => ({ ...r, name_min_similarity: Math.round(v * 100) / 100 }))}
+                min={0.5}
+                max={1.0}
+                step={0.01}
+              />
+              <p className="text-xs text-muted-foreground">
+                0.50 = soepel (meer matches), 1.00 = identiek. Aanbevolen: 0.80–0.90.
+              </p>
+            </div>
+
+            <div className={`flex items-center justify-between ${!rules.match_by_name ? 'opacity-50 pointer-events-none' : ''}`}>
+              <div className="space-y-0.5">
+                <Label>Zelfde stad vereist</Label>
+                <p className="text-xs text-muted-foreground">Beperkt match tot restaurants in dezelfde stad.</p>
+              </div>
+              <Switch
+                checked={rules.same_city_required}
+                onCheckedChange={(v) => setRules((r) => ({ ...r, same_city_required: v }))}
+              />
+            </div>
+
+            <div className={`space-y-2 ${!rules.match_by_name ? 'opacity-50 pointer-events-none' : ''}`}>
+              <Label htmlFor="radius">Maximale afstand (meters)</Label>
+              <Input
+                id="radius"
+                type="number"
+                min={0}
+                step={10}
+                value={rules.radius_meters}
+                onChange={(e) => setRules((r) => ({ ...r, radius_meters: Math.max(0, parseInt(e.target.value || '0', 10)) }))}
+              />
+              <p className="text-xs text-muted-foreground">
+                Match alleen als locaties binnen deze straal liggen. 0 = afstand negeren.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setRules(DEFAULT_RULES)} disabled={savingRules}>
+              <RotateCcw className="h-4 w-4 mr-1" />
+              Standaard
+            </Button>
+            <Button onClick={saveRules} disabled={savingRules}>
+              {savingRules ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Check className="h-4 w-4 mr-1" />}
+              Opslaan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Bulk Scan Dialog */}
       <Dialog open={bulkOpen} onOpenChange={(o) => !bulkRunning && setBulkOpen(o)}>
