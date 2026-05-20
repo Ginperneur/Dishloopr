@@ -406,10 +406,10 @@ export function SearchBar({
         </button>
       </motion.div>
 
-      {/* MOBILE OVERLAYS - Fixed position fullscreen */}
-      
-      {/* Mobile Suggestions Overlay */}
-      <AnimatePresence>
+      {/* MOBILE + DESKTOP SUGGESTIONS — rendered via portal so they escape
+          any parent stacking context (motion.div / transform / filter). */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
         {showSuggestions && hasSuggestions && (
           <>
             {/* Backdrop - both mobile and desktop */}
