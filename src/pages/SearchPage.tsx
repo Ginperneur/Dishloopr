@@ -112,51 +112,17 @@ export default function SearchPage() {
     setSelectedCityId(resolvedCityId);
   }, [resolvedCityId]);
 
-  // 301-style canonical redirect: /search?dish=X (no other filters) → /eten/gerecht/{slug}
-  // and /search?city=X (no other filters) → /steden/{slug}
+  // Normalize dish casing in URL (avoid duplicate indexing) without redirecting
+  // away to a pillar/in-between page — user-initiated searches must land on results.
   useEffect(() => {
-    const hasCuisine = !!cuisineParam;
-    const hasFeatured = featuredOnly;
-    const hasView = searchParams.get('view') === 'map';
-    if (hasCuisine || hasFeatured || hasView) return;
-
-    // Normalize dish to lowercase slug and try canonical pillar
-    if (dishQuery && (!cityParam || cityParam === 'all')) {
-      const lower = dishQuery.toLowerCase().trim();
-      const slug = slugify(lower);
-      if (!slug) return;
-      let cancelled = false;
-      (async () => {
-        const { data } = await supabase
-          .from('dishes')
-          .select('slug')
-          .or(`slug.eq.${slug},name.ilike.${lower}`)
-          .eq('is_active', true)
-          .limit(1)
-          .maybeSingle();
-        if (cancelled) return;
-        if (data?.slug) {
-          navigate(`/eten/gerecht/${data.slug}`, { replace: true });
-        } else if (dishQuery !== lower) {
-          // At minimum normalize to lowercase to avoid case duplicates
-          const params = new URLSearchParams(searchParams);
-          params.set('dish', lower);
-          setSearchParams(params, { replace: true });
-        }
-      })();
-      return () => { cancelled = true; };
+    if (!dishQuery) return;
+    const lower = dishQuery.toLowerCase().trim();
+    if (dishQuery !== lower) {
+      const params = new URLSearchParams(searchParams);
+      params.set('dish', lower);
+      setSearchParams(params, { replace: true });
     }
-
-    // City-only → /steden/{slug}
-    if (!dishQuery && cityParam && cityParam !== 'all') {
-      const match = cities.find(c =>
-        c.id === cityParam || c.slug === cityParam || c.name.toLowerCase() === cityParam.toLowerCase()
-      );
-      if (match?.slug) {
-        navigate(`/steden/${match.slug}`, { replace: true });
-      }
-    }
-  }, [dishQuery, cityParam, cuisineParam, featuredOnly, searchParams, cities, navigate, setSearchParams]);
+  }, [dishQuery, searchParams, setSearchParams]);
 
   // Show scroll-to-top button after scrolling
   useEffect(() => {
