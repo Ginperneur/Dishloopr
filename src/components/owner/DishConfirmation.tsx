@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Check, X, Plus, Loader2, ChefHat, AlertCircle, Search, Leaf, Wheat } from 'lucide-react';
+import { Check, X, Plus, Loader2, ChefHat, AlertCircle, Search, Leaf, Wheat, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { cn, formatDishName } from '@/lib/utils';
@@ -50,6 +50,8 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
   const confirmedDishes = dishes.filter((d) => 
     d.status === 'verified_by_owner' || d.status === 'approved_by_admin'
   );
+  const signatureCount = confirmedDishes.filter((d: any) => d.is_signature).length;
+  const SIGNATURE_MAX = 5;
   const existingDishIds = dishes.map((d) => d.dish_id);
 
   const availableToAdd = availableDishes.filter(
@@ -158,6 +160,27 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
     refetch();
   };
 
+  const toggleSignature = async (dishId: string, currentValue: boolean) => {
+    if (!currentValue && signatureCount >= SIGNATURE_MAX) {
+      toast.error(isNL
+        ? `Maximaal ${SIGNATURE_MAX} "Bekend om" gerechten`
+        : `Maximum ${SIGNATURE_MAX} "Known for" dishes`);
+      return;
+    }
+    const { error } = await supabase
+      .from('restaurant_dishes')
+      .update({ is_signature: !currentValue })
+      .eq('id', dishId);
+    if (error) {
+      toast.error(isNL ? 'Kon niet bijwerken' : 'Could not update');
+      return;
+    }
+    toast.success(!currentValue
+      ? (isNL ? 'Gemarkeerd als "Bekend om"' : 'Marked as "Known for"')
+      : (isNL ? '"Bekend om" verwijderd' : '"Known for" removed'));
+    refetch();
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -241,7 +264,9 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
               {isNL ? 'Bevestigde Gerechten' : 'Confirmed Dishes'}
             </CardTitle>
             <CardDescription>
-              {isNL ? 'Beheer gerechten en dieetopties' : 'Manage dishes and dietary options'}
+              {isNL
+                ? `Beheer gerechten en markeer max ${SIGNATURE_MAX} als "Bekend om" (${signatureCount}/${SIGNATURE_MAX})`
+                : `Manage dishes, mark up to ${SIGNATURE_MAX} as "Known for" (${signatureCount}/${SIGNATURE_MAX})`}
             </CardDescription>
           </div>
           <Button onClick={() => setAddDishOpen(true)}>
@@ -268,8 +293,13 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
                       {COURSE_TYPE_LABELS[courseType]}
                     </p>
                     <div className="space-y-2">
-                      {courseDishes.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
+                       {courseDishes.map((item) => {
+                         const isSig = (item as any).is_signature || false;
+                         return (
+                         <div key={item.id} className={cn(
+                           "flex items-center justify-between p-3 rounded-lg border bg-card",
+                           isSig && "border-primary/40 bg-primary/5"
+                         )}>
                           <div className="flex items-center gap-2 min-w-0">
                             <Select
                               value={(item as any).course_type || 'hoofdgerecht'}
@@ -290,10 +320,24 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
                                 ))}
                               </SelectContent>
                             </Select>
+                            {isSig && <Star className="h-3.5 w-3.5 fill-primary text-primary shrink-0" />}
                             <span className="text-sm font-medium truncate">{getDishName(item.dish)}</span>
                           </div>
 
                           <div className="flex items-center gap-3 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => toggleSignature(item.id, isSig)}
+                              disabled={!isSig && signatureCount >= SIGNATURE_MAX}
+                              title={isNL ? 'Bekend om' : 'Known for'}
+                              className={cn(
+                                "p-1 rounded transition-colors",
+                                isSig ? "text-primary" : "text-muted-foreground hover:text-primary",
+                                !isSig && signatureCount >= SIGNATURE_MAX && "opacity-30 cursor-not-allowed hover:text-muted-foreground"
+                              )}
+                            >
+                              <Star className={cn("h-4 w-4", isSig && "fill-primary")} />
+                            </button>
                             {/* Dietary toggles */}
                             <div className="flex items-center gap-1" title="Vegetarisch">
                               <Leaf className="h-3.5 w-3.5 text-green-600" />
@@ -327,7 +371,8 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
                             </button>
                           </div>
                         </div>
-                      ))}
+                         );
+                       })}
                     </div>
                   </div>
                 );
