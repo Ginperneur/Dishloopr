@@ -72,6 +72,7 @@ const navGroups = [
       { id: 'sponsored', label: 'Sponsored', icon: Sparkles },
       { id: 'featured-slots', label: 'Featured', icon: Crown },
       { id: 'newsletter', label: 'Nieuwsbrief', icon: FileText },
+      { id: 'restaurant-mail', label: 'Mail Restaurants', icon: FileText },
       { id: 'seo', label: 'SEO Pages', icon: TrendingUp },
       { id: 'notifications', label: 'Notificaties', icon: Bell },
     ],

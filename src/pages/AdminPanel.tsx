@@ -44,6 +44,7 @@ import { FeaturedSlotsManager } from '@/components/admin/FeaturedSlotsManager';
 import { AmbiancePricingManager } from '@/components/admin/AmbiancePricingManager';
 import { AdminNotifications } from '@/components/admin/AdminNotifications';
 import { NewsletterManager } from '@/components/admin/NewsletterManager';
+import { RestaurantBulkMailer } from '@/components/admin/RestaurantBulkMailer';
 import { MenuScraper } from '@/components/admin/MenuScraper';
 import { ManualMenuUpload } from '@/components/admin/ManualMenuUpload';
 import { EmptyDishesManager } from '@/components/admin/EmptyDishesManager';
@@ -589,6 +590,7 @@ export default function AdminPanel() {
                   <CardContent className="pt-6"><NewsletterManager /></CardContent>
                 </Card>
               )}
+              {activeSection === 'restaurant-mail' && <RestaurantBulkMailer />}
               {activeSection === 'menu-scraper' && <MenuScraper />}
               {activeSection === 'manual-menu' && <ManualMenuUpload />}
               {activeSection === 'empty-dishes' && <EmptyDishesManager onNavigateToTab={handleNavigateToTab} />}
