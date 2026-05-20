@@ -10,8 +10,11 @@ import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Loader2, MapPin, Sparkles, Check, X, RefreshCw, Star, ExternalLink, Zap, AlertCircle, RotateCcw, Search, Trash2 } from 'lucide-react';
+import { Loader2, MapPin, Sparkles, Check, X, RefreshCw, Star, ExternalLink, Zap, AlertCircle, RotateCcw, Search, Trash2, Settings, History, ScanSearch } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
@@ -108,6 +111,104 @@ export function RestaurantDiscovery() {
 
   // Delete duplicates state
   const [deletingDuplicates, setDeletingDuplicates] = useState(false);
+
+  // Duplicate rules & rescan state
+  type DupRules = {
+    match_by_place_id: boolean;
+    match_by_name: boolean;
+    name_min_similarity: number;
+    same_city_required: boolean;
+    radius_meters: number;
+  };
+  const DEFAULT_RULES: DupRules = {
+    match_by_place_id: true,
+    match_by_name: true,
+    name_min_similarity: 0.85,
+    same_city_required: true,
+    radius_meters: 150,
+  };
+  const [rules, setRules] = useState<DupRules>(DEFAULT_RULES);
+  const [rulesDialogOpen, setRulesDialogOpen] = useState(false);
+  const [savingRules, setSavingRules] = useState(false);
+  const [rescanning, setRescanning] = useState(false);
+
+  // Audit log
+  type AuditRow = {
+    id: string;
+    user_id: string;
+    action_type: string;
+    created_at: string;
+    details: any;
+  };
+  const [auditLogs, setAuditLogs] = useState<AuditRow[]>([]);
+
+  // Load duplicate rules from app_settings
+  const loadRules = async () => {
+    const { data } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'discovery_duplicate_rules')
+      .maybeSingle();
+    if (data?.value) {
+      try {
+        const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+        setRules({ ...DEFAULT_RULES, ...parsed });
+      } catch {
+        /* keep defaults */
+      }
+    }
+  };
+
+  // Load audit log for cleanup/rescan
+  const loadAuditLogs = async () => {
+    const { data } = await supabase
+      .from('admin_activity_logs')
+      .select('id, user_id, action_type, created_at, details')
+      .in('action_type', ['discovery_cleanup_duplicates', 'discovery_rescan_duplicates'])
+      .order('created_at', { ascending: false })
+      .limit(25);
+    setAuditLogs((data || []) as AuditRow[]);
+  };
+
+  useEffect(() => {
+    loadRules();
+    loadAuditLogs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const saveRules = async () => {
+    setSavingRules(true);
+    try {
+      const { error } = await supabase
+        .from('app_settings')
+        .update({ value: JSON.stringify(rules), updated_at: new Date().toISOString() })
+        .eq('key', 'discovery_duplicate_rules');
+      if (error) throw error;
+      toast.success('Duplicate-regels opgeslagen');
+    } catch (e: any) {
+      toast.error(e.message || 'Opslaan mislukt');
+    } finally {
+      setSavingRules(false);
+    }
+  };
+
+  const runRescan = async () => {
+    if (!confirm('De huidige duplicate-regels worden toegepast op alle pending discovery-resultaten. Doorgaan?')) return;
+    setRescanning(true);
+    try {
+      const { data, error } = await supabase.rpc('rescan_discovery_duplicates', {
+        p_rules: rules as any,
+      });
+      if (error) throw error;
+      const d: any = data || {};
+      toast.success(`Re-scan klaar: ${d.checked || 0} gecheckt, ${d.marked || 0} als duplicate gemarkeerd (${d.took_ms || 0} ms)`);
+      await Promise.all([loadData(), loadAuditLogs()]);
+    } catch (e: any) {
+      toast.error(e.message || 'Re-scan mislukt');
+    } finally {
+      setRescanning(false);
+    }
+  };
 
   // Persist selection across refresh / navigation
   useEffect(() => {
@@ -418,27 +519,13 @@ export function RestaurantDiscovery() {
     if (!confirm(`Weet je zeker dat je ${stats.duplicate.toLocaleString('nl-NL')} duplicaat-resultaten uit de discovery queue wilt verwijderen?\n\nDe gekoppelde restaurants blijven bestaan — alleen de discovery_results records worden opgeruimd.`)) return;
     setDeletingDuplicates(true);
     try {
-      // Delete in batches to avoid timeouts on large datasets
-      let totalDeleted = 0;
-      while (true) {
-        const { data: batch, error: selErr } = await supabase
-          .from('discovery_results')
-          .select('id')
-          .eq('status', 'duplicate')
-          .limit(1000);
-        if (selErr) throw selErr;
-        if (!batch || batch.length === 0) break;
-        const ids = batch.map((r) => r.id);
-        const { error: delErr } = await supabase
-          .from('discovery_results')
-          .delete()
-          .in('id', ids);
-        if (delErr) throw delErr;
-        totalDeleted += ids.length;
-        if (batch.length < 1000) break;
-      }
-      toast.success(`${totalDeleted.toLocaleString('nl-NL')} duplicaten verwijderd uit de discovery queue`);
-      await loadData();
+      const { data, error } = await supabase.rpc('cleanup_discovery_duplicates', {
+        p_rules: rules as any,
+      });
+      if (error) throw error;
+      const d: any = data || {};
+      toast.success(`${(d.deleted_count || 0).toLocaleString('nl-NL')} duplicaten verwijderd (${d.took_ms || 0} ms)`);
+      await Promise.all([loadData(), loadAuditLogs()]);
     } catch (e: any) {
       toast.error(e.message || 'Verwijderen mislukt');
     } finally {
