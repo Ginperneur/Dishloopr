@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     const batchSize = body.batchSize || 25;
     const offset = body.offset || 0;
     const forceRefresh = body.forceRefresh || false;
-    const mode = body.mode || 'full'; // 'full' | 'opening_hours_only'
+    const mode = body.mode || 'full'; // 'full' | 'opening_hours_only' | 'never_enriched'
 
     // Build query based on mode
     let query = supabase
@@ -39,6 +39,9 @@ Deno.serve(async (req) => {
     if (mode === 'opening_hours_only') {
       // Restaurants that already have a rating but missing opening_hours
       query = query.not('google_rating', 'is', null).gt('google_rating', 0).is('opening_hours', null);
+    } else if (mode === 'never_enriched') {
+      // Only restaurants that have never been touched (rating IS NULL, excludes failed attempts where rating=0)
+      query = query.is('google_rating', null);
     } else if (!forceRefresh) {
       query = query.is('google_rating', null);
     }
@@ -65,6 +68,8 @@ Deno.serve(async (req) => {
 
     if (mode === 'opening_hours_only') {
       countQuery = countQuery.not('google_rating', 'is', null).gt('google_rating', 0).is('opening_hours', null);
+    } else if (mode === 'never_enriched') {
+      countQuery = countQuery.is('google_rating', null);
     } else if (!forceRefresh) {
       countQuery = countQuery.is('google_rating', null);
     }
