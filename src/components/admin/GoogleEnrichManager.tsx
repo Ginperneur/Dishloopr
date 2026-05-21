@@ -16,7 +16,7 @@ interface EnrichResult {
   reviews?: number;
 }
 
-type EnrichMode = 'full' | 'opening_hours_only';
+type EnrichMode = 'full' | 'opening_hours_only' | 'never_enriched';
 
 export function GoogleEnrichManager() {
   const [running, setRunning] = useState(false);
@@ -131,6 +131,19 @@ export function GoogleEnrichManager() {
               <Button onClick={() => runAll('full')} disabled={running} size="sm">
                 {running && activeMode === 'full' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
                 Alles verrijken
+              </Button>
+            </div>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-1.5">Alleen nog nooit verrijkte restaurants (skip eerdere mislukte pogingen)</p>
+            <div className="flex gap-2">
+              <Button onClick={() => runBatch(25, 'never_enriched')} disabled={running} variant="outline" size="sm">
+                {running && activeMode === 'never_enriched' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Play className="h-4 w-4 mr-2" />}
+                1 Batch (25)
+              </Button>
+              <Button onClick={() => runAll('never_enriched')} disabled={running} size="sm">
+                {running && activeMode === 'never_enriched' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                Alle nieuwe verrijken
               </Button>
             </div>
           </div>
