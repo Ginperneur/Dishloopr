@@ -62,6 +62,7 @@ import { DishConfirmation } from '@/components/owner/DishConfirmation';
 import { TagManager } from '@/components/owner/TagManager';
 import { RestaurantImageUpload } from '@/components/admin/RestaurantImageUpload';
 import { ActionCards } from '@/components/owner/ActionCards';
+import { DailyBriefing } from '@/components/owner/DailyBriefing';
 import { ReviewIntelligence } from '@/components/owner/ReviewIntelligence';
 import { NeighborhoodAnalysis } from '@/components/owner/NeighborhoodAnalysis';
 import { PeakHoursInsight } from '@/components/owner/PeakHoursInsight';
