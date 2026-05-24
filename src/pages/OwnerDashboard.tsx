@@ -427,6 +427,47 @@ export default function OwnerDashboard() {
           />
         </motion.div>
 
+        {/* Daily Briefing - hero insight card */}
+        {selectedRestaurant && (
+          <DailyBriefing
+            restaurantName={selectedRestaurant.name}
+            totalViews={analytics?.totalViews || 0}
+            viewsByDay={analytics?.viewsByDay || []}
+            unansweredReviews={unansweredReviews}
+            suggestedDishes={suggestedDishCount}
+            isVerified={isVerified}
+            primaryActionLabel={
+              !isVerified
+                ? 'Verifieer nu'
+                : unansweredReviews > 0
+                ? 'Beantwoord reviews'
+                : suggestedDishCount > 0
+                ? 'Bevestig gerechten'
+                : 'Bekijk inzichten'
+            }
+            primaryActionHint={
+              !isVerified
+                ? 'Ontgrendel alle data en functies'
+                : unansweredReviews > 0
+                ? 'Reageren verhoogt vertrouwen'
+                : suggestedDishCount > 0
+                ? 'Word beter vindbaar'
+                : 'Optimaliseer je profiel verder'
+            }
+            onPrimaryAction={() => {
+              if (!isVerified) {
+                setVerificationDialogOpen(true);
+              } else if (unansweredReviews > 0) {
+                setActiveTab('overview');
+              } else if (suggestedDishCount > 0) {
+                setActiveTab('content');
+              } else {
+                setActiveTab('insights');
+              }
+            }}
+          />
+        )}
+
         {/* Action Cards */}
         <ActionCards
           unansweredReviews={unansweredReviews}
