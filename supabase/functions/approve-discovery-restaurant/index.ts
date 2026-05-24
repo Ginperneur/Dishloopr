@@ -229,6 +229,48 @@ Deno.serve(async (req) => {
     }
 
     // ============================================
+    // STEP 4b: Fetch Google photos (if none yet)
+    // ============================================
+    try {
+      const { data: restPhotos } = await admin
+        .from('restaurants')
+        .select('images, google_place_id')
+        .eq('id', restaurantId!)
+        .single();
+
+      const hasImages = Array.isArray(restPhotos?.images) && restPhotos!.images.length > 0;
+      if (!hasImages && restPhotos?.google_place_id) {
+        const photosRes = await fetch(`${supabaseUrl}/functions/v1/fetch-google-photos`, {
+          method: 'POST',
+          headers: {
+            'Authorization': authHeader,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            place_id: restPhotos.google_place_id,
+            restaurant_id: restaurantId,
+            max_photos: 6,
+          }),
+        });
+        const photosData = await photosRes.json().catch(() => ({}));
+        const count = photosData?.count ?? photosData?.images?.length ?? 0;
+        steps.push({
+          step: 'fetch_photos',
+          ok: photosRes.ok && count > 0,
+          detail: `${count} foto's toegevoegd`,
+        });
+      } else {
+        steps.push({
+          step: 'fetch_photos',
+          ok: true,
+          detail: hasImages ? 'Heeft al foto\'s' : 'Geen place_id',
+        });
+      }
+    } catch (e: any) {
+      steps.push({ step: 'fetch_photos', ok: false, detail: e.message });
+    }
+
+    // ============================================
     // STEP 5: Activate if enriched + classified
     // ============================================
     const { data: finalRest } = await admin
