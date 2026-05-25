@@ -1003,6 +1003,11 @@ export default function OwnerDashboard() {
             )}
           </TabsContent>
 
+          {/* ===== FACTUREN TAB ===== */}
+          <TabsContent value="invoices">
+            <InvoicesTab />
+          </TabsContent>
+
         </Tabs>
       </div>
 
