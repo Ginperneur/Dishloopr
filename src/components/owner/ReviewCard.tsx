@@ -37,11 +37,6 @@ export function ReviewCard({ review, onRespond, canRespond, restaurantId, restau
 
   const applyTemplate = async (t: { id: string; body: string }) => {
     setResponse(t.body);
-    // increment use_count (fire and forget)
-    (supabase as any).rpc('increment', {}).then(() => {});
-    await (supabase as any).from('response_templates')
-      .update({ use_count: (templates.find(x => x.id === t.id) as any)?.use_count_curr ?? undefined })
-      .eq('id', t.id);
   };
 
   const generateAI = async (tone: 'warm' | 'professional' | 'apologetic') => {
