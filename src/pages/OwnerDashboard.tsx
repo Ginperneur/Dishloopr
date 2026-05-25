@@ -79,6 +79,11 @@ import { InvoicesTab } from '@/components/owner/InvoicesTab';
 import { QRCodeGenerator } from '@/components/owner/QRCodeGenerator';
 import { CompetitorBenchmark } from '@/components/owner/CompetitorBenchmark';
 import { DealsManager } from '@/components/owner/DealsManager';
+import { NotificationBell } from '@/components/owner/NotificationBell';
+import { QuickShareMenu } from '@/components/owner/QuickShareMenu';
+import { ProfileCompletenessCard } from '@/components/owner/ProfileCompletenessCard';
+import { WeeklyReportToggle } from '@/components/owner/WeeklyReportToggle';
+import { ProGate } from '@/components/owner/ProGate';
 import { useOptimizationInsights } from '@/hooks/useOptimizationInsights';
 import { useMarketInsights } from '@/hooks/useMarketInsights';
 import { useRestaurantDishes } from '@/hooks/useRestaurantDishes';
@@ -287,7 +292,16 @@ export default function OwnerDashboard() {
               </div>
             </div>
 
-            {restaurants.length > 1 && (
+            <div className="flex items-center gap-2">
+              {selectedRestaurant && (
+                <QuickShareMenu
+                  restaurantSlug={selectedRestaurant.slug}
+                  restaurantName={selectedRestaurant.name}
+                  address={(selectedRestaurant as any).address}
+                />
+              )}
+              <NotificationBell />
+              {restaurants.length > 1 && (
               <Popover open={restaurantPickerOpen} onOpenChange={setRestaurantPickerOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -335,7 +349,8 @@ export default function OwnerDashboard() {
                   </Command>
                 </PopoverContent>
               </Popover>
-            )}
+              )}
+            </div>
           </div>
         </motion.div>
 
@@ -462,6 +477,15 @@ export default function OwnerDashboard() {
             locked={!isVerified}
           />
         </motion.div>
+
+        {/* Daily Briefing - hero insight card */}
+        {selectedRestaurant && (
+          <ProfileCompletenessCard
+            restaurant={selectedRestaurant as any}
+            dishCount={restaurantDishes.length}
+            onNavigateTab={(tab) => setActiveTab(tab)}
+          />
+        )}
 
         {/* Daily Briefing - hero insight card */}
         {selectedRestaurant && (
@@ -767,6 +791,9 @@ export default function OwnerDashboard() {
               />
             )}
 
+            {/* Email Preferences */}
+            <WeeklyReportToggle />
+
             {/* Dishes Confirmation */}
             <div>
               <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
@@ -992,13 +1019,15 @@ export default function OwnerDashboard() {
                 </div>
 
                 <div className="border-t pt-8">
-                  <CompetitorBenchmark
-                    restaurantId={selectedRestaurant.id}
-                    cityId={selectedRestaurant.city_id}
-                    cuisines={selectedRestaurant.cuisines || []}
-                    rating={Number(selectedRestaurant.rating)}
-                    reviewCount={selectedRestaurant.review_count}
-                  />
+                  <ProGate restaurantId={selectedRestaurant.id}>
+                    <CompetitorBenchmark
+                      restaurantId={selectedRestaurant.id}
+                      cityId={selectedRestaurant.city_id}
+                      cuisines={selectedRestaurant.cuisines || []}
+                      rating={Number(selectedRestaurant.rating)}
+                      reviewCount={selectedRestaurant.review_count}
+                    />
+                  </ProGate>
                 </div>
 
                 <div className="border-t pt-8">

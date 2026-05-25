@@ -1490,6 +1490,63 @@ export type Database = {
           },
         ]
       }
+      owner_email_preferences: {
+        Row: {
+          created_at: string
+          updated_at: string
+          user_id: string
+          weekly_report: boolean
+        }
+        Insert: {
+          created_at?: string
+          updated_at?: string
+          user_id: string
+          weekly_report?: boolean
+        }
+        Update: {
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+          weekly_report?: boolean
+        }
+        Relationships: []
+      }
+      owner_notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          link: string | null
+          restaurant_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          restaurant_id?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          restaurant_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -2079,6 +2136,7 @@ export type Database = {
           meal_types: string[] | null
           name: string
           opening_hours: Json | null
+          owner_tier: string
           phone: string | null
           postal_code: string | null
           price_level: number
@@ -2131,6 +2189,7 @@ export type Database = {
           meal_types?: string[] | null
           name: string
           opening_hours?: Json | null
+          owner_tier?: string
           phone?: string | null
           postal_code?: string | null
           price_level?: number
@@ -2183,6 +2242,7 @@ export type Database = {
           meal_types?: string[] | null
           name?: string
           opening_hours?: Json | null
+          owner_tier?: string
           phone?: string | null
           postal_code?: string | null
           price_level?: number
