@@ -899,6 +899,43 @@ export default function OwnerDashboard() {
                 />
               )}
             </div>
+
+            {/* Response Templates (Basis) */}
+            {selectedRestaurant && isVerified && (
+              <div className="border-t pt-8">
+                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                  <MessageSquare className="h-5 w-5 text-primary" />
+                  Reactietemplates
+                </h3>
+                <ResponseTemplatesManager restaurantId={selectedRestaurant.id} />
+              </div>
+            )}
+
+            {/* Internal Feedback Inbox (Pro) */}
+            {selectedRestaurant && isVerified && (
+              <div className="border-t pt-8">
+                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                  <MessageSquare className="h-5 w-5 text-primary" />
+                  Interne gast-feedback (QR)
+                </h3>
+                <ProGate restaurantId={selectedRestaurant.id}>
+                  <InternalFeedbackInbox restaurantId={selectedRestaurant.id} />
+                </ProGate>
+              </div>
+            )}
+
+            {/* Team Members (Pro) */}
+            {selectedRestaurant && isVerified && (
+              <div className="border-t pt-8">
+                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                  <Store className="h-5 w-5 text-primary" />
+                  Team-beheer
+                </h3>
+                <ProGate restaurantId={selectedRestaurant.id}>
+                  <TeamMembersManager restaurantId={selectedRestaurant.id} />
+                </ProGate>
+              </div>
+            )}
           </TabsContent>
 
           {/* ===== INZICHTEN TAB ===== */}
