@@ -103,6 +103,7 @@ const App = () => (
                   <Route path="/dashboard" element={<OwnerDashboard />} />
                   <Route path="/owner-dashboard" element={<OwnerDashboard />} />
                   <Route path="/my-dashboard" element={<FoodieDashboard />} />
+                  <Route path="/feedback/:restaurantId" element={<InternalFeedbackPage />} />
                   <Route path="/admin" element={<AdminPanel />} />
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/contact" element={<ContactPage />} />
