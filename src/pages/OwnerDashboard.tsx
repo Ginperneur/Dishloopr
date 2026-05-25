@@ -32,7 +32,8 @@ import {
   CheckCircle2,
   PartyPopper,
   Instagram,
-  Receipt
+  Receipt,
+  ChevronsUpDown
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -40,6 +41,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOwnerDashboard } from '@/hooks/useOwnerDashboard';
 import { useRestaurantClaims } from '@/hooks/useRestaurantClaims';
@@ -100,6 +104,7 @@ export default function OwnerDashboard() {
   const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string | undefined>(undefined);
+  const [restaurantPickerOpen, setRestaurantPickerOpen] = useState(false);
 
   // Fetch optimization data for action cards
   const { data: optimizationData } = useOptimizationInsights(selectedRestaurant?.id);
@@ -283,24 +288,53 @@ export default function OwnerDashboard() {
             </div>
 
             {restaurants.length > 1 && (
-              <Select
-                value={selectedRestaurant?.id}
-                onValueChange={(id) => {
-                  const restaurant = restaurants.find(r => r.id === id);
-                  if (restaurant) setSelectedRestaurant(restaurant);
-                }}
-              >
-                <SelectTrigger className="w-[250px]">
-                  <SelectValue placeholder="Selecteer restaurant" />
-                </SelectTrigger>
-                <SelectContent>
-                  {restaurants.map(restaurant => (
-                    <SelectItem key={restaurant.id} value={restaurant.id}>
-                      {restaurant.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={restaurantPickerOpen} onOpenChange={setRestaurantPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={restaurantPickerOpen}
+                    className="w-[280px] justify-between"
+                  >
+                    <span className="truncate">
+                      {selectedRestaurant?.name || 'Selecteer restaurant'}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[320px] p-0" align="end">
+                  <Command
+                    filter={(value, search) =>
+                      value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0
+                    }
+                  >
+                    <CommandInput placeholder="Zoek restaurant..." />
+                    <CommandList>
+                      <CommandEmpty>Geen restaurant gevonden.</CommandEmpty>
+                      <CommandGroup>
+                        {restaurants.map(restaurant => (
+                          <CommandItem
+                            key={restaurant.id}
+                            value={restaurant.name}
+                            onSelect={() => {
+                              setSelectedRestaurant(restaurant);
+                              setRestaurantPickerOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                'mr-2 h-4 w-4',
+                                selectedRestaurant?.id === restaurant.id ? 'opacity-100' : 'opacity-0'
+                              )}
+                            />
+                            <span className="truncate">{restaurant.name}</span>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             )}
           </div>
         </motion.div>
