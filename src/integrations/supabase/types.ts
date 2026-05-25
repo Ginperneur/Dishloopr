@@ -166,6 +166,7 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          province: string | null
           slug: string
           updated_at: string
         }
@@ -175,6 +176,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          province?: string | null
           slug: string
           updated_at?: string
         }
@@ -184,6 +186,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          province?: string | null
           slug?: string
           updated_at?: string
         }
@@ -1345,8 +1348,11 @@ export type Database = {
           price_paid: number
           promo_type: string
           restaurant_id: string
+          scope: string
           status: string
           stripe_payment_id: string | null
+          target_city_id: string | null
+          target_province: string | null
           title: string
           updated_at: string
           user_id: string
@@ -1360,8 +1366,11 @@ export type Database = {
           price_paid?: number
           promo_type?: string
           restaurant_id: string
+          scope?: string
           status?: string
           stripe_payment_id?: string | null
+          target_city_id?: string | null
+          target_province?: string | null
           title: string
           updated_at?: string
           user_id: string
@@ -1375,8 +1384,11 @@ export type Database = {
           price_paid?: number
           promo_type?: string
           restaurant_id?: string
+          scope?: string
           status?: string
           stripe_payment_id?: string | null
+          target_city_id?: string | null
+          target_province?: string | null
           title?: string
           updated_at?: string
           user_id?: string
@@ -1422,6 +1434,24 @@ export type Database = {
           subscribed_at?: string
           unsubscribed_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      nl_provinces: {
+        Row: {
+          created_at: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          name?: string
+          slug?: string
         }
         Relationships: []
       }
@@ -3302,6 +3332,7 @@ export type Database = {
       can_create_claim: { Args: { _user_id: string }; Returns: boolean }
       cleanup_discovery_duplicates: { Args: { p_rules?: Json }; Returns: Json }
       clear_expired_verification_codes: { Args: never; Returns: undefined }
+      create_biweekly_newsletter_draft: { Args: never; Returns: string }
       deduplicate_dishes: { Args: never; Returns: Json }
       deduplicate_restaurant_dishes: { Args: never; Returns: Json }
       generate_amsterdam_grid: { Args: never; Returns: number }
