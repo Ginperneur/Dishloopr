@@ -36,10 +36,38 @@ serve(async (req) => {
       });
     }
 
-    const { restaurantId, restaurantName, title, description, promoType, editionId } = await req.json();
+    const {
+      restaurantId,
+      restaurantName,
+      title,
+      description,
+      promoType,
+      editionId,
+      scope,
+      targetCityId,
+      targetProvince,
+    } = await req.json();
 
     if (!restaurantId || !title) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const allowedScopes = ["city", "province", "national"] as const;
+    const finalScope: typeof allowedScopes[number] = allowedScopes.includes(scope)
+      ? scope
+      : "city";
+
+    if (finalScope === "city" && !targetCityId) {
+      return new Response(JSON.stringify({ error: "targetCityId is required for city scope" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (finalScope === "province" && !targetProvince) {
+      return new Response(JSON.stringify({ error: "targetProvince is required for province scope" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -51,6 +79,34 @@ serve(async (req) => {
       { auth: { persistSession: false } },
     );
 
+    // Look up scope-specific Stripe price ID + EUR amount from app_settings
+    const priceKey =
+      finalScope === "city"
+        ? "newsletter_price_id_city"
+        : finalScope === "province"
+          ? "newsletter_price_id_province"
+          : "newsletter_price_id_national";
+
+    const priceMap: Record<typeof allowedScopes[number], number> = {
+      city: 15,
+      province: 20,
+      national: 40,
+    };
+
+    const { data: setting } = await supabaseAdmin
+      .from("app_settings")
+      .select("value")
+      .eq("key", priceKey)
+      .maybeSingle();
+
+    const stripePriceId = setting?.value;
+    if (!stripePriceId) {
+      return new Response(
+        JSON.stringify({ error: `Stripe price not configured for scope ${finalScope}` }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     // Create placement record
     const { data: placement, error: placementError } = await supabaseAdmin
       .from("newsletter_placements")
@@ -61,6 +117,10 @@ serve(async (req) => {
         description: description || null,
         promo_type: promoType || "actie",
         edition_id: editionId || null,
+        scope: finalScope,
+        target_city_id: finalScope === "city" ? targetCityId : null,
+        target_province: finalScope === "province" ? targetProvince : null,
+        price_paid: priceMap[finalScope],
         status: "pending_payment",
       })
       .select()
@@ -85,7 +145,7 @@ serve(async (req) => {
       payment_method_types: ["card", "ideal"],
       line_items: [
         {
-          price: "price_1TKicY3EXkDnjHC3kV9Mt6ma", // €15.00 Nieuwsbrief Plaatsing
+          price: stripePriceId,
           quantity: 1,
         },
       ],
@@ -97,6 +157,9 @@ serve(async (req) => {
         placementId: placement.id,
         restaurantId,
         userId: user.id,
+        scope: finalScope,
+        targetCityId: targetCityId || "",
+        targetProvince: targetProvince || "",
       },
     });
 
