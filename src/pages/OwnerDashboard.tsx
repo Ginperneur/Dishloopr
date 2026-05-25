@@ -923,6 +923,20 @@ export default function OwnerDashboard() {
                   <SearchRanking restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
                 </div>
 
+                {/* Conversion Funnel (Pro) */}
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <BarChart3 className="h-5 w-5 text-primary" />
+                    Conversie & Zoektermen
+                  </h3>
+                  <ProGate feature="funnel" restaurant={selectedRestaurant as any}>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <OwnerFunnel restaurantId={selectedRestaurant.id} />
+                      <SearchTermHeatmap restaurantId={selectedRestaurant.id} />
+                    </div>
+                  </ProGate>
+                </div>
+
                 {/* Dish Analytics */}
                 <div className="border-t pt-8">
                   <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
