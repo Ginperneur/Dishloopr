@@ -489,7 +489,7 @@ export default function OwnerDashboard() {
 
         {/* Main Tabs - Grouped into 5 clear sections */}
         <Tabs value={activeTab} defaultValue="overview" onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="w-full h-auto p-1 flex overflow-x-auto sm:grid sm:grid-cols-5 gap-1">
+          <TabsList className="w-full h-auto p-1 flex overflow-x-auto sm:grid sm:grid-cols-6 gap-1">
             <TabsTrigger value="overview" className="flex items-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm whitespace-nowrap shrink-0">
               <LayoutDashboard className="h-4 w-4" />
               <span>Overzicht</span>
@@ -511,6 +511,10 @@ export default function OwnerDashboard() {
               <TrendingUp className="h-4 w-4" />
               <span>Markt</span>
               {!isVerified && <Lock className="h-3 w-3" />}
+            </TabsTrigger>
+            <TabsTrigger value="invoices" className="flex items-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm whitespace-nowrap shrink-0">
+              <Receipt className="h-4 w-4" />
+              <span>Facturen</span>
             </TabsTrigger>
           </TabsList>
 
