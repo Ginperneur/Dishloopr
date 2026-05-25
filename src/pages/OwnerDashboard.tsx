@@ -462,12 +462,14 @@ export default function OwnerDashboard() {
             value={analytics?.totalViews || 0}
             icon={Eye}
             trend={calculateTrend(analytics?.totalViews || 0)}
+            sparkline={(analytics?.viewsByDay || []).map(d => d.count)}
           />
           <StatCard
             title="Totale clicks"
             value={analytics?.totalClicks || 0}
             icon={MousePointer}
             trend={calculateTrend(analytics?.totalClicks || 0)}
+            sparkline={(analytics?.viewsByDay || []).map(d => d.count)}
           />
           <StatCard
             title="Website clicks"
