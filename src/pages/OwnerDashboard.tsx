@@ -616,6 +616,8 @@ export default function OwnerDashboard() {
                         review={review}
                         onRespond={respondToReview}
                         canRespond={isVerified}
+                        restaurantId={selectedRestaurant?.id}
+                        restaurantName={selectedRestaurant?.name}
                       />
                     ))}
                     {reviews.length > 5 && (
