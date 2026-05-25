@@ -929,7 +929,7 @@ export default function OwnerDashboard() {
                     <BarChart3 className="h-5 w-5 text-primary" />
                     Conversie & Zoektermen
                   </h3>
-                  <ProGate feature="funnel" restaurant={selectedRestaurant as any}>
+                  <ProGate restaurantId={selectedRestaurant.id}>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <OwnerFunnel restaurantId={selectedRestaurant.id} />
                       <SearchTermHeatmap restaurantId={selectedRestaurant.id} />
