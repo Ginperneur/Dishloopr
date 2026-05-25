@@ -1,12 +1,13 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Circle, Sparkles, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Restaurant {
+  id: string;
   description?: string | null;
   images?: string[] | null;
   opening_hours?: any;
@@ -18,12 +19,24 @@ interface Restaurant {
 
 interface Props {
   restaurant: Restaurant | null;
-  menuItemCount: number;
   dishCount: number;
   onNavigateTab: (tab: string) => void;
 }
 
-export function ProfileCompletenessCard({ restaurant, menuItemCount, dishCount, onNavigateTab }: Props) {
+export function ProfileCompletenessCard({ restaurant, dishCount, onNavigateTab }: Props) {
+  const [menuItemCount, setMenuItemCount] = useState(0);
+
+  useEffect(() => {
+    if (!restaurant?.id) return;
+    (async () => {
+      const { count } = await supabase
+        .from('menu_items')
+        .select('id', { count: 'exact', head: true })
+        .eq('restaurant_id', restaurant.id);
+      setMenuItemCount(count || 0);
+    })();
+  }, [restaurant?.id]);
+
   const checks = useMemo(() => {
     if (!restaurant) return [];
     const hours = restaurant.opening_hours;
