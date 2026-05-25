@@ -791,6 +791,9 @@ export default function OwnerDashboard() {
               />
             )}
 
+            {/* Email Preferences */}
+            <WeeklyReportToggle />
+
             {/* Dishes Confirmation */}
             <div>
               <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
@@ -1016,13 +1019,15 @@ export default function OwnerDashboard() {
                 </div>
 
                 <div className="border-t pt-8">
-                  <CompetitorBenchmark
-                    restaurantId={selectedRestaurant.id}
-                    cityId={selectedRestaurant.city_id}
-                    cuisines={selectedRestaurant.cuisines || []}
-                    rating={Number(selectedRestaurant.rating)}
-                    reviewCount={selectedRestaurant.review_count}
-                  />
+                  <ProGate restaurantId={selectedRestaurant.id}>
+                    <CompetitorBenchmark
+                      restaurantId={selectedRestaurant.id}
+                      cityId={selectedRestaurant.city_id}
+                      cuisines={selectedRestaurant.cuisines || []}
+                      rating={Number(selectedRestaurant.rating)}
+                      reviewCount={selectedRestaurant.review_count}
+                    />
+                  </ProGate>
                 </div>
 
                 <div className="border-t pt-8">
