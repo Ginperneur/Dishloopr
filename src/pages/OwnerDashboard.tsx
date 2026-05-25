@@ -480,6 +480,15 @@ export default function OwnerDashboard() {
 
         {/* Daily Briefing - hero insight card */}
         {selectedRestaurant && (
+          <ProfileCompletenessCard
+            restaurant={selectedRestaurant as any}
+            dishCount={restaurantDishes.length}
+            onNavigateTab={(tab) => setActiveTab(tab)}
+          />
+        )}
+
+        {/* Daily Briefing - hero insight card */}
+        {selectedRestaurant && (
           <DailyBriefing
             restaurantName={selectedRestaurant.name}
             totalViews={analytics?.totalViews || 0}
