@@ -84,6 +84,11 @@ import { QuickShareMenu } from '@/components/owner/QuickShareMenu';
 import { ProfileCompletenessCard } from '@/components/owner/ProfileCompletenessCard';
 import { WeeklyReportToggle } from '@/components/owner/WeeklyReportToggle';
 import { ProGate } from '@/components/owner/ProGate';
+import { OwnerFunnel } from '@/components/owner/OwnerFunnel';
+import { SearchTermHeatmap } from '@/components/owner/SearchTermHeatmap';
+import { ResponseTemplatesManager } from '@/components/owner/ResponseTemplatesManager';
+import { TeamMembersManager } from '@/components/owner/TeamMembersManager';
+import { InternalFeedbackInbox } from '@/components/owner/InternalFeedbackInbox';
 import { useOptimizationInsights } from '@/hooks/useOptimizationInsights';
 import { useMarketInsights } from '@/hooks/useMarketInsights';
 import { useRestaurantDishes } from '@/hooks/useRestaurantDishes';
@@ -457,12 +462,14 @@ export default function OwnerDashboard() {
             value={analytics?.totalViews || 0}
             icon={Eye}
             trend={calculateTrend(analytics?.totalViews || 0)}
+            sparkline={(analytics?.viewsByDay || []).map(d => d.count)}
           />
           <StatCard
             title="Totale clicks"
             value={analytics?.totalClicks || 0}
             icon={MousePointer}
             trend={calculateTrend(analytics?.totalClicks || 0)}
+            sparkline={(analytics?.viewsByDay || []).map(d => d.count)}
           />
           <StatCard
             title="Website clicks"
@@ -609,6 +616,8 @@ export default function OwnerDashboard() {
                         review={review}
                         onRespond={respondToReview}
                         canRespond={isVerified}
+                        restaurantId={selectedRestaurant?.id}
+                        restaurantName={selectedRestaurant?.name}
                       />
                     ))}
                     {reviews.length > 5 && (
@@ -890,6 +899,43 @@ export default function OwnerDashboard() {
                 />
               )}
             </div>
+
+            {/* Response Templates (Basis) */}
+            {selectedRestaurant && isVerified && (
+              <div className="border-t pt-8">
+                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                  <MessageSquare className="h-5 w-5 text-primary" />
+                  Reactietemplates
+                </h3>
+                <ResponseTemplatesManager restaurantId={selectedRestaurant.id} />
+              </div>
+            )}
+
+            {/* Internal Feedback Inbox (Pro) */}
+            {selectedRestaurant && isVerified && (
+              <div className="border-t pt-8">
+                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                  <MessageSquare className="h-5 w-5 text-primary" />
+                  Interne gast-feedback (QR)
+                </h3>
+                <ProGate restaurantId={selectedRestaurant.id}>
+                  <InternalFeedbackInbox restaurantId={selectedRestaurant.id} />
+                </ProGate>
+              </div>
+            )}
+
+            {/* Team Members (Pro) */}
+            {selectedRestaurant && isVerified && (
+              <div className="border-t pt-8">
+                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                  <Store className="h-5 w-5 text-primary" />
+                  Team-beheer
+                </h3>
+                <ProGate restaurantId={selectedRestaurant.id}>
+                  <TeamMembersManager restaurantId={selectedRestaurant.id} />
+                </ProGate>
+              </div>
+            )}
           </TabsContent>
 
           {/* ===== INZICHTEN TAB ===== */}
@@ -912,6 +958,20 @@ export default function OwnerDashboard() {
                     Zoekpositie
                   </h3>
                   <SearchRanking restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
+                </div>
+
+                {/* Conversion Funnel (Pro) */}
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <BarChart3 className="h-5 w-5 text-primary" />
+                    Conversie & Zoektermen
+                  </h3>
+                  <ProGate restaurantId={selectedRestaurant.id}>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <OwnerFunnel restaurantId={selectedRestaurant.id} />
+                      <SearchTermHeatmap restaurantId={selectedRestaurant.id} />
+                    </div>
+                  </ProGate>
                 </div>
 
                 {/* Dish Analytics */}

@@ -24,6 +24,7 @@ const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const EmailConfirmPage = lazy(() => import("./pages/EmailConfirmPage"));
 const OwnerDashboard = lazy(() => import("./pages/OwnerDashboard"));
+const InternalFeedbackPage = lazy(() => import("./pages/InternalFeedbackPage"));
 const FoodieDashboard = lazy(() => import("./pages/FoodieDashboard"));
 const AdminPanel = lazy(() => import("./pages/AdminPanel"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
@@ -102,6 +103,7 @@ const App = () => (
                   <Route path="/dashboard" element={<OwnerDashboard />} />
                   <Route path="/owner-dashboard" element={<OwnerDashboard />} />
                   <Route path="/my-dashboard" element={<FoodieDashboard />} />
+                  <Route path="/feedback/:restaurantId" element={<InternalFeedbackPage />} />
                   <Route path="/admin" element={<AdminPanel />} />
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/contact" element={<ContactPage />} />

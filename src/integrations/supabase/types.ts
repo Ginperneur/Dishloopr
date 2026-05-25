@@ -1187,6 +1187,42 @@ export type Database = {
           },
         ]
       }
+      internal_feedback: {
+        Row: {
+          category: string | null
+          comment: string | null
+          contact_email: string | null
+          created_at: string
+          id: string
+          is_resolved: boolean
+          rating: number
+          resolved_at: string | null
+          restaurant_id: string
+        }
+        Insert: {
+          category?: string | null
+          comment?: string | null
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          is_resolved?: boolean
+          rating: number
+          resolved_at?: string | null
+          restaurant_id: string
+        }
+        Update: {
+          category?: string | null
+          comment?: string | null
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          is_resolved?: boolean
+          rating?: number
+          resolved_at?: string | null
+          restaurant_id?: string
+        }
+        Relationships: []
+      }
       menu_items: {
         Row: {
           allergens: string[] | null
@@ -1638,6 +1674,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      response_templates: {
+        Row: {
+          body: string
+          category: string
+          created_at: string
+          id: string
+          restaurant_id: string
+          sentiment: string | null
+          title: string
+          updated_at: string
+          use_count: number
+          user_id: string
+        }
+        Insert: {
+          body: string
+          category?: string
+          created_at?: string
+          id?: string
+          restaurant_id: string
+          sentiment?: string | null
+          title: string
+          updated_at?: string
+          use_count?: number
+          user_id: string
+        }
+        Update: {
+          body?: string
+          category?: string
+          created_at?: string
+          id?: string
+          restaurant_id?: string
+          sentiment?: string | null
+          title?: string
+          updated_at?: string
+          use_count?: number
+          user_id?: string
+        }
+        Relationships: []
       }
       restaurant_chains: {
         Row: {
@@ -2097,6 +2172,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      restaurant_team_members: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          id: string
+          invited_at: string
+          invited_by: string
+          invited_email: string
+          restaurant_id: string
+          role: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          id?: string
+          invited_at?: string
+          invited_by: string
+          invited_email: string
+          restaurant_id: string
+          role?: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string
+          invited_email?: string
+          restaurant_id?: string
+          role?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       restaurants: {
         Row: {
@@ -3413,6 +3527,21 @@ export type Database = {
       get_featured_active_count: {
         Args: { p_slot_id: string }
         Returns: number
+      }
+      get_owner_funnel: {
+        Args: { p_days?: number; p_restaurant_id: string }
+        Returns: {
+          clicks: number
+          conversions: number
+          views: number
+        }[]
+      }
+      get_search_term_heatmap: {
+        Args: { p_days?: number; p_limit?: number; p_restaurant_id: string }
+        Returns: {
+          hits: number
+          search_term: string
+        }[]
       }
       get_trending_dishes: {
         Args: { dish_limit?: number }

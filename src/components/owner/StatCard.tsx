@@ -1,5 +1,6 @@
 import { TrendingUp, TrendingDown, Lock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { LineChart, Line, ResponsiveContainer } from 'recharts';
 
 interface StatCardProps {
   title: string;
@@ -10,11 +11,15 @@ interface StatCardProps {
     label: string;
   };
   locked?: boolean;
+  sparkline?: number[];
 }
 
-export function StatCard({ title, value, icon: Icon, trend, locked }: StatCardProps) {
+export function StatCard({ title, value, icon: Icon, trend, locked, sparkline }: StatCardProps) {
   const isPositive = trend && trend.value >= 0;
   const isNeutral = trend && trend.value === 0;
+  const showSpark = !locked && sparkline && sparkline.length > 1;
+  const sparkData = showSpark ? sparkline!.map((v, i) => ({ i, v })) : [];
+  const sparkColor = isPositive === false ? 'hsl(var(--destructive))' : 'hsl(var(--primary))';
 
   return (
     <Card className={locked ? 'opacity-60' : ''}>
@@ -53,6 +58,22 @@ export function StatCard({ title, value, icon: Icon, trend, locked }: StatCardPr
             )}
           </div>
         </div>
+        {showSpark && (
+          <div className="h-10 mt-3 -mx-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={sparkData}>
+                <Line
+                  type="monotone"
+                  dataKey="v"
+                  stroke={sparkColor}
+                  strokeWidth={2}
+                  dot={false}
+                  isAnimationActive={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
