@@ -31,7 +31,8 @@ import {
   Rocket,
   CheckCircle2,
   PartyPopper,
-  Instagram
+  Instagram,
+  Receipt
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent } from '@/components/ui/card';
