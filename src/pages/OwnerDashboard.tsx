@@ -71,6 +71,7 @@ import { PromotionROI } from '@/components/owner/PromotionROI';
 import { OwnerEventsManager } from '@/components/owner/OwnerEventsManager';
 import { SocialLinksManager } from '@/components/owner/SocialLinksManager';
 import { NewsletterPlacement } from '@/components/owner/NewsletterPlacement';
+import { InvoicesTab } from '@/components/owner/InvoicesTab';
 import { QRCodeGenerator } from '@/components/owner/QRCodeGenerator';
 import { CompetitorBenchmark } from '@/components/owner/CompetitorBenchmark';
 import { DealsManager } from '@/components/owner/DealsManager';
