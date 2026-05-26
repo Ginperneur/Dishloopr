@@ -89,6 +89,10 @@ import { SearchTermHeatmap } from '@/components/owner/SearchTermHeatmap';
 import { ResponseTemplatesManager } from '@/components/owner/ResponseTemplatesManager';
 import { TeamMembersManager } from '@/components/owner/TeamMembersManager';
 import { InternalFeedbackInbox } from '@/components/owner/InternalFeedbackInbox';
+import { PromoCodesManager } from '@/components/owner/PromoCodesManager';
+import { LoyaltyProgramManager } from '@/components/owner/LoyaltyProgramManager';
+import { SocialPostGenerator } from '@/components/owner/SocialPostGenerator';
+import { UpgradeToProCard } from '@/components/owner/UpgradeToProCard';
 import { useOptimizationInsights } from '@/hooks/useOptimizationInsights';
 import { useMarketInsights } from '@/hooks/useMarketInsights';
 import { useRestaurantDishes } from '@/hooks/useRestaurantDishes';
@@ -1056,6 +1060,42 @@ export default function OwnerDashboard() {
                     restaurantId={selectedRestaurant.id} 
                     restaurantName={selectedRestaurant.name} 
                   />
+                </div>
+
+                {/* Promo Codes (Basis) */}
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <Megaphone className="h-5 w-5 text-primary" />
+                    Kortingscodes
+                  </h3>
+                  <PromoCodesManager restaurantId={selectedRestaurant.id} />
+                </div>
+
+                {/* AI Social Post Generator (Pro) */}
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    AI Social-post Generator
+                  </h3>
+                  <ProGate restaurantId={selectedRestaurant.id}>
+                    <SocialPostGenerator restaurantName={selectedRestaurant.name} />
+                  </ProGate>
+                </div>
+
+                {/* Loyalty (Pro) */}
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <Crown className="h-5 w-5 text-primary" />
+                    Stempelkaart & Loyalty
+                  </h3>
+                  <ProGate restaurantId={selectedRestaurant.id}>
+                    <LoyaltyProgramManager restaurantId={selectedRestaurant.id} />
+                  </ProGate>
+                </div>
+
+                {/* Upgrade CTA */}
+                <div className="border-t pt-8">
+                  <UpgradeToProCard restaurantId={selectedRestaurant.id} />
                 </div>
               </>
             )}

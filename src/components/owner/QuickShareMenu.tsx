@@ -15,17 +15,20 @@ interface QuickShareMenuProps {
 export function QuickShareMenu({ restaurantSlug, restaurantName, address }: QuickShareMenuProps) {
   const [copied, setCopied] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
-  const url = `https://dishloopr.com/restaurant/${restaurantSlug}`;
+  const baseUrl = `https://dishloopr.com/restaurant/${restaurantSlug}`;
+  const withUtm = (source: string) =>
+    `${baseUrl}?utm_source=${source}&utm_medium=owner_share&utm_campaign=restaurant_promo`;
+  const url = withUtm('copy');
 
   const copy = async () => {
-    await navigator.clipboard.writeText(url);
+    await navigator.clipboard.writeText(withUtm('copy'));
     setCopied(true);
     toast.success('Link gekopieerd');
     setTimeout(() => setCopied(false), 1500);
   };
 
   const whatsapp = () => {
-    const text = `Bekijk ${restaurantName} op Dishloopr: ${url}`;
+    const text = `Bekijk ${restaurantName} op Dishloopr: ${withUtm('whatsapp')}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 

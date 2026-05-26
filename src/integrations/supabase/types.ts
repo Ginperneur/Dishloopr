@@ -1223,6 +1223,60 @@ export type Database = {
         }
         Relationships: []
       }
+      loyalty_programs: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          restaurant_id: string
+          reward_description: string
+          stamps_required: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          restaurant_id: string
+          reward_description?: string
+          stamps_required?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          restaurant_id?: string
+          reward_description?: string
+          stamps_required?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      loyalty_stamps: {
+        Row: {
+          created_at: string
+          id: string
+          redeemed: boolean
+          restaurant_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          redeemed?: boolean
+          restaurant_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          redeemed?: boolean
+          restaurant_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       menu_items: {
         Row: {
           allergens: string[] | null
@@ -1637,6 +1691,83 @@ export type Database = {
           twitter_url?: string | null
           updated_at?: string
           website_url?: string | null
+        }
+        Relationships: []
+      }
+      promo_code_redemptions: {
+        Row: {
+          created_at: string
+          id: string
+          promo_code_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          promo_code_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          promo_code_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_code_redemptions_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          restaurant_id: string
+          updated_at: string
+          use_count: number
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          restaurant_id: string
+          updated_at?: string
+          use_count?: number
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          restaurant_id?: string
+          updated_at?: string
+          use_count?: number
+          valid_from?: string
+          valid_until?: string | null
         }
         Relationships: []
       }
