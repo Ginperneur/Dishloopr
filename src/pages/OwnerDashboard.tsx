@@ -479,7 +479,9 @@ export default function OwnerDashboard() {
           </motion.div>
         )}
 
-        {/* Stats Grid */}
+        {/* Overview-only mission-control band: KPIs + briefing + actions */}
+        {activeTab === 'overview' && (
+        <>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -580,36 +582,18 @@ export default function OwnerDashboard() {
             setActiveTab(tabMap[tab] || tab);
           }}
         />
+        </>
+        )}
 
         {/* Main Tabs - Grouped into 5 clear sections */}
         <Tabs value={activeTab} defaultValue="overview" onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="w-full h-auto p-1 flex overflow-x-auto sm:grid sm:grid-cols-6 gap-1">
-            <TabsTrigger value="overview" className="flex items-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm whitespace-nowrap shrink-0">
-              <LayoutDashboard className="h-4 w-4" />
-              <span>Overzicht</span>
-            </TabsTrigger>
-            <TabsTrigger value="content" className="flex items-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm whitespace-nowrap shrink-0">
-              <FileText className="h-4 w-4" />
-              <span>Content</span>
-            </TabsTrigger>
-            <TabsTrigger value="insights" className="flex items-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm whitespace-nowrap shrink-0" disabled={!isVerified}>
-              <BarChart3 className="h-4 w-4" />
-              <span>Inzichten</span>
-              {!isVerified && <Lock className="h-3 w-3" />}
-            </TabsTrigger>
-            <TabsTrigger value="marketing" className="flex items-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm whitespace-nowrap shrink-0">
-              <Megaphone className="h-4 w-4" />
-              <span>Marketing</span>
-            </TabsTrigger>
-            <TabsTrigger value="market" className="flex items-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm whitespace-nowrap shrink-0" disabled={!isVerified}>
-              <TrendingUp className="h-4 w-4" />
-              <span>Markt</span>
-              {!isVerified && <Lock className="h-3 w-3" />}
-            </TabsTrigger>
-            <TabsTrigger value="invoices" className="flex items-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm whitespace-nowrap shrink-0">
-              <Receipt className="h-4 w-4" />
-              <span>Facturen</span>
-            </TabsTrigger>
+          <TabsList className="sr-only" aria-hidden="true">
+            <TabsTrigger value="overview">Overzicht</TabsTrigger>
+            <TabsTrigger value="content">Content</TabsTrigger>
+            <TabsTrigger value="insights">Inzichten</TabsTrigger>
+            <TabsTrigger value="marketing">Marketing</TabsTrigger>
+            <TabsTrigger value="market">Markt</TabsTrigger>
+            <TabsTrigger value="invoices">Facturen</TabsTrigger>
           </TabsList>
 
           {/* ===== OVERZICHT TAB ===== */}
