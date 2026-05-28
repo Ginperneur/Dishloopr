@@ -3,7 +3,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function OwnerDashboardSkeleton() {
   return (
-    <Layout>
+    <Layout showFooter={false}>
       <div className="flex w-full min-h-[calc(100svh-4rem)]">
         {/* Sidebar skeleton */}
         <aside className="hidden md:flex flex-col gap-2 w-[16rem] border-r p-3">
