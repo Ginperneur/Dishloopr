@@ -284,15 +284,92 @@ export default function OwnerDashboard() {
 
   return (
     <Layout>
-      <div className="container py-6 md:py-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
-        >
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
+      <SidebarProvider defaultOpen={true}>
+        <div className="flex w-full min-h-[calc(100vh-4rem)]">
+          <OwnerSidebar
+            activeTab={activeTab}
+            onChange={setActiveTab}
+            isVerified={isVerified}
+          />
+          <div className="flex-1 flex flex-col min-w-0">
+            {/* Sticky inner header */}
+            <div className="sticky top-14 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
+              <div className="container py-3 flex items-center gap-2 md:gap-3">
+                <SidebarTrigger className="shrink-0" />
+                <div className="hidden sm:block h-6 w-px bg-border" />
+                {restaurants.length > 1 ? (
+                  <Popover open={restaurantPickerOpen} onOpenChange={setRestaurantPickerOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        role="combobox"
+                        aria-expanded={restaurantPickerOpen}
+                        className="max-w-[220px] md:max-w-[320px] justify-between px-2 font-medium"
+                      >
+                        <span className="truncate">
+                          {selectedRestaurant?.name || 'Selecteer restaurant'}
+                        </span>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[320px] p-0" align="start">
+                      <Command
+                        filter={(value, search) =>
+                          value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0
+                        }
+                      >
+                        <CommandInput placeholder="Zoek restaurant..." />
+                        <CommandList>
+                          <CommandEmpty>Geen restaurant gevonden.</CommandEmpty>
+                          <CommandGroup>
+                            {restaurants.map(restaurant => (
+                              <CommandItem
+                                key={restaurant.id}
+                                value={restaurant.name}
+                                onSelect={() => {
+                                  setSelectedRestaurant(restaurant);
+                                  setRestaurantPickerOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    'mr-2 h-4 w-4',
+                                    selectedRestaurant?.id === restaurant.id ? 'opacity-100' : 'opacity-0'
+                                  )}
+                                />
+                                <span className="truncate">{restaurant.name}</span>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                ) : (
+                  <span className="font-medium truncate max-w-[220px] md:max-w-none">
+                    {selectedRestaurant?.name || 'Dashboard'}
+                  </span>
+                )}
+                <div className="flex-1" />
+                {selectedRestaurant && (
+                  <QuickShareMenu
+                    restaurantSlug={selectedRestaurant.slug}
+                    restaurantName={selectedRestaurant.name}
+                    address={(selectedRestaurant as any).address}
+                  />
+                )}
+                <NotificationBell />
+              </div>
+            </div>
+
+            <div className="container py-6 md:py-8">
+              {/* Page header */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6"
+              >
+                <div>
               <h1 className="text-2xl md:text-3xl font-bold mb-1">
                 {selectedRestaurant?.name || 'Dashboard'}
               </h1>
@@ -309,68 +386,7 @@ export default function OwnerDashboard() {
                 </Button>
               </div>
             </div>
-
-            <div className="flex items-center gap-2">
-              {selectedRestaurant && (
-                <QuickShareMenu
-                  restaurantSlug={selectedRestaurant.slug}
-                  restaurantName={selectedRestaurant.name}
-                  address={(selectedRestaurant as any).address}
-                />
-              )}
-              <NotificationBell />
-              {restaurants.length > 1 && (
-              <Popover open={restaurantPickerOpen} onOpenChange={setRestaurantPickerOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={restaurantPickerOpen}
-                    className="w-[280px] justify-between"
-                  >
-                    <span className="truncate">
-                      {selectedRestaurant?.name || 'Selecteer restaurant'}
-                    </span>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[320px] p-0" align="end">
-                  <Command
-                    filter={(value, search) =>
-                      value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0
-                    }
-                  >
-                    <CommandInput placeholder="Zoek restaurant..." />
-                    <CommandList>
-                      <CommandEmpty>Geen restaurant gevonden.</CommandEmpty>
-                      <CommandGroup>
-                        {restaurants.map(restaurant => (
-                          <CommandItem
-                            key={restaurant.id}
-                            value={restaurant.name}
-                            onSelect={() => {
-                              setSelectedRestaurant(restaurant);
-                              setRestaurantPickerOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                'mr-2 h-4 w-4',
-                                selectedRestaurant?.id === restaurant.id ? 'opacity-100' : 'opacity-0'
-                              )}
-                            />
-                            <span className="truncate">{restaurant.name}</span>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              )}
-            </div>
-          </div>
-        </motion.div>
+              </motion.div>
 
         {/* Status Banner - Compact */}
         {!isVerified && (
