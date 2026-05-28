@@ -881,11 +881,38 @@ export default function OwnerDashboard() {
                 Events & Acties
               </h3>
               {selectedRestaurant ? (
-                <OwnerEventsManager restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
+                <div className="space-y-6">
+                  <EventsCalendarView restaurantId={selectedRestaurant.id} />
+                  <OwnerEventsManager restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
+                </div>
               ) : (
                 <Card><CardContent className="py-8 text-center"><p className="text-muted-foreground text-sm">Selecteer een restaurant</p></CardContent></Card>
               )}
             </div>
+
+            {/* Openingstijden Uitzonderingen */}
+            {selectedRestaurant && (
+              <div className="border-t pt-8">
+                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                  <Clock className="h-5 w-5 text-primary" />
+                  Openingstijden Uitzonderingen
+                </h3>
+                <OpeningHoursExceptions restaurantId={selectedRestaurant.id} />
+              </div>
+            )}
+
+            {/* Multi-language Profile (Pro) */}
+            {selectedRestaurant && isVerified && (
+              <div className="border-t pt-8">
+                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  Meertalig profiel
+                </h3>
+                <ProGate restaurantId={selectedRestaurant.id}>
+                  <MultiLanguageProfile restaurantId={selectedRestaurant.id} defaultName={selectedRestaurant.name} />
+                </ProGate>
+              </div>
+            )}
 
             {/* Social Media (verified owners only) */}
             <div className="border-t pt-8">
