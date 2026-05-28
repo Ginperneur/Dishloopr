@@ -1012,6 +1012,31 @@ export default function OwnerDashboard() {
                   </ProGate>
                 </div>
 
+                {/* Audience demographics (Basis) + Best time to post (Pro) */}
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <BarChart3 className="h-5 w-5 text-primary" />
+                    Publiek & Activiteit
+                  </h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <AudienceDemographics restaurantId={selectedRestaurant.id} />
+                    <ProGate restaurantId={selectedRestaurant.id}>
+                      <BestTimeToPost restaurantId={selectedRestaurant.id} />
+                    </ProGate>
+                  </div>
+                </div>
+
+                {/* Lost to competitor (Pro) */}
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                    Verloren aan concurrenten
+                  </h3>
+                  <ProGate restaurantId={selectedRestaurant.id}>
+                    <LostToCompetitor restaurantId={selectedRestaurant.id} />
+                  </ProGate>
+                </div>
+
                 {/* Dish Analytics */}
                 <div className="border-t pt-8">
                   <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
