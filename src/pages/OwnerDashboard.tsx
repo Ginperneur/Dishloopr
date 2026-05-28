@@ -47,6 +47,7 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { OwnerSidebar } from '@/components/owner/OwnerSidebar';
 import { OwnerCommandPalette } from '@/components/owner/OwnerCommandPalette';
 import { OwnerDashboardSkeleton } from '@/components/owner/OwnerDashboardSkeleton';
+import { OwnerTabHeader } from '@/components/owner/OwnerTabHeader';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOwnerDashboard } from '@/hooks/useOwnerDashboard';
@@ -495,15 +496,18 @@ export default function OwnerDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6"
+          className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 mb-6"
         >
-          <StatCard
-            title="Profielweergaven"
-            value={analytics?.totalViews || 0}
-            icon={Eye}
-            trend={calculateTrend(analytics?.totalViews || 0)}
-            sparkline={(analytics?.viewsByDay || []).map(d => d.count)}
-          />
+          <div className="md:col-span-3 lg:col-span-2 lg:row-span-1">
+            <StatCard
+              variant="primary"
+              title="Profielweergaven (30d)"
+              value={analytics?.totalViews || 0}
+              icon={Eye}
+              trend={calculateTrend(analytics?.totalViews || 0)}
+              sparkline={(analytics?.viewsByDay || []).map(d => d.count)}
+            />
+          </div>
           <StatCard
             title="Totale clicks"
             value={analytics?.totalClicks || 0}
@@ -511,18 +515,20 @@ export default function OwnerDashboard() {
             trend={calculateTrend(analytics?.totalClicks || 0)}
             sparkline={(analytics?.viewsByDay || []).map(d => d.count)}
           />
-          <StatCard
-            title="Website clicks"
-            value={isVerified ? (analytics?.websiteClicks || 0) : 0}
-            icon={Globe}
-            locked={!isVerified}
-          />
-          <StatCard
-            title="Telefoon clicks"
-            value={isVerified ? (analytics?.phoneClicks || 0) : 0}
-            icon={Phone}
-            locked={!isVerified}
-          />
+          <div className="grid grid-cols-2 gap-3 md:gap-4 md:col-span-3 lg:col-span-1 lg:grid-cols-1">
+            <StatCard
+              title="Website"
+              value={isVerified ? (analytics?.websiteClicks || 0) : 0}
+              icon={Globe}
+              locked={!isVerified}
+            />
+            <StatCard
+              title="Telefoon"
+              value={isVerified ? (analytics?.phoneClicks || 0) : 0}
+              icon={Phone}
+              locked={!isVerified}
+            />
+          </div>
         </motion.div>
 
         {/* Daily Briefing - hero insight card */}
@@ -662,6 +668,11 @@ export default function OwnerDashboard() {
 
           {/* ===== CONTENT TAB ===== */}
           <TabsContent value="content" className="space-y-8">
+            <OwnerTabHeader
+              icon={FileText}
+              title="Content & Profiel"
+              description="Beheer gerechten, foto's, instellingen en je publieke profiel."
+            />
             {/* Restaurant Quick Settings */}
             {selectedRestaurant && (
               <div>
@@ -989,6 +1000,11 @@ export default function OwnerDashboard() {
 
           {/* ===== INZICHTEN TAB ===== */}
           <TabsContent value="insights">
+            <OwnerTabHeader
+              icon={BarChart3}
+              title="Inzichten & Analytics"
+              description="Prestaties, zoekpositie, publiek en optimalisatiekansen."
+            />
             {isVerified && selectedRestaurant ? (
               <div className="space-y-8">
                 {/* Analytics */}
@@ -1077,6 +1093,11 @@ export default function OwnerDashboard() {
 
           {/* ===== MARKETING TAB ===== */}
           <TabsContent value="marketing" className="space-y-8">
+            <OwnerTabHeader
+              icon={Megaphone}
+              title="Marketing & Groei"
+              description="Premium zichtbaarheid, promoties, nieuwsbrief en social."
+            />
             {/* Featured / Premium */}
             {selectedRestaurant && (
               <>
@@ -1184,6 +1205,11 @@ export default function OwnerDashboard() {
 
           {/* ===== MARKT TAB ===== */}
           <TabsContent value="market">
+            <OwnerTabHeader
+              icon={TrendingUp}
+              title="Markt & Concurrentie"
+              description="Buurtanalyse, benchmarks, piekuren en deals."
+            />
             {isVerified && selectedRestaurant ? (
               <div className="space-y-8">
                 <div>
@@ -1249,6 +1275,11 @@ export default function OwnerDashboard() {
 
           {/* ===== FACTUREN TAB ===== */}
           <TabsContent value="invoices">
+            <OwnerTabHeader
+              icon={Receipt}
+              title="Facturen & Betalingen"
+              description="Overzicht van je facturen en abonnement."
+            />
             <InvoicesTab />
           </TabsContent>
 
