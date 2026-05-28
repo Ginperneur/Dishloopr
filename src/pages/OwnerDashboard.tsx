@@ -93,6 +93,13 @@ import { PromoCodesManager } from '@/components/owner/PromoCodesManager';
 import { LoyaltyProgramManager } from '@/components/owner/LoyaltyProgramManager';
 import { SocialPostGenerator } from '@/components/owner/SocialPostGenerator';
 import { UpgradeToProCard } from '@/components/owner/UpgradeToProCard';
+import { OpeningHoursExceptions } from '@/components/owner/OpeningHoursExceptions';
+import { MultiLanguageProfile } from '@/components/owner/MultiLanguageProfile';
+import { CrossPromotionManager } from '@/components/owner/CrossPromotionManager';
+import { AudienceDemographics } from '@/components/owner/AudienceDemographics';
+import { BestTimeToPost } from '@/components/owner/BestTimeToPost';
+import { LostToCompetitor } from '@/components/owner/LostToCompetitor';
+import { EventsCalendarView } from '@/components/owner/EventsCalendarView';
 import { useOptimizationInsights } from '@/hooks/useOptimizationInsights';
 import { useMarketInsights } from '@/hooks/useMarketInsights';
 import { useRestaurantDishes } from '@/hooks/useRestaurantDishes';
@@ -874,11 +881,38 @@ export default function OwnerDashboard() {
                 Events & Acties
               </h3>
               {selectedRestaurant ? (
-                <OwnerEventsManager restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
+                <div className="space-y-6">
+                  <EventsCalendarView restaurantId={selectedRestaurant.id} />
+                  <OwnerEventsManager restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
+                </div>
               ) : (
                 <Card><CardContent className="py-8 text-center"><p className="text-muted-foreground text-sm">Selecteer een restaurant</p></CardContent></Card>
               )}
             </div>
+
+            {/* Openingstijden Uitzonderingen */}
+            {selectedRestaurant && (
+              <div className="border-t pt-8">
+                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                  <Clock className="h-5 w-5 text-primary" />
+                  Openingstijden Uitzonderingen
+                </h3>
+                <OpeningHoursExceptions restaurantId={selectedRestaurant.id} />
+              </div>
+            )}
+
+            {/* Multi-language Profile (Pro) */}
+            {selectedRestaurant && isVerified && (
+              <div className="border-t pt-8">
+                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  Meertalig profiel
+                </h3>
+                <ProGate restaurantId={selectedRestaurant.id}>
+                  <MultiLanguageProfile restaurantId={selectedRestaurant.id} defaultName={selectedRestaurant.name} />
+                </ProGate>
+              </div>
+            )}
 
             {/* Social Media (verified owners only) */}
             <div className="border-t pt-8">
@@ -975,6 +1009,31 @@ export default function OwnerDashboard() {
                       <OwnerFunnel restaurantId={selectedRestaurant.id} />
                       <SearchTermHeatmap restaurantId={selectedRestaurant.id} />
                     </div>
+                  </ProGate>
+                </div>
+
+                {/* Audience demographics (Basis) + Best time to post (Pro) */}
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <BarChart3 className="h-5 w-5 text-primary" />
+                    Publiek & Activiteit
+                  </h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <AudienceDemographics restaurantId={selectedRestaurant.id} />
+                    <ProGate restaurantId={selectedRestaurant.id}>
+                      <BestTimeToPost restaurantId={selectedRestaurant.id} />
+                    </ProGate>
+                  </div>
+                </div>
+
+                {/* Lost to competitor (Pro) */}
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                    Verloren aan concurrenten
+                  </h3>
+                  <ProGate restaurantId={selectedRestaurant.id}>
+                    <LostToCompetitor restaurantId={selectedRestaurant.id} />
                   </ProGate>
                 </div>
 
@@ -1090,6 +1149,17 @@ export default function OwnerDashboard() {
                   </h3>
                   <ProGate restaurantId={selectedRestaurant.id}>
                     <LoyaltyProgramManager restaurantId={selectedRestaurant.id} />
+                  </ProGate>
+                </div>
+
+                {/* Cross-promotie (Pro) */}
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <Crown className="h-5 w-5 text-primary" />
+                    Cross-promotie
+                  </h3>
+                  <ProGate restaurantId={selectedRestaurant.id}>
+                    <CrossPromotionManager restaurantId={selectedRestaurant.id} />
                   </ProGate>
                 </div>
 
