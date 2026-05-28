@@ -273,7 +273,7 @@ export default function OwnerDashboard() {
   const isOnboardingComplete = completedSteps >= 4; // 4 out of 5 is good enough
 
   return (
-    <Layout>
+    <Layout showFooter={false}>
       <SidebarProvider defaultOpen={true}>
         <div className="owner-shell flex w-full min-h-[calc(100svh-4rem)]">
           <OwnerSidebar
