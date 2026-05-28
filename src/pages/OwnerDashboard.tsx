@@ -656,10 +656,23 @@ export default function OwnerDashboard() {
                   </div>
                 </div>
               ) : (
-                <Card>
-                  <CardContent className="py-8 text-center">
-                    <MessageSquare className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-                    <p className="text-muted-foreground text-sm">Nog geen reviews ontvangen</p>
+                <Card className="border-dashed">
+                  <CardContent className="py-10 text-center max-w-md mx-auto">
+                    <div className="h-12 w-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                      <MessageSquare className="h-6 w-6 text-primary" />
+                    </div>
+                    <p className="font-medium text-sm mb-1">Nog geen reviews</p>
+                    <p className="text-xs text-muted-foreground mb-4">
+                      Deel je profiel met gasten — reviews verhogen je positie in zoekresultaten.
+                    </p>
+                    {selectedRestaurant && (
+                      <Button size="sm" variant="outline" asChild>
+                        <Link to={`/restaurant/${selectedRestaurant.slug}`}>
+                          <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                          Bekijk publieke pagina
+                        </Link>
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               )}
