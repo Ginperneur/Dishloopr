@@ -346,3 +346,20 @@
     scroll-margin-top: 5rem;
   }
 }
+
+/* Owner Dashboard shell: keep sidebar below the global Header */
+.owner-shell [data-sidebar="sidebar"] {
+  top: 3.5rem;
+  height: calc(100svh - 3.5rem);
+}
+@media (min-width: 768px) {
+  .owner-shell [data-sidebar="sidebar"] {
+    top: 4rem;
+    height: calc(100svh - 4rem);
+  }
+}
+/* The in-flow sidebar spacer should not push the page beyond viewport */
+.owner-shell [data-sidebar="sidebar"] ~ * .min-h-svh,
+.owner-shell .group\/sidebar-wrapper {
+  min-height: calc(100svh - 3.5rem);
+}
