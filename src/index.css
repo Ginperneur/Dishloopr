@@ -346,3 +346,9 @@
     scroll-margin-top: 5rem;
   }
 }
+
+/* Owner Dashboard shell: the in-flow sidebar spacer should not exceed the
+   available viewport (the fixed sidebar is offset via Tailwind utilities). */
+.owner-shell .group\/sidebar-wrapper {
+  min-height: calc(100svh - 3.5rem);
+}

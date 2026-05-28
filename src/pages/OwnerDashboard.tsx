@@ -45,6 +45,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { OwnerSidebar } from '@/components/owner/OwnerSidebar';
+import { OwnerCommandPalette } from '@/components/owner/OwnerCommandPalette';
+import { OwnerDashboardSkeleton } from '@/components/owner/OwnerDashboardSkeleton';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOwnerDashboard } from '@/hooks/useOwnerDashboard';
@@ -128,6 +130,7 @@ export default function OwnerDashboard() {
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [restaurantPickerOpen, setRestaurantPickerOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   // Fetch optimization data for action cards
   const { data: optimizationData } = useOptimizationInsights(selectedRestaurant?.id);
@@ -203,20 +206,7 @@ export default function OwnerDashboard() {
   };
 
   if (authLoading || loading) {
-    return (
-      <Layout>
-        <div className="container py-8">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 w-64 bg-muted rounded" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="h-32 bg-muted rounded-lg" />
-              ))}
-            </div>
-          </div>
-        </div>
-      </Layout>
-    );
+    return <OwnerDashboardSkeleton />;
   }
 
   if (!user) return <Navigate to="/login" replace />;
@@ -285,16 +275,28 @@ export default function OwnerDashboard() {
   return (
     <Layout>
       <SidebarProvider defaultOpen={true}>
-        <div className="flex w-full min-h-[calc(100vh-4rem)]">
+        <div className="owner-shell flex w-full min-h-[calc(100svh-4rem)]">
           <OwnerSidebar
             activeTab={activeTab}
             onChange={setActiveTab}
             isVerified={isVerified}
           />
+          <OwnerCommandPalette
+            open={paletteOpen}
+            onOpenChange={setPaletteOpen}
+            activeTab={activeTab}
+            onChangeTab={setActiveTab}
+            restaurants={restaurants.map((r) => ({ id: r.id, name: r.name, slug: r.slug }))}
+            selectedRestaurantId={selectedRestaurant?.id}
+            onSelectRestaurant={(id) => {
+              const r = restaurants.find((x) => x.id === id);
+              if (r) setSelectedRestaurant(r);
+            }}
+          />
           <div className="flex-1 flex flex-col min-w-0">
             {/* Sticky inner header */}
-            <div className="sticky top-14 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
-              <div className="container py-3 flex items-center gap-2 md:gap-3">
+            <div className="sticky top-14 md:top-16 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
+              <div className="w-full px-4 md:px-6 py-3 flex items-center gap-2 md:gap-3">
                 <SidebarTrigger className="shrink-0" />
                 <div className="hidden sm:block h-6 w-px bg-border" />
                 {restaurants.length > 1 ? (
@@ -351,6 +353,18 @@ export default function OwnerDashboard() {
                   </span>
                 )}
                 <div className="flex-1" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPaletteOpen(true)}
+                  className="hidden md:inline-flex h-9 gap-2 text-muted-foreground"
+                  aria-label="Open command palette"
+                >
+                  <span className="text-xs">Snel zoeken</span>
+                  <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100">
+                    ⌘K
+                  </kbd>
+                </Button>
                 {selectedRestaurant && (
                   <QuickShareMenu
                     restaurantSlug={selectedRestaurant.slug}
@@ -362,18 +376,14 @@ export default function OwnerDashboard() {
               </div>
             </div>
 
-            <div className="container py-6 md:py-8">
+            <div className="w-full px-4 md:px-6 py-6 md:py-8 max-w-[1600px] mx-auto">
               {/* Page header */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="mb-6"
               >
-                <div>
-              <h1 className="text-2xl md:text-3xl font-bold mb-1">
-                {selectedRestaurant?.name || 'Dashboard'}
-              </h1>
-              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-3 flex-wrap">
                 <ClaimStatusBadge 
                   status={selectedRestaurant?.claim_status || 'unclaimed'} 
                   size="sm" 
@@ -384,8 +394,7 @@ export default function OwnerDashboard() {
                     Bekijk pagina
                   </Link>
                 </Button>
-              </div>
-            </div>
+                </div>
               </motion.div>
 
         {/* Status Banner - Compact */}
