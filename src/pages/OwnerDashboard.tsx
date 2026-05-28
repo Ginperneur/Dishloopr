@@ -668,6 +668,11 @@ export default function OwnerDashboard() {
 
           {/* ===== CONTENT TAB ===== */}
           <TabsContent value="content" className="space-y-8">
+            <OwnerTabHeader
+              icon={FileText}
+              title="Content & Profiel"
+              description="Beheer gerechten, foto's, instellingen en je publieke profiel."
+            />
             {/* Restaurant Quick Settings */}
             {selectedRestaurant && (
               <div>
@@ -995,6 +1000,11 @@ export default function OwnerDashboard() {
 
           {/* ===== INZICHTEN TAB ===== */}
           <TabsContent value="insights">
+            <OwnerTabHeader
+              icon={BarChart3}
+              title="Inzichten & Analytics"
+              description="Prestaties, zoekpositie, publiek en optimalisatiekansen."
+            />
             {isVerified && selectedRestaurant ? (
               <div className="space-y-8">
                 {/* Analytics */}
@@ -1083,6 +1093,11 @@ export default function OwnerDashboard() {
 
           {/* ===== MARKETING TAB ===== */}
           <TabsContent value="marketing" className="space-y-8">
+            <OwnerTabHeader
+              icon={Megaphone}
+              title="Marketing & Groei"
+              description="Premium zichtbaarheid, promoties, nieuwsbrief en social."
+            />
             {/* Featured / Premium */}
             {selectedRestaurant && (
               <>
@@ -1190,6 +1205,11 @@ export default function OwnerDashboard() {
 
           {/* ===== MARKT TAB ===== */}
           <TabsContent value="market">
+            <OwnerTabHeader
+              icon={TrendingUp}
+              title="Markt & Concurrentie"
+              description="Buurtanalyse, benchmarks, piekuren en deals."
+            />
             {isVerified && selectedRestaurant ? (
               <div className="space-y-8">
                 <div>
@@ -1255,6 +1275,11 @@ export default function OwnerDashboard() {
 
           {/* ===== FACTUREN TAB ===== */}
           <TabsContent value="invoices">
+            <OwnerTabHeader
+              icon={Receipt}
+              title="Facturen & Betalingen"
+              description="Overzicht van je facturen en abonnement."
+            />
             <InvoicesTab />
           </TabsContent>
 
