@@ -43,6 +43,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { OwnerSidebar } from '@/components/owner/OwnerSidebar';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOwnerDashboard } from '@/hooks/useOwnerDashboard';
@@ -124,7 +126,7 @@ export default function OwnerDashboard() {
   const [permissions, setPermissions] = useState<ClaimPermissions | null>(null);
   const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string | undefined>(undefined);
+  const [activeTab, setActiveTab] = useState<string>('overview');
   const [restaurantPickerOpen, setRestaurantPickerOpen] = useState(false);
 
   // Fetch optimization data for action cards
@@ -282,15 +284,92 @@ export default function OwnerDashboard() {
 
   return (
     <Layout>
-      <div className="container py-6 md:py-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
-        >
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
+      <SidebarProvider defaultOpen={true}>
+        <div className="flex w-full min-h-[calc(100vh-4rem)]">
+          <OwnerSidebar
+            activeTab={activeTab}
+            onChange={setActiveTab}
+            isVerified={isVerified}
+          />
+          <div className="flex-1 flex flex-col min-w-0">
+            {/* Sticky inner header */}
+            <div className="sticky top-14 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
+              <div className="container py-3 flex items-center gap-2 md:gap-3">
+                <SidebarTrigger className="shrink-0" />
+                <div className="hidden sm:block h-6 w-px bg-border" />
+                {restaurants.length > 1 ? (
+                  <Popover open={restaurantPickerOpen} onOpenChange={setRestaurantPickerOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        role="combobox"
+                        aria-expanded={restaurantPickerOpen}
+                        className="max-w-[220px] md:max-w-[320px] justify-between px-2 font-medium"
+                      >
+                        <span className="truncate">
+                          {selectedRestaurant?.name || 'Selecteer restaurant'}
+                        </span>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[320px] p-0" align="start">
+                      <Command
+                        filter={(value, search) =>
+                          value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0
+                        }
+                      >
+                        <CommandInput placeholder="Zoek restaurant..." />
+                        <CommandList>
+                          <CommandEmpty>Geen restaurant gevonden.</CommandEmpty>
+                          <CommandGroup>
+                            {restaurants.map(restaurant => (
+                              <CommandItem
+                                key={restaurant.id}
+                                value={restaurant.name}
+                                onSelect={() => {
+                                  setSelectedRestaurant(restaurant);
+                                  setRestaurantPickerOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    'mr-2 h-4 w-4',
+                                    selectedRestaurant?.id === restaurant.id ? 'opacity-100' : 'opacity-0'
+                                  )}
+                                />
+                                <span className="truncate">{restaurant.name}</span>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                ) : (
+                  <span className="font-medium truncate max-w-[220px] md:max-w-none">
+                    {selectedRestaurant?.name || 'Dashboard'}
+                  </span>
+                )}
+                <div className="flex-1" />
+                {selectedRestaurant && (
+                  <QuickShareMenu
+                    restaurantSlug={selectedRestaurant.slug}
+                    restaurantName={selectedRestaurant.name}
+                    address={(selectedRestaurant as any).address}
+                  />
+                )}
+                <NotificationBell />
+              </div>
+            </div>
+
+            <div className="container py-6 md:py-8">
+              {/* Page header */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6"
+              >
+                <div>
               <h1 className="text-2xl md:text-3xl font-bold mb-1">
                 {selectedRestaurant?.name || 'Dashboard'}
               </h1>
@@ -307,68 +386,7 @@ export default function OwnerDashboard() {
                 </Button>
               </div>
             </div>
-
-            <div className="flex items-center gap-2">
-              {selectedRestaurant && (
-                <QuickShareMenu
-                  restaurantSlug={selectedRestaurant.slug}
-                  restaurantName={selectedRestaurant.name}
-                  address={(selectedRestaurant as any).address}
-                />
-              )}
-              <NotificationBell />
-              {restaurants.length > 1 && (
-              <Popover open={restaurantPickerOpen} onOpenChange={setRestaurantPickerOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={restaurantPickerOpen}
-                    className="w-[280px] justify-between"
-                  >
-                    <span className="truncate">
-                      {selectedRestaurant?.name || 'Selecteer restaurant'}
-                    </span>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[320px] p-0" align="end">
-                  <Command
-                    filter={(value, search) =>
-                      value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0
-                    }
-                  >
-                    <CommandInput placeholder="Zoek restaurant..." />
-                    <CommandList>
-                      <CommandEmpty>Geen restaurant gevonden.</CommandEmpty>
-                      <CommandGroup>
-                        {restaurants.map(restaurant => (
-                          <CommandItem
-                            key={restaurant.id}
-                            value={restaurant.name}
-                            onSelect={() => {
-                              setSelectedRestaurant(restaurant);
-                              setRestaurantPickerOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                'mr-2 h-4 w-4',
-                                selectedRestaurant?.id === restaurant.id ? 'opacity-100' : 'opacity-0'
-                              )}
-                            />
-                            <span className="truncate">{restaurant.name}</span>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              )}
-            </div>
-          </div>
-        </motion.div>
+              </motion.div>
 
         {/* Status Banner - Compact */}
         {!isVerified && (
@@ -461,7 +479,9 @@ export default function OwnerDashboard() {
           </motion.div>
         )}
 
-        {/* Stats Grid */}
+        {/* Overview-only mission-control band: KPIs + briefing + actions */}
+        {activeTab === 'overview' && (
+        <>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -562,36 +582,18 @@ export default function OwnerDashboard() {
             setActiveTab(tabMap[tab] || tab);
           }}
         />
+        </>
+        )}
 
         {/* Main Tabs - Grouped into 5 clear sections */}
         <Tabs value={activeTab} defaultValue="overview" onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="w-full h-auto p-1 flex overflow-x-auto sm:grid sm:grid-cols-6 gap-1">
-            <TabsTrigger value="overview" className="flex items-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm whitespace-nowrap shrink-0">
-              <LayoutDashboard className="h-4 w-4" />
-              <span>Overzicht</span>
-            </TabsTrigger>
-            <TabsTrigger value="content" className="flex items-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm whitespace-nowrap shrink-0">
-              <FileText className="h-4 w-4" />
-              <span>Content</span>
-            </TabsTrigger>
-            <TabsTrigger value="insights" className="flex items-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm whitespace-nowrap shrink-0" disabled={!isVerified}>
-              <BarChart3 className="h-4 w-4" />
-              <span>Inzichten</span>
-              {!isVerified && <Lock className="h-3 w-3" />}
-            </TabsTrigger>
-            <TabsTrigger value="marketing" className="flex items-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm whitespace-nowrap shrink-0">
-              <Megaphone className="h-4 w-4" />
-              <span>Marketing</span>
-            </TabsTrigger>
-            <TabsTrigger value="market" className="flex items-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm whitespace-nowrap shrink-0" disabled={!isVerified}>
-              <TrendingUp className="h-4 w-4" />
-              <span>Markt</span>
-              {!isVerified && <Lock className="h-3 w-3" />}
-            </TabsTrigger>
-            <TabsTrigger value="invoices" className="flex items-center gap-1.5 py-2.5 px-3 text-xs sm:text-sm whitespace-nowrap shrink-0">
-              <Receipt className="h-4 w-4" />
-              <span>Facturen</span>
-            </TabsTrigger>
+          <TabsList className="sr-only" aria-hidden="true">
+            <TabsTrigger value="overview">Overzicht</TabsTrigger>
+            <TabsTrigger value="content">Content</TabsTrigger>
+            <TabsTrigger value="insights">Inzichten</TabsTrigger>
+            <TabsTrigger value="marketing">Marketing</TabsTrigger>
+            <TabsTrigger value="market">Markt</TabsTrigger>
+            <TabsTrigger value="invoices">Facturen</TabsTrigger>
           </TabsList>
 
           {/* ===== OVERZICHT TAB ===== */}
@@ -1259,6 +1261,9 @@ export default function OwnerDashboard() {
           }}
         />
       )}
+          </div>
+        </div>
+      </SidebarProvider>
     </Layout>
   );
 }
