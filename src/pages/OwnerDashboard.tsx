@@ -281,6 +281,18 @@ export default function OwnerDashboard() {
             onChange={setActiveTab}
             isVerified={isVerified}
           />
+          <OwnerCommandPalette
+            open={paletteOpen}
+            onOpenChange={setPaletteOpen}
+            activeTab={activeTab}
+            onChangeTab={setActiveTab}
+            restaurants={restaurants.map((r) => ({ id: r.id, name: r.name, slug: r.slug }))}
+            selectedRestaurantId={selectedRestaurant?.id}
+            onSelectRestaurant={(id) => {
+              const r = restaurants.find((x) => x.id === id);
+              if (r) setSelectedRestaurant(r);
+            }}
+          />
           <div className="flex-1 flex flex-col min-w-0">
             {/* Sticky inner header */}
             <div className="sticky top-14 md:top-16 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
@@ -341,6 +353,18 @@ export default function OwnerDashboard() {
                   </span>
                 )}
                 <div className="flex-1" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPaletteOpen(true)}
+                  className="hidden md:inline-flex h-9 gap-2 text-muted-foreground"
+                  aria-label="Open command palette"
+                >
+                  <span className="text-xs">Snel zoeken</span>
+                  <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100">
+                    ⌘K
+                  </kbd>
+                </Button>
                 {selectedRestaurant && (
                   <QuickShareMenu
                     restaurantSlug={selectedRestaurant.slug}
