@@ -1152,6 +1152,17 @@ export default function OwnerDashboard() {
                   </ProGate>
                 </div>
 
+                {/* Cross-promotie (Pro) */}
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <Crown className="h-5 w-5 text-primary" />
+                    Cross-promotie
+                  </h3>
+                  <ProGate restaurantId={selectedRestaurant.id}>
+                    <CrossPromotionManager restaurantId={selectedRestaurant.id} />
+                  </ProGate>
+                </div>
+
                 {/* Upgrade CTA */}
                 <div className="border-t pt-8">
                   <UpgradeToProCard restaurantId={selectedRestaurant.id} />
