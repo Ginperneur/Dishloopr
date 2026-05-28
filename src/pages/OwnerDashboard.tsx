@@ -126,7 +126,7 @@ export default function OwnerDashboard() {
   const [permissions, setPermissions] = useState<ClaimPermissions | null>(null);
   const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string | undefined>(undefined);
+  const [activeTab, setActiveTab] = useState<string>('overview');
   const [restaurantPickerOpen, setRestaurantPickerOpen] = useState(false);
 
   // Fetch optimization data for action cards
