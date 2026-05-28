@@ -43,6 +43,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { OwnerSidebar } from '@/components/owner/OwnerSidebar';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOwnerDashboard } from '@/hooks/useOwnerDashboard';
