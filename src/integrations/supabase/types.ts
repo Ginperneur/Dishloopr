@@ -452,6 +452,60 @@ export type Database = {
         }
         Relationships: []
       }
+      cross_promotions: {
+        Row: {
+          created_at: string
+          description: string | null
+          ends_at: string | null
+          id: string
+          initiator_restaurant_id: string
+          partner_restaurant_id: string
+          starts_at: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          initiator_restaurant_id: string
+          partner_restaurant_id: string
+          starts_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          initiator_restaurant_id?: string
+          partner_restaurant_id?: string
+          starts_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cross_promotions_initiator_restaurant_id_fkey"
+            columns: ["initiator_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cross_promotions_partner_restaurant_id_fkey"
+            columns: ["partner_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demand_routing_events: {
         Row: {
           created_at: string
@@ -1580,6 +1634,50 @@ export type Database = {
           },
         ]
       }
+      opening_hours_exceptions: {
+        Row: {
+          close_time: string | null
+          created_at: string
+          exception_date: string
+          id: string
+          is_closed: boolean
+          open_time: string | null
+          reason: string | null
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          close_time?: string | null
+          created_at?: string
+          exception_date: string
+          id?: string
+          is_closed?: boolean
+          open_time?: string | null
+          reason?: string | null
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          close_time?: string | null
+          created_at?: string
+          exception_date?: string
+          id?: string
+          is_closed?: boolean
+          open_time?: string | null
+          reason?: string | null
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opening_hours_exceptions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       owner_email_preferences: {
         Row: {
           created_at: string
@@ -2342,6 +2440,47 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      restaurant_translations: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          language_code: string
+          name: string | null
+          restaurant_id: string
+          tagline: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          language_code: string
+          name?: string | null
+          restaurant_id: string
+          tagline?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          language_code?: string
+          name?: string | null
+          restaurant_id?: string
+          tagline?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_translations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       restaurants: {
         Row: {
