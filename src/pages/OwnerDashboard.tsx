@@ -45,6 +45,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { OwnerSidebar } from '@/components/owner/OwnerSidebar';
+import { OwnerCommandPalette } from '@/components/owner/OwnerCommandPalette';
+import { OwnerDashboardSkeleton } from '@/components/owner/OwnerDashboardSkeleton';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOwnerDashboard } from '@/hooks/useOwnerDashboard';
@@ -128,6 +130,7 @@ export default function OwnerDashboard() {
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [restaurantPickerOpen, setRestaurantPickerOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   // Fetch optimization data for action cards
   const { data: optimizationData } = useOptimizationInsights(selectedRestaurant?.id);
@@ -203,20 +206,7 @@ export default function OwnerDashboard() {
   };
 
   if (authLoading || loading) {
-    return (
-      <Layout>
-        <div className="container py-8">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 w-64 bg-muted rounded" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="h-32 bg-muted rounded-lg" />
-              ))}
-            </div>
-          </div>
-        </div>
-      </Layout>
-    );
+    return <OwnerDashboardSkeleton />;
   }
 
   if (!user) return <Navigate to="/login" replace />;
