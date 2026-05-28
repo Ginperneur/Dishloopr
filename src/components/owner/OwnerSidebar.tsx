@@ -40,7 +40,10 @@ export function OwnerSidebar({ activeTab, onChange, isVerified }: OwnerSidebarPr
   const collapsed = state === 'collapsed';
 
   return (
-    <Sidebar collapsible="icon" className="border-r">
+    <Sidebar
+      collapsible="icon"
+      className="border-r !top-14 md:!top-16 !h-[calc(100svh-3.5rem)] md:!h-[calc(100svh-4rem)]"
+    >
       <SidebarContent>
         <SidebarGroup>
           {!collapsed && <SidebarGroupLabel>Dashboard</SidebarGroupLabel>}
