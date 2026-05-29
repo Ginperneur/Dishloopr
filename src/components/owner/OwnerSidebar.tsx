@@ -64,10 +64,12 @@ export function OwnerSidebar({ activeTab, onChange, isVerified }: OwnerSidebarPr
                         disabled={locked}
                         onClick={() => !locked && onChange(section.id)}
                         className={cn(
-                          'flex items-center gap-2 w-full text-left',
+                          'flex items-center gap-2 w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 rounded-md',
                           locked && 'opacity-50 cursor-not-allowed',
                         )}
                         aria-label={section.label}
+                        aria-current={isActive ? 'page' : undefined}
+                        aria-disabled={locked || undefined}
                       >
                         <section.icon className="h-4 w-4 shrink-0" />
                         {!collapsed && (
