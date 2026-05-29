@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { Lock, Crown } from 'lucide-react';
+import { Lock, Crown, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProBadge } from './ProBadge';
 import { useOwnerTier } from '@/hooks/useOwnerTier';
@@ -31,21 +31,23 @@ export function ProGate({ restaurantId, enforced = false, showBadge = true, chil
   }
 
   return (
-    <div className="relative overflow-hidden rounded-xl">
-      <div className="pointer-events-none blur-sm opacity-60">{children}</div>
-      <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 backdrop-blur-[2px] gap-3 p-6 text-center">
-        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-          <Crown className="h-5 w-5 text-primary" />
-        </div>
-        <div>
-          <p className="font-semibold text-sm">Owner Pro functie</p>
-          <p className="text-xs text-muted-foreground max-w-xs">
-            Upgrade je restaurant naar Pro om diepere inzichten en tools te ontgrendelen.
+    <div className="relative">
+      <div className="blur-sm pointer-events-none select-none opacity-50">{children}</div>
+      <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-lg">
+        <div className="text-center p-6 max-w-sm">
+          <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+            <Lock className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <h3 className="font-semibold mb-2">Owner Pro functie</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Upgrade naar Pro om deze diepere inzichten en tools te ontgrendelen.
           </p>
+          <Button size="sm" disabled>
+            <Crown className="h-4 w-4 mr-2" />
+            Upgrade naar Pro
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </Button>
         </div>
-        <Button size="sm" variant="default">
-          <Lock className="h-3 w-3 mr-1" /> Upgrade naar Pro
-        </Button>
       </div>
     </div>
   );
