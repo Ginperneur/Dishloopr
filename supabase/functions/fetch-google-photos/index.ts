@@ -60,6 +60,34 @@ serve(async (req) => {
       throw new Error('restaurant_id is required');
     }
 
+    // Authorization: allow admins, restaurant managers, or users with a claim request for this restaurant
+    const { data: isAdmin } = await supabaseAdmin.rpc('has_role', { _user_id: user.id, _role: 'admin' });
+    let allowed = !!isAdmin;
+    if (!allowed) {
+      const { data: mgr } = await supabaseAdmin
+        .from('restaurant_managers')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('restaurant_id', restaurant_id)
+        .maybeSingle();
+      if (mgr) allowed = true;
+    }
+    if (!allowed) {
+      const { data: claim } = await supabaseAdmin
+        .from('claim_requests')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('restaurant_id', restaurant_id)
+        .maybeSingle();
+      if (claim) allowed = true;
+    }
+    if (!allowed) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden: no access to this restaurant' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     let photoRefs: string[] = photo_references || [];
 
     // If place_id is provided but no photo_references, fetch them from Google Places
