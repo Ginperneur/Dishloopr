@@ -29,7 +29,7 @@ export function StatCard({ title, value, icon: Icon, trend, locked, sparkline, v
   return (
     <Card
       className={cn(
-        'relative overflow-hidden transition-shadow hover:shadow-md',
+        'relative overflow-hidden transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md hover:border-primary/30',
         locked && 'opacity-60',
         isPrimary && 'border-primary/30 bg-gradient-to-br from-primary/10 via-primary/[0.04] to-transparent'
       )}
