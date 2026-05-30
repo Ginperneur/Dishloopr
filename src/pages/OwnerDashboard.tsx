@@ -279,7 +279,7 @@ export default function OwnerDashboard() {
   return (
     <Layout showFooter={false}>
       <SidebarProvider defaultOpen={true}>
-        <div className="owner-shell flex w-full min-h-[calc(100svh-4rem)]">
+        <div className="owner-shell flex w-full min-h-[calc(100svh-4rem)] animate-in fade-in duration-300">
           <OwnerSidebar
             activeTab={activeTab}
             onChange={setActiveTab}
