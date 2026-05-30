@@ -48,6 +48,7 @@ import { OwnerSidebar } from '@/components/owner/OwnerSidebar';
 import { OwnerCommandPalette } from '@/components/owner/OwnerCommandPalette';
 import { OwnerDashboardSkeleton } from '@/components/owner/OwnerDashboardSkeleton';
 import { OwnerTabHeader } from '@/components/owner/OwnerTabHeader';
+import { OwnerHelpDialog } from '@/components/owner/OwnerHelpDialog';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOwnerDashboard } from '@/hooks/useOwnerDashboard';
@@ -132,6 +133,7 @@ export default function OwnerDashboard() {
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [restaurantPickerOpen, setRestaurantPickerOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   // Fetch optimization data for action cards
   const { data: optimizationData } = useOptimizationInsights(selectedRestaurant?.id);
