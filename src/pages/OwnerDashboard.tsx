@@ -35,6 +35,7 @@ import {
   Receipt,
   ChevronsUpDown
 } from 'lucide-react';
+import { HelpCircle } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -296,6 +297,7 @@ export default function OwnerDashboard() {
               if (r) setSelectedRestaurant(r);
             }}
           />
+          <OwnerHelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
           <div className="flex-1 flex flex-col min-w-0">
             {/* Sticky inner header */}
             <div className="sticky top-14 md:top-16 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
@@ -375,6 +377,15 @@ export default function OwnerDashboard() {
                     address={(selectedRestaurant as any).address}
                   />
                 )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9"
+                  aria-label="Toon sneltoetsen"
+                  onClick={() => setHelpOpen(true)}
+                >
+                  <HelpCircle className="h-4 w-4" />
+                </Button>
                 <NotificationBell />
               </div>
             </div>
