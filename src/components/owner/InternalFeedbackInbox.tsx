@@ -7,6 +7,7 @@ import { Inbox, Check, Star, QrCode } from 'lucide-react';
 import { toast } from 'sonner';
 import QRCode from 'qrcode';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { OwnerEmptyState } from '@/components/owner/OwnerEmptyState';
 
 interface Feedback {
   id: string; rating: number; comment: string | null; category: string | null;

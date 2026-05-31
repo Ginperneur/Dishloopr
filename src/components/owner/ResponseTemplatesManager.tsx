@@ -7,9 +7,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquareReply, Plus, Trash2, Pencil } from 'lucide-react';
+import { MessageSquareReply, MessageSquare, Plus, Trash2, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { OwnerEmptyState } from '@/components/owner/OwnerEmptyState';
 
 interface Template {
   id: string; title: string; body: string; category: string; sentiment: string | null; use_count: number;

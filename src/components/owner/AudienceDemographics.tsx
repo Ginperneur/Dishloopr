@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Users, Globe, Smartphone, Monitor } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
+import { OwnerEmptyState } from '@/components/owner/OwnerEmptyState';
 
 interface Stats {
   total: number;
