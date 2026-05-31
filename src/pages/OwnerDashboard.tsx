@@ -1337,6 +1337,7 @@ export default function OwnerDashboard() {
       )}
           </main>
         </div>
+        </div>
       </SidebarProvider>
     </Layout>
   );
