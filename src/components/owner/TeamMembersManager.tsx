@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Users, UserPlus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { OwnerEmptyState } from '@/components/owner/OwnerEmptyState';
 
 interface Member {
   id: string; invited_email: string; role: string; status: string; invited_at: string; accepted_at: string | null;
@@ -76,8 +77,13 @@ export function TeamMembersManager({ restaurantId }: { restaurantId: string }) {
         </div>
         {loading ? (
           <p className="text-sm text-muted-foreground py-4 text-center">Laden…</p>
-        ) : members.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">Nog geen team-leden uitgenodigd.</p>
+         ) : members.length === 0 ? (
+          <OwnerEmptyState
+            compact
+            icon={UserPlus}
+            title="Nog geen team-leden"
+            description="Nodig collega's uit om samen reviews en menu's te beheren."
+          />
         ) : (
           <ul className="divide-y border rounded-md">
             {members.map((m) => (

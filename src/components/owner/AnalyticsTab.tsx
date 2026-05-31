@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
-import { Star, TrendingUp, Globe, Phone, Calendar } from 'lucide-react';
+import { Star, TrendingUp, Globe, Phone, Calendar, LineChart } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { OwnerEmptyState } from '@/components/owner/OwnerEmptyState';
 import {
   AreaChart,
   Area,
@@ -91,9 +92,11 @@ export function AnalyticsTab({ analytics, restaurant, reviews }: AnalyticsTabPro
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <p className="text-center text-muted-foreground py-12">
-              Nog geen analytics data beschikbaar
-            </p>
+            <OwnerEmptyState
+              icon={LineChart}
+              title="Nog geen analytics-data"
+              description="Zodra gasten je profiel bekijken zie je hier dagelijkse weergaven, klikken en trends."
+            />
           )}
         </CardContent>
       </Card>

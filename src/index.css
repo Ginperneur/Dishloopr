@@ -352,3 +352,38 @@
 .owner-shell .group\/sidebar-wrapper {
   min-height: calc(100svh - 3.5rem);
 }
+
+/* ============================================================
+ * A11Y — prefers-reduced-motion
+ * Honor user motion preferences across framer-motion + Tailwind
+ * animations in the owner dashboard.
+ * ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Skip link — visually hidden until focused */
+.skip-link {
+  position: absolute;
+  left: 0.75rem;
+  top: -3rem;
+  z-index: 100;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: top 0.15s ease-out;
+}
+.skip-link:focus,
+.skip-link:focus-visible {
+  top: 0.75rem;
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}

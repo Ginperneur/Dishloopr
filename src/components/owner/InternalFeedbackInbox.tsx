@@ -7,6 +7,7 @@ import { Inbox, Check, Star, QrCode } from 'lucide-react';
 import { toast } from 'sonner';
 import QRCode from 'qrcode';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { OwnerEmptyState } from '@/components/owner/OwnerEmptyState';
 
 interface Feedback {
   id: string; rating: number; comment: string | null; category: string | null;
@@ -72,8 +73,13 @@ export function InternalFeedbackInbox({ restaurantId }: { restaurantId: string }
       <CardContent>
         {loading ? (
           <p className="text-sm text-muted-foreground py-4 text-center">Laden…</p>
-        ) : items.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-6 text-center">Nog geen interne feedback ontvangen.</p>
+         ) : items.length === 0 ? (
+          <OwnerEmptyState
+            compact
+            icon={Inbox}
+            title="Geen feedback"
+            description="Nog geen interne feedback ontvangen — gebruik de QR-code op tafel om gasten anoniem feedback te laten geven."
+          />
         ) : (
           <ul className="space-y-2">
             {items.map((f) => (

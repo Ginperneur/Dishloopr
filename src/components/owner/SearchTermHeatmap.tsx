@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Search } from 'lucide-react';
+import { OwnerEmptyState } from '@/components/owner/OwnerEmptyState';
 
 export function SearchTermHeatmap({ restaurantId, days = 30 }: { restaurantId: string; days?: number }) {
   const [terms, setTerms] = useState<{ search_term: string; hits: number }[]>([]);
@@ -31,8 +32,13 @@ export function SearchTermHeatmap({ restaurantId, days = 30 }: { restaurantId: s
       <CardContent>
         {loading ? (
           <p className="text-sm text-muted-foreground py-6 text-center">Laden…</p>
-        ) : terms.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-6 text-center">Nog geen zoektermen vastgelegd voor jouw restaurant.</p>
+         ) : terms.length === 0 ? (
+          <OwnerEmptyState
+            compact
+            icon={Search}
+            title="Geen zoektermen"
+            description={`Nog geen zoektermen vastgelegd in de laatste ${days} dagen.`}
+          />
         ) : (
           <ul className="space-y-2">
             {terms.map((t) => (
