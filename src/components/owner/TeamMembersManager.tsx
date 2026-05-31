@@ -76,8 +76,13 @@ export function TeamMembersManager({ restaurantId }: { restaurantId: string }) {
         </div>
         {loading ? (
           <p className="text-sm text-muted-foreground py-4 text-center">Laden…</p>
-        ) : members.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">Nog geen team-leden uitgenodigd.</p>
+         ) : members.length === 0 ? (
+          <OwnerEmptyState
+            compact
+            icon={UserPlus}
+            title="Nog geen team-leden"
+            description="Nodig collega's uit om samen reviews en menu's te beheren."
+          />
         ) : (
           <ul className="divide-y border rounded-md">
             {members.map((m) => (
