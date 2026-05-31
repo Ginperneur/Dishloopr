@@ -380,7 +380,7 @@ export default function OwnerDashboard() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9"
+                  className="h-9 w-9 hidden sm:inline-flex"
                   aria-label="Toon sneltoetsen"
                   onClick={() => setHelpOpen(true)}
                 >
