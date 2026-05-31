@@ -55,10 +55,16 @@ export function AudienceDemographics({ restaurantId }: { restaurantId: string })
 
   if (stats.total === 0) {
     return (
-      <Card><CardContent className="p-6 text-center">
-        <Users className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-        <p className="text-sm text-muted-foreground">Nog geen bezoekersdata in de laatste 30 dagen.</p>
-      </CardContent></Card>
+      <Card>
+        <CardContent className="p-0">
+          <OwnerEmptyState
+            compact
+            icon={Users}
+            title="Geen bezoekersdata"
+            description="Nog geen bezoekersdata in de laatste 30 dagen."
+          />
+        </CardContent>
+      </Card>
     );
   }
 

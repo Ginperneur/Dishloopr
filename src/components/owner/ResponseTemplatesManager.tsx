@@ -138,8 +138,13 @@ export function ResponseTemplatesManager({ restaurantId }: { restaurantId: strin
       <CardContent>
         {loading ? (
           <p className="text-sm text-muted-foreground py-4 text-center">Laden…</p>
-        ) : templates.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-6 text-center">Nog geen templates. Maak er één om snel reviews te beantwoorden.</p>
+         ) : templates.length === 0 ? (
+          <OwnerEmptyState
+            compact
+            icon={MessageSquare}
+            title="Geen templates"
+            description="Maak een template om reviews snel te beantwoorden."
+          />
         ) : (
           <ul className="space-y-2">
             {templates.map((t) => (

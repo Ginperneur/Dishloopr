@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Users, UserPlus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { OwnerEmptyState } from '@/components/owner/OwnerEmptyState';
 
 interface Member {
   id: string; invited_email: string; role: string; status: string; invited_at: string; accepted_at: string | null;
