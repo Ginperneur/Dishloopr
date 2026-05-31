@@ -91,9 +91,11 @@ export function AnalyticsTab({ analytics, restaurant, reviews }: AnalyticsTabPro
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <p className="text-center text-muted-foreground py-12">
-              Nog geen analytics data beschikbaar
-            </p>
+            <OwnerEmptyState
+              icon={BarChart3}
+              title="Nog geen analytics-data"
+              description="Zodra gasten je profiel bekijken zie je hier dagelijkse weergaven, klikken en trends."
+            />
           )}
         </CardContent>
       </Card>
