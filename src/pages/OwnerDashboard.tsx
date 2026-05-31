@@ -50,6 +50,7 @@ import { OwnerCommandPalette } from '@/components/owner/OwnerCommandPalette';
 import { OwnerDashboardSkeleton } from '@/components/owner/OwnerDashboardSkeleton';
 import { OwnerTabHeader } from '@/components/owner/OwnerTabHeader';
 import { OwnerHelpDialog } from '@/components/owner/OwnerHelpDialog';
+import { OwnerEmptyState } from '@/components/owner/OwnerEmptyState';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOwnerDashboard } from '@/hooks/useOwnerDashboard';
@@ -280,6 +281,9 @@ export default function OwnerDashboard() {
     <Layout showFooter={false}>
       <SidebarProvider defaultOpen={true}>
         <div className="owner-shell flex w-full min-h-[calc(100svh-4rem)] animate-in fade-in duration-300">
+          <a href="#owner-main" className="skip-link">
+            Direct naar inhoud
+          </a>
           <OwnerSidebar
             activeTab={activeTab}
             onChange={setActiveTab}
@@ -390,7 +394,11 @@ export default function OwnerDashboard() {
               </div>
             </div>
 
-            <div className="w-full px-4 md:px-6 py-6 md:py-8 max-w-[1600px] mx-auto">
+            <main
+              id="owner-main"
+              tabIndex={-1}
+              className="w-full px-4 md:px-6 py-6 md:py-8 max-w-[1600px] mx-auto focus:outline-none"
+            >
               {/* Page header */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
