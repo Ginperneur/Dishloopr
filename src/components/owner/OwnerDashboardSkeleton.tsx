@@ -29,12 +29,27 @@ export function OwnerDashboardSkeleton() {
               <Skeleton className="h-7 w-32" />
             </div>
 
-            <Skeleton className="h-20 w-full rounded-lg" />
+            {/* Daily briefing hero */}
+            <Skeleton className="h-36 w-full rounded-xl" />
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
               {Array.from({ length: 4 }).map((_, i) => (
                 <Skeleton key={i} className="h-32 rounded-lg" />
               ))}
+            </div>
+
+            {/* Profile completeness card */}
+            <div className="flex gap-5 items-center p-4 border rounded-lg">
+              <Skeleton className="h-[88px] w-[88px] rounded-full shrink-0" />
+              <div className="flex-1 space-y-3">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-12 w-full rounded-lg" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-6 w-24 rounded-md" />
+                  <Skeleton className="h-6 w-28 rounded-md" />
+                  <Skeleton className="h-6 w-20 rounded-md" />
+                </div>
+              </div>
             </div>
 
             <div className="grid lg:grid-cols-3 gap-4">
