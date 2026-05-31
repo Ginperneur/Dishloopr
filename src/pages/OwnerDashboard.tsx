@@ -394,9 +394,10 @@ export default function OwnerDashboard() {
               </div>
             </div>
 
-            <main
+            <div
               id="owner-main"
               tabIndex={-1}
+              role="main"
               className="w-full px-4 md:px-6 py-6 md:py-8 max-w-[1600px] mx-auto focus:outline-none"
             >
               {/* Page header */}
@@ -1335,7 +1336,7 @@ export default function OwnerDashboard() {
           }}
         />
       )}
-          </main>
+          </div>
         </div>
       </SidebarProvider>
     </Layout>
