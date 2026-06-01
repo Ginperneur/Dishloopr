@@ -995,14 +995,16 @@ export default function OwnerDashboard() {
               )}
             </div>
 
-            {/* Response Templates (Basis) */}
+            {/* Response Templates / AI antwoord-assistent (Pro) */}
             {selectedRestaurant && isVerified && (
               <div className="border-t pt-8">
                 <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
                   <MessageSquare className="h-5 w-5 text-primary" />
-                  Reactietemplates
+                  AI antwoord-assistent
                 </h3>
-                <ResponseTemplatesManager restaurantId={selectedRestaurant.id} />
+                <ProGate restaurantId={selectedRestaurant.id} enforced>
+                  <ResponseTemplatesManager restaurantId={selectedRestaurant.id} />
+                </ProGate>
               </div>
             )}
 
@@ -1026,7 +1028,7 @@ export default function OwnerDashboard() {
                   <Store className="h-5 w-5 text-primary" />
                   Team-beheer
                 </h3>
-                <ProGate restaurantId={selectedRestaurant.id}>
+                <ProGate restaurantId={selectedRestaurant.id} enforced>
                   <TeamMembersManager restaurantId={selectedRestaurant.id} />
                 </ProGate>
               </div>
@@ -1066,7 +1068,7 @@ export default function OwnerDashboard() {
                     <BarChart3 className="h-5 w-5 text-primary" />
                     Conversie & Zoektermen
                   </h3>
-                  <ProGate restaurantId={selectedRestaurant.id}>
+                  <ProGate restaurantId={selectedRestaurant.id} enforced>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <OwnerFunnel restaurantId={selectedRestaurant.id} />
                       <SearchTermHeatmap restaurantId={selectedRestaurant.id} />
