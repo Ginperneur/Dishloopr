@@ -118,6 +118,7 @@ export default function OwnerDashboard() {
   const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const [searchParams] = useSearchParams();
+  const { refreshStatus: refreshProStatus } = useOwnerProCheckout();
   const {
     restaurants,
     selectedRestaurant,
