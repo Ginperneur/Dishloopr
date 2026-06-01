@@ -55,6 +55,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOwnerDashboard } from '@/hooks/useOwnerDashboard';
 import { useRestaurantClaims } from '@/hooks/useRestaurantClaims';
+import { useOwnerProCheckout } from '@/hooks/useOwnerProCheckout';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { StatCard } from '@/components/owner/StatCard';
@@ -117,6 +118,7 @@ export default function OwnerDashboard() {
   const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const [searchParams] = useSearchParams();
+  const { refreshStatus: refreshProStatus } = useOwnerProCheckout();
   const {
     restaurants,
     selectedRestaurant,
@@ -182,6 +184,18 @@ export default function OwnerDashboard() {
       window.history.replaceState({}, '', '/owner-dashboard');
     } else if (newsletter === 'cancelled') {
       toast.info('Nieuwsbrief betaling geannuleerd.');
+      window.history.replaceState({}, '', '/owner-dashboard');
+    }
+
+    // Handle Owner Pro checkout redirect from Stripe
+    const proCheckout = searchParams.get('pro_checkout');
+    if (proCheckout === 'success') {
+      toast.success('Welkom bij Owner Pro! Je abonnement wordt geactiveerd…');
+      refreshProStatus();
+      setTimeout(() => refreshProStatus(), 3000);
+      window.history.replaceState({}, '', '/owner-dashboard');
+    } else if (proCheckout === 'cancelled') {
+      toast.info('Pro upgrade geannuleerd.');
       window.history.replaceState({}, '', '/owner-dashboard');
     }
   }, [searchParams]);
@@ -995,14 +1009,16 @@ export default function OwnerDashboard() {
               )}
             </div>
 
-            {/* Response Templates (Basis) */}
+            {/* Response Templates / AI antwoord-assistent (Pro) */}
             {selectedRestaurant && isVerified && (
               <div className="border-t pt-8">
                 <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
                   <MessageSquare className="h-5 w-5 text-primary" />
-                  Reactietemplates
+                  AI antwoord-assistent
                 </h3>
-                <ResponseTemplatesManager restaurantId={selectedRestaurant.id} />
+                <ProGate restaurantId={selectedRestaurant.id} enforced>
+                  <ResponseTemplatesManager restaurantId={selectedRestaurant.id} />
+                </ProGate>
               </div>
             )}
 
@@ -1026,7 +1042,7 @@ export default function OwnerDashboard() {
                   <Store className="h-5 w-5 text-primary" />
                   Team-beheer
                 </h3>
-                <ProGate restaurantId={selectedRestaurant.id}>
+                <ProGate restaurantId={selectedRestaurant.id} enforced>
                   <TeamMembersManager restaurantId={selectedRestaurant.id} />
                 </ProGate>
               </div>
@@ -1066,7 +1082,7 @@ export default function OwnerDashboard() {
                     <BarChart3 className="h-5 w-5 text-primary" />
                     Conversie & Zoektermen
                   </h3>
-                  <ProGate restaurantId={selectedRestaurant.id}>
+                  <ProGate restaurantId={selectedRestaurant.id} enforced>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <OwnerFunnel restaurantId={selectedRestaurant.id} />
                       <SearchTermHeatmap restaurantId={selectedRestaurant.id} />

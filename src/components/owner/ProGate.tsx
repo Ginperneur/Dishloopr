@@ -1,8 +1,9 @@
 import { ReactNode } from 'react';
-import { Lock, Crown, ArrowRight } from 'lucide-react';
+import { Lock, Crown, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProBadge } from './ProBadge';
 import { useOwnerTier } from '@/hooks/useOwnerTier';
+import { useOwnerProCheckout } from '@/hooks/useOwnerProCheckout';
 
 interface ProGateProps {
   restaurantId: string | undefined;
@@ -15,6 +16,7 @@ interface ProGateProps {
 
 export function ProGate({ restaurantId, enforced = false, showBadge = true, children }: ProGateProps) {
   const { data: tier } = useOwnerTier(restaurantId);
+  const { startCheckout, loading } = useOwnerProCheckout();
   const isPro = tier === 'pro';
 
   if (!enforced || isPro) {
@@ -40,10 +42,14 @@ export function ProGate({ restaurantId, enforced = false, showBadge = true, chil
           </div>
           <h3 className="font-semibold mb-2">Owner Pro functie</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Upgrade naar Pro om deze diepere inzichten en tools te ontgrendelen.
+            Upgrade naar Pro (€29/maand of €290/jaar) om deze tools te ontgrendelen.
           </p>
-          <Button size="sm" disabled>
-            <Crown className="h-4 w-4 mr-2" />
+          <Button size="sm" onClick={() => startCheckout('monthly')} disabled={loading !== null}>
+            {loading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Crown className="h-4 w-4 mr-2" />
+            )}
             Upgrade naar Pro
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>

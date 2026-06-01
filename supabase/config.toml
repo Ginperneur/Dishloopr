@@ -80,3 +80,12 @@ verify_jwt = false
 
 [functions.support-chat]
 verify_jwt = false
+
+[functions.create-owner-pro-checkout]
+verify_jwt = false
+
+[functions.check-owner-pro-status]
+verify_jwt = false
+
+[functions.owner-pro-portal]
+verify_jwt = false
