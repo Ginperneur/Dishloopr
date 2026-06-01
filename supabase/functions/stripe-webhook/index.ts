@@ -341,8 +341,78 @@ serve(async (req) => {
         }
 
         logStep("Newsletter placement paid successfully", { placementId: metadata.placementId });
+      }
+      // Handle Owner Pro subscription checkout
+      else if (type === "owner_pro" && metadata.user_id) {
+        logStep("Processing owner_pro checkout", { userId: metadata.user_id });
+        const subscriptionId = session.subscription as string | null;
+        const customerId = session.customer as string | null;
+        let priceId: string | null = null;
+        let interval: string | null = metadata.billing_interval || null;
+        let periodEnd: string | null = null;
+        let cancelAtPeriodEnd = false;
+
+        if (subscriptionId) {
+          const sub = await stripe.subscriptions.retrieve(subscriptionId);
+          priceId = sub.items.data[0]?.price?.id ?? null;
+          periodEnd = new Date(sub.current_period_end * 1000).toISOString();
+          cancelAtPeriodEnd = sub.cancel_at_period_end;
+          if (!interval) {
+            interval = sub.items.data[0]?.price?.recurring?.interval === "year" ? "yearly" : "monthly";
+          }
+        }
+
+        await supabaseAdmin
+          .from("owner_pro_subscriptions")
+          .upsert(
+            {
+              user_id: metadata.user_id,
+              stripe_customer_id: customerId,
+              stripe_subscription_id: subscriptionId,
+              stripe_price_id: priceId,
+              status: "active",
+              billing_interval: interval,
+              current_period_end: periodEnd,
+              cancel_at_period_end: cancelAtPeriodEnd,
+            },
+            { onConflict: "stripe_subscription_id" }
+          );
+
+        await supabaseAdmin.rpc("sync_owner_pro_restaurants", { _user_id: metadata.user_id });
+        logStep("Owner Pro subscription activated", { userId: metadata.user_id, interval });
       } else {
         logStep("Missing metadata for purchase", { metadata: session.metadata });
+      }
+    }
+
+    // Subscription lifecycle events for Owner Pro
+    if (
+      event.type === "customer.subscription.updated" ||
+      event.type === "customer.subscription.deleted"
+    ) {
+      const sub = event.data.object as Stripe.Subscription;
+      const userId = sub.metadata?.user_id;
+      if (userId && sub.metadata?.type === "owner_pro") {
+        const isActive = sub.status === "active" || sub.status === "trialing";
+        const priceId = sub.items.data[0]?.price?.id ?? null;
+        const interval = sub.items.data[0]?.price?.recurring?.interval === "year" ? "yearly" : "monthly";
+        await supabaseAdmin
+          .from("owner_pro_subscriptions")
+          .upsert(
+            {
+              user_id: userId,
+              stripe_customer_id: sub.customer as string,
+              stripe_subscription_id: sub.id,
+              stripe_price_id: priceId,
+              status: isActive ? "active" : "inactive",
+              billing_interval: interval,
+              current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+              cancel_at_period_end: sub.cancel_at_period_end,
+            },
+            { onConflict: "stripe_subscription_id" }
+          );
+        await supabaseAdmin.rpc("sync_owner_pro_restaurants", { _user_id: userId });
+        logStep("Owner Pro subscription synced", { userId, status: sub.status });
       }
     }
 
