@@ -55,6 +55,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOwnerDashboard } from '@/hooks/useOwnerDashboard';
 import { useRestaurantClaims } from '@/hooks/useRestaurantClaims';
+import { useOwnerProCheckout } from '@/hooks/useOwnerProCheckout';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { StatCard } from '@/components/owner/StatCard';
@@ -182,6 +183,18 @@ export default function OwnerDashboard() {
       window.history.replaceState({}, '', '/owner-dashboard');
     } else if (newsletter === 'cancelled') {
       toast.info('Nieuwsbrief betaling geannuleerd.');
+      window.history.replaceState({}, '', '/owner-dashboard');
+    }
+
+    // Handle Owner Pro checkout redirect from Stripe
+    const proCheckout = searchParams.get('pro_checkout');
+    if (proCheckout === 'success') {
+      toast.success('Welkom bij Owner Pro! Je abonnement wordt geactiveerd…');
+      refreshProStatus();
+      setTimeout(() => refreshProStatus(), 3000);
+      window.history.replaceState({}, '', '/owner-dashboard');
+    } else if (proCheckout === 'cancelled') {
+      toast.info('Pro upgrade geannuleerd.');
       window.history.replaceState({}, '', '/owner-dashboard');
     }
   }, [searchParams]);
