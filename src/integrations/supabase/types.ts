@@ -1780,6 +1780,44 @@ export type Database = {
         }
         Relationships: []
       }
+      owner_weekly_recommendations: {
+        Row: {
+          actions: Json
+          created_at: string
+          id: string
+          model: string | null
+          restaurant_id: string
+          summary: string | null
+          week_start: string
+        }
+        Insert: {
+          actions?: Json
+          created_at?: string
+          id?: string
+          model?: string | null
+          restaurant_id: string
+          summary?: string | null
+          week_start: string
+        }
+        Update: {
+          actions?: Json
+          created_at?: string
+          id?: string
+          model?: string | null
+          restaurant_id?: string
+          summary?: string | null
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_weekly_recommendations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -3843,12 +3881,40 @@ export type Database = {
         Args: { p_slot_id: string }
         Returns: number
       }
+      get_guest_cohorts: {
+        Args: { p_restaurant_id: string; p_weeks?: number }
+        Returns: {
+          new_visitors: number
+          returning_visitors: number
+          week_start: string
+        }[]
+      }
+      get_owner_attribution: {
+        Args: { p_days?: number; p_restaurant_id: string }
+        Returns: {
+          channel: string
+          clicks: number
+          conversions: number
+          views: number
+        }[]
+      }
       get_owner_funnel: {
         Args: { p_days?: number; p_restaurant_id: string }
         Returns: {
           clicks: number
           conversions: number
           views: number
+        }[]
+      }
+      get_owner_historical_benchmark: {
+        Args: { p_days?: number; p_restaurant_id: string }
+        Returns: {
+          current_clicks: number
+          current_conversions: number
+          current_views: number
+          previous_clicks: number
+          previous_conversions: number
+          previous_views: number
         }[]
       }
       get_search_term_heatmap: {
