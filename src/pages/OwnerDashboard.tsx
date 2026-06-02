@@ -95,6 +95,10 @@ import { WeeklyReportToggle } from '@/components/owner/WeeklyReportToggle';
 import { ProGate } from '@/components/owner/ProGate';
 import { OwnerFunnel } from '@/components/owner/OwnerFunnel';
 import { SearchTermHeatmap } from '@/components/owner/SearchTermHeatmap';
+import { GuestCohortHeatmap } from '@/components/owner/GuestCohortHeatmap';
+import { ChannelAttribution } from '@/components/owner/ChannelAttribution';
+import { WeeklyRecommendations } from '@/components/owner/WeeklyRecommendations';
+import { HistoricalBenchmark } from '@/components/owner/HistoricalBenchmark';
 import { ResponseTemplatesManager } from '@/components/owner/ResponseTemplatesManager';
 import { TeamMembersManager } from '@/components/owner/TeamMembersManager';
 import { InternalFeedbackInbox } from '@/components/owner/InternalFeedbackInbox';
@@ -1088,6 +1092,40 @@ export default function OwnerDashboard() {
                       <SearchTermHeatmap restaurantId={selectedRestaurant.id} />
                     </div>
                   </ProGate>
+                </div>
+
+                {/* Weekly AI recommendations (Pro) */}
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <BarChart3 className="h-5 w-5 text-primary" />
+                    AI-aanbevelingen
+                  </h3>
+                  <ProGate restaurantId={selectedRestaurant.id} enforced>
+                    <WeeklyRecommendations restaurantId={selectedRestaurant.id} />
+                  </ProGate>
+                </div>
+
+                {/* Cohort + attribution (Pro) */}
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <BarChart3 className="h-5 w-5 text-primary" />
+                    Gasten-cohorten & attributie
+                  </h3>
+                  <ProGate restaurantId={selectedRestaurant.id} enforced>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <GuestCohortHeatmap restaurantId={selectedRestaurant.id} />
+                      <ChannelAttribution restaurantId={selectedRestaurant.id} />
+                    </div>
+                  </ProGate>
+                </div>
+
+                {/* Benchmark vs vorig jaar (gratis) */}
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                    Jaar-op-jaar benchmark
+                  </h3>
+                  <HistoricalBenchmark restaurantId={selectedRestaurant.id} />
                 </div>
 
                 {/* Audience demographics (Basis) + Best time to post (Pro) */}
