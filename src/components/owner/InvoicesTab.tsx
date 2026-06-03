@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { Download, ExternalLink, FileText, Loader2, Receipt } from 'lucide-react';
 import { toast } from 'sonner';
+import { ProSubscriptionCard } from './ProSubscriptionCard';
 
 interface InvoiceItem {
   id: string;
@@ -65,6 +66,7 @@ export function InvoicesTab() {
 
   return (
     <div className="space-y-4">
+      <ProSubscriptionCard />
       <div className="flex items-center gap-2">
         <Receipt className="h-5 w-5 text-primary" />
         <h2 className="text-lg font-semibold">Facturen & betalingen</h2>
