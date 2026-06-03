@@ -7,8 +7,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface ProStatus {
-  active: boolean;
-  status?: string;
+  is_pro: boolean;
+  interval?: string | null;
   current_period_end?: string | null;
   cancel_at_period_end?: boolean;
 }
@@ -63,7 +63,7 @@ export function ProSubscriptionCard() {
     );
   }
 
-  if (!status?.active) return null;
+  if (!status?.is_pro) return null;
 
   const renewDate = status.current_period_end
     ? new Date(status.current_period_end).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -79,7 +79,9 @@ export function ProSubscriptionCard() {
           <div>
             <div className="flex items-center gap-2">
               <span className="font-semibold">Owner Pro actief</span>
-              <Badge variant="secondary" className="text-xs">{status.status ?? 'active'}</Badge>
+              <Badge variant="secondary" className="text-xs">
+                {status.interval === 'yearly' ? 'Jaarlijks' : 'Maandelijks'}
+              </Badge>
             </div>
             {renewDate && (
               <p className="text-xs text-muted-foreground">
