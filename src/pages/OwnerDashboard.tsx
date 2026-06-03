@@ -100,6 +100,7 @@ import { ChannelAttribution } from '@/components/owner/ChannelAttribution';
 import { WeeklyRecommendations } from '@/components/owner/WeeklyRecommendations';
 import { HistoricalBenchmark } from '@/components/owner/HistoricalBenchmark';
 import { InsightsExportButton } from '@/components/owner/InsightsExportButton';
+import { FunnelAnomalies } from '@/components/owner/FunnelAnomalies';
 import { ResponseTemplatesManager } from '@/components/owner/ResponseTemplatesManager';
 import { TeamMembersManager } from '@/components/owner/TeamMembersManager';
 import { InternalFeedbackInbox } from '@/components/owner/InternalFeedbackInbox';
@@ -1110,7 +1111,10 @@ export default function OwnerDashboard() {
                     AI-aanbevelingen
                   </h3>
                   <ProGate restaurantId={selectedRestaurant.id} enforced>
-                    <WeeklyRecommendations restaurantId={selectedRestaurant.id} />
+                    <div className="space-y-6">
+                      <FunnelAnomalies restaurantId={selectedRestaurant.id} />
+                      <WeeklyRecommendations restaurantId={selectedRestaurant.id} />
+                    </div>
                   </ProGate>
                 </div>
 
