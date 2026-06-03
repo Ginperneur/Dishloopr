@@ -3906,6 +3906,16 @@ export type Database = {
           views: number
         }[]
       }
+      get_owner_funnel_anomalies: {
+        Args: { p_restaurant_id: string }
+        Returns: {
+          current_value: number
+          delta_pct: number
+          metric: string
+          previous_value: number
+          severity: string
+        }[]
+      }
       get_owner_historical_benchmark: {
         Args: { p_days?: number; p_restaurant_id: string }
         Returns: {
