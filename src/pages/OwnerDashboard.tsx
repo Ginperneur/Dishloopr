@@ -99,6 +99,7 @@ import { GuestCohortHeatmap } from '@/components/owner/GuestCohortHeatmap';
 import { ChannelAttribution } from '@/components/owner/ChannelAttribution';
 import { WeeklyRecommendations } from '@/components/owner/WeeklyRecommendations';
 import { HistoricalBenchmark } from '@/components/owner/HistoricalBenchmark';
+import { InsightsExportButton } from '@/components/owner/InsightsExportButton';
 import { ResponseTemplatesManager } from '@/components/owner/ResponseTemplatesManager';
 import { TeamMembersManager } from '@/components/owner/TeamMembersManager';
 import { InternalFeedbackInbox } from '@/components/owner/InternalFeedbackInbox';
@@ -1059,6 +1060,14 @@ export default function OwnerDashboard() {
               icon={BarChart3}
               title="Inzichten & Analytics"
               description="Prestaties, zoekpositie, publiek en optimalisatiekansen."
+              actions={
+                isVerified && selectedRestaurant ? (
+                  <InsightsExportButton
+                    restaurantId={selectedRestaurant.id}
+                    restaurantName={selectedRestaurant.name}
+                  />
+                ) : undefined
+              }
             />
             {isVerified && selectedRestaurant ? (
               <div className="space-y-8">
