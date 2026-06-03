@@ -27,18 +27,32 @@ export function SocialShare({
 }: SocialShareProps) {
   // Always share the production URL, not preview URLs
   const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
-  const shareUrl = url || `https://dishloopr.com${currentPath}`;
+  const baseShareUrl = url || `https://dishloopr.com${currentPath}`;
+
+  const withUtm = (source: string, medium: string, campaign = 'share') => {
+    try {
+      const u = new URL(baseShareUrl);
+      if (!u.searchParams.get('utm_source')) u.searchParams.set('utm_source', source);
+      if (!u.searchParams.get('utm_medium')) u.searchParams.set('utm_medium', medium);
+      if (!u.searchParams.get('utm_campaign')) u.searchParams.set('utm_campaign', campaign);
+      return u.toString();
+    } catch {
+      return baseShareUrl;
+    }
+  };
+
+  const shareUrl = withUtm('direct', 'share');
   const encodedUrl = encodeURIComponent(shareUrl);
   const encodedTitle = encodeURIComponent(title);
   const encodedDescription = encodeURIComponent(description);
   const hashtagString = hashtags.join(',');
 
   const shareLinks = {
-    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-    twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}&hashtags=${hashtagString}`,
-    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
-    whatsapp: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`,
-    email: `mailto:?subject=${encodedTitle}&body=${encodedDescription}%0A%0A${encodedUrl}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(withUtm('facebook', 'social'))}`,
+    twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(withUtm('twitter', 'social'))}&text=${encodedTitle}&hashtags=${hashtagString}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(withUtm('linkedin', 'social'))}`,
+    whatsapp: `https://wa.me/?text=${encodedTitle}%20${encodeURIComponent(withUtm('whatsapp', 'messaging'))}`,
+    email: `mailto:?subject=${encodedTitle}&body=${encodedDescription}%0A%0A${encodeURIComponent(withUtm('email', 'email'))}`,
   };
 
   const handleShare = (platform: keyof typeof shareLinks) => {
@@ -48,7 +62,7 @@ export function SocialShare({
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(withUtm('copy-link', 'share'));
       toast.success('Link gekopieerd naar klembord');
     } catch {
       toast.error('Kon link niet kopiëren');
@@ -61,7 +75,7 @@ export function SocialShare({
         await navigator.share({
           title,
           text: description,
-          url: shareUrl,
+          url: withUtm('native', 'share'),
         });
       } catch (error) {
         // User cancelled or share failed
