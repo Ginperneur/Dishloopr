@@ -71,6 +71,7 @@ import { AdminToday } from '@/components/admin/AdminToday';
 import { RestaurantSuggestionsQueue } from '@/components/admin/RestaurantSuggestionsQueue';
 import { ErrorLogsViewer } from '@/components/admin/ErrorLogsViewer';
 import { ReservationLinkDetector } from '@/components/admin/ReservationLinkDetector';
+import { RateLimitMonitor } from '@/components/admin/RateLimitMonitor';
 
 interface Stats {
   totalUsers: number;
@@ -133,6 +134,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'settings': { title: "Instellingen", description: "Platform configuratie" },
   'error-logs': { title: "Error Logs", description: "Frontend crashes en errors van gebruikers" },
   'reservation-detect': { title: "Reserveringslinks", description: "Detecteer TheFork/Zenchef/OpenTable links via websites" },
+  'rate-limits': { title: "API Bescherming", description: "Rate limits, kill-switch en monitoring van AI/API gebruik" },
 };
 
 export default function AdminPanel() {
@@ -504,6 +506,7 @@ export default function AdminPanel() {
               {activeSection === 'reviews' && <ReviewModerationManager />}
 
               {activeSection === 'reservation-detect' && <ReservationLinkDetector />}
+              {activeSection === 'rate-limits' && <RateLimitMonitor />}
               
               {activeSection === 'users' && (
                 <Card>

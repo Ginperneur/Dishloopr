@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -67,6 +68,15 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limit (AI-protected): 15/uur per ingelogde user, 5/uur per IP
+    const rl = await enforceRateLimit(req, {
+      functionName: "ai-recommendations",
+      user: { max: 15, window: 3600 },
+      anon: { max: 5, window: 3600 },
+      isAi: true,
+    });
+    if (!rl.allowed && rl.response) return rl.response;
+
     // Require authentication to prevent anonymous AI credit drain
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {

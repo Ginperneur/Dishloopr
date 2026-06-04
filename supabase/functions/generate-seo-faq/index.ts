@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,6 +13,14 @@ serve(async (req) => {
   }
 
   try {
+    const rl = await enforceRateLimit(req, {
+      functionName: "generate-seo-faq",
+      user: { max: 30, window: 86400 },
+      anon: { max: 0, window: 3600 },
+      isAi: true,
+    });
+    if (!rl.allowed && rl.response) return rl.response;
+
     // Admin-only
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {

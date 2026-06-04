@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -45,6 +46,15 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // Rate limit (kostbare Firecrawl + AI calls)
+  const rl = await enforceRateLimit(req, {
+    functionName: "scrape-menu",
+    user: { max: 30, window: 3600 },
+    anon: { max: 5, window: 3600 },
+    isAi: true,
+  });
+  if (!rl.allowed && rl.response) return rl.response;
 
   let parsedRestaurantId: string | null = null;
   let adminSupabase: ReturnType<typeof createClient> | null = null;

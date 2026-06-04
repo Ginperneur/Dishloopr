@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -77,6 +78,13 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const rl = await enforceRateLimit(req, {
+      functionName: "detect-reservation-links",
+      user: { max: 60, window: 3600 },
+      anon: { max: 5, window: 3600 },
+    });
+    if (!rl.allowed && rl.response) return rl.response;
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);

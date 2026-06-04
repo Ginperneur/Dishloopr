@@ -100,6 +100,7 @@ const navGroups = [
       { id: 'audit-trail', label: 'Audit Trail', icon: Clock },
       { id: 'error-logs', label: 'Error Logs', icon: AlertCircle },
       { id: 'activity', label: 'Activiteit', icon: Settings },
+      { id: 'rate-limits', label: 'API Bescherming', icon: ShieldAlert },
       { id: 'settings', label: 'Instellingen', icon: Settings },
     ],
   },

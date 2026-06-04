@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -61,6 +62,14 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limit: betaalde Google API
+    const rl = await enforceRateLimit(req, {
+      functionName: "google-places-search",
+      user: { max: 60, window: 3600 },
+      anon: { max: 15, window: 3600 },
+    });
+    if (!rl.allowed && rl.response) return rl.response;
+
     // Create Supabase client with service role for database access
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
