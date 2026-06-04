@@ -9,6 +9,7 @@ import {
   type ScoringContext,
   type DishMatchInfo,
 } from '@/lib/ranking';
+import { calculateDistance } from '@/hooks/useGeolocation';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type Dish = Database['public']['Tables']['dishes']['Row'];
@@ -236,6 +237,30 @@ export function useSearch() {
     // For browse/text-only, apply a reasonable limit.
     const hasDishMatches = matchingDishes.length > 0;
 
+    // Distance-based expansion: when a city is selected AND user requested a radius,
+    // we drop the strict city_id filter and post-filter by Haversine distance from the
+    // city centroid (avg geo of all restaurants in that city).
+    const wantsRadius = !!(filters?.radiusKm && filters.radiusKm > 0 && cityId && cityId !== 'all');
+    let cityCenter: { lat: number; lng: number } | null = null;
+    if (wantsRadius) {
+      const { data: centerRows } = await supabase
+        .from('restaurants')
+        .select('geo_lat, geo_lng')
+        .eq('city_id', cityId!)
+        .eq('is_active', true)
+        .not('geo_lat', 'is', null)
+        .not('geo_lng', 'is', null)
+        .limit(200);
+      if (centerRows && centerRows.length > 0) {
+        const lats = centerRows.map((r: any) => Number(r.geo_lat));
+        const lngs = centerRows.map((r: any) => Number(r.geo_lng));
+        cityCenter = {
+          lat: lats.reduce((a, b) => a + b, 0) / lats.length,
+          lng: lngs.reduce((a, b) => a + b, 0) / lngs.length,
+        };
+      }
+    }
+
     const buildRestaurantQuery = () => {
       let q = supabase.from('restaurants').select('*').eq('is_active', true);
       // Hide restaurants without photos from public listings
@@ -269,7 +294,8 @@ export function useSearch() {
       if (featuredOnly) {
         q = q.or('is_featured.eq.true,is_top_listing.eq.true');
       }
-      if (cityId && cityId !== 'all') {
+      // Skip strict city_id when a radius is requested (we filter by distance below)
+      if (cityId && cityId !== 'all' && !(wantsRadius && cityCenter)) {
         q = q.eq('city_id', cityId);
       }
 
@@ -363,8 +389,19 @@ export function useSearch() {
       return;
     }
 
+    // Apply radius post-filter (Haversine) when expansion is active.
+    let filteredRestaurants = restaurants;
+    if (wantsRadius && cityCenter) {
+      const maxKm = filters!.radiusKm!;
+      filteredRestaurants = restaurants.filter((r) => {
+        if (r.geo_lat == null || r.geo_lng == null) return false;
+        const d = calculateDistance(cityCenter!.lat, cityCenter!.lng, Number(r.geo_lat), Number(r.geo_lng));
+        return d <= maxKm;
+      });
+    }
+
     // ── Step 4: Chain info (batch) ──
-    const chainIds = [...new Set(restaurants.map(r => r.chain_id).filter(Boolean))] as string[];
+    const chainIds = [...new Set(filteredRestaurants.map(r => r.chain_id).filter(Boolean))] as string[];
     const chainNameById = new Map<string, string>();
     const chainCountById = new Map<string, number>();
 
