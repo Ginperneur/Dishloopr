@@ -435,14 +435,14 @@ export function FeaturedMarketplace({
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setDurationMonths(Math.min(3, durationMonths + 1))}
-                  disabled={durationMonths >= 3}
+                  onClick={() => setDurationMonths(Math.min(12, durationMonths + 1))}
+                  disabled={durationMonths >= 12}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Maximum 3 maanden aaneengesloten, daarna verplichte pauze van een maand
+                Looptijd voor de premium plek (max 12 maanden vooraf). Maandelijks opzegbaar.
               </p>
             </div>
 
@@ -456,6 +456,9 @@ export function FeaturedMarketplace({
                   1e gratis, extra = €/maand
                 </Badge>
               </div>
+              <p className="text-xs text-muted-foreground -mt-1">
+                Ambiance add-ons lopen <strong>doorlopend per maand</strong> — geen limiet, maandelijks opzegbaar. Hieronder zie je de vaste maandprijs per tag.
+              </p>
               <div className="grid grid-cols-2 gap-2">
                 {ambiancePricing.map((ambiance) => {
                   const isIncluded = includedAmbiance === ambiance.ambiance_tag;

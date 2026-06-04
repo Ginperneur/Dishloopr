@@ -112,6 +112,8 @@ import { SocialPostGenerator } from '@/components/owner/SocialPostGenerator';
 import { UpgradeToProCard } from '@/components/owner/UpgradeToProCard';
 import { ProPaywall } from '@/components/owner/ProPaywall';
 import { ProUpsellBanner } from '@/components/owner/ProUpsellBanner';
+import { VisibilityPricingOverview } from '@/components/owner/VisibilityPricingOverview';
+import { OwnerTour } from '@/components/owner/OwnerTour';
 import { useOwnerTier } from '@/hooks/useOwnerTier';
 import { OpeningHoursExceptions } from '@/components/owner/OpeningHoursExceptions';
 import { MultiLanguageProfile } from '@/components/owner/MultiLanguageProfile';
@@ -656,6 +658,7 @@ export default function OwnerDashboard() {
             <TabsTrigger value="overview">Overzicht</TabsTrigger>
             <TabsTrigger value="content">Content</TabsTrigger>
             <TabsTrigger value="insights">Inzichten</TabsTrigger>
+            <TabsTrigger value="promotions">Promoties</TabsTrigger>
             <TabsTrigger value="marketing">Marketing</TabsTrigger>
             <TabsTrigger value="market">Markt</TabsTrigger>
             <TabsTrigger value="invoices">Facturen</TabsTrigger>
@@ -1226,23 +1229,24 @@ export default function OwnerDashboard() {
             )}
           </TabsContent>
 
-          {/* ===== MARKETING TAB ===== */}
-          <TabsContent value="marketing" className="space-y-8">
+          {/* ===== PROMOTIES TAB ===== */}
+          <TabsContent value="promotions" className="space-y-8">
             <OwnerTabHeader
-              icon={Megaphone}
-              title="Marketing & Groei"
-              description="Premium zichtbaarheid, promoties, nieuwsbrief en social."
+              icon={Rocket}
+              title="Promoties & Zichtbaarheid"
+              description="Alle manieren om hoger te scoren, nieuwe gasten te bereiken en op te vallen."
             />
-            {/* Featured / Premium */}
             {selectedRestaurant && (
               <>
+                <VisibilityPricingOverview />
+
                 <div>
                   <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
                     <Sparkles className="h-5 w-5 text-primary" />
-                    Premium Zichtbaarheid
+                    Premium Zichtbaarheid (Featured + Ambiance)
                   </h3>
-                  <FeaturedMarketplace 
-                    restaurantId={selectedRestaurant.id} 
+                  <FeaturedMarketplace
+                    restaurantId={selectedRestaurant.id}
                     restaurantName={selectedRestaurant.name}
                     restaurantCuisines={selectedRestaurant.cuisines || []}
                     cityId={selectedRestaurant.city_id}
@@ -1253,10 +1257,10 @@ export default function OwnerDashboard() {
                 <div className="border-t pt-8">
                   <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
                     <Crown className="h-5 w-5 text-primary" />
-                    Promoties & Listings
+                    Listing Boosts (eenmalig 30 dagen)
                   </h3>
-                  <PromotionsSection 
-                    restaurant={selectedRestaurant} 
+                  <PromotionsSection
+                    restaurant={selectedRestaurant}
                     onRefresh={() => window.location.reload()}
                     canPurchase={isVerified}
                   />
@@ -1270,6 +1274,13 @@ export default function OwnerDashboard() {
                   <SponsoredMarketplace restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
                 </div>
 
+                <div className="border-t pt-8">
+                  <NewsletterPlacement
+                    restaurantId={selectedRestaurant.id}
+                    restaurantName={selectedRestaurant.name}
+                  />
+                </div>
+
                 {isVerified && (
                   <div className="border-t pt-8">
                     <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
@@ -1279,17 +1290,20 @@ export default function OwnerDashboard() {
                     <DemandRoutingSettings restaurant={selectedRestaurant} />
                   </div>
                 )}
+              </>
+            )}
+          </TabsContent>
 
-                {/* Newsletter Placement */}
-                <div className="border-t pt-8">
-                  <NewsletterPlacement 
-                    restaurantId={selectedRestaurant.id} 
-                    restaurantName={selectedRestaurant.name} 
-                  />
-                </div>
-
-                {/* Promo Codes (Basis) */}
-                <div className="border-t pt-8">
+          {/* ===== MARKETING TAB ===== */}
+          <TabsContent value="marketing" className="space-y-8">
+            <OwnerTabHeader
+              icon={Megaphone}
+              title="Marketing & Retentie"
+              description="Loyalty, kortingscodes, social posts en samenwerkingen met andere restaurants."
+            />
+            {selectedRestaurant && (
+              <>
+                <div>
                   <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
                     <Megaphone className="h-5 w-5 text-primary" />
                     Kortingscodes
@@ -1297,7 +1311,6 @@ export default function OwnerDashboard() {
                   <PromoCodesManager restaurantId={selectedRestaurant.id} />
                 </div>
 
-                {/* AI Social Post Generator (Pro) */}
                 <div className="border-t pt-8">
                   <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
                     <Sparkles className="h-5 w-5 text-primary" />
@@ -1450,6 +1463,9 @@ export default function OwnerDashboard() {
           }}
         />
       )}
+
+      {/* One-time onboarding tour for newly claimed owners */}
+      <OwnerTour userId={user?.id} />
           </div>
         </div>
       </SidebarProvider>

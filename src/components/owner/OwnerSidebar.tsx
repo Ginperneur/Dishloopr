@@ -6,6 +6,7 @@ import {
   TrendingUp,
   Receipt,
   Lock,
+  Rocket,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -30,6 +31,7 @@ const sections = [
   { id: 'overview', label: 'Overzicht', icon: LayoutDashboard, requiresVerified: false },
   { id: 'content', label: 'Content', icon: FileText, requiresVerified: false },
   { id: 'insights', label: 'Inzichten', icon: BarChart3, requiresVerified: true },
+  { id: 'promotions', label: 'Promoties', icon: Rocket, requiresVerified: false },
   { id: 'marketing', label: 'Marketing', icon: Megaphone, requiresVerified: false },
   { id: 'market', label: 'Markt', icon: TrendingUp, requiresVerified: true },
   { id: 'invoices', label: 'Facturen', icon: Receipt, requiresVerified: false },
