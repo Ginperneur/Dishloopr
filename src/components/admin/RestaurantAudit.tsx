@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertTriangle, ShieldAlert, Eye, Trash2, RefreshCw, MapPin, ImageOff, UtensilsCrossed, Copy, Ban, CheckCircle2, RotateCcw, XCircle, Undo2, Wand2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 interface AuditRestaurant {
   id: string;
   name: string;
@@ -453,7 +454,7 @@ export function RestaurantAudit() {
   const handleBulkFixCuisines = async () => {
     const count = restaurantsWithoutCuisine.length;
     if (count === 0) { toast.info('Alle restaurants hebben al een keuken'); return; }
-    if (!confirm(`AI-classificatie starten voor ${count} restaurants zonder keuken? Dit kan even duren.`)) return;
+    if (!(await openConfirm(`AI-classificatie starten voor ${count} restaurants zonder keuken? Dit kan even duren.`))) return;
 
     setBulkFixing(true);
     setBulkFixProgress({ done: 0, total: count });

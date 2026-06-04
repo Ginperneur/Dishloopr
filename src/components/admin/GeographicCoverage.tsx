@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 interface CityStats {
   id: string;
   name: string;
@@ -158,7 +159,7 @@ export function GeographicCoverage() {
 
   const bulkDeactivate = async () => {
     if (selected.size === 0) return;
-    if (!confirm(`${selected.size} restaurants deactiveren?`)) return;
+    if (!(await openConfirm(`${selected.size} restaurants deactiveren?`))) return;
     setExecuting(true);
     const ids = Array.from(selected);
     for (let i = 0; i < ids.length; i += 200) {
@@ -173,8 +174,8 @@ export function GeographicCoverage() {
 
   const bulkDelete = async () => {
     if (selected.size === 0) return;
-    if (!confirm(`${selected.size} restaurants PERMANENT verwijderen? Dit kan niet ongedaan worden!`)) return;
-    if (!confirm(`Weet je het zeker? Alle gekoppelde gerechten, reviews en favorieten worden ook verwijderd.`)) return;
+    if (!(await openConfirm(`${selected.size} restaurants PERMANENT verwijderen? Dit kan niet ongedaan worden!`))) return;
+    if (!(await openConfirm(`Weet je het zeker? Alle gekoppelde gerechten, reviews en favorieten worden ook verwijderd.`))) return;
     setExecuting(true);
     const ids = Array.from(selected);
     for (let i = 0; i < ids.length; i += 200) {

@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tag, Plus, Trash2, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 interface PromoCode {
   id: string;
   code: string;
@@ -69,7 +70,7 @@ export function PromoCodesManager({ restaurantId }: { restaurantId: string }) {
   };
 
   const remove = async (id: string) => {
-    if (!confirm('Code verwijderen?')) return;
+    if (!(await openConfirm('Code verwijderen?'))) return;
     await (supabase as any).from('promo_codes').delete().eq('id', id);
     toast.success('Verwijderd');
     load();

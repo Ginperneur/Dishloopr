@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useActivityLog } from '@/hooks/useActivityLog';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 export function BulkActionsManager() {
   const [restaurants, setRestaurants] = useState<any[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -59,7 +60,7 @@ export function BulkActionsManager() {
 
   const bulkUpdate = async (field: string, value: any, label: string) => {
     if (selected.size === 0) { toast.error('Selecteer eerst restaurants'); return; }
-    if (!confirm(`${label} toepassen op ${selected.size} restaurants?`)) return;
+    if (!(await openConfirm(`${label} toepassen op ${selected.size} restaurants?`))) return;
 
     setExecuting(true);
     const ids = Array.from(selected);

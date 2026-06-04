@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 interface ErrorLog {
   id: string;
   message: string;
@@ -112,7 +113,7 @@ export function ErrorLogsViewer() {
   };
 
   const handleClearAll = async () => {
-    if (!confirm(`Verwijder alle ${filtered.length} zichtbare logs?`)) return;
+    if (!(await openConfirm(`Verwijder alle ${filtered.length} zichtbare logs?`))) return;
     const ids = filtered.map((l) => l.id);
     const { error } = await supabase.from('error_logs').delete().in('id', ids);
     if (error) {

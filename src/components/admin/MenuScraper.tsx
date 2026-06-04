@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 type ScrapeFilter = 'all' | 'missing' | 'no_approved' | 'never_scraped' | 'scrape_failed';
 type QueueStatus = 'queued' | 'processing' | 'done' | 'failed' | 'canceled';
 
@@ -357,7 +358,7 @@ export function MenuScraper() {
   };
 
   const handleClearCompleted = async () => {
-    if (!confirm('Verwijder alle voltooide, mislukte en geannuleerde items uit de queue?')) return;
+    if (!(await openConfirm('Verwijder alle voltooide, mislukte en geannuleerde items uit de queue?'))) return;
     const { error } = await supabase
       .from('scrape_queue')
       .delete()
@@ -367,7 +368,7 @@ export function MenuScraper() {
   };
 
   const handleCancelQueue = async () => {
-    if (!confirm('Annuleer alle wachtende en lopende scrape-items? Het item dat nu bezig is kan nog afronden, maar wordt niet opnieuw opgepakt.')) return;
+    if (!(await openConfirm('Annuleer alle wachtende en lopende scrape-items? Het item dat nu bezig is kan nog afronden, maar wordt niet opnieuw opgepakt.'))) return;
     const { error } = await supabase
       .from('scrape_queue')
       .update({

@@ -18,6 +18,7 @@ import { Loader2, MapPin, Sparkles, Check, X, RefreshCw, Star, ExternalLink, Zap
 import { formatDistanceToNow } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 interface GridPoint {
   id: string;
   name: string;
@@ -195,7 +196,7 @@ export function RestaurantDiscovery() {
   };
 
   const runRescan = async () => {
-    if (!confirm('De huidige duplicate-regels worden toegepast op alle pending discovery-resultaten. Doorgaan?')) return;
+    if (!(await openConfirm('De huidige duplicate-regels worden toegepast op alle pending discovery-resultaten. Doorgaan?'))) return;
     setRescanning(true);
     try {
       const { data, error } = await supabase.rpc('rescan_discovery_duplicates', {
@@ -528,7 +529,7 @@ export function RestaurantDiscovery() {
       toast.info('Geen duplicaten om te verwijderen');
       return;
     }
-    if (!confirm(`Weet je zeker dat je ${stats.duplicate.toLocaleString('nl-NL')} duplicaat-resultaten uit de discovery queue wilt verwijderen?\n\nDe gekoppelde restaurants blijven bestaan — alleen de discovery_results records worden opgeruimd.`)) return;
+    if (!(await openConfirm(`Weet je zeker dat je ${stats.duplicate.toLocaleString('nl-NL')} duplicaat-resultaten uit de discovery queue wilt verwijderen?\n\nDe gekoppelde restaurants blijven bestaan — alleen de discovery_results records worden opgeruimd.`))) return;
     setDeletingDuplicates(true);
     try {
       const { data, error } = await supabase.rpc('cleanup_discovery_duplicates', {
@@ -548,7 +549,7 @@ export function RestaurantDiscovery() {
   const approveSelected = async () => {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
-    if (!confirm(`Weet je zeker dat je ${ids.length} restaurant(s) wilt goedkeuren? Dit start de volledige pipeline.`)) return;
+    if (!(await openConfirm(`Weet je zeker dat je ${ids.length} restaurant(s) wilt goedkeuren? Dit start de volledige pipeline.`))) return;
     setBulkSelectionRunning(true);
     setPipelineRunning(true);
     setPipelineCancel(false);
@@ -579,7 +580,7 @@ export function RestaurantDiscovery() {
   const rejectSelected = async () => {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
-    if (!confirm(`Weet je zeker dat je ${ids.length} restaurant(s) wilt afwijzen?`)) return;
+    if (!(await openConfirm(`Weet je zeker dat je ${ids.length} restaurant(s) wilt afwijzen?`))) return;
     setBulkSelectionRunning(true);
     try {
       const { error } = await supabase

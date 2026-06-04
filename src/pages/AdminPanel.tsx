@@ -73,6 +73,7 @@ import { ErrorLogsViewer } from '@/components/admin/ErrorLogsViewer';
 import { ReservationLinkDetector } from '@/components/admin/ReservationLinkDetector';
 import { RateLimitMonitor } from '@/components/admin/RateLimitMonitor';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 interface Stats {
   totalUsers: number;
   totalRestaurants: number;
@@ -263,7 +264,7 @@ export default function AdminPanel() {
   };
 
   const deleteRestaurant = async (id: string) => {
-    if (!confirm('Weet je zeker dat je dit restaurant wilt verwijderen?')) return;
+    if (!(await openConfirm('Weet je zeker dat je dit restaurant wilt verwijderen?'))) return;
     const { error } = await supabase.from('restaurants').delete().eq('id', id);
     if (error) { toast.error('Verwijderen mislukt: ' + error.message); } else {
       toast.success('Restaurant verwijderd');

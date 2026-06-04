@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +22,14 @@ type ConfirmFn = (opts: ConfirmOptions) => Promise<boolean>;
 
 const ConfirmContext = createContext<ConfirmFn | null>(null);
 
+let globalConfirm: ConfirmFn | null = null;
+
+export function openConfirm(opts: ConfirmOptions | string): Promise<boolean> {
+  const o = typeof opts === 'string' ? { description: opts } : opts;
+  if (globalConfirm) return globalConfirm(o);
+  return Promise.resolve(window.confirm(o.description || o.title || 'Weet je het zeker?'));
+}
+
 export function ConfirmProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [opts, setOpts] = useState<ConfirmOptions>({});
@@ -34,6 +42,11 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
       resolverRef.current = resolve;
     });
   }, []);
+
+  useEffect(() => {
+    globalConfirm = confirm;
+    return () => { if (globalConfirm === confirm) globalConfirm = null; };
+  }, [confirm]);
 
   const handleClose = (value: boolean) => {
     setOpen(false);

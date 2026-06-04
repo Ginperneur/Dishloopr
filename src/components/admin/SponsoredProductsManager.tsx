@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useSponsoredProducts } from '@/hooks/useSponsoredProducts';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 interface Dish {
   id: string;
   name: string;
@@ -113,7 +114,7 @@ export function SponsoredProductsManager() {
   };
 
   const deleteProduct = async (id: string) => {
-    if (!confirm('Weet je zeker dat je dit product wilt verwijderen?')) return;
+    if (!(await openConfirm('Weet je zeker dat je dit product wilt verwijderen?'))) return;
 
     const { error } = await supabase.from('sponsored_products').delete().eq('id', id);
 

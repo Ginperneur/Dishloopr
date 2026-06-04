@@ -56,6 +56,7 @@ import { useSeoLandingPages } from '@/hooks/useSeoLandingPage';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 interface FAQ {
   question: string;
   answer: string;
@@ -177,7 +178,7 @@ export function SeoLandingPagesManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Weet je zeker dat je deze pagina wilt verwijderen?')) return;
+    if (!(await openConfirm('Weet je zeker dat je deze pagina wilt verwijderen?'))) return;
 
     const { error } = await deletePage(id);
     if (error) {

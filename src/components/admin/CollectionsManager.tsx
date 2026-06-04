@@ -14,6 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 interface Collection {
   id: string;
   slug: string;
@@ -357,7 +358,7 @@ export function CollectionsManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Weet je zeker dat je deze collectie wilt verwijderen?')) return;
+    if (!(await openConfirm('Weet je zeker dat je deze collectie wilt verwijderen?'))) return;
 
     try {
       const { error } = await supabase
