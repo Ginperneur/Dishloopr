@@ -1463,6 +1463,9 @@ export default function OwnerDashboard() {
           }}
         />
       )}
+
+      {/* One-time onboarding tour for newly claimed owners */}
+      <OwnerTour userId={user?.id} />
           </div>
         </div>
       </SidebarProvider>
