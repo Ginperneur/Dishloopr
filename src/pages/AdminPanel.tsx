@@ -68,6 +68,7 @@ import { ReviewModerationManager } from '@/components/admin/ReviewModerationMana
 import { NotificationManager } from '@/components/admin/NotificationManager';
 import { RestaurantDiscovery } from '@/components/admin/RestaurantDiscovery';
 import { AdminToday } from '@/components/admin/AdminToday';
+import { RestaurantSuggestionsQueue } from '@/components/admin/RestaurantSuggestionsQueue';
 import { ErrorLogsViewer } from '@/components/admin/ErrorLogsViewer';
 
 interface Stats {
@@ -368,6 +369,7 @@ export default function AdminPanel() {
 
               {/* Section content */}
               {activeSection === 'today' && <AdminToday onNavigate={handleNavigateToTab} />}
+              {activeSection === 'suggestions' && <RestaurantSuggestionsQueue />}
               {activeSection === 'kpi' && <KpiDashboard />}
               {activeSection === 'revenue' && <RevenueDashboard />}
               {activeSection === 'user-insights' && <UserInsights />}

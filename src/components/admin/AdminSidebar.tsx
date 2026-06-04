@@ -64,6 +64,7 @@ const navGroups = [
       { id: 'users', label: 'Gebruikers', icon: Users },
       { id: 'roles', label: 'Rollen', icon: Crown },
       { id: 'claims', label: 'Claims', icon: FileText, badgeKey: 'pendingClaims' as const },
+      { id: 'suggestions', label: 'Suggesties', icon: Inbox },
     ],
   },
   {

@@ -46,6 +46,7 @@ const CityDetailPage = lazy(() => import("./pages/CityDetailPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ForRestaurantsPage = lazy(() => import("./pages/ForRestaurantsPage"));
 const AddRestaurantPage = lazy(() => import("./pages/AddRestaurantPage"));
+const SuggestRestaurantPage = lazy(() => import("./pages/SuggestRestaurantPage"));
 const EventsPage = lazy(() => import("./pages/EventsPage"));
 const VotePage = lazy(() => import("./pages/VotePage"));
 

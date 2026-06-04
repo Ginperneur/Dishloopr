@@ -132,6 +132,7 @@ export function Footer() {
               <li><Link to="/events" className="hover:text-foreground transition-colors">{t('nav.events', 'Events')}</Link></li>
               <li><Link to="/about" className="hover:text-foreground transition-colors">{t('footer.about')}</Link></li>
               <li><Link to="/contact" className="hover:text-foreground transition-colors">{t('footer.contact')}</Link></li>
+              <li><Link to="/suggest-restaurant" className="hover:text-foreground transition-colors">Stel een restaurant voor</Link></li>
             </ul>
           </div>
 
