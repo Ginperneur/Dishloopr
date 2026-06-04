@@ -3,6 +3,9 @@ project_id = "uktafmxojymsojqewzuy"
 [functions.parse-menu]
 verify_jwt = false
 
+[functions.moderate-review]
+verify_jwt = true
+
 [functions.parse-menu-image]
 verify_jwt = false
 
