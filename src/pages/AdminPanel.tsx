@@ -506,6 +506,7 @@ export default function AdminPanel() {
               {activeSection === 'reviews' && <ReviewModerationManager />}
 
               {activeSection === 'reservation-detect' && <ReservationLinkDetector />}
+              {activeSection === 'rate-limits' && <RateLimitMonitor />}
               
               {activeSection === 'users' && (
                 <Card>
