@@ -1083,7 +1083,22 @@ export default function OwnerDashboard() {
                 ) : undefined
               }
             />
-            {isVerified && selectedRestaurant ? (
+            {!isPro && selectedRestaurant ? (
+              <ProPaywall
+                featureName="Inzichten & Analytics"
+                description="Begrijp precies hoe gasten je restaurant vinden, wat ze bestellen en waar je groei laat liggen."
+                benefits={[
+                  'Volledige prestatie-analytics: weergaven, kliks en conversies per dag',
+                  'Live zoekpositie en zoektermen waarop je gevonden wordt',
+                  'Conversie-funnel + AI-detectie van plotselinge dalingen',
+                  'Wekelijkse AI-aanbevelingen op maat van jouw cijfers',
+                  'Gasten-cohorten, kanaal-attributie en jaar-op-jaar benchmark',
+                  'Publieksdata, beste posting-tijden en "verloren aan concurrenten"',
+                  'Gerechten-analytics en optimalisatie-dashboard',
+                  'Exporteer alle inzichten naar CSV/PDF',
+                ]}
+              />
+            ) : isVerified && selectedRestaurant ? (
               <div className="space-y-8">
                 {/* Analytics */}
                 <div>
