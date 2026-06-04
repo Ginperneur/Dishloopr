@@ -109,6 +109,9 @@ export function FeaturedRestaurantsSection({
         }
       }));
 
+      // Hide restaurants without photos for consistency across listings
+      featuredData = featuredData.filter((r: any) => Array.isArray(r.images) && r.images.length > 0);
+
       // Filter by ambiance if specified
       if (ambiance) {
         featuredData = featuredData.filter((r: any) => {
