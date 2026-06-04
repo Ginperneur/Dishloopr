@@ -70,21 +70,30 @@ export function ClaimRequestsQueue({ onUpdate }: ClaimRequestsQueueProps) {
       return;
     }
 
-    // Fetch restaurant and profile data for each request
-    const enrichedRequests: ClaimRequest[] = [];
-    
-    for (const request of data || []) {
-      const [restaurantResult, profileResult] = await Promise.all([
-        supabase.from('restaurants').select('id, name, address, phone, is_active, claim_status').eq('id', request.restaurant_id).single(),
-        supabase.from('profiles').select('name, email').eq('id', request.user_id).single()
-      ]);
+    const requestRows = data || [];
+    const restaurantIds = Array.from(new Set(requestRows.map((r) => r.restaurant_id).filter(Boolean)));
+    const userIds = Array.from(new Set(requestRows.map((r) => r.user_id).filter(Boolean)));
 
-      enrichedRequests.push({
-        ...request,
-        restaurant: restaurantResult.data || undefined,
-        profile: profileResult.data || undefined
-      });
-    }
+    const [restaurantsRes, profilesRes] = await Promise.all([
+      restaurantIds.length
+        ? supabase
+            .from('restaurants')
+            .select('id, name, address, phone, is_active, claim_status')
+            .in('id', restaurantIds)
+        : Promise.resolve({ data: [] as any[] }),
+      userIds.length
+        ? supabase.from('profiles').select('id, name, email').in('id', userIds)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
+
+    const restaurantMap = new Map((restaurantsRes.data || []).map((r: any) => [r.id, r]));
+    const profileMap = new Map((profilesRes.data || []).map((p: any) => [p.id, { name: p.name, email: p.email }]));
+
+    const enrichedRequests: ClaimRequest[] = requestRows.map((request) => ({
+      ...request,
+      restaurant: restaurantMap.get(request.restaurant_id) || undefined,
+      profile: profileMap.get(request.user_id) || undefined,
+    }));
 
     setRequests(enrichedRequests);
     setLoading(false);
