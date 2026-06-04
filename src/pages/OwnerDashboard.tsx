@@ -114,6 +114,8 @@ import { ProPaywall } from '@/components/owner/ProPaywall';
 import { ProUpsellBanner } from '@/components/owner/ProUpsellBanner';
 import { VisibilityPricingOverview } from '@/components/owner/VisibilityPricingOverview';
 import { OwnerTour } from '@/components/owner/OwnerTour';
+import { ActivePromotionsCounter } from '@/components/owner/ActivePromotionsCounter';
+import { VisibilityProgress, type VisibilityStep } from '@/components/owner/VisibilityProgress';
 import { useOwnerTier } from '@/hooks/useOwnerTier';
 import { OpeningHoursExceptions } from '@/components/owner/OpeningHoursExceptions';
 import { MultiLanguageProfile } from '@/components/owner/MultiLanguageProfile';
