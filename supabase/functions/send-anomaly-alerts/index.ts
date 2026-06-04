@@ -125,8 +125,10 @@ Deno.serve(async (req) => {
         .maybeSingle();
       if (!profile?.email) continue;
 
-      const html = renderAlert(profile.name || 'eigenaar', r.name, r.slug, fresh);
-      const subject = `Let op: kritieke daling bij ${r.name}`;
+      const hasCritical = fresh.some((a) => a.severity === 'critical');
+      const label = hasCritical ? 'kritieke daling' : 'opvallende daling';
+      const html = renderAlert(profile.name || 'eigenaar', r.name, r.slug, fresh, label);
+      const subject = `Let op: ${label} bij ${r.name}`;
 
       const res = await fetch(`${GATEWAY_URL}/emails`, {
         method: 'POST',
