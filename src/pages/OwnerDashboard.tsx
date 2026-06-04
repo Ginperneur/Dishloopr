@@ -663,6 +663,9 @@ export default function OwnerDashboard() {
 
           {/* ===== OVERZICHT TAB ===== */}
           <TabsContent value="overview" className="space-y-6">
+            {!isPro && selectedRestaurant && (
+              <ProUpsellBanner onSeeMore={() => setActiveTab('insights')} />
+            )}
             {/* Reviews Section */}
             <div>
               <div className="flex items-center justify-between mb-4">
