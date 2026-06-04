@@ -173,7 +173,7 @@ export default function ListsPage() {
                 </Link>
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={async () => {
                     if (await openConfirm(`Lijst "${l.name}" verwijderen?`)) deleteList(l.id);
                   }}
                   className="absolute top-3 right-3 p-1.5 rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
