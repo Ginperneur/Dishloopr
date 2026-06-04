@@ -847,8 +847,8 @@ export function RestaurantDiscovery() {
                   <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Zoek op naam of adres..."
-                    value={queueSearch}
-                    onChange={(e) => setQueueSearch(e.target.value)}
+                    value={queueSearchInput}
+                    onChange={(e) => setQueueSearchInput(e.target.value)}
                     className="pl-8"
                   />
                 </div>
