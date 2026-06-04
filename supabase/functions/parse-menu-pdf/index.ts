@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -17,6 +18,14 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const __rl = await enforceRateLimit(req, {
+    functionName: "parse-menu-pdf",
+    isAi: true,
+    user: { max: 10, window: 1800 },
+    anon: { max: 0, window: 3600 },
+  });
+  if (!__rl.allowed && __rl.response) return __rl.response;
 
   try {
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
