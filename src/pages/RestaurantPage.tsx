@@ -548,6 +548,7 @@ export default function RestaurantPage() {
                 variant="full"
                 phone={restaurant.phone}
                 googleMapsUrl={googleMapsUrl}
+                googlePlaceId={restaurant.google_place_id}
                 onClickTrack={trackCTAClick}
               />
 
