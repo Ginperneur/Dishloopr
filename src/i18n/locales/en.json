@@ -418,5 +418,29 @@
     "friday": "Friday",
     "saturday": "Saturday",
     "sunday": "Sunday"
+  },
+  "about": {
+    "featureSearch": "Search by dish",
+    "featureSearchDesc": "Find restaurants not by category, but by the specific dish you're craving.",
+    "featureLocal": "Local & relevant",
+    "featureLocalDesc": "Filter by city and location to discover the best options near you.",
+    "featureReviews": "Honest reviews",
+    "featureReviewsDesc": "Read real experiences from other guests and share your own opinion.",
+    "featureEveryone": "For everyone",
+    "featureEveryoneDesc": "Whether you're looking for a romantic dinner or a family-friendly restaurant — we help you find it.",
+    "faq1q": "What is Dishloopr?",
+    "faq1a": "Dishloopr is a platform to find restaurants based on the dish you're craving, filtered by city, ambience and price.",
+    "faq2q": "How does Dishloopr work?",
+    "faq2a": "Just search for the dish you want to eat, filter by location and preferences, and discover the best restaurants near you.",
+    "faq3q": "Is Dishloopr free?",
+    "faq3a": "Yes, Dishloopr is completely free for consumers.",
+    "seoTitle": "About Dishloopr — Discover restaurants by dish",
+    "seoDescription": "Learn more about Dishloopr, the fastest way to find restaurants based on the dish you're craving. Filtered by city, ambience and price."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you're looking for doesn't exist or has been moved. Don't worry, we'll help you find your way!",
+    "goHome": "Go home",
+    "searchRestaurants": "Search restaurants"
   }
 }
