@@ -305,6 +305,47 @@ export type Database = {
           },
         ]
       }
+      claim_verification_secrets: {
+        Row: {
+          attempts: number
+          claim_id: string
+          code_hash: string
+          created_at: string
+          email: string | null
+          expires_at: string
+          method: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          claim_id: string
+          code_hash: string
+          created_at?: string
+          email?: string | null
+          expires_at: string
+          method: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          claim_id?: string
+          code_hash?: string
+          created_at?: string
+          email?: string | null
+          expires_at?: string
+          method?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claim_verification_secrets_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: true
+            referencedRelation: "restaurant_claims"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       collection_restaurants: {
         Row: {
           collection_id: string
