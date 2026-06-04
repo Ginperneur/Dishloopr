@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
   // Rate limit (kostbare Firecrawl + AI calls)
   const rl = await enforceRateLimit(req, {
     functionName: "scrape-menu",
-    user: { max: 30, window: 3600 },
+    user: { max: 10, window: 1800 },
     anon: { max: 5, window: 3600 },
     isAi: true,
   });
