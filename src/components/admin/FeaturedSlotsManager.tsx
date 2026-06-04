@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, RefreshCw, TrendingUp, Users } from 'lucide-react';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 interface FeaturedSlot {
   id: string;
   city_id: string;
@@ -157,7 +158,7 @@ export function FeaturedSlotsManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Weet je zeker dat je dit slot wilt verwijderen?')) return;
+    if (!(await openConfirm('Weet je zeker dat je dit slot wilt verwijderen?'))) return;
 
     try {
       const { error } = await supabase

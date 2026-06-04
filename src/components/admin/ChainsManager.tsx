@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, Store, Link2 } from 'lucide-react';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 interface Chain {
   id: string;
   name: string;
@@ -183,7 +184,7 @@ export function ChainsManager() {
   };
 
   const handleDelete = async (chain: Chain) => {
-    if (!confirm(`Weet je zeker dat je "${chain.name}" wilt verwijderen?`)) return;
+    if (!(await openConfirm(`Weet je zeker dat je "${chain.name}" wilt verwijderen?`))) return;
 
     const { error } = await supabase
       .from('restaurant_chains')

@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { OwnerEmptyState } from '@/components/owner/OwnerEmptyState';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 interface Member {
   id: string; invited_email: string; role: string; status: string; invited_at: string; accepted_at: string | null;
 }
@@ -50,7 +51,7 @@ export function TeamMembersManager({ restaurantId }: { restaurantId: string }) {
   };
 
   const remove = async (id: string) => {
-    if (!confirm('Lid verwijderen?')) return;
+    if (!(await openConfirm('Lid verwijderen?'))) return;
     await (supabase as any).from('restaurant_team_members').delete().eq('id', id);
     toast.success('Verwijderd');
     load();

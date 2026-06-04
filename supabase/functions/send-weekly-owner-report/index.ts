@@ -149,7 +149,7 @@ function renderReport(name: string, rows: Array<{ name: string; slug: string; vi
         </div>
         <div style="flex:1;background:#fff7f0;border:1px solid #f6d4b8;padding:16px;border-radius:12px;text-align:center;">
           <div style="font-size:28px;font-weight:700;color:#F26522;">${totalClicks}</div>
-          <div style="font-size:12px;color:#666;">Clicks</div>
+          <div style="font-size:12px;color:#666;">Kliks</div>
         </div>
         <div style="flex:1;background:#fff7f0;border:1px solid #f6d4b8;padding:16px;border-radius:12px;text-align:center;">
           <div style="font-size:28px;font-weight:700;color:#F26522;">${totalReviews}</div>
@@ -161,8 +161,8 @@ function renderReport(name: string, rows: Array<{ name: string; slug: string; vi
         <thead>
           <tr style="background:#fafafa;">
             <th style="padding:12px;text-align:left;font-size:12px;color:#666;text-transform:uppercase;">Restaurant</th>
-            <th style="padding:12px;text-align:center;font-size:12px;color:#666;text-transform:uppercase;">Views</th>
-            <th style="padding:12px;text-align:center;font-size:12px;color:#666;text-transform:uppercase;">Clicks</th>
+            <th style="padding:12px;text-align:center;font-size:12px;color:#666;text-transform:uppercase;">Weergaven</th>
+            <th style="padding:12px;text-align:center;font-size:12px;color:#666;text-transform:uppercase;">Kliks</th>
             <th style="padding:12px;text-align:center;font-size:12px;color:#666;text-transform:uppercase;">Reviews</th>
           </tr>
         </thead>

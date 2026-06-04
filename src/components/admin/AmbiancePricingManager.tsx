@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, Palette, GripVertical } from 'lucide-react';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 interface AmbiancePricing {
   id: string;
   ambiance_tag: string;
@@ -111,7 +112,7 @@ export function AmbiancePricingManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Weet je zeker dat je deze prijs wilt verwijderen?')) return;
+    if (!(await openConfirm('Weet je zeker dat je deze prijs wilt verwijderen?'))) return;
 
     try {
       const { error } = await supabase

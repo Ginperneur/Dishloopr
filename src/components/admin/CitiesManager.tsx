@@ -19,6 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useActivityLog } from '@/hooks/useActivityLog';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 interface City {
   id: string;
   name: string;
@@ -178,7 +179,7 @@ export function CitiesManager({ onUpdate }: CitiesManagerProps) {
       return;
     }
     
-    if (!confirm('Weet je zeker dat je deze stad wilt verwijderen?')) return;
+    if (!(await openConfirm('Weet je zeker dat je deze stad wilt verwijderen?'))) return;
 
     const { error } = await supabase
       .from('cities')

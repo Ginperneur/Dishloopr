@@ -73,6 +73,7 @@ import { ErrorLogsViewer } from '@/components/admin/ErrorLogsViewer';
 import { ReservationLinkDetector } from '@/components/admin/ReservationLinkDetector';
 import { RateLimitMonitor } from '@/components/admin/RateLimitMonitor';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 interface Stats {
   totalUsers: number;
   totalRestaurants: number;
@@ -223,8 +224,21 @@ export default function AdminPanel() {
   };
 
   const fetchUsers = async () => {
-    const { data: profileData } = await supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(100);
-    setUsers(profileData || []);
+    let allUsers: any[] = [];
+    let from = 0;
+    const batchSize = 1000;
+    while (true) {
+      const { data: batch } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(from, from + batchSize - 1);
+      if (!batch || batch.length === 0) break;
+      allUsers = allUsers.concat(batch);
+      if (batch.length < batchSize) break;
+      from += batchSize;
+    }
+    setUsers(allUsers);
   };
 
   const fetchData = async () => {
@@ -250,7 +264,7 @@ export default function AdminPanel() {
   };
 
   const deleteRestaurant = async (id: string) => {
-    if (!confirm('Weet je zeker dat je dit restaurant wilt verwijderen?')) return;
+    if (!(await openConfirm('Weet je zeker dat je dit restaurant wilt verwijderen?'))) return;
     const { error } = await supabase.from('restaurants').delete().eq('id', id);
     if (error) { toast.error('Verwijderen mislukt: ' + error.message); } else {
       toast.success('Restaurant verwijderd');

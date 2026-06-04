@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 type EmptyRow = {
   id: string;
   name: string;
@@ -199,7 +200,7 @@ export function EmptyDishesManager({ onNavigateToTab }: Props) {
       toast.error('Geen restaurants met website in huidige filter.');
       return;
     }
-    if (!confirm(`Auto-vul ${targets.length} restaurants via menu-scraper?\n\nDit kan enkele minuten duren. Je kunt op elk moment stoppen.`)) return;
+    if (!(await openConfirm(`Auto-vul ${targets.length} restaurants via menu-scraper?\n\nDit kan enkele minuten duren. Je kunt op elk moment stoppen.`))) return;
 
     setAutoRunning(true);
     setAutoCancel(false);

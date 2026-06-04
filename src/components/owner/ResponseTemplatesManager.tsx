@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { OwnerEmptyState } from '@/components/owner/OwnerEmptyState';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 interface Template {
   id: string; title: string; body: string; category: string; sentiment: string | null; use_count: number;
 }
@@ -72,7 +73,7 @@ export function ResponseTemplatesManager({ restaurantId }: { restaurantId: strin
   };
 
   const remove = async (id: string) => {
-    if (!confirm('Template verwijderen?')) return;
+    if (!(await openConfirm('Template verwijderen?'))) return;
     const { error } = await (supabase as any).from('response_templates').delete().eq('id', id);
     if (error) { toast.error('Verwijderen mislukt'); return; }
     toast.success('Verwijderd');

@@ -96,6 +96,8 @@ export function DishRatingSelector({ availableDishes, selectedRatings, onChange 
                               star === currentRating ? 0 : star
                             )}
                             className="p-0.5 transition-transform hover:scale-110"
+                            aria-label={`${star} ${star === 1 ? 'ster' : 'sterren'} voor ${dish.name}`}
+                            aria-pressed={star <= currentRating}
                           >
                             <Star
                               className={`h-4 w-4 transition-colors ${

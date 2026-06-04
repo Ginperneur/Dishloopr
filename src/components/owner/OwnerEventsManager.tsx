@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 interface RestaurantEvent {
   id: string;
   restaurant_id: string;
@@ -170,7 +171,7 @@ export function OwnerEventsManager({ restaurantId, restaurantName }: OwnerEvents
   };
 
   const handleDelete = async (eventId: string) => {
-    if (!confirm('Weet je zeker dat je dit event wilt verwijderen?')) return;
+    if (!(await openConfirm('Weet je zeker dat je dit event wilt verwijderen?'))) return;
     const { error } = await supabase
       .from('restaurant_events')
       .delete()

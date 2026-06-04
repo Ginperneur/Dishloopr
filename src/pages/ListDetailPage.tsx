@@ -22,6 +22,7 @@ import { useUserLists } from '@/hooks/useUserLists';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 
 interface ListMeta {
@@ -107,7 +108,7 @@ export default function ListDetailPage() {
 
   const handleDelete = async () => {
     if (!list) return;
-    if (!confirm(`Lijst "${list.name}" verwijderen?`)) return;
+    if (!(await openConfirm(`Lijst "${list.name}" verwijderen?`))) return;
     const ok = await deleteList(list.id);
     if (ok) navigate('/lists');
   };

@@ -417,5 +417,29 @@
     "friday": "Viernes",
     "saturday": "Sábado",
     "sunday": "Domingo"
+  },
+  "about": {
+    "featureSearch": "Buscar por plato",
+    "featureSearchDesc": "Encuentra restaurantes no por categoría, sino por el plato concreto que te apetece.",
+    "featureLocal": "Local y relevante",
+    "featureLocalDesc": "Filtra por ciudad y ubicación para descubrir las mejores opciones cerca de ti.",
+    "featureReviews": "Reseñas honestas",
+    "featureReviewsDesc": "Lee experiencias reales de otros clientes y comparte tu propia opinión.",
+    "featureEveryone": "Para todos",
+    "featureEveryoneDesc": "Ya busques una cena romántica o un restaurante familiar — te ayudamos a encontrarlo.",
+    "faq1q": "¿Qué es Dishloopr?",
+    "faq1a": "Dishloopr es una plataforma para encontrar restaurantes según el plato que te apetece, filtrado por ciudad, ambiente y precio.",
+    "faq2q": "¿Cómo funciona Dishloopr?",
+    "faq2a": "Solo busca el plato que quieres comer, filtra por ubicación y preferencias, y descubre los mejores restaurantes cerca de ti.",
+    "faq3q": "¿Dishloopr es gratis?",
+    "faq3a": "Sí, Dishloopr es completamente gratuito para los consumidores.",
+    "seoTitle": "Sobre Dishloopr — Descubre restaurantes por plato",
+    "seoDescription": "Conoce más sobre Dishloopr, la forma más rápida de encontrar restaurantes según el plato que te apetece. Filtrado por ciudad, ambiente y precio."
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "description": "La página que buscas no existe o ha sido movida. ¡No te preocupes, te ayudamos a continuar!",
+    "goHome": "Ir al inicio",
+    "searchRestaurants": "Buscar restaurantes"
   }
 }

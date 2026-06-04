@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { useActivityLog } from '@/hooks/useActivityLog';
 import { formatDishName } from '@/lib/utils';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 interface Dish {
   id: string;
   name: string;
@@ -92,7 +93,7 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
     name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
   const handleDeduplicateDishes = async () => {
-    if (!confirm('Wil je alle dubbele gerechten samenvoegen?')) return;
+    if (!(await openConfirm('Wil je alle dubbele gerechten samenvoegen?'))) return;
     setDeduplicating(true);
     try {
       const { data, error } = await supabase.rpc('deduplicate_dishes');
@@ -280,7 +281,7 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
   };
 
   const deleteDish = async (id: string, name: string) => {
-    if (!confirm('Weet je zeker dat je dit gerecht wilt verwijderen?')) return;
+    if (!(await openConfirm('Weet je zeker dat je dit gerecht wilt verwijderen?'))) return;
     const { error } = await supabase.from('dishes').delete().eq('id', id);
     if (error) {
       toast.error('Verwijderen mislukt: ' + error.message);
@@ -302,7 +303,7 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
 
   // --- Bulk actions ---
   const bulkDelete = async () => {
-    if (!confirm(`Weet je zeker dat je ${selected.size} gerechten wilt verwijderen? Dit kan niet ongedaan worden.`)) return;
+    if (!(await openConfirm(`Weet je zeker dat je ${selected.size} gerechten wilt verwijderen? Dit kan niet ongedaan worden.`))) return;
     setBulkExecuting(true);
     const ids = Array.from(selected);
     let deleted = 0;

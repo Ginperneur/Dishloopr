@@ -9,6 +9,7 @@ import { GitMerge, RefreshCw, Eye, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useActivityLog } from '@/hooks/useActivityLog';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 interface DuplicateGroup {
   key: string;
   type: 'name' | 'address';
@@ -112,7 +113,7 @@ export function DuplicateMerger() {
   };
 
   const mergeAll = async () => {
-    if (!confirm(`Weet je zeker dat je ALLE ${groups.length} groepen wilt samenvoegen? Dit kan niet ongedaan worden.`)) return;
+    if (!(await openConfirm(`Weet je zeker dat je ALLE ${groups.length} groepen wilt samenvoegen? Dit kan niet ongedaan worden.`))) return;
     setMerging('__all__');
     let merged = 0;
     for (const group of [...groups]) {
@@ -174,7 +175,7 @@ export function DuplicateMerger() {
     const removeIds = group.restaurants.filter(r => r.id !== keepId).map(r => r.id);
     const keepRestaurant = group.restaurants.find(r => r.id === keepId)!;
 
-    if (!confirm(`Weet je zeker dat je ${removeIds.length} duplica(a)t(en) wilt samenvoegen naar \\"${keepRestaurant.name}\\"? Reviews, gerechten en favorieten worden overgezet.`)) return;
+    if (!(await openConfirm(`Weet je zeker dat je ${removeIds.length} duplica(a)t(en) wilt samenvoegen naar \\"${keepRestaurant.name}\\"? Reviews, gerechten en favorieten worden overgezet.`))) return;
 
     setMerging(group.key);
 

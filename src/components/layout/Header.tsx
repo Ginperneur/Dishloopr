@@ -35,6 +35,16 @@ export function Header() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // Close mobile menu on Escape for a11y
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [mobileMenuOpen]);
+
   useEffect(() => {
     if (user) {
       // Batch all queries in parallel
@@ -133,6 +143,8 @@ export function Header() {
               <button
                 key={lang.code}
                 onClick={() => i18n.changeLanguage(lang.code)}
+                aria-label={`${t('home.language', 'Taal')}: ${lang.label}`}
+                aria-pressed={i18n.language === lang.code}
                 className={`px-2 py-1 text-xs font-semibold rounded-md transition-colors ${
                   i18n.language === lang.code
                     ? 'bg-primary text-primary-foreground'
@@ -242,6 +254,10 @@ export function Header() {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
+            id="mobile-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('nav.mainNavigation', 'Hoofdnavigatie')}
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
@@ -297,6 +313,8 @@ export function Header() {
                     <button
                       key={lang.code}
                       onClick={() => i18n.changeLanguage(lang.code)}
+                      aria-label={`${t('home.language', 'Taal')}: ${lang.label}`}
+                      aria-pressed={i18n.language === lang.code}
                       className={`px-3 py-1.5 text-sm font-semibold rounded-lg transition-colors ${
                         i18n.language === lang.code
                           ? 'bg-primary text-primary-foreground'

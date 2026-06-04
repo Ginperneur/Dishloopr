@@ -22,31 +22,34 @@ export default function CityIndexPage() {
 
   useEffect(() => {
     async function fetchCities() {
-      const { data: citiesData } = await supabase
-        .from('cities')
-        .select('id, name, slug')
-        .eq('is_active', true)
-        .order('name');
+      const [citiesRes, restaurantsRes] = await Promise.all([
+        supabase
+          .from('cities')
+          .select('id, name, slug')
+          .eq('is_active', true)
+          .order('name'),
+        supabase
+          .from('restaurants')
+          .select('city_id')
+          .eq('is_active', true),
+      ]);
 
+      const citiesData = citiesRes.data;
       if (!citiesData) {
         setLoading(false);
         return;
       }
 
-      // Get restaurant counts per city
-      const cityOverviews: CityOverview[] = [];
-      for (const city of citiesData) {
-        const { count } = await supabase
-          .from('restaurants')
-          .select('id', { count: 'exact', head: true })
-          .eq('city_id', city.id)
-          .eq('is_active', true);
-
-        cityOverviews.push({
-          ...city,
-          restaurantCount: count || 0,
-        });
+      const counts = new Map<string, number>();
+      for (const r of restaurantsRes.data || []) {
+        if (!r.city_id) continue;
+        counts.set(r.city_id, (counts.get(r.city_id) || 0) + 1);
       }
+
+      const cityOverviews: CityOverview[] = citiesData.map((c) => ({
+        ...c,
+        restaurantCount: counts.get(c.id) || 0,
+      }));
 
       setCities(cityOverviews.sort((a, b) => b.restaurantCount - a.restaurantCount));
       setLoading(false);

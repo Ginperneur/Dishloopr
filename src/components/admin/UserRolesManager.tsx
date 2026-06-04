@@ -21,6 +21,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useActivityLog } from '@/hooks/useActivityLog';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 interface UserRole {
   id: string;
   user_id: string;
@@ -130,7 +131,7 @@ export function UserRolesManager({ users, onUpdate }: UserRolesManagerProps) {
       }
     }
 
-    if (!confirm('Weet je zeker dat je deze rol wilt verwijderen?')) return;
+    if (!(await openConfirm('Weet je zeker dat je deze rol wilt verwijderen?'))) return;
 
     const { error } = await supabase
       .from('user_roles')

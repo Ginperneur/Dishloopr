@@ -20,6 +20,7 @@ import {
 import { useUserLists } from '@/hooks/useUserLists';
 import { useAuth } from '@/contexts/AuthContext';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 export default function ListsPage() {
   const { user } = useAuth();
   const { lists, loading, createList, deleteList } = useUserLists();
@@ -172,8 +173,8 @@ export default function ListsPage() {
                 </Link>
                 <button
                   type="button"
-                  onClick={() => {
-                    if (confirm(`Lijst "${l.name}" verwijderen?`)) deleteList(l.id);
+                  onClick={async () => {
+                    if (await openConfirm(`Lijst "${l.name}" verwijderen?`)) deleteList(l.id);
                   }}
                   className="absolute top-3 right-3 p-1.5 rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
                   aria-label="Verwijder lijst"

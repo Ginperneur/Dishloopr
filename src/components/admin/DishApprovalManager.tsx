@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
+import { openConfirm } from '@/components/ui/confirm-dialog';
 interface Restaurant {
   id: string;
   name: string;
@@ -487,7 +488,7 @@ export function DishApprovalManager() {
                 await Promise.all([fetchDishes(), fetchStatusCounts()]);
               }} />
               <Button variant="outline" size="sm" onClick={async () => {
-                if (!confirm('Wil je dubbele restaurant-gerecht koppelingen opschonen? De koppeling met de hoogste confidence wordt behouden.')) return;
+                if (!(await openConfirm('Wil je dubbele restaurant-gerecht koppelingen opschonen? De koppeling met de hoogste confidence wordt behouden.'))) return;
                 setDeduplicating(true);
                 try {
                   const { data, error } = await supabase.rpc('deduplicate_restaurant_dishes');
