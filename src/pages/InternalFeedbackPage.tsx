@@ -38,7 +38,7 @@ export default function InternalFeedbackPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 to-background">
+    <div className="min-h-[100svh] flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 to-background">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-center">

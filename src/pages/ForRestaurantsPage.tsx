@@ -71,7 +71,7 @@ export default function ForRestaurantsPage() {
         ])}
       />
       
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
+      <div className="min-h-[100svh] bg-gradient-to-b from-background to-muted/30">
         {/* Hero Section */}
         <section className="relative py-16 md:py-24 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
