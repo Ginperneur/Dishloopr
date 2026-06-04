@@ -10,6 +10,7 @@ interface ReservationWidgetProps {
   variant?: 'full' | 'button';
   phone?: string | null;
   googleMapsUrl?: string | null;
+  googlePlaceId?: string | null;
   onClickTrack?: (type: string) => void;
 }
 
@@ -28,6 +29,7 @@ export function ReservationWidget({
   variant = 'full',
   phone,
   googleMapsUrl,
+  googlePlaceId,
   onClickTrack
 }: ReservationWidgetProps) {
   const { t } = useTranslation();
@@ -73,7 +75,22 @@ export function ReservationWidget({
 
   // No digital reservation — show phone or Google Maps fallback
   if (!zenchefId && !reservationUrl) {
+    // Google Reserve fallback: opens the GBP profile where the Reserve button is shown
+    const googleReserveUrl = googlePlaceId
+      ? `https://www.google.com/maps/place/?q=place_id:${googlePlaceId}`
+      : null;
+
     if (variant === 'button') {
+      if (googleReserveUrl) {
+        return (
+          <Button className="flex-1" size="default" onClick={() => onClickTrack?.('reservation_google')} asChild>
+            <a href={googleReserveUrl} target="_blank" rel="noopener noreferrer">
+              <Calendar className="h-4 w-4 mr-2" />
+              {t('restaurant.reserve')}
+            </a>
+          </Button>
+        );
+      }
       if (phone) {
         return (
           <Button className="flex-1" size="default" variant="outline" asChild>
@@ -88,7 +105,7 @@ export function ReservationWidget({
     }
 
     // Full variant fallback
-    if (phone || googleMapsUrl) {
+    if (googleReserveUrl || phone || googleMapsUrl) {
       return (
         <div className="p-6 rounded-2xl border border-border bg-card">
           <h3 className="font-semibold mb-4 flex items-center gap-2">
@@ -96,11 +113,25 @@ export function ReservationWidget({
             Reserveren
           </h3>
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Dit restaurant heeft geen online reserveringssysteem. Neem direct contact op:
-            </p>
+            {googleReserveUrl ? (
+              <p className="text-sm text-muted-foreground">
+                Reserveer direct via het Google-profiel van {restaurantName}.
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Dit restaurant heeft geen online reserveringssysteem. Neem direct contact op:
+              </p>
+            )}
+            {googleReserveUrl && (
+              <Button className="w-full" size="lg" onClick={() => onClickTrack?.('reservation_google')} asChild>
+                <a href={googleReserveUrl} target="_blank" rel="noopener noreferrer">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Reserveer via Google
+                </a>
+              </Button>
+            )}
             {phone && (
-              <Button className="w-full" size="lg" asChild>
+              <Button variant={googleReserveUrl ? 'outline' : 'default'} className="w-full" size={googleReserveUrl ? 'default' : 'lg'} asChild>
                 <a href={`tel:${phone}`}>
                   <Phone className="h-4 w-4 mr-2" />
                   Bel {phone}

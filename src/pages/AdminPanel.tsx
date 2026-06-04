@@ -70,6 +70,7 @@ import { RestaurantDiscovery } from '@/components/admin/RestaurantDiscovery';
 import { AdminToday } from '@/components/admin/AdminToday';
 import { RestaurantSuggestionsQueue } from '@/components/admin/RestaurantSuggestionsQueue';
 import { ErrorLogsViewer } from '@/components/admin/ErrorLogsViewer';
+import { ReservationLinkDetector } from '@/components/admin/ReservationLinkDetector';
 
 interface Stats {
   totalUsers: number;
@@ -131,6 +132,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'activity': { title: "Activiteit", description: "Activity log" },
   'settings': { title: "Instellingen", description: "Platform configuratie" },
   'error-logs': { title: "Error Logs", description: "Frontend crashes en errors van gebruikers" },
+  'reservation-detect': { title: "Reserveringslinks", description: "Detecteer TheFork/Zenchef/OpenTable links via websites" },
 };
 
 export default function AdminPanel() {
@@ -500,6 +502,8 @@ export default function AdminPanel() {
                 </div>
               )}
               {activeSection === 'reviews' && <ReviewModerationManager />}
+
+              {activeSection === 'reservation-detect' && <ReservationLinkDetector />}
               
               {activeSection === 'users' && (
                 <Card>

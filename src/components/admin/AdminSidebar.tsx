@@ -4,7 +4,7 @@ import {
   Store, UtensilsCrossed, Check, Sparkles,
   MessageSquare, FileText,
   Bell, Star,
-  ShieldAlert, Image, Eye, Upload, Globe, Download, Zap, Clock, Settings, Inbox
+  ShieldAlert, Image, Eye, Upload, Globe, Download, Zap, Clock, Settings, Inbox, Calendar
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -92,6 +92,7 @@ const navGroups = [
       { id: 'discovery', label: 'Discovery', icon: Search },
       { id: 'geocode', label: 'Geocode', icon: MapPin },
       { id: 'google-enrich', label: 'Google Verrijking', icon: Star },
+      { id: 'reservation-detect', label: 'Reserveringslinks', icon: Calendar },
       { id: 'photos', label: "Foto's", icon: Image },
       { id: 'data-export', label: 'Export', icon: Download },
       { id: 'seo-health', label: 'SEO Health', icon: Globe },
