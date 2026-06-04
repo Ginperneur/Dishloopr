@@ -502,6 +502,8 @@ export default function AdminPanel() {
                 </div>
               )}
               {activeSection === 'reviews' && <ReviewModerationManager />}
+
+              {activeSection === 'reservation-detect' && <ReservationLinkDetector />}
               
               {activeSection === 'users' && (
                 <Card>
