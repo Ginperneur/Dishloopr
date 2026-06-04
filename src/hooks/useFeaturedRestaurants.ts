@@ -41,6 +41,8 @@ export function useFeaturedRestaurants(defaultLimit = 3) {
         .from('restaurants')
         .select('*')
         .eq('is_active', true)
+        .not('images', 'is', null)
+        .not('images', 'eq', '{}')
         .or('is_featured.eq.true,is_top_listing.eq.true')
         .order('is_top_listing', { ascending: false })
         .order('rating', { ascending: false })
