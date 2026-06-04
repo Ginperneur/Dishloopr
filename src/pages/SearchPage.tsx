@@ -88,6 +88,9 @@ export default function SearchPage() {
   );
   const [displayCount, setDisplayCount] = useState(12);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  // Tracks an in-flight "Bij mij" click so we can switch to the map view
+  // as soon as the browser returns the user's coordinates.
+  const [pendingNearMe, setPendingNearMe] = useState(false);
 
   // Keep viewMode in sync with URL (?view=map) so BottomNav Map/Search tabs work
   useEffect(() => {
@@ -208,6 +211,28 @@ export default function SearchPage() {
     sortedResults.slice(0, displayCount), 
     [sortedResults, displayCount]
   );
+  // Stable list of restaurants passed to the map (recomputes only when data changes).
+  const mapRestaurants = useMemo(
+    () => sortedResults.map(r => ({
+      id: r.id,
+      name: r.name,
+      slug: r.slug,
+      address: r.address,
+      rating: Number(r.rating),
+      review_count: r.review_count,
+      geo_lat: r.geo_lat,
+      geo_lng: r.geo_lng,
+      is_featured: r.is_featured,
+      is_top_listing: r.is_top_listing,
+      images: r.images,
+      price_level: r.price_level,
+    })),
+    [sortedResults],
+  );
+  const stableUserLocation = useMemo(
+    () => (userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : null),
+    [userLocation?.lat, userLocation?.lng],
+  );
   const hasMore = displayCount < sortedResults.length;
   
   const loadMore = () => {
@@ -219,20 +244,26 @@ export default function SearchPage() {
     if (locationLoading) return;
     
     if (!userLocation) {
+      setPendingNearMe(true);
       requestLocation();
-      toast.info('Locatie wordt opgehaald...');
+      toast.info('Locatie wordt opgehaald…');
     } else {
+      // Already have location — open map view centered on user immediately
+      handleViewModeChange('map');
       setSortBy('nearest');
-      toast.success('Gesorteerd op afstand');
+      toast.success('Kaart gecentreerd op jouw locatie');
     }
   };
 
-  // Auto-sort by nearest when location becomes available
+  // When a "Bij mij" click resolves, auto-open the map and sort by distance.
   useEffect(() => {
-    if (userLocation && sortBy === 'nearest') {
-      // Location is now available, results will re-sort
+    if (userLocation && pendingNearMe) {
+      setPendingNearMe(false);
+      handleViewModeChange('map');
+      setSortBy('nearest');
+      toast.success('Kaart gecentreerd op jouw locatie');
     }
-  }, [userLocation, sortBy]);
+  }, [userLocation, pendingNearMe]);
 
   const handleSearch = (query: string, newCityId: string) => {
     const params = new URLSearchParams();
@@ -617,21 +648,8 @@ export default function SearchPage() {
           }>
             <div className="h-[calc(100svh-12rem)] md:h-[60vh] min-h-[400px] rounded-xl overflow-hidden border border-border">
               <RestaurantMap
-                restaurants={sortedResults.map(r => ({
-                  id: r.id,
-                  name: r.name,
-                  slug: r.slug,
-                  address: r.address,
-                  rating: Number(r.rating),
-                  review_count: r.review_count,
-                  geo_lat: r.geo_lat,
-                  geo_lng: r.geo_lng,
-                  is_featured: r.is_featured,
-                  is_top_listing: r.is_top_listing,
-                  images: r.images,
-                  price_level: r.price_level,
-                }))}
-                userLocation={userLocation}
+                restaurants={mapRestaurants}
+                userLocation={stableUserLocation}
                 className="h-full"
               />
             </div>
