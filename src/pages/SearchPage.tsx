@@ -42,6 +42,7 @@ interface Filters {
   dietaryOptions: string[];
   hasTerrace?: boolean;
   openNow?: boolean;
+  radiusKm?: number;
 }
 
 export default function SearchPage() {
@@ -259,6 +260,7 @@ export default function SearchPage() {
       mealTypes: [],
       experiences: [],
       dietaryOptions: [],
+      radiusKm: 0,
     });
   };
 
@@ -270,7 +272,8 @@ export default function SearchPage() {
     filters.mealTypes.length +
     filters.experiences.length +
     filters.dietaryOptions.length +
-    (filters.hasTerrace ? 1 : 0);
+    (filters.hasTerrace ? 1 : 0) +
+    (filters.radiusKm && filters.radiusKm > 0 ? 1 : 0);
 
   const cityName = selectedCityId === 'all' 
     ? t('cities.all') 
