@@ -110,6 +110,8 @@ import { PromoCodesManager } from '@/components/owner/PromoCodesManager';
 import { LoyaltyProgramManager } from '@/components/owner/LoyaltyProgramManager';
 import { SocialPostGenerator } from '@/components/owner/SocialPostGenerator';
 import { UpgradeToProCard } from '@/components/owner/UpgradeToProCard';
+import { ProPaywall } from '@/components/owner/ProPaywall';
+import { useOwnerTier } from '@/hooks/useOwnerTier';
 import { OpeningHoursExceptions } from '@/components/owner/OpeningHoursExceptions';
 import { MultiLanguageProfile } from '@/components/owner/MultiLanguageProfile';
 import { CrossPromotionManager } from '@/components/owner/CrossPromotionManager';
@@ -155,6 +157,9 @@ export default function OwnerDashboard() {
     selectedRestaurant?.city_id,
     selectedRestaurant?.cuisines || []
   );
+
+  const { data: ownerTier } = useOwnerTier(selectedRestaurant?.id);
+  const isPro = ownerTier === 'pro';
 
   const unansweredReviews = reviews.filter(r => !r.owner_response).length;
   const suggestedDishCount = restaurantDishes.filter(d => d.status === 'suggested').length;
@@ -1078,7 +1083,22 @@ export default function OwnerDashboard() {
                 ) : undefined
               }
             />
-            {isVerified && selectedRestaurant ? (
+            {!isPro && selectedRestaurant ? (
+              <ProPaywall
+                featureName="Inzichten & Analytics"
+                description="Begrijp precies hoe gasten je restaurant vinden, wat ze bestellen en waar je groei laat liggen."
+                benefits={[
+                  'Volledige prestatie-analytics: weergaven, kliks en conversies per dag',
+                  'Live zoekpositie en zoektermen waarop je gevonden wordt',
+                  'Conversie-funnel + AI-detectie van plotselinge dalingen',
+                  'Wekelijkse AI-aanbevelingen op maat van jouw cijfers',
+                  'Gasten-cohorten, kanaal-attributie en jaar-op-jaar benchmark',
+                  'Publieksdata, beste posting-tijden en "verloren aan concurrenten"',
+                  'Gerechten-analytics en optimalisatie-dashboard',
+                  'Exporteer alle inzichten naar CSV/PDF',
+                ]}
+              />
+            ) : isVerified && selectedRestaurant ? (
               <div className="space-y-8">
                 {/* Analytics */}
                 <div>
@@ -1320,7 +1340,20 @@ export default function OwnerDashboard() {
               title="Markt & Concurrentie"
               description="Buurtanalyse, benchmarks, piekuren en deals."
             />
-            {isVerified && selectedRestaurant ? (
+            {!isPro && selectedRestaurant ? (
+              <ProPaywall
+                featureName="Markt & Concurrentie"
+                description="Zie precies hoe je presteert ten opzichte van de concurrentie in jouw buurt en stad."
+                benefits={[
+                  'Buurtanalyse: vergelijk rating, reviews en prijsniveau van directe concurrenten',
+                  'Competitor benchmark op keuken, stad en prijsklasse',
+                  'Deals-manager voor tijdelijke acties met meetbare ROI',
+                  'QR-code generator voor tafels, flyers en social',
+                  'Piekuren- en piekdagen-inzicht op basis van echte zoekvraag',
+                  'Promotie ROI: zie welke acties klanten écht opleverden',
+                ]}
+              />
+            ) : isVerified && selectedRestaurant ? (
               <div className="space-y-8">
                 <div>
                   <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
