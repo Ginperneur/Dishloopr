@@ -22,13 +22,47 @@ export function ExploreCities() {
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase
-        .from('cities')
-        .select('id, name, slug')
-        .eq('is_active', true)
-        .order('name', { ascending: true })
-        .limit(8);
-      setCities((data as CityRow[]) || []);
+      // Curated popularity fallback (largest / most touristic NL cities first).
+      const POPULARITY: string[] = [
+        'amsterdam', 'rotterdam', 'den-haag', 'utrecht', 'eindhoven',
+        'groningen', 'tilburg', 'almere', 'breda', 'nijmegen',
+        'haarlem', 'arnhem', 'enschede', 'apeldoorn', 'amersfoort',
+        'maastricht', 'leiden', 'dordrecht', 'zwolle', 'delft',
+      ];
+
+      const [{ data: cityRows }, { data: restRows }] = await Promise.all([
+        supabase.from('cities').select('id, name, slug').eq('is_active', true),
+        supabase.from('restaurants').select('city_id').eq('is_active', true).limit(10000),
+      ]);
+
+      const counts = new Map<string, number>();
+      (restRows || []).forEach((r: any) => {
+        if (!r?.city_id) return;
+        counts.set(r.city_id, (counts.get(r.city_id) || 0) + 1);
+      });
+
+      const rank = (slug: string) => {
+        const idx = POPULARITY.indexOf(slug);
+        return idx === -1 ? POPULARITY.length : idx;
+      };
+
+      const sorted = ((cityRows as CityRow[]) || [])
+        .map((c) => ({ ...c, restaurant_count: counts.get(c.id) || 0 }))
+        .sort((a, b) => {
+          // 1. Restaurant count desc (real signal of size on the platform)
+          if ((b.restaurant_count || 0) !== (a.restaurant_count || 0)) {
+            return (b.restaurant_count || 0) - (a.restaurant_count || 0);
+          }
+          // 2. Curated popularity rank
+          const ra = rank(a.slug);
+          const rb = rank(b.slug);
+          if (ra !== rb) return ra - rb;
+          // 3. Alphabetical as final tiebreaker
+          return a.name.localeCompare(b.name);
+        })
+        .slice(0, 8);
+
+      setCities(sorted);
       setLoading(false);
     }
     load();
