@@ -8,13 +8,16 @@ export function useOwnerTier(restaurantId: string | undefined) {
     queryKey: ['owner-tier', restaurantId],
     enabled: !!restaurantId,
     queryFn: async (): Promise<OwnerTier> => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('restaurants')
-        .select('owner_tier' as any)
+        .select('owner_tier')
         .eq('id', restaurantId!)
         .maybeSingle();
-      const tier = (data as any)?.owner_tier as OwnerTier | undefined;
-      return tier === 'pro' ? 'pro' : 'basic';
+      if (error) {
+        console.warn('[useOwnerTier] fetch failed', error);
+        return 'basic';
+      }
+      return data?.owner_tier === 'pro' ? 'pro' : 'basic';
     },
   });
 }

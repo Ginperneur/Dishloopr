@@ -79,7 +79,7 @@ export function useMarketInsights(restaurantId?: string, cityId?: string, cuisin
       .from('analytics_events')
       .select('event_type, created_at')
       .eq('restaurant_id', restaurantId)
-      .in('event_type', ['restaurant_view', 'restaurant_click'])
+      .in('event_type', ['view', 'click'])
       .gte('created_at', thirtyDaysAgo.toISOString());
 
     if (data) {
@@ -94,7 +94,7 @@ export function useMarketInsights(restaurantId?: string, cityId?: string, cuisin
         const date = new Date(event.created_at);
         const hour = date.getHours();
         const day = date.getDay();
-        const isView = event.event_type === 'restaurant_view';
+        const isView = event.event_type === 'view';
 
         if (isView) {
           hourMap[hour].views++;
