@@ -100,6 +100,18 @@ export async function enforceRateLimit(
             identifier = `user:${data.user.id}`;
             isUser = true;
             limit = opts.user;
+            // Admin bypass: admins can run bulk admin tooling without hitting limits.
+            try {
+              const { data: isAdmin } = await admin.rpc("has_role", {
+                _user_id: data.user.id,
+                _role: "admin",
+              });
+              if (isAdmin === true) {
+                return { allowed: true, identifier, isUser: true };
+              }
+            } catch (_) {
+              // ignore, fall through to normal limiting
+            }
           }
         } catch (_) {
           // fall through to IP
