@@ -107,7 +107,16 @@ Deno.serve(async (req) => {
           _restaurant_id: restaurantId,
           _min_role: 'editor',
         });
-        if (!hasAccess) {
+        let allowed = !!hasAccess;
+        if (!allowed) {
+          const { data: rest } = await supabase
+            .from('restaurants')
+            .select('claimed_by_owner_id')
+            .eq('id', restaurantId)
+            .maybeSingle();
+          if (rest?.claimed_by_owner_id === user.id) allowed = true;
+        }
+        if (!allowed) {
           return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
       }
