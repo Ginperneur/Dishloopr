@@ -34,6 +34,7 @@ interface SearchFilters {
   experiences?: string[];
   dietaryOptions?: string[];
   hasTerrace?: boolean;
+  radiusKm?: number;
 }
 
 // Max restaurants to fetch for browse-mode (no dish query)
@@ -237,6 +238,8 @@ export function useSearch() {
 
     const buildRestaurantQuery = () => {
       let q = supabase.from('restaurants').select('*').eq('is_active', true);
+      // Hide restaurants without photos from public listings
+      q = q.not('images', 'is', null).not('images', 'eq', '{}');
 
       if (hasDishMatches) {
         // Fetch only restaurants that have matching dishes

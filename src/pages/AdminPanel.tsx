@@ -105,6 +105,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'users': { title: "Gebruikers", description: "Geregistreerde gebruikers" },
   'roles': { title: "Rollen", description: "Gebruikersrollen toewijzen" },
   'claims': { title: "Claims", description: "Restaurant claims verwerken" },
+  'suggestions': { title: "Suggesties", description: "Door bezoekers ingediende restaurant-suggesties" },
   'sponsored': { title: "Sponsored", description: "Gesponsorde producten beheren" },
   'featured-slots': { title: "Featured Spots", description: "Featured slots en sfeer-pricing" },
   'newsletter': { title: "Nieuwsbrief", description: "Edities en plaatsingen" },
