@@ -89,3 +89,6 @@ verify_jwt = false
 
 [functions.owner-pro-portal]
 verify_jwt = false
+
+[functions.send-anomaly-alerts]
+verify_jwt = false

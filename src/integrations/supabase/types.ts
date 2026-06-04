@@ -1678,20 +1678,64 @@ export type Database = {
           },
         ]
       }
+      owner_anomaly_alerts_log: {
+        Row: {
+          created_at: string
+          delta_pct: number | null
+          id: string
+          metric: string
+          restaurant_id: string
+          severity: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string
+          delta_pct?: number | null
+          id?: string
+          metric: string
+          restaurant_id: string
+          severity: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          delta_pct?: number | null
+          id?: string
+          metric?: string
+          restaurant_id?: string
+          severity?: string
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_anomaly_alerts_log_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       owner_email_preferences: {
         Row: {
+          anomaly_alerts: boolean
           created_at: string
           updated_at: string
           user_id: string
           weekly_report: boolean
         }
         Insert: {
+          anomaly_alerts?: boolean
           created_at?: string
           updated_at?: string
           user_id: string
           weekly_report?: boolean
         }
         Update: {
+          anomaly_alerts?: boolean
           created_at?: string
           updated_at?: string
           user_id?: string

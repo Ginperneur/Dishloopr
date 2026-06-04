@@ -92,6 +92,7 @@ import { NotificationBell } from '@/components/owner/NotificationBell';
 import { QuickShareMenu } from '@/components/owner/QuickShareMenu';
 import { ProfileCompletenessCard } from '@/components/owner/ProfileCompletenessCard';
 import { WeeklyReportToggle } from '@/components/owner/WeeklyReportToggle';
+import { AnomalyAlertToggle } from '@/components/owner/AnomalyAlertToggle';
 import { ProGate } from '@/components/owner/ProGate';
 import { OwnerFunnel } from '@/components/owner/OwnerFunnel';
 import { SearchTermHeatmap } from '@/components/owner/SearchTermHeatmap';
@@ -890,6 +891,7 @@ export default function OwnerDashboard() {
 
             {/* Email Preferences */}
             <WeeklyReportToggle />
+            <AnomalyAlertToggle />
 
             {/* Dishes Confirmation */}
             <div>
