@@ -169,7 +169,7 @@
   "trending": {
     "title": "Plats tendance",
     "subtitle": "Populaire dans votre ville",
-    "inCity": "à {city}",
+    "inCity": "à {{city}}",
     "now": "Tendance maintenant",
     "searches": "recherches",
     "seasonalSubtitle": "Plats parfaits en ce moment"

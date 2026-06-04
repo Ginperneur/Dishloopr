@@ -170,7 +170,7 @@
   "trending": {
     "title": "Trending gerechten",
     "subtitle": "Populair in jouw stad",
-    "inCity": "in {city}",
+    "inCity": "in {{city}}",
     "now": "Trending nu",
     "searches": "zoekopdrachten",
     "seasonalSubtitle": "Gerechten die nu perfect passen"
