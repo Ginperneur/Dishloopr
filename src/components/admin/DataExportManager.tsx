@@ -3,9 +3,20 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, Loader2, FileSpreadsheet, FileJson, Database } from 'lucide-react';
+import { Download, Loader2, FileSpreadsheet, FileJson, Database, ShieldAlert } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useActivityLog } from '@/hooks/useActivityLog';
 
 type ExportFormat = 'csv' | 'json';
 
@@ -15,6 +26,7 @@ interface ExportConfig {
   description: string;
   icon: React.ReactNode;
   fetchData: () => Promise<Record<string, unknown>[]>;
+  pii?: boolean;
 }
 
 const BATCH_SIZE = 1000;
