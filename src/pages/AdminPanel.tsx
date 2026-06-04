@@ -132,6 +132,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'activity': { title: "Activiteit", description: "Activity log" },
   'settings': { title: "Instellingen", description: "Platform configuratie" },
   'error-logs': { title: "Error Logs", description: "Frontend crashes en errors van gebruikers" },
+  'reservation-detect': { title: "Reserveringslinks", description: "Detecteer TheFork/Zenchef/OpenTable links via websites" },
 };
 
 export default function AdminPanel() {
