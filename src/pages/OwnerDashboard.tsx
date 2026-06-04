@@ -1340,7 +1340,20 @@ export default function OwnerDashboard() {
               title="Markt & Concurrentie"
               description="Buurtanalyse, benchmarks, piekuren en deals."
             />
-            {isVerified && selectedRestaurant ? (
+            {!isPro && selectedRestaurant ? (
+              <ProPaywall
+                featureName="Markt & Concurrentie"
+                description="Zie precies hoe je presteert ten opzichte van de concurrentie in jouw buurt en stad."
+                benefits={[
+                  'Buurtanalyse: vergelijk rating, reviews en prijsniveau van directe concurrenten',
+                  'Competitor benchmark op keuken, stad en prijsklasse',
+                  'Deals-manager voor tijdelijke acties met meetbare ROI',
+                  'QR-code generator voor tafels, flyers en social',
+                  'Piekuren- en piekdagen-inzicht op basis van echte zoekvraag',
+                  'Promotie ROI: zie welke acties klanten écht opleverden',
+                ]}
+              />
+            ) : isVerified && selectedRestaurant ? (
               <div className="space-y-8">
                 <div>
                   <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
