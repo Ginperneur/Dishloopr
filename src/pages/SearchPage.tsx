@@ -592,6 +592,16 @@ export default function SearchPage() {
                 <X className="h-3 w-3 ml-1" />
               </Badge>
             )}
+            {filters.radiusKm && filters.radiusKm > 0 && (
+              <Badge
+                variant="secondary"
+                className="cursor-pointer text-xs"
+                onClick={() => setFilters(prev => ({ ...prev, radiusKm: 0 }))}
+              >
+                📍 +{filters.radiusKm} km rond stad
+                <X className="h-3 w-3 ml-1" />
+              </Badge>
+            )}
             <Button variant="ghost" size="sm" onClick={clearFilters} className="h-6 text-xs px-2">
               {t('filters.clearAll')}
             </Button>
