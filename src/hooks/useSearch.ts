@@ -420,7 +420,7 @@ export function useSearch() {
 
     // ── Step 5: No query → browse mode ──
     if (queryTerms.length === 0) {
-      const scoredResults: SearchResult[] = restaurants.map(r => ({
+      const scoredResults: SearchResult[] = filteredRestaurants.map(r => ({
         ...r,
         cityName: cityMap.get(r.city_id),
         chainName: r.chain_id ? chainNameById.get(r.chain_id) : undefined,
@@ -476,7 +476,7 @@ export function useSearch() {
     const scoredResults: SearchResult[] = [];
     const totalQueryTerms = isMultiDish ? queryTerms.length : 1;
 
-    for (const restaurant of restaurants) {
+    for (const restaurant of filteredRestaurants) {
       const linkedDishes = restaurantDishMap.get(restaurant.id) || null;
       
       // If the search matched known dishes, skip restaurants without that dish
