@@ -1238,9 +1238,9 @@ export default function OwnerDashboard() {
             />
             {selectedRestaurant && (
               <>
-                <VisibilityPricingOverview />
+                <VisibilityPricingOverview onNavigatePro={() => setActiveTab('insights')} />
 
-                <div>
+                <div id="promo-featured">
                   <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
                     <Sparkles className="h-5 w-5 text-primary" />
                     Premium Zichtbaarheid (Featured + Ambiance)
@@ -1254,7 +1254,7 @@ export default function OwnerDashboard() {
                   />
                 </div>
 
-                <div className="border-t pt-8">
+                <div id="promo-listings" className="border-t pt-8">
                   <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
                     <Crown className="h-5 w-5 text-primary" />
                     Listing Boosts (eenmalig 30 dagen)
@@ -1266,7 +1266,7 @@ export default function OwnerDashboard() {
                   />
                 </div>
 
-                <div className="border-t pt-8">
+                <div id="promo-sponsored" className="border-t pt-8">
                   <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
                     <Megaphone className="h-5 w-5 text-primary" />
                     Gerecht-specifieke Sponsoring
@@ -1274,7 +1274,7 @@ export default function OwnerDashboard() {
                   <SponsoredMarketplace restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
                 </div>
 
-                <div className="border-t pt-8">
+                <div id="promo-newsletter" className="border-t pt-8">
                   <NewsletterPlacement
                     restaurantId={selectedRestaurant.id}
                     restaurantName={selectedRestaurant.name}
