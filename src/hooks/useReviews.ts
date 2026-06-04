@@ -118,6 +118,36 @@ export function useReviews(restaurantId: string | undefined) {
     setSubmitting(true);
     const validatedData = validation.data;
 
+    // AI moderation check
+    let reviewStatus: 'published' | 'flagged' = 'published';
+    try {
+      const { data: mod, error: modError } = await supabase.functions.invoke('moderate-review', {
+        body: {
+          title: validatedData.title,
+          body: validatedData.body,
+          rating: validatedData.rating,
+        },
+      });
+
+      if (modError) {
+        console.error('Moderation error:', modError);
+      } else if (mod?.decision === 'block') {
+        toast.error(
+          mod.reason
+            ? `Review geweigerd: ${mod.reason}`
+            : 'Review bevat ongepaste inhoud en is geweigerd.'
+        );
+        setSubmitting(false);
+        return false;
+      } else if (mod?.decision === 'flag') {
+        reviewStatus = 'flagged';
+      }
+    } catch (e) {
+      console.error('Moderation invocation failed:', e);
+      // Fail open: still allow but flag for safety
+      reviewStatus = 'flagged';
+    }
+
     const review: ReviewInsert = {
       restaurant_id: restaurantId,
       user_id: user.id,
@@ -125,7 +155,7 @@ export function useReviews(restaurantId: string | undefined) {
       title: validatedData.title,
       body: validatedData.body,
       photos: validatedData.photos || [],
-      status: 'published',
+      status: reviewStatus,
     };
 
     const { data: insertedReview, error } = await supabase
@@ -164,7 +194,11 @@ export function useReviews(restaurantId: string | undefined) {
       body: { reviewId: insertedReview.id }
     }).catch(() => {}); // Don't block on notification failure
 
-    toast.success('Review geplaatst!');
+    if (reviewStatus === 'flagged') {
+      toast.success('Review ontvangen — wordt eerst gecontroleerd door een moderator.');
+    } else {
+      toast.success('Review geplaatst!');
+    }
     await fetchReviews();
     setSubmitting(false);
     return true;
