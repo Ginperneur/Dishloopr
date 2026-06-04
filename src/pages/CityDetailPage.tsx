@@ -58,6 +58,8 @@ export default function CityDetailPage() {
         .select('*', { count: 'exact' })
         .eq('city_id', cityData.id)
         .eq('is_active', true)
+        .not('images', 'is', null)
+        .not('images', 'eq', '{}')
         .order('is_featured', { ascending: false })
         .order('rating', { ascending: false })
         .limit(6);
