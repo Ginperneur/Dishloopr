@@ -114,6 +114,8 @@ import { ProPaywall } from '@/components/owner/ProPaywall';
 import { ProUpsellBanner } from '@/components/owner/ProUpsellBanner';
 import { VisibilityPricingOverview } from '@/components/owner/VisibilityPricingOverview';
 import { OwnerTour } from '@/components/owner/OwnerTour';
+import { ActivePromotionsCounter } from '@/components/owner/ActivePromotionsCounter';
+import { VisibilityProgress, type VisibilityStep } from '@/components/owner/VisibilityProgress';
 import { useOwnerTier } from '@/hooks/useOwnerTier';
 import { OpeningHoursExceptions } from '@/components/owner/OpeningHoursExceptions';
 import { MultiLanguageProfile } from '@/components/owner/MultiLanguageProfile';
@@ -185,7 +187,14 @@ export default function OwnerDashboard() {
         loadPermissions();
         refreshClaims?.();
       }, 2000);
-      toast.info('Betaling ontvangen! Je verificatie wordt verwerkt.');
+      toast.success('Verificatie betaald ✓', {
+        description: `Je verificatie is geactiveerd op ${new Date().toLocaleDateString('nl-NL')}. Een admin reviewt je aanvraag — meestal binnen 1 werkdag.`,
+        duration: 10000,
+        action: {
+          label: 'Bekijk status',
+          onClick: () => setActiveTab('overview'),
+        },
+      });
       window.history.replaceState({}, '', '/owner-dashboard');
     } else if (verification === 'cancelled') {
       toast.error('Verificatie betaling geannuleerd.');
@@ -195,8 +204,15 @@ export default function OwnerDashboard() {
     // Handle newsletter redirect from Stripe
     const newsletter = searchParams.get('newsletter');
     if (newsletter === 'success') {
-      toast.success('Betaling ontvangen! Je plaatsing wordt beoordeeld.');
-      setActiveTab('marketing');
+      toast.success('Nieuwsbrief plaatsing geactiveerd ✓', {
+        description: `Je plaatsing is besteld op ${new Date().toLocaleDateString('nl-NL')} en wordt voor verzending door ons team gecheckt.`,
+        duration: 10000,
+        action: {
+          label: 'Naar Promoties',
+          onClick: () => setActiveTab('promotions'),
+        },
+      });
+      setActiveTab('promotions');
       window.history.replaceState({}, '', '/owner-dashboard');
     } else if (newsletter === 'cancelled') {
       toast.info('Nieuwsbrief betaling geannuleerd.');
@@ -206,12 +222,61 @@ export default function OwnerDashboard() {
     // Handle Owner Pro checkout redirect from Stripe
     const proCheckout = searchParams.get('pro_checkout');
     if (proCheckout === 'success') {
-      toast.success('Welkom bij Owner Pro! Je abonnement wordt geactiveerd…');
+      toast.success('Welkom bij Owner Pro 🎉', {
+        description: `Je abonnement is actief vanaf ${new Date().toLocaleDateString('nl-NL')}. Inzichten, Markt en onbeperkte tags staan nu voor je open.`,
+        duration: 12000,
+        action: {
+          label: 'Bekijk Inzichten',
+          onClick: () => setActiveTab('insights'),
+        },
+      });
       refreshProStatus();
       setTimeout(() => refreshProStatus(), 3000);
       window.history.replaceState({}, '', '/owner-dashboard');
     } else if (proCheckout === 'cancelled') {
       toast.info('Pro upgrade geannuleerd.');
+      window.history.replaceState({}, '', '/owner-dashboard');
+    }
+
+    // Handle Featured marketplace checkout
+    const featured = searchParams.get('featured');
+    if (featured === 'success') {
+      toast.success('Premium plek geactiveerd ✓', {
+        description: `Je staat per ${new Date().toLocaleDateString('nl-NL')} bovenaan in zoekresultaten. Bekijk de looptijd in je promoties.`,
+        duration: 12000,
+        action: {
+          label: 'Bekijk looptijd',
+          onClick: () => setActiveTab('promotions'),
+        },
+      });
+      setActiveTab('promotions');
+      window.history.replaceState({}, '', '/owner-dashboard');
+    } else if (featured === 'cancelled') {
+      toast.info('Premium plek niet afgerond.');
+      window.history.replaceState({}, '', '/owner-dashboard');
+    }
+
+    // Handle Listing boost checkout
+    const listing = searchParams.get('listing');
+    if (listing === 'success') {
+      toast.success('Listing boost geactiveerd ✓', {
+        description: `Je boost is actief vanaf ${new Date().toLocaleDateString('nl-NL')} en loopt 30 dagen.`,
+        duration: 10000,
+        action: { label: 'Bekijk looptijd', onClick: () => setActiveTab('promotions') },
+      });
+      setActiveTab('promotions');
+      window.history.replaceState({}, '', '/owner-dashboard');
+    }
+
+    // Handle Sponsored dish checkout
+    const sponsored = searchParams.get('sponsored');
+    if (sponsored === 'success') {
+      toast.success('Gesponsord gerecht geactiveerd ✓', {
+        description: `Je gerecht wordt uitgelicht vanaf ${new Date().toLocaleDateString('nl-NL')}.`,
+        duration: 10000,
+        action: { label: 'Bekijk looptijd', onClick: () => setActiveTab('promotions') },
+      });
+      setActiveTab('promotions');
       window.history.replaceState({}, '', '/owner-dashboard');
     }
   }, [searchParams]);
@@ -1238,7 +1303,71 @@ export default function OwnerDashboard() {
             />
             {selectedRestaurant && (
               <>
-                <VisibilityPricingOverview onNavigatePro={() => setActiveTab('insights')} />
+                <ActivePromotionsCounter
+                  restaurantId={selectedRestaurant.id}
+                  restaurant={selectedRestaurant as any}
+                />
+
+                <VisibilityProgress
+                  steps={[
+                    {
+                      id: 'verify',
+                      label: 'Restaurant geverifieerd',
+                      hint: 'Vereist voor alle promoties',
+                      done: isVerified,
+                      onClick: () => setVerificationDialogOpen(true),
+                    },
+                    {
+                      id: 'pro',
+                      label: 'Owner Pro actief',
+                      hint: 'Inzichten + Markt + onbeperkte tags',
+                      done: isPro,
+                      onClick: () => setActiveTab('insights'),
+                    },
+                    {
+                      id: 'featured',
+                      label: 'Premium zoekplek',
+                      hint: 'Vast bovenaan in jouw stad/keuken',
+                      done: !!(selectedRestaurant as any).is_featured,
+                      scrollTo: 'promo-featured',
+                    },
+                    {
+                      id: 'listing',
+                      label: 'Listing boost geactiveerd',
+                      hint: 'Eenmalige 30-dagen zichtbaarheid',
+                      done: !!(selectedRestaurant as any).is_top_listing || !!(selectedRestaurant as any).is_featured,
+                      scrollTo: 'promo-listings',
+                    },
+                    {
+                      id: 'sponsored',
+                      label: 'Gerecht in de spotlight',
+                      hint: 'Promoot je signature dish',
+                      done: false,
+                      scrollTo: 'promo-sponsored',
+                    },
+                    {
+                      id: 'newsletter',
+                      label: 'Nieuwsbrief plaatsing',
+                      hint: 'Bereik foodies in hun inbox',
+                      done: false,
+                      scrollTo: 'promo-newsletter',
+                    },
+                  ] as VisibilityStep[]}
+                />
+
+                <VisibilityPricingOverview
+                  onNavigatePro={() => setActiveTab('insights')}
+                  signals={{
+                    isPro,
+                    totalViews: analytics?.totalViews ?? 0,
+                    totalClicks: analytics?.totalClicks ?? 0,
+                    reviewCount: reviews.length,
+                    dishCount: restaurantDishes.length,
+                    isFeatured: !!(selectedRestaurant as any).is_featured,
+                    isTopListing: !!(selectedRestaurant as any).is_top_listing,
+                    hasActiveFeatured: !!(selectedRestaurant as any).is_featured,
+                  }}
+                />
 
                 <div id="promo-featured">
                   <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
