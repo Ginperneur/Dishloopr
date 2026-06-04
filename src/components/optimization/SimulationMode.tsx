@@ -24,6 +24,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
+import { useOwnerProCheckout } from '@/hooks/useOwnerProCheckout';
+import { Loader2 } from 'lucide-react';
 
 interface SimulationResult {
   currentPosition: number;
@@ -103,6 +105,7 @@ export function SimulationMode({ restaurantId, isPremium, onSimulate }: Simulati
   };
 
   const canSimulate = isPremium || simulationsUsed < maxFreeSimulations;
+  const { startCheckout, loading: checkoutLoading } = useOwnerProCheckout();
 
   return (
     <Card>
@@ -129,9 +132,13 @@ export function SimulationMode({ restaurantId, isPremium, onSimulate }: Simulati
             <p className="text-muted-foreground mb-4">
               Upgrade naar Premium voor onbeperkte simulaties
             </p>
-            <Button>
-              <Sparkles className="h-4 w-4 mr-2" />
-              Upgrade naar Premium
+            <Button onClick={() => startCheckout('monthly')} disabled={checkoutLoading !== null}>
+              {checkoutLoading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4 mr-2" />
+              )}
+              Upgrade naar Owner Pro
             </Button>
           </div>
         ) : (

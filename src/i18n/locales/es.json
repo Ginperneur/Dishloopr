@@ -57,6 +57,8 @@
     "dietary": "Dieta",
     "vegetarian": "Vegetariano",
     "vegan": "Vegano",
+    "glutenFree": "Sin gluten",
+    "halal": "Halal",
     "cuisine": "Cocina",
     "concept": "Concepto",
     "mealType": "Comida",

@@ -18,6 +18,8 @@ import { TagAnalysis } from './TagAnalysis';
 import { OptimizationSuggestions } from './OptimizationSuggestions';
 import { SimulationMode } from './SimulationMode';
 import { useOptimizationInsights } from '@/hooks/useOptimizationInsights';
+import { useOwnerProCheckout } from '@/hooks/useOwnerProCheckout';
+import { Loader2 } from 'lucide-react';
 
 interface OptimizationDashboardProps {
   restaurantId: string;
@@ -28,6 +30,7 @@ export function OptimizationDashboard({ restaurantId, restaurantName }: Optimiza
   const { t } = useTranslation();
   const { data, loading, error, simulateChange } = useOptimizationInsights(restaurantId);
   const [activeTab, setActiveTab] = useState('overview');
+  const { startCheckout, loading: checkoutLoading } = useOwnerProCheckout();
 
   if (loading) {
     return (
@@ -168,8 +171,12 @@ export function OptimizationDashboard({ restaurantId, restaurantName }: Optimiza
                     </p>
                   </div>
                 </div>
-                <Button>
-                  <Sparkles className="h-4 w-4 mr-2" />
+                <Button onClick={() => startCheckout('monthly')} disabled={checkoutLoading !== null}>
+                  {checkoutLoading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 mr-2" />
+                  )}
                   €29/maand
                 </Button>
               </div>
