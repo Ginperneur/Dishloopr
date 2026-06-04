@@ -64,7 +64,7 @@ export function WelcomeHero({
           </div>
 
           <Button variant="ghost" size="icon" asChild className="shrink-0 hidden sm:flex">
-            <Link to="/profile">
+            <Link to="/profile" aria-label="Profielinstellingen">
               <Settings className="h-4 w-4" />
             </Link>
           </Button>
