@@ -88,6 +88,9 @@ export default function SearchPage() {
   );
   const [displayCount, setDisplayCount] = useState(12);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  // Tracks an in-flight "Bij mij" click so we can switch to the map view
+  // as soon as the browser returns the user's coordinates.
+  const [pendingNearMe, setPendingNearMe] = useState(false);
 
   // Keep viewMode in sync with URL (?view=map) so BottomNav Map/Search tabs work
   useEffect(() => {
@@ -219,20 +222,26 @@ export default function SearchPage() {
     if (locationLoading) return;
     
     if (!userLocation) {
+      setPendingNearMe(true);
       requestLocation();
-      toast.info('Locatie wordt opgehaald...');
+      toast.info('Locatie wordt opgehaald…');
     } else {
+      // Already have location — open map view centered on user immediately
+      handleViewModeChange('map');
       setSortBy('nearest');
-      toast.success('Gesorteerd op afstand');
+      toast.success('Kaart gecentreerd op jouw locatie');
     }
   };
 
-  // Auto-sort by nearest when location becomes available
+  // When a "Bij mij" click resolves, auto-open the map and sort by distance.
   useEffect(() => {
-    if (userLocation && sortBy === 'nearest') {
-      // Location is now available, results will re-sort
+    if (userLocation && pendingNearMe) {
+      setPendingNearMe(false);
+      handleViewModeChange('map');
+      setSortBy('nearest');
+      toast.success('Kaart gecentreerd op jouw locatie');
     }
-  }, [userLocation, sortBy]);
+  }, [userLocation, pendingNearMe]);
 
   const handleSearch = (query: string, newCityId: string) => {
     const params = new URLSearchParams();
