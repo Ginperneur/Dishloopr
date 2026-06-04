@@ -77,6 +77,8 @@ export function RestaurantMap({ restaurants, userLocation, onClose, className = 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const layerRef = useRef<L.LayerGroup | null>(null);
+  const didInitialFitRef = useRef(false);
+  const lastUserKeyRef = useRef<string | null>(null);
 
   const mappableRestaurants = useMemo(
     () =>
@@ -91,14 +93,6 @@ export function RestaurantMap({ restaurants, userLocation, onClose, className = 
   );
 
   const defaultCenter: [number, number] = [52.3676, 4.9041];
-  const center: [number, number] = userLocation
-    ? [userLocation.lat, userLocation.lng]
-    : mappableRestaurants.length
-      ? [
-          mappableRestaurants.reduce((sum, r) => sum + (r.geo_lat as number), 0) / mappableRestaurants.length,
-          mappableRestaurants.reduce((sum, r) => sum + (r.geo_lng as number), 0) / mappableRestaurants.length,
-        ]
-      : defaultCenter;
 
   // Init map once
   useEffect(() => {
@@ -114,19 +108,34 @@ export function RestaurantMap({ restaurants, userLocation, onClose, className = 
       maxZoom: 19,
     }).addTo(map);
 
-    map.setView(center, 13);
+    // Initial view: user → first restaurant → default city
+    const initialCenter: [number, number] = userLocation
+      ? [userLocation.lat, userLocation.lng]
+      : mappableRestaurants.length
+        ? [mappableRestaurants[0].geo_lat as number, mappableRestaurants[0].geo_lng as number]
+        : defaultCenter;
+    map.setView(initialCenter, userLocation ? 14 : 13);
 
     const layer = L.layerGroup().addTo(map);
     mapRef.current = map;
     layerRef.current = layer;
 
     const invalidate = () => map.invalidateSize();
-    const t = window.setTimeout(invalidate, 80);
+    // Multiple invalidations to catch layout shifts (sticky headers, fonts loading, etc.)
+    const timers = [50, 200, 600].map((d) => window.setTimeout(invalidate, d));
     window.addEventListener('resize', invalidate);
     window.addEventListener('orientationchange', invalidate);
 
+    // Observe container size changes (e.g. when SearchPage toggles map view)
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined' && containerRef.current) {
+      ro = new ResizeObserver(() => map.invalidateSize());
+      ro.observe(containerRef.current);
+    }
+
     return () => {
-      window.clearTimeout(t);
+      timers.forEach((t) => window.clearTimeout(t));
+      ro?.disconnect();
       window.removeEventListener('resize', invalidate);
       window.removeEventListener('orientationchange', invalidate);
       layer.clearLayers();
@@ -137,16 +146,13 @@ export function RestaurantMap({ restaurants, userLocation, onClose, className = 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Update markers + view
+  // Update markers (do NOT force view on every render — that wedges interaction)
   useEffect(() => {
     const map = mapRef.current;
     const layer = layerRef.current;
     if (!map || !layer) return;
 
     layer.clearLayers();
-
-    // Keep view aligned with latest center
-    map.setView(center, 13, { animate: false });
 
     if (userLocation) {
       const userMarker = L.marker([userLocation.lat, userLocation.lng], { icon: createUserIcon() });
@@ -216,10 +222,35 @@ export function RestaurantMap({ restaurants, userLocation, onClose, className = 
       marker.bindPopup(root, { closeButton: true, autoPan: true });
       marker.addTo(layer);
     });
-  }, [center, mappableRestaurants, navigate, userLocation]);
+
+    // First time we have data, fit the map to the markers (incl. user)
+    if (!didInitialFitRef.current) {
+      const points: L.LatLngTuple[] = mappableRestaurants.map(
+        (r) => [r.geo_lat as number, r.geo_lng as number] as L.LatLngTuple,
+      );
+      if (userLocation) points.push([userLocation.lat, userLocation.lng]);
+      if (points.length >= 2) {
+        map.fitBounds(L.latLngBounds(points), { padding: [40, 40], maxZoom: 15 });
+        didInitialFitRef.current = true;
+      } else if (points.length === 1) {
+        map.setView(points[0], 14);
+        didInitialFitRef.current = true;
+      }
+    }
+  }, [mappableRestaurants, navigate, userLocation]);
+
+  // When the user's location arrives or changes, fly to it.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !userLocation) return;
+    const key = `${userLocation.lat.toFixed(5)},${userLocation.lng.toFixed(5)}`;
+    if (lastUserKeyRef.current === key) return;
+    lastUserKeyRef.current = key;
+    map.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 0.8 });
+  }, [userLocation]);
 
   return (
-    <div className={`relative rounded-xl overflow-hidden ${className}`}>
+    <div className={`relative rounded-xl overflow-hidden h-full w-full ${className}`}>
       {onClose && (
         <button
           type="button"
@@ -233,7 +264,7 @@ export function RestaurantMap({ restaurants, userLocation, onClose, className = 
       <div
         ref={containerRef}
         className="touch-manipulation"
-        style={{ height: '100%', width: '100%', minHeight: '400px' }}
+        style={{ height: '100%', width: '100%', minHeight: '60vh' }}
       />
     </div>
   );
