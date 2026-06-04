@@ -112,6 +112,7 @@ const App = () => (
                   <Route path="/claim" element={<ClaimPage />} />
                   <Route path="/for-restaurants" element={<ForRestaurantsPage />} />
                   <Route path="/add-restaurant" element={<AddRestaurantPage />} />
+                  <Route path="/suggest-restaurant" element={<SuggestRestaurantPage />} />
                   <Route path="/favorites" element={<FavoritesPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/account" element={<AccountPage />} />

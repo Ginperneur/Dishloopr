@@ -70,6 +70,7 @@ import { DishAnalytics } from '@/components/owner/DishAnalytics';
 import { SearchRanking } from '@/components/owner/SearchRanking';
 import { ClaimStatusBadge } from '@/components/claims/ClaimStatusBadge';
 import { MenuItemsManager } from '@/components/admin/MenuItemsManager';
+import { OwnerMenuUpload } from '@/components/owner/OwnerMenuUpload';
 import { LockedFeatureOverlay } from '@/components/claims/LockedFeatureOverlay';
 import { VerificationRequiredDialog } from '@/components/claims/VerificationRequiredDialog';
 import { DishConfirmation } from '@/components/owner/DishConfirmation';
@@ -919,6 +920,11 @@ export default function OwnerDashboard() {
                 <MenuItemsManager restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
               ) : (
                 <Card><CardContent className="py-8 text-center"><p className="text-muted-foreground text-sm">Selecteer een restaurant</p></CardContent></Card>
+              )}
+              {selectedRestaurant && (
+                <div className="mt-4">
+                  <OwnerMenuUpload restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
+                </div>
               )}
             </div>
 
