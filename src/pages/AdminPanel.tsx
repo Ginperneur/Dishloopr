@@ -223,8 +223,21 @@ export default function AdminPanel() {
   };
 
   const fetchUsers = async () => {
-    const { data: profileData } = await supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(100);
-    setUsers(profileData || []);
+    let allUsers: any[] = [];
+    let from = 0;
+    const batchSize = 1000;
+    while (true) {
+      const { data: batch } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(from, from + batchSize - 1);
+      if (!batch || batch.length === 0) break;
+      allUsers = allUsers.concat(batch);
+      if (batch.length < batchSize) break;
+      from += batchSize;
+    }
+    setUsers(allUsers);
   };
 
   const fetchData = async () => {
