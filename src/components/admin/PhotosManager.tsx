@@ -225,6 +225,18 @@ export function PhotosManager() {
           </div>
         </CardHeader>
         <CardContent>
+          <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+            <Tabs value={filterMode} onValueChange={(v) => setFilterMode(v as "all" | "never")}>
+              <TabsList>
+                <TabsTrigger value="all">Alle zonder foto's</TabsTrigger>
+                <TabsTrigger value="never">Nog nooit opgehaald</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <Button variant="outline" size="sm" onClick={exportCsv} disabled={missingPhotos.length === 0}>
+              <Download className="h-4 w-4 mr-2" />
+              Exporteer CSV
+            </Button>
+          </div>
           <div className="flex items-center justify-between p-4 bg-muted rounded-lg mb-4">
             <div className="flex items-center gap-3">
               {missingPhotos.length === 0 ? (
