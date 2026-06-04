@@ -12,6 +12,7 @@ import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OnboardingDialog } from "@/components/onboarding/OnboardingDialog";
 import { CookieConsent } from "@/components/legal/CookieConsent";
+import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 
 // Eagerly load critical routes
 import Index from "./pages/Index";
@@ -88,12 +89,13 @@ const App = () => (
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Suspense fallback={<PageLoader />}>
-                <OnboardingDialog />
-                <CookieConsent />
+            <ConfirmProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Suspense fallback={<PageLoader />}>
+                  <OnboardingDialog />
+                  <CookieConsent />
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/search" element={<SearchPage />} />
@@ -138,6 +140,7 @@ const App = () => (
                 </Routes>
               </Suspense>
             </BrowserRouter>
+            </ConfirmProvider>
           </TooltipProvider>
         </AuthProvider>
       </QueryClientProvider>
