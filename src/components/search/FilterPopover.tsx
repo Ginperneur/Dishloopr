@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Slider } from '@/components/ui/slider';
 
 interface Filters {
   priceLevel: number[];
@@ -22,6 +23,7 @@ interface Filters {
   dietaryOptions: string[];
   hasTerrace?: boolean;
   openNow?: boolean;
+  radiusKm?: number;
 }
 
 interface FilterPopoverProps {
@@ -136,7 +138,8 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
     filters.experiences.length +
     filters.dietaryOptions.length +
     (filters.hasTerrace ? 1 : 0) +
-    (filters.openNow ? 1 : 0);
+    (filters.openNow ? 1 : 0) +
+    (filters.radiusKm && filters.radiusKm > 0 ? 1 : 0);
 
   const toggleFilter = (type: keyof Filters, value: string | number) => {
     const current = filters[type] as (string | number)[];
@@ -157,6 +160,7 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
       dietaryOptions: [],
       hasTerrace: undefined,
       openNow: undefined,
+      radiusKm: 0,
     });
   };
 
@@ -226,6 +230,34 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
                 </button>
               );
             })}
+          </div>
+          {/* Distance slider — expand search around the selected city */}
+          <div className="mt-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-muted-foreground">
+                Afstand rond stad
+              </label>
+              <span className="text-xs font-semibold">
+                {filters.radiusKm && filters.radiusKm > 0
+                  ? `+${filters.radiusKm} km`
+                  : 'Alleen in stad'}
+              </span>
+            </div>
+            <Slider
+              value={[filters.radiusKm ?? 0]}
+              min={0}
+              max={60}
+              step={5}
+              onValueChange={(v) => onFiltersChange({ ...filters, radiusKm: v[0] })}
+              aria-label="Maximale afstand tot de stad in kilometers"
+            />
+            <div className="flex justify-between text-[10px] text-muted-foreground">
+              <span>0</span>
+              <span>15</span>
+              <span>30</span>
+              <span>45</span>
+              <span>60 km</span>
+            </div>
           </div>
         </div>
         
