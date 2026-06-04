@@ -171,6 +171,7 @@ const EXPORTS: ExportConfig[] = [
   },
   {
     key: 'newsletter_subscribers',
+    pii: true,
     label: 'Nieuwsbrief abonnees',
     description: 'Alle nieuwsbrief abonnees met status.',
     icon: <Database className="w-5 h-5" />,
@@ -191,6 +192,7 @@ const EXPORTS: ExportConfig[] = [
   },
   {
     key: 'restaurant_suggestions',
+    pii: true,
     label: 'Restaurant suggesties',
     description: 'Door bezoekers ingediende restaurant-suggesties.',
     icon: <Database className="w-5 h-5" />,
@@ -227,6 +229,7 @@ const EXPORTS: ExportConfig[] = [
   },
   {
     key: 'profiles',
+    pii: true,
     label: 'Gebruikersprofielen',
     description: 'Geregistreerde gebruikers (naam, e-mail, reviewer level).',
     icon: <Database className="w-5 h-5" />,
