@@ -2488,6 +2488,63 @@ export type Database = {
           },
         ]
       }
+      restaurant_suggestions: {
+        Row: {
+          address: string | null
+          admin_notes: string | null
+          city: string | null
+          created_at: string
+          cuisine: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          suggested_by: string | null
+          suggester_email: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          admin_notes?: string | null
+          city?: string | null
+          created_at?: string
+          cuisine?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          suggested_by?: string | null
+          suggester_email?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          admin_notes?: string | null
+          city?: string | null
+          created_at?: string
+          cuisine?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          suggested_by?: string | null
+          suggester_email?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       restaurant_tag_subscriptions: {
         Row: {
           created_at: string
@@ -2655,6 +2712,7 @@ export type Database = {
           opening_hours: Json | null
           owner_tier: string
           phone: string | null
+          photos_fetched_at: string | null
           postal_code: string | null
           price_level: number
           rating: number
@@ -2708,6 +2766,7 @@ export type Database = {
           opening_hours?: Json | null
           owner_tier?: string
           phone?: string | null
+          photos_fetched_at?: string | null
           postal_code?: string | null
           price_level?: number
           rating?: number
@@ -2761,6 +2820,7 @@ export type Database = {
           opening_hours?: Json | null
           owner_tier?: string
           phone?: string | null
+          photos_fetched_at?: string | null
           postal_code?: string | null
           price_level?: number
           rating?: number
