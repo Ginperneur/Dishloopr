@@ -435,7 +435,7 @@ export function FeaturedMarketplace({
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setDurationMonths(Math.min(3, durationMonths + 1))}
+                  onClick={() => setDurationMonths(Math.min(12, durationMonths + 1))}
                   disabled={durationMonths >= 12}
                 >
                   <Plus className="h-4 w-4" />
