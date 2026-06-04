@@ -1303,7 +1303,71 @@ export default function OwnerDashboard() {
             />
             {selectedRestaurant && (
               <>
-                <VisibilityPricingOverview onNavigatePro={() => setActiveTab('insights')} />
+                <ActivePromotionsCounter
+                  restaurantId={selectedRestaurant.id}
+                  restaurant={selectedRestaurant as any}
+                />
+
+                <VisibilityProgress
+                  steps={[
+                    {
+                      id: 'verify',
+                      label: 'Restaurant geverifieerd',
+                      hint: 'Vereist voor alle promoties',
+                      done: isVerified,
+                      onClick: () => setVerificationDialogOpen(true),
+                    },
+                    {
+                      id: 'pro',
+                      label: 'Owner Pro actief',
+                      hint: 'Inzichten + Markt + onbeperkte tags',
+                      done: isPro,
+                      onClick: () => setActiveTab('insights'),
+                    },
+                    {
+                      id: 'featured',
+                      label: 'Premium zoekplek',
+                      hint: 'Vast bovenaan in jouw stad/keuken',
+                      done: !!(selectedRestaurant as any).is_featured,
+                      scrollTo: 'promo-featured',
+                    },
+                    {
+                      id: 'listing',
+                      label: 'Listing boost geactiveerd',
+                      hint: 'Eenmalige 30-dagen zichtbaarheid',
+                      done: !!(selectedRestaurant as any).is_top_listing || !!(selectedRestaurant as any).is_featured,
+                      scrollTo: 'promo-listings',
+                    },
+                    {
+                      id: 'sponsored',
+                      label: 'Gerecht in de spotlight',
+                      hint: 'Promoot je signature dish',
+                      done: false,
+                      scrollTo: 'promo-sponsored',
+                    },
+                    {
+                      id: 'newsletter',
+                      label: 'Nieuwsbrief plaatsing',
+                      hint: 'Bereik foodies in hun inbox',
+                      done: false,
+                      scrollTo: 'promo-newsletter',
+                    },
+                  ] as VisibilityStep[]}
+                />
+
+                <VisibilityPricingOverview
+                  onNavigatePro={() => setActiveTab('insights')}
+                  signals={{
+                    isPro,
+                    totalViews: analytics?.totalViews ?? 0,
+                    totalClicks: analytics?.totalClicks ?? 0,
+                    reviewCount: reviews.length,
+                    dishCount: restaurantDishes.length,
+                    isFeatured: !!(selectedRestaurant as any).is_featured,
+                    isTopListing: !!(selectedRestaurant as any).is_top_listing,
+                    hasActiveFeatured: !!(selectedRestaurant as any).is_featured,
+                  }}
+                />
 
                 <div id="promo-featured">
                   <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
