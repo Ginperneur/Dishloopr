@@ -46,6 +46,7 @@ const CityDetailPage = lazy(() => import("./pages/CityDetailPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ForRestaurantsPage = lazy(() => import("./pages/ForRestaurantsPage"));
 const AddRestaurantPage = lazy(() => import("./pages/AddRestaurantPage"));
+const SuggestRestaurantPage = lazy(() => import("./pages/SuggestRestaurantPage"));
 const EventsPage = lazy(() => import("./pages/EventsPage"));
 const VotePage = lazy(() => import("./pages/VotePage"));
 
@@ -112,6 +113,7 @@ const App = () => (
                   <Route path="/claim" element={<ClaimPage />} />
                   <Route path="/for-restaurants" element={<ForRestaurantsPage />} />
                   <Route path="/add-restaurant" element={<AddRestaurantPage />} />
+                  <Route path="/suggest-restaurant" element={<SuggestRestaurantPage />} />
                   <Route path="/favorites" element={<FavoritesPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/account" element={<AccountPage />} />

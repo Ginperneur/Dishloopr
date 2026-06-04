@@ -42,19 +42,40 @@ serve(async (req) => {
       });
     }
 
-    const { data: roleData } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
-    if (!roleData) {
-      return new Response(JSON.stringify({ error: 'Admin access required' }), {
-        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
     const { restaurantId, pdfBase64, pdfUrl } = await req.json();
     if (!restaurantId) {
       return new Response(JSON.stringify({ error: 'restaurantId is required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    // Allow: admins, restaurant managers, or users with a claim_request for this restaurant
+    const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
+    let allowed = !!isAdmin;
+    if (!allowed) {
+      const { data: mgr } = await supabase
+        .from('restaurant_managers')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('restaurant_id', restaurantId)
+        .maybeSingle();
+      if (mgr) allowed = true;
+    }
+    if (!allowed) {
+      const { data: claim } = await supabase
+        .from('claim_requests')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('restaurant_id', restaurantId)
+        .maybeSingle();
+      if (claim) allowed = true;
+    }
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: 'Forbidden: no access to this restaurant' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (!pdfBase64 && !pdfUrl) {
       return new Response(JSON.stringify({ error: 'pdfBase64 or pdfUrl required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },

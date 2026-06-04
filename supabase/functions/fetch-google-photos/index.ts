@@ -175,6 +175,12 @@ serve(async (req) => {
       }
     }
 
+    // Always mark photos_fetched_at so admins can filter "never fetched"
+    await supabaseAdmin
+      .from('restaurants')
+      .update({ photos_fetched_at: new Date().toISOString() })
+      .eq('id', restaurant_id);
+
     // Update restaurant with new images
     if (uploadedImages.length > 0) {
       // Get existing images
