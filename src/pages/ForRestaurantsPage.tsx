@@ -211,49 +211,6 @@ export default function ForRestaurantsPage() {
           </div>
         </section>
 
-        {/* Testimonials - NEW */}
-        <section className="py-12 md:py-16 bg-muted/30">
-          <div className="container mx-auto px-4">
-            <motion.div 
-              className="max-w-4xl mx-auto"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">
-                {t('forRestaurants.whatOwnersSay', 'Wat eigenaren zeggen')}
-              </h2>
-              
-              <div className="grid md:grid-cols-2 gap-6">
-                {testimonials.map((testimonial, index) => (
-                  <Card key={index} className="bg-background">
-                    <CardContent className="p-6">
-                      <Quote className="h-8 w-8 text-primary/20 mb-4" />
-                      <p className="text-foreground mb-4 italic">{testimonial.quote}</p>
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <span className="text-sm font-semibold text-primary">
-                            {testimonial.author.split(' ').map(n => n[0]).join('')}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="font-semibold text-sm">{testimonial.author}</p>
-                          <p className="text-xs text-muted-foreground">{testimonial.role}</p>
-                        </div>
-                        <div className="ml-auto flex gap-0.5">
-                          {[...Array(testimonial.rating)].map((_, i) => (
-                            <Star key={i} className="h-4 w-4 fill-rating text-rating" />
-                          ))}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </motion.div>
-          </div>
-        </section>
-
         {/* Intro Text */}
         <section className="py-12 md:py-16">
           <div className="container mx-auto px-4">
