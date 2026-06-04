@@ -170,7 +170,7 @@
   "trending": {
     "title": "Trending dishes",
     "subtitle": "Popular in your city",
-    "inCity": "in {city}",
+    "inCity": "in {{city}}",
     "now": "Trending now",
     "searches": "searches",
     "seasonalSubtitle": "Dishes that are perfect right now"

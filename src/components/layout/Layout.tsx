@@ -10,7 +10,7 @@ interface LayoutProps {
 
 export function Layout({ children, showFooter = true }: LayoutProps) {
   return (
-    <div className="min-h-screen flex flex-col w-full max-w-full overflow-x-hidden">
+    <div className="min-h-[100svh] flex flex-col w-full max-w-full overflow-x-hidden">
       {/* Skip to content - accessibility */}
       <a
         href="#main-content"

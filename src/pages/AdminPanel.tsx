@@ -287,7 +287,7 @@ export default function AdminPanel() {
 
   if (authLoading || adminLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-[100svh] bg-background flex items-center justify-center">
         <div className="animate-pulse space-y-4 w-full max-w-md">
           <div className="h-8 w-64 bg-muted rounded mx-auto" />
           <div className="grid grid-cols-2 gap-4">
@@ -302,7 +302,7 @@ export default function AdminPanel() {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-[100svh] bg-background flex items-center justify-center">
         <div className="text-center">
           <Shield className="h-16 w-16 mx-auto text-destructive mb-4" />
           <h1 className="text-2xl font-bold mb-2">Toegang geweigerd</h1>
@@ -316,7 +316,7 @@ export default function AdminPanel() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-[100svh] flex w-full bg-background">
         <AdminSidebar
           activeSection={activeSection}
           onSectionChange={setActiveSection}

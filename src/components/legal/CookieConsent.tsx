@@ -42,7 +42,7 @@ export function CookieConsent() {
             <Cookie className="h-5 w-5" />
           </div>
           <div className="text-sm text-foreground/90 leading-relaxed">
-            We gebruiken functionele cookies en optionele analyse om Dishloopr te verbeteren.{' '}
+            We gebruiken functionele cookies van Dishloopr en verwerkers (Supabase voor auth/data, Stripe voor betalingen, Google Maps voor locaties) en optionele analyse om de site te verbeteren.{' '}
             <Link to="/privacy" className="underline underline-offset-2 hover:text-primary">
               Lees meer
             </Link>

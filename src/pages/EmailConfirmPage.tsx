@@ -59,7 +59,7 @@ export default function EmailConfirmPage() {
         description="Bevestig je e-mailadres om je Dishloopr account te activeren."
         noindex
       />
-      <div className="min-h-[calc(100vh-3.5rem)] md:min-h-[calc(100vh-4rem)] flex items-center justify-center py-8 md:py-12 px-4">
+      <div className="min-h-[calc(100svh-3.5rem)] md:min-h-[calc(100svh-4rem)] flex items-center justify-center py-8 md:py-12 px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

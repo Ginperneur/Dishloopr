@@ -70,7 +70,7 @@ export default function PrivacyPage() {
                 <li>Personalisatie van je ervaring</li>
                 <li>Communicatie over je account en onze diensten</li>
                 <li>Analyse en verbetering van het platform</li>
-                <li>Fraude preventie en beveiliging</li>
+                <li>Fraudepreventie en beveiliging</li>
               </ul>
             </section>
 

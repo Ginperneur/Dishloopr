@@ -59,7 +59,7 @@ export default function ForgotPasswordPage() {
         description="Vraag een nieuw wachtwoord aan voor je Dishloopr account."
         noindex
       />
-      <div className="min-h-[calc(100vh-3.5rem)] md:min-h-[calc(100vh-4rem)] flex items-center justify-center py-8 md:py-12 px-4">
+      <div className="min-h-[calc(100svh-3.5rem)] md:min-h-[calc(100svh-4rem)] flex items-center justify-center py-8 md:py-12 px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

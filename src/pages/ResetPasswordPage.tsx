@@ -80,7 +80,7 @@ export default function ResetPasswordPage() {
   if (!session) {
     return (
       <Layout showFooter={false}>
-        <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+        <div className="min-h-[calc(100svh-4rem)] flex items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
       </Layout>
@@ -94,7 +94,7 @@ export default function ResetPasswordPage() {
         description="Stel een nieuw wachtwoord in voor je Dishloopr account."
         noindex
       />
-      <div className="min-h-[calc(100vh-3.5rem)] md:min-h-[calc(100vh-4rem)] flex items-center justify-center py-8 md:py-12 px-4">
+      <div className="min-h-[calc(100svh-3.5rem)] md:min-h-[calc(100svh-4rem)] flex items-center justify-center py-8 md:py-12 px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

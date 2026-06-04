@@ -169,7 +169,7 @@
   "trending": {
     "title": "Platos populares",
     "subtitle": "Popular en tu ciudad",
-    "inCity": "en {city}",
+    "inCity": "en {{city}}",
     "now": "Popular ahora",
     "searches": "búsquedas",
     "seasonalSubtitle": "Platos perfectos en este momento"
