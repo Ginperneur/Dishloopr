@@ -51,7 +51,10 @@ export function OwnerSidebar({ activeTab, onChange, isVerified }: OwnerSidebarPr
             <SidebarMenu>
               {sections.map((section) => {
                 const isActive = activeTab === section.id;
-                const locked = section.requiresVerified && !isVerified;
+                // Visual hint only — the destination page itself shows the
+                // appropriate gate (verification flow or Pro paywall) so the
+                // owner can always click through and learn what's behind it.
+                const showLockHint = section.requiresVerified && !isVerified;
                 return (
                   <SidebarMenuItem key={section.id}>
                     <SidebarMenuButton
@@ -61,21 +64,18 @@ export function OwnerSidebar({ activeTab, onChange, isVerified }: OwnerSidebarPr
                     >
                       <button
                         type="button"
-                        disabled={locked}
-                        onClick={() => !locked && onChange(section.id)}
+                        onClick={() => onChange(section.id)}
                         className={cn(
                           'flex items-center gap-2 w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 rounded-md',
-                          locked && 'opacity-50 cursor-not-allowed',
                         )}
                         aria-label={section.label}
                         aria-current={isActive ? 'page' : undefined}
-                        aria-disabled={locked || undefined}
                       >
                         <section.icon className="h-4 w-4 shrink-0" />
                         {!collapsed && (
                           <>
                             <span className="flex-1 truncate">{section.label}</span>
-                            {locked && <Lock className="h-3 w-3 opacity-60" />}
+                            {showLockHint && <Lock className="h-3 w-3 opacity-60" />}
                           </>
                         )}
                       </button>
