@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +12,14 @@ serve(async (req) => {
   }
 
   try {
+    const rl = await enforceRateLimit(req, {
+      functionName: "analyze-reviews",
+      user: { max: 10, window: 3600 },
+      anon: { max: 2, window: 3600 },
+      isAi: true,
+    });
+    if (!rl.allowed && rl.response) return rl.response;
+
     const { reviews } = await req.json();
 
     if (!reviews || !Array.isArray(reviews) || reviews.length === 0) {
