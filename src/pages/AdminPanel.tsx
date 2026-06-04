@@ -71,6 +71,7 @@ import { AdminToday } from '@/components/admin/AdminToday';
 import { RestaurantSuggestionsQueue } from '@/components/admin/RestaurantSuggestionsQueue';
 import { ErrorLogsViewer } from '@/components/admin/ErrorLogsViewer';
 import { ReservationLinkDetector } from '@/components/admin/ReservationLinkDetector';
+import { RateLimitMonitor } from '@/components/admin/RateLimitMonitor';
 
 interface Stats {
   totalUsers: number;
