@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,6 +22,14 @@ serve(async (req) => {
   }
 
   try {
+    const rl = await enforceRateLimit(req, {
+      functionName: "parse-menu-image",
+      user: { max: 20, window: 86400 },
+      anon: { max: 3, window: 3600 },
+      isAi: true,
+    });
+    if (!rl.allowed && rl.response) return rl.response;
+
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       console.error('LOVABLE_API_KEY is not configured');
