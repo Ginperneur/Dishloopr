@@ -442,7 +442,7 @@ export function FeaturedMarketplace({
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Looptijd voor de premium plek (max 12 maanden vooraf). Maandelijks opzegbaar.
+                Je kiest zelf de looptijd (1–12 maanden) en betaalt vooraf voor de geboekte periode. De plek loopt niet automatisch door — er is geen abonnement en geen opzegtermijn.
               </p>
             </div>
 
