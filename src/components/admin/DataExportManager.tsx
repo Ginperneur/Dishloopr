@@ -298,8 +298,10 @@ const EXPORTS: ExportConfig[] = [
 export function DataExportManager() {
   const [exportingKey, setExportingKey] = useState<string | null>(null);
   const [format, setFormat] = useState<ExportFormat>('csv');
+  const [pendingPiiExport, setPendingPiiExport] = useState<ExportConfig | null>(null);
+  const { logActivity } = useActivityLog();
 
-  const handleExport = async (config: ExportConfig) => {
+  const runExport = async (config: ExportConfig) => {
     setExportingKey(config.key);
     try {
       const data = await config.fetchData();
@@ -320,6 +322,15 @@ export function DataExportManager() {
         downloadFile(content, `${filename}.csv`, 'text/csv');
       }
 
+      if (config.pii) {
+        await logActivity({
+          actionType: 'create',
+          entityType: 'user',
+          entityName: `PII export: ${config.label}`,
+          details: { dataset: config.key, format, row_count: data.length },
+        });
+      }
+
       toast.success(`${data.length} rijen geëxporteerd als ${format.toUpperCase()}`);
     } catch (err) {
       console.error('Export error:', err);
@@ -327,6 +338,14 @@ export function DataExportManager() {
     } finally {
       setExportingKey(null);
     }
+  };
+
+  const handleExport = (config: ExportConfig) => {
+    if (config.pii) {
+      setPendingPiiExport(config);
+      return;
+    }
+    void runExport(config);
   };
 
   return (
@@ -373,7 +392,14 @@ export function DataExportManager() {
                 <div className="flex items-center gap-3">
                   <div className="text-muted-foreground">{config.icon}</div>
                   <div>
-                    <div className="font-medium">{config.label}</div>
+                    <div className="font-medium flex items-center gap-2">
+                      {config.label}
+                      {config.pii && (
+                        <Badge variant="outline" className="text-[10px] gap-1 border-destructive/40 text-destructive">
+                          <ShieldAlert className="h-3 w-3" /> PII
+                        </Badge>
+                      )}
+                    </div>
                     <div className="text-sm text-muted-foreground">{config.description}</div>
                   </div>
                 </div>
@@ -395,6 +421,34 @@ export function DataExportManager() {
           </div>
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!pendingPiiExport} onOpenChange={(o) => !o && setPendingPiiExport(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <ShieldAlert className="h-5 w-5 text-destructive" />
+              Persoonsgegevens exporteren?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Je staat op het punt <strong>{pendingPiiExport?.label}</strong> te exporteren. Deze dataset bevat persoonsgegevens (AVG). De export wordt vastgelegd in het admin-activiteitenlogboek met je gebruikers-ID, tijdstip en aantal rijen.
+              <br /><br />
+              Bewaar het bestand uitsluitend op een beveiligde locatie en verwijder het zodra het niet meer nodig is.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const cfg = pendingPiiExport;
+                setPendingPiiExport(null);
+                if (cfg) void runExport(cfg);
+              }}
+            >
+              Ja, exporteer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
