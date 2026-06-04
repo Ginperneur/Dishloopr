@@ -176,7 +176,7 @@ Deno.serve(async (req) => {
   }
 });
 
-function renderAlert(name: string, restaurantName: string, slug: string, alerts: AnomalyRow[]) {
+function renderAlert(name: string, restaurantName: string, slug: string, alerts: AnomalyRow[], label = 'kritieke daling') {
   const itemsHtml = alerts
     .map((a) => {
       const cfg = METRIC_LABEL[a.metric] ?? { label: a.metric, advice: '' };
@@ -195,7 +195,7 @@ function renderAlert(name: string, restaurantName: string, slug: string, alerts:
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;color:#111;">
       <h1 style="color:#F26522;font-size:22px;margin:0 0 8px;">Hoi ${escape(name)},</h1>
       <p style="color:#555;margin:0 0 20px;font-size:14px;">
-        We zien een kritieke daling in de kerncijfers van <strong>${escape(restaurantName)}</strong> de afgelopen 7 dagen (vergeleken met de week ervoor).
+        We zien een ${escape(label)} in de kerncijfers van <strong>${escape(restaurantName)}</strong> de afgelopen 7 dagen (vergeleken met de week ervoor).
       </p>
       ${itemsHtml}
       <div style="text-align:center;margin-top:24px;">
