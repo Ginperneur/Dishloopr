@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Utensils, Star, MapPin, ChefHat } from 'lucide-react';
+import { Utensils, Star, MapPin, Store } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Stats {
@@ -63,10 +63,10 @@ export function SocialProof() {
   // Always show all four stats — even small numbers signal real activity
   // and beat an empty section.
   const items = [
-    { icon: Utensils, value: stats.restaurants, label: 'Restaurants', suffix: '+' },
+    { icon: Store, value: stats.restaurants, label: 'Restaurants', suffix: '+' },
     { icon: Star, value: stats.reviews, label: 'Reviews', suffix: '+' },
     { icon: MapPin, value: stats.cities, label: 'Steden', suffix: '' },
-    { icon: ChefHat, value: stats.dishes, label: 'Gerechten', suffix: '+' },
+    { icon: Utensils, value: stats.dishes, label: 'Gerechten', suffix: '+' },
   ];
 
   return (
