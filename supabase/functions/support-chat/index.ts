@@ -50,10 +50,10 @@ serve(async (req) => {
   }
 
   try {
-    // Rate limit (AI): 20/uur per user, 5/uur per IP voor anonieme bezoekers
+    // Rate limit (AI): 10 per 30 min per ingelogde user, 5/uur per IP voor anonieme bezoekers
     const rl = await enforceRateLimit(req, {
       functionName: "support-chat",
-      user: { max: 20, window: 3600 },
+      user: { max: 10, window: 1800 },
       anon: { max: 5, window: 3600 },
       isAi: true,
     });
