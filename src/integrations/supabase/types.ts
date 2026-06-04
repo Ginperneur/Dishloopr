@@ -2002,6 +2002,27 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_log: {
+        Row: {
+          created_at: string
+          function_name: string
+          id: string
+          identifier: string
+        }
+        Insert: {
+          created_at?: string
+          function_name: string
+          id?: string
+          identifier: string
+        }
+        Update: {
+          created_at?: string
+          function_name?: string
+          id?: string
+          identifier?: string
+        }
+        Relationships: []
+      }
       reservation_intents: {
         Row: {
           clicked_at: string
@@ -4048,7 +4069,17 @@ export type Database = {
         Returns: number
       }
       can_create_claim: { Args: { _user_id: string }; Returns: boolean }
+      check_and_log_rate_limit: {
+        Args: {
+          p_function: string
+          p_identifier: string
+          p_max: number
+          p_window_seconds: number
+        }
+        Returns: Json
+      }
       cleanup_discovery_duplicates: { Args: { p_rules?: Json }; Returns: Json }
+      cleanup_rate_limit_log: { Args: never; Returns: number }
       clear_expired_verification_codes: { Args: never; Returns: undefined }
       create_biweekly_newsletter_draft: { Args: never; Returns: string }
       deduplicate_dishes: { Args: never; Returns: Json }
