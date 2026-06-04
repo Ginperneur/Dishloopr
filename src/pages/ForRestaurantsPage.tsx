@@ -58,25 +58,6 @@ export default function ForRestaurantsPage() {
   // Stats for social proof
   const stats = [
     { value: restaurantStatValue, label: t('forRestaurants.statsRestaurants', 'Restaurants'), icon: Building2 },
-    { value: '50K+', label: t('forRestaurants.statsSearches', 'Zoekopdrachten/maand'), icon: Eye },
-    { value: '4.8', label: t('forRestaurants.statsRating', 'Gem. rating'), icon: Star },
-    { value: '32%', label: t('forRestaurants.statsConversion', 'Klik-naar-bezoek ratio'), icon: TrendingUp },
-  ];
-
-  // Testimonials
-  const testimonials = [
-    {
-      quote: t('forRestaurants.testimonial1Quote', '"Sinds we op Dishloopr staan, krijgen we wekelijks nieuwe gasten die specifiek voor onze ramen komen."'),
-      author: 'Yuki Tanaka',
-      role: 'Eigenaar, Ramen Ya Amsterdam',
-      rating: 5
-    },
-    {
-      quote: t('forRestaurants.testimonial2Quote', '"De insights per gerecht zijn goud waard. We weten nu precies welke gerechten het beste presteren."'),
-      author: 'Marco de Vries',
-      role: 'Manager, La Piazza Rotterdam',
-      rating: 5
-    },
   ];
 
   return (
