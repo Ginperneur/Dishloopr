@@ -110,6 +110,8 @@ import { PromoCodesManager } from '@/components/owner/PromoCodesManager';
 import { LoyaltyProgramManager } from '@/components/owner/LoyaltyProgramManager';
 import { SocialPostGenerator } from '@/components/owner/SocialPostGenerator';
 import { UpgradeToProCard } from '@/components/owner/UpgradeToProCard';
+import { ProPaywall } from '@/components/owner/ProPaywall';
+import { useOwnerTier } from '@/hooks/useOwnerTier';
 import { OpeningHoursExceptions } from '@/components/owner/OpeningHoursExceptions';
 import { MultiLanguageProfile } from '@/components/owner/MultiLanguageProfile';
 import { CrossPromotionManager } from '@/components/owner/CrossPromotionManager';
@@ -155,6 +157,9 @@ export default function OwnerDashboard() {
     selectedRestaurant?.city_id,
     selectedRestaurant?.cuisines || []
   );
+
+  const { data: ownerTier } = useOwnerTier(selectedRestaurant?.id);
+  const isPro = ownerTier === 'pro';
 
   const unansweredReviews = reviews.filter(r => !r.owner_response).length;
   const suggestedDishCount = restaurantDishes.filter(d => d.status === 'suggested').length;
