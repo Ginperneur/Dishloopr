@@ -83,6 +83,10 @@ export function ProPaywall({ featureName, description, benefits, previewVariant 
 
         {/* Pricing CTA row */}
         <div className="mt-8 pt-6 border-t">
+          <div className="mb-4 flex items-center justify-center gap-2 text-xs font-semibold text-primary">
+            <Sparkles className="h-3.5 w-3.5" />
+            Eén abonnement ontgrendelt Inzichten én Markt — geen aparte kosten per functie
+          </div>
           <div className="grid sm:grid-cols-2 gap-3">
             <button
               type="button"
