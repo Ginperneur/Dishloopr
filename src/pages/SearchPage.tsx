@@ -211,6 +211,28 @@ export default function SearchPage() {
     sortedResults.slice(0, displayCount), 
     [sortedResults, displayCount]
   );
+  // Stable list of restaurants passed to the map (recomputes only when data changes).
+  const mapRestaurants = useMemo(
+    () => sortedResults.map(r => ({
+      id: r.id,
+      name: r.name,
+      slug: r.slug,
+      address: r.address,
+      rating: Number(r.rating),
+      review_count: r.review_count,
+      geo_lat: r.geo_lat,
+      geo_lng: r.geo_lng,
+      is_featured: r.is_featured,
+      is_top_listing: r.is_top_listing,
+      images: r.images,
+      price_level: r.price_level,
+    })),
+    [sortedResults],
+  );
+  const stableUserLocation = useMemo(
+    () => (userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : null),
+    [userLocation?.lat, userLocation?.lng],
+  );
   const hasMore = displayCount < sortedResults.length;
   
   const loadMore = () => {
@@ -626,21 +648,8 @@ export default function SearchPage() {
           }>
             <div className="h-[calc(100svh-12rem)] md:h-[60vh] min-h-[400px] rounded-xl overflow-hidden border border-border">
               <RestaurantMap
-                restaurants={sortedResults.map(r => ({
-                  id: r.id,
-                  name: r.name,
-                  slug: r.slug,
-                  address: r.address,
-                  rating: Number(r.rating),
-                  review_count: r.review_count,
-                  geo_lat: r.geo_lat,
-                  geo_lng: r.geo_lng,
-                  is_featured: r.is_featured,
-                  is_top_listing: r.is_top_listing,
-                  images: r.images,
-                  price_level: r.price_level,
-                }))}
-                userLocation={userLocation}
+                restaurants={mapRestaurants}
+                userLocation={stableUserLocation}
                 className="h-full"
               />
             </div>
