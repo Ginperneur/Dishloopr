@@ -68,6 +68,22 @@ export default function ClaimPage() {
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Resolve claim-limit boolean (canCreateClaim from the hook is an async function).
+  const [canClaim, setCanClaim] = useState(true);
+  useEffect(() => {
+    let active = true;
+    if (!user) {
+      setCanClaim(true);
+      return;
+    }
+    canCreateClaim().then((allowed) => {
+      if (active) setCanClaim(allowed);
+    }).catch(() => {
+      if (active) setCanClaim(true);
+    });
+    return () => { active = false; };
+  }, [user, userClaims, canCreateClaim]);
+
   const benefits = [
     {
       icon: CheckCircle,
@@ -134,7 +150,7 @@ export default function ClaimPage() {
       return;
     }
 
-    if (!canCreateClaim) {
+    if (!canClaim) {
       toast.error('Je hebt het maximum aantal claims bereikt. Verifieer eerst een bestaande claim.');
       return;
     }
@@ -522,7 +538,7 @@ export default function ClaimPage() {
                     </div>
                   ))}
                 </div>
-                {!canCreateClaim && (
+                {!canClaim && (
                   <div className="mt-4 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
                     <div className="flex items-center gap-2 text-yellow-600 text-sm">
                       <AlertCircle className="h-4 w-4" />
@@ -669,7 +685,7 @@ export default function ClaimPage() {
                   <Button 
                     onClick={handleSearch} 
                     className="w-full" 
-                    disabled={isSearching || !canCreateClaim}
+                    disabled={isSearching || !canClaim}
                   >
                     {isSearching ? (
                       <>

@@ -96,7 +96,7 @@ serve(async (req) => {
 
     const cityName = (restaurant.cities as any)?.name || "je stad";
     const ownerName = profile.name || "Restauranteigenaar";
-    const baseUrl = Deno.env.get("SITE_URL") || "https://dishloopr.lovable.app";
+    const baseUrl = Deno.env.get("SITE_URL") || "https://dishloopr.com";
 
     // Send email notification
     const emailResponse = await resend.emails.send({

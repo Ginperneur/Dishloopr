@@ -139,7 +139,7 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil",
     });
 
-    const origin = req.headers.get("origin") || "https://dishloopr.lovable.app";
+    const origin = req.headers.get("origin") || "https://dishloopr.com";
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card", "ideal"],
