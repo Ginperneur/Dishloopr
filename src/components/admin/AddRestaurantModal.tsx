@@ -111,6 +111,10 @@ export function AddRestaurantModal({ onSuccess }: AddRestaurantModalProps) {
             toast.success(`${data.results?.added || 0} gerechten gevonden via website!`);
           }
         });
+        // Fire-and-forget: detect reservation provider (Zenchef/TheFork/OpenTable/...)
+        supabase.functions.invoke('detect-reservation-links', {
+          body: { restaurantId: newRestaurant.id, forceRefresh: true },
+        }).catch(() => { /* ignore */ });
       }
 
       setFormData({
