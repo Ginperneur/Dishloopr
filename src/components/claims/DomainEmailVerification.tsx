@@ -44,7 +44,6 @@ export function DomainEmailVerification({
   const [step, setStep] = useState<'enter_email' | 'enter_code'>('enter_email');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
-  const [expectedCode, setExpectedCode] = useState('');
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
 
@@ -76,119 +75,41 @@ export function DomainEmailVerification({
 
     setSending(true);
     try {
-      // Generate a 6-digit code
-      const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
-      setExpectedCode(generatedCode);
-
-      // Store code in claim
-      await supabase
-        .from('restaurant_claims')
-        .update({
-          verification_method: 'domain_email',
-          verification_started_at: new Date().toISOString(),
-          verification_proof: {
-            method: 'domain_email',
-            email: trimmed,
-            expected_code: generatedCode,
-            sent_at: new Date().toISOString(),
-          },
-        })
-        .eq('id', claimId);
-
-      // Send the verification email via edge function
-      const { error } = await supabase.functions.invoke('send-domain-verification', {
-        body: { email: trimmed, code: generatedCode, restaurantName },
+      const { data, error } = await supabase.functions.invoke('verify-claim', {
+        body: { action: 'send_domain_code', claimId, email: trimmed },
       });
-
       if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
 
       toast.success(`Verificatiecode verstuurd naar ${trimmed}`);
       setStep('enter_code');
-    } catch (error) {
-      console.error('Error sending verification email:', error);
-      toast.error('Kon verificatie-e-mail niet versturen. Probeer het opnieuw.');
+    } catch (err: any) {
+      console.error('Error sending verification email:', err);
+      toast.error(err?.message || 'Kon verificatie-e-mail niet versturen.');
     } finally {
       setSending(false);
     }
   };
 
   const handleVerifyCode = async () => {
-    if (code.trim() !== expectedCode) {
-      toast.error('Onjuiste code. Controleer je e-mail en probeer opnieuw.');
+    if (!/^\d{6}$/.test(code.trim())) {
+      toast.error('Voer de 6-cijferige code in.');
       return;
     }
 
     setVerifying(true);
     try {
-      // Update claim to verified
-      const { error: claimError } = await supabase
-        .from('restaurant_claims')
-        .update({
-          status: 'verified',
-          verification_method: 'domain_email',
-          verification_completed_at: new Date().toISOString(),
-          verification_proof: {
-            method: 'domain_email',
-            email: email.trim().toLowerCase(),
-            verified_at: new Date().toISOString(),
-          },
-          is_primary: true,
-        })
-        .eq('id', claimId);
-
-      if (claimError) throw claimError;
-
-      // Update restaurant status
-      await supabase
-        .from('restaurants')
-        .update({ claim_status: 'verified_owner', updated_at: new Date().toISOString() })
-        .eq('id', restaurantId);
-
-      // Add as primary owner
-      await supabase
-        .from('restaurant_managers')
-        .upsert({
-          restaurant_id: restaurantId,
-          user_id: user?.id,
-          role: 'primary_owner',
-          accepted_at: new Date().toISOString(),
-        }, { onConflict: 'restaurant_id,user_id' });
-
-      // Give owner role
-      const { data: existingRole } = await supabase
-        .from('user_roles')
-        .select('id')
-        .eq('user_id', user?.id)
-        .eq('role', 'owner')
-        .maybeSingle();
-
-      if (!existingRole) {
-        await supabase.from('user_roles').insert({ user_id: user?.id, role: 'owner' });
-      }
-
-      // Supersede other claims
-      await supabase
-        .from('restaurant_claims')
-        .update({ status: 'superseded' })
-        .eq('restaurant_id', restaurantId)
-        .neq('id', claimId);
-
-      // Log
-      await supabase.from('claim_activity_logs').insert({
-        actor_id: user?.id,
-        actor_role: 'user',
-        restaurant_id: restaurantId,
-        claim_id: claimId,
-        action_type: 'VERIFICATION_COMPLETED',
-        action_category: 'verification',
-        after_data: { method: 'domain_email', email: email.trim().toLowerCase() },
+      const { data, error } = await supabase.functions.invoke('verify-claim', {
+        body: { action: 'verify_domain_code', claimId, code: code.trim() },
       });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
 
       toast.success('Verificatie geslaagd! Je bent nu geverifieerde eigenaar.');
       onVerified();
-    } catch (error) {
-      console.error('Verification error:', error);
-      toast.error('Verificatie mislukt. Probeer het opnieuw.');
+    } catch (err: any) {
+      console.error('Verification error:', err);
+      toast.error(err?.message || 'Verificatie mislukt.');
     } finally {
       setVerifying(false);
     }
