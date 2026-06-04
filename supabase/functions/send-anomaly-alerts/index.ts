@@ -49,12 +49,21 @@ Deno.serve(async (req) => {
 
     const wk = weekStart();
 
-    // Owners opted out of anomaly alerts
-    const { data: optedOut } = await supabase
+    // Load all owner preferences relevant for anomaly alerts
+    const { data: prefRows } = await supabase
       .from('owner_email_preferences')
-      .select('user_id')
-      .eq('anomaly_alerts', false);
-    const skip = new Set((optedOut || []).map((r: any) => r.user_id));
+      .select('user_id, anomaly_alerts, anomaly_alert_frequency, anomaly_alert_severity');
+    const prefs = new Map<string, { enabled: boolean; freq: string; sev: string }>();
+    for (const p of (prefRows || []) as any[]) {
+      prefs.set(p.user_id, {
+        enabled: p.anomaly_alerts !== false,
+        freq: p.anomaly_alert_frequency ?? 'daily',
+        sev: p.anomaly_alert_severity ?? 'critical',
+      });
+    }
+
+    // For weekly mode we only send on Mondays (UTC)
+    const isMonday = new Date().getUTCDay() === 1;
 
     // Pro subscribers only — anomalies are a Pro feature
     const { data: proRows } = await supabase
@@ -79,7 +88,10 @@ Deno.serve(async (req) => {
 
     for (const r of (restaurants || []) as any[]) {
       const ownerId: string = r.claimed_by_owner_id;
-      if (!ownerId || skip.has(ownerId) || !proUsers.has(ownerId)) continue;
+      if (!ownerId || !proUsers.has(ownerId)) continue;
+      const p = prefs.get(ownerId) ?? { enabled: true, freq: 'daily', sev: 'critical' };
+      if (!p.enabled) continue;
+      if (p.freq === 'weekly' && !isMonday) continue;
       owners_checked++;
 
       const { data: rows, error } = await supabase.rpc('get_owner_funnel_anomalies' as any, {
@@ -87,8 +99,11 @@ Deno.serve(async (req) => {
       });
       if (error || !rows) continue;
 
-      const critical = (rows as AnomalyRow[]).filter((a) => a.severity === 'critical');
-      if (critical.length === 0) continue;
+      const includeWarning = p.sev === 'critical_and_warning';
+      const relevant = (rows as AnomalyRow[]).filter(
+        (a) => a.severity === 'critical' || (includeWarning && a.severity === 'warning')
+      );
+      if (relevant.length === 0) continue;
 
       // Dedup: filter out metrics already alerted this week
       const { data: existing } = await supabase
@@ -97,7 +112,7 @@ Deno.serve(async (req) => {
         .eq('restaurant_id', r.id)
         .eq('week_start', wk);
       const already = new Set((existing || []).map((e: any) => e.metric));
-      const fresh = critical.filter((a) => !already.has(a.metric));
+      const fresh = relevant.filter((a) => !already.has(a.metric));
       if (fresh.length === 0) {
         skipped_duplicates++;
         continue;
