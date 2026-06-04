@@ -1,63 +1,56 @@
+## Plan: 7 nieuwe features
 
-# Batch 3 & 4 — voorgesteld plan
+### 1. Eigenaar uploadt menu (PDF of CSV)
+Nieuwe component `src/components/owner/OwnerMenuUpload.tsx` toegevoegd aan de Menu-tab van `OwnerDashboard`.
+- **PDF**: uploadt naar `menus` storage bucket en roept bestaande edge function `parse-menu-pdf` aan (al gebouwd voor admin) — claim-vereist via `restaurant_claims`.
+- **CSV**: client-side parser (kolommen `name`, `price`, `description`, `category`, `is_signature`). Per rij `dishes` (upsert via slug) + `restaurant_dishes` (status `approved`, source `owner_csv`).
+- Template-knop "Download voorbeeld CSV".
+- Edge function `parse-menu-pdf` lichtjes uitgebreid: ook eigenaars (geclaimd restaurant) toestaan i.p.v. enkel admin.
 
-Vier richtingen gekozen. Om scope-creep te vermijden splits ik dit in twee leverbare batches met heldere acceptatiecriteria. We kunnen ook één van de batches eerst pakken.
+### 2. Admin foto's: filter "nog nooit opgehaald"
+Migratie: kolom `photos_fetched_at TIMESTAMPTZ NULL` op `restaurants`. `fetch-google-photos` zet die bij elke poging (success of no_photos).
+In `PhotosManager.tsx`: extra filter-toggle "Alleen nog nooit opgehaald" → query met `photos_fetched_at IS NULL`. Bestaande lijst blijft "geen foto's".
 
-## Batch 3 — Polish & a11y + Owner-groei tools
+### 3. Restaurants zonder foto's verbergen op de site
+Filter aan publieke queries:
+- `useSearch.ts`, `useRestaurant.ts` (alleen waar lijst-weergave), `Index.tsx` trending, `CityDetailPage`, `FeaturedRestaurantsSection`.
+- Conditie: `images is not null AND array_length(images,1) > 0`.
+- Restaurant met geen foto's geeft 404 op detailpagina (om dood-content te vermijden) — optioneel, kunnen we ook gewoon placeholder tonen. **Vraag aan jou:** detailpagina ook verbergen of alleen uit lijsten? Default: alleen uit lijsten en search.
 
-### A. Polish & a11y (sluit batch 1/2 af)
-1. **Consistente empty states** — één herbruikbare `<OwnerEmptyState />` component (icoon, kop, sub, optionele CTA) en deze toepassen op de tabs Overzicht, Content, Inzichten, Marketing, Markt, Facturen — i.p.v. lege grafieken / blanco panelen.
-2. **A11y pass** — focus-rings op alle interactieve elementen in het owner-shell, `aria-current` op sidebar items, `aria-live="polite"` voor toasts, labels op icon-only knoppen in de header, en `prefers-reduced-motion` respecteren voor framer-motion in DailyBriefing/ProfileCompletenessCard.
-3. **Dark mode parity** — DailyBriefing gradient en sparkline checken in dark mode (nu hardcoded white-tints).
-4. **Toetsenbord** — Esc sluit popovers (restaurant picker, share menu), Tab-volgorde top-to-bottom binnen het shell, skip-link "Direct naar inhoud".
+### 4. CSV-download: restaurants zonder foto's
+Knop in `PhotosManager.tsx` "Exporteer naar CSV" → `name, address, city, phone, website, place_id` van de huidige lijst.
 
-### B. Owner-groei tools (nieuwe Marketing-tab features)
-5. **Reputatie-widget / embed** — generator die een knip-en-plak `<script>` snippet en `<iframe>` levert die een mini-kaart toont met sterren + "Bekijk op Dishloopr". Edge function `og-reputation-widget` rendert SVG/HTML uit `restaurants` + aggregated `reviews`. Geen tracking-cookies.
-6. **Branded QR-prints** — uitbreiding van bestaande `QRCodeGenerator` met PDF-export (A6/A5 tafelkaart + A4 poster) inclusief restaurantnaam en korte CTA. Client-side via `jspdf` (al niet aanwezig, alleen toevoegen als je akkoord bent met dependency).
-7. **Referral / vrienden-uitnodigen** — owners krijgen een persoonlijke referral-link `?ref=owner_<id>`. Nieuwe tabel `owner_referrals(referrer_id, referred_user_id, restaurant_id, created_at, status)` + RLS. Owner dashboard toont aantal aangemelde gebruikers en status. Beloning later (geen Stripe-credits in deze ronde, eerst tracking).
-8. **Eigen-gasten mail-campagne builder** — owners kunnen één e-mail per maand naar gasten die expliciet hebben opt-in'd via een review-followup checkbox. Hergebruikt `send-restaurant-bulk-email`. Nieuwe tabel `restaurant_guest_subscribers` + RLS (alleen owner van het restaurant ziet eigen lijst).
+### 5. Volledige admin-data CSV export (incl. discovery)
+`DataExportManager.tsx` uitbreiden met extra exports:
+- `restaurant_discoveries` (discovery queue)
+- `restaurant_claims`, `restaurant_suggestions` (nieuw, zie #7)
+- `reviews`, `users` (profielen), `user_roles`, `featured_subscriptions`, `sponsored_products`, `newsletter_subscribers`, `click_events`, `view_events`.
+Per export: keuze CSV/JSON, batch via bestaande `fetchAllRows`.
 
-> Acceptatie B: alle vier features verschijnen in Marketing-tab, gated achter `<ProGate enforced={false}>` voor non-Pro met `showBadge` (zodat ze het zien én weten wat ze missen).
+### 6. Afstandsfilter "max X min vanaf stad"
+In `FilterPopover` nieuw veld "Max afstand vanaf stad" (slider 0–60 km, of "Alleen in stad"). Default 0 = alleen in stad.
+- Logic in `useSearch.ts`: als radius > 0 en `cityId` gekozen → haal stad-coords (`cities.lat/lng`), filter restaurants binnen radius via `calculateDistance` (al beschikbaar in `useGeolocation.ts`).
+- Conversie: 15 min auto ≈ 15 km (configureerbare constante). UI toont km, label "± 15 km (≈ 15 min)".
+- URL-param `radius=15` toegevoegd voor deelbare links.
 
----
+### 7. Publieke restaurant-suggestie
+- Nieuwe tabel `restaurant_suggestions` (name, address, city, website, notes, suggested_by uuid nullable, status pending/approved/rejected, created_at).
+- RLS: iedereen INSERT (rate-limit via simpele app-laag op IP via header), alleen admin SELECT/UPDATE.
+- Publieke pagina/route `/suggest-restaurant` (of dialog vanaf `AddRestaurantPage` voor niet-eigenaars): formulier met zod-validatie, captcha optioneel later.
+- Admin-panel: nieuwe sectie `RestaurantSuggestionsQueue.tsx` met goedkeuren (→ pre-fill in `RestaurantDiscovery` / `AddRestaurantModal`) of afwijzen.
+- BottomNav/Footer-link "Suggereer restaurant".
 
-## Batch 4 — Pro-tier monetization + Diepere inzichten
+### Migraties
+1. `restaurants.photos_fetched_at` (#2)
+2. `restaurant_suggestions` tabel + GRANT + RLS (#7)
 
-### C. Pro-tier monetization (Stripe — losse run, los van bestaande Stripe-features)
-9. **Stripe product + price** — recurring price `Owner Pro` (maandelijks + jaarlijks). Aanmaken via `create_stripe_product_and_price`.
-10. **Edge functions**
-    - `create-owner-pro-checkout` — start checkout sessie (mode: subscription), retourneert URL.
-    - `owner-pro-portal` — opent Stripe Billing Portal voor de owner.
-    - `check-owner-pro-status` — controleert en synct subscription status per call (geen webhook nodig — volgens jouw bestaande patroon van Stripe-features).
-11. **Tabel** — `owner_pro_subscriptions(user_id, stripe_subscription_id, stripe_customer_id, status, current_period_end, created_at, updated_at)` met RLS (eigen rij select; service_role full).
-12. **Hook `useOwnerTier` upgrade** — leest nu uit (mock?) → nu uit `owner_pro_subscriptions` joined op `auth.uid()`. Cache 60s.
-13. **Paywall flow** — `<ProGate enforced={true}>` toont een knop "Upgrade naar Pro €X/maand" die `create-owner-pro-checkout` invokeert; success redirect naar `/owner-dashboard?upgrade=success`, dashboard toont confetti-toast.
-14. **Prijsbepaling** — vraag aan jou: maandelijks bedrag (suggestie €29/maand of €290/jaar), en welke features écht achter `enforced={true}` komen (nu staat alles op `enforced={false}` = teaser-modus).
+### Volgorde van bouwen
+1. Migraties (#2, #7)
+2. Backend uitbreidingen (`parse-menu-pdf` owner-toegang, `fetch-google-photos` timestamp)
+3. Admin: PhotosManager filter + CSV + DataExportManager uitbreiding + SuggestionsQueue
+4. Site-filtering (#3)
+5. Owner menu-upload component
+6. Distance-filter in search
+7. Publieke suggestion-flow
 
-### D. Diepere inzichten (Inzichten-tab uitbreiden)
-15. **Cohort-analyse gasten** — heatmap nieuwe vs. terugkerende viewers per week (op basis van `analytics_events.session_id` + `user_id`). View `restaurant_guest_cohorts` (security_invoker).
-16. **Conversie-attributie per kanaal** — funnel view per `utm_source` (qr / whatsapp / copy / share-widget) → views → clicks → contact. Geen nieuwe edge function; aggregatie via RPC `owner_attribution(restaurant_id)`.
-17. **"Wat te doen deze week"** — AI-aanbeveling kaart via Lovable AI Gateway (Gemini 2.5 Flash). Edge function `owner-weekly-recommendation` neemt de laatste 7 dagen analytics + reviews + suggestie-data en geeft 3 concrete acties terug. Cached per restaurant per week.
-18. **Benchmark vs eigen historie** — bestaande StatCard krijgt optionele "vorig jaar deze tijd" lijn in sparkline + tooltip "Je doet het X% beter dan vorig kwartaal".
-
-> Acceptatie D: alles in Inzichten-tab, items 15-17 achter `<ProGate enforced={true}>` na Batch 4-C, item 18 voor iedereen.
-
----
-
-## Voorgestelde volgorde
-
-```text
-Stap 1 → Batch 3-A (polish & a11y)        ~ 1 ronde, geen DB-wijziging
-Stap 2 → Batch 3-B (owner-groei)          ~ 2 rondes, 2 nieuwe tabellen + migraties
-Stap 3 → Batch 4-C (Pro monetization)     ~ 2 rondes, 1 tabel + 3 edge functions + Stripe product
-Stap 4 → Batch 4-D (diepere inzichten)    ~ 2 rondes, 1 view + 1 RPC + 1 edge function
-```
-
-## Beslispunten vóór ik begin
-
-1. **Volgorde** akkoord, of liever eerst Pro-monetization (C) om revenue te starten?
-2. **Pro-prijs** — €29/maand + €290/jaar oké, of andere bedragen?
-3. **Welke huidige features** moeten echt locked worden (enforced=true) en welke blijven teaser?
-4. **Owner-groei dependencies** — mag ik `jspdf` toevoegen voor QR-prints, of alleen PNG-download?
-
-Zodra je deze vier punten beantwoordt start ik met Stap 1 (polish & a11y), die geen externe beslissingen nodig heeft, en parallel reken ik mee aan de DB-migraties voor Stap 2.
+Wil je dat detailpagina van een restaurant zonder foto's óók verborgen wordt (#3), of alleen uit lijsten/search?
