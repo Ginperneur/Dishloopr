@@ -111,6 +111,7 @@ import { LoyaltyProgramManager } from '@/components/owner/LoyaltyProgramManager'
 import { SocialPostGenerator } from '@/components/owner/SocialPostGenerator';
 import { UpgradeToProCard } from '@/components/owner/UpgradeToProCard';
 import { ProPaywall } from '@/components/owner/ProPaywall';
+import { ProUpsellBanner } from '@/components/owner/ProUpsellBanner';
 import { useOwnerTier } from '@/hooks/useOwnerTier';
 import { OpeningHoursExceptions } from '@/components/owner/OpeningHoursExceptions';
 import { MultiLanguageProfile } from '@/components/owner/MultiLanguageProfile';
