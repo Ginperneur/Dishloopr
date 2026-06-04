@@ -160,22 +160,52 @@ export function useMarketInsights(restaurantId?: string, cityId?: string, cuisin
       .order('created_at', { ascending: false })
       .limit(5);
 
-    if (sponsored) {
-      sponsored.forEach((purchase: any) => {
-        const dishName = purchase.product?.dish_id?.name || 'Gerecht';
-        results.push({
-          type: 'sponsored',
-          label: `Gesponsord: ${dishName}`,
-          totalSpent: purchase.price_paid || 0,
-          totalViews: 0, // We don't track views on sponsored yet
-          totalClicks: 0,
-          ctr: 0,
-          costPerClick: 0,
-          status: purchase.is_active ? 'active' : 'expired',
-          startDate: purchase.starts_at,
-          endDate: purchase.expires_at,
-        });
-      });
+    if (sponsored && sponsored.length > 0) {
+      // Approximate ROI: count restaurant views/clicks within the sponsored window
+      const sponsoredWithStats = await Promise.all(
+        sponsored.map(async (purchase: any) => {
+          const dishName = purchase.product?.dish_id?.name || 'Gerecht';
+          const startsAt = purchase.starts_at || purchase.created_at;
+          const expiresAt = purchase.expires_at || new Date().toISOString();
+
+          const [viewsRes, clicksRes] = await Promise.all([
+            supabase
+              .from('analytics_events')
+              .select('id', { count: 'exact', head: true })
+              .eq('restaurant_id', restaurantId)
+              .eq('event_type', 'view')
+              .gte('created_at', startsAt)
+              .lte('created_at', expiresAt),
+            supabase
+              .from('analytics_events')
+              .select('id', { count: 'exact', head: true })
+              .eq('restaurant_id', restaurantId)
+              .eq('event_type', 'click')
+              .gte('created_at', startsAt)
+              .lte('created_at', expiresAt),
+          ]);
+
+          const totalViews = viewsRes.count || 0;
+          const totalClicks = clicksRes.count || 0;
+          const ctr = totalViews > 0 ? (totalClicks / totalViews) * 100 : 0;
+          const totalSpent = purchase.price_paid || 0;
+          const costPerClick = totalClicks > 0 ? totalSpent / totalClicks : 0;
+
+          return {
+            type: 'sponsored' as const,
+            label: `Gesponsord: ${dishName}`,
+            totalSpent,
+            totalViews,
+            totalClicks,
+            ctr: Math.round(ctr * 10) / 10,
+            costPerClick: Math.round(costPerClick * 100) / 100,
+            status: purchase.is_active ? 'active' : 'expired',
+            startDate: purchase.starts_at,
+            endDate: purchase.expires_at,
+          };
+        })
+      );
+      results.push(...sponsoredWithStats);
     }
 
     setPromotionROI(results);
