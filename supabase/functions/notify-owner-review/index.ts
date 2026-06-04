@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
             </div>
             <p style="color: #666; font-size: 14px;">
               Je kunt reageren op deze review via je 
-              <a href="https://dishloopr.com/owner" style="color: #E8590C;">eigenaarsdashboard</a>.
+              <a href="https://dishloopr.com/dashboard" style="color: #E8590C;">eigenaarsdashboard</a>.
             </p>
           </div>
         `,
