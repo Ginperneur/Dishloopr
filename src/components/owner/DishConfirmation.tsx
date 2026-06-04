@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Check, X, Plus, Loader2, ChefHat, AlertCircle, Search, Leaf, Wheat, Star } from 'lucide-react';
+import { Check, X, Plus, Loader2, ChefHat, AlertCircle, Search, Leaf, Wheat, Star, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { cn, formatDishName } from '@/lib/utils';
@@ -45,6 +45,7 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
   const [newDishName, setNewDishName] = useState('');
   const [newDishNameEn, setNewDishNameEn] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [isClassifying, setIsClassifying] = useState(false);
 
   const suggestedDishes = dishes.filter((d) => d.status === 'suggested');
   const confirmedDishes = dishes.filter((d) => 
@@ -80,6 +81,51 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
 
   const handleReject = async (id: string) => {
     await rejectDish(id, 'Afgewezen door eigenaar');
+  };
+
+  const handleAutoClassify = async () => {
+    if (confirmedDishes.length === 0) return;
+    setIsClassifying(true);
+    try {
+      const dishIds = confirmedDishes.map((d) => d.dish_id).filter(Boolean);
+      const { data: dishData, error } = await supabase
+        .from('dishes')
+        .select('id, is_vegetarian, is_vegan, is_gluten_free, is_halal')
+        .in('id', dishIds);
+      if (error) throw error;
+
+      const dishMap = new Map((dishData || []).map((d: any) => [d.id, d]));
+      let updated = 0;
+
+      await Promise.all(
+        confirmedDishes.map(async (item: any) => {
+          const ref = dishMap.get(item.dish_id);
+          if (!ref) return;
+          const patch: Record<string, boolean> = {};
+          // Only enable flags; never overwrite an owner's manual toggle to false.
+          if ((ref.is_vegetarian || ref.is_vegan) && !item.is_vegetarian) patch.is_vegetarian = true;
+          if (ref.is_gluten_free && !item.is_gluten_free) patch.is_gluten_free = true;
+          if (ref.is_halal && !item.is_halal) patch.is_halal = true;
+          if (Object.keys(patch).length === 0) return;
+          const { error: upErr } = await supabase
+            .from('restaurant_dishes')
+            .update(patch)
+            .eq('id', item.id);
+          if (!upErr) updated += 1;
+        }),
+      );
+
+      toast.success(
+        updated > 0
+          ? (isNL ? `${updated} gerechten automatisch geclassificeerd` : `${updated} dishes auto-classified`)
+          : (isNL ? 'Alles was al up-to-date' : 'Everything was already up to date'),
+      );
+      refetch();
+    } catch {
+      toast.error(isNL ? 'Auto-classificatie mislukt' : 'Auto-classification failed');
+    } finally {
+      setIsClassifying(false);
+    }
   };
 
   const generateSlug = (name: string) => {
@@ -269,12 +315,48 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
                 : `Manage dishes, mark up to ${SIGNATURE_MAX} as "Known for" (${signatureCount}/${SIGNATURE_MAX})`}
             </CardDescription>
           </div>
-          <Button onClick={() => setAddDishOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            {isNL ? 'Gerecht Toevoegen' : 'Add Dish'}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleAutoClassify}
+              disabled={isClassifying || confirmedDishes.length === 0}
+              title={isNL
+                ? 'Vul vegetarisch / glutenvrij / halal automatisch in op basis van het gerecht'
+                : 'Auto-fill vegetarian / gluten-free / halal based on the dish'}
+            >
+              {isClassifying
+                ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                : <Sparkles className="w-4 h-4 mr-2" />}
+              {isNL ? 'Auto-classificeren' : 'Auto-classify'}
+            </Button>
+            <Button onClick={() => setAddDishOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              {isNL ? 'Gerecht Toevoegen' : 'Add Dish'}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
+          {/* Legend */}
+          {confirmedDishes.length > 0 && (
+            <div className="mb-4 rounded-lg border bg-muted/30 p-3">
+              <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+                {isNL ? 'Legenda' : 'Legend'}
+              </p>
+              <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5"><span>🥗</span>{isNL ? 'Voorgerecht' : 'Starter'}</span>
+                <span className="inline-flex items-center gap-1.5"><span>🍽️</span>{isNL ? 'Hoofdgerecht' : 'Main'}</span>
+                <span className="inline-flex items-center gap-1.5"><span>🍰</span>{isNL ? 'Dessert' : 'Dessert'}</span>
+                <span className="inline-flex items-center gap-1.5"><span>🥙</span>{isNL ? 'Bijgerecht' : 'Side'}</span>
+                <span className="inline-flex items-center gap-1.5"><span>🥤</span>{isNL ? 'Drank' : 'Drink'}</span>
+                <span className="inline-flex items-center gap-1.5"><Star className="h-3.5 w-3.5 fill-primary text-primary" />{isNL ? 'Bekend om' : 'Known for'}</span>
+                <span className="inline-flex items-center gap-1.5"><Leaf className="h-3.5 w-3.5 text-green-600" />{isNL ? 'Vegetarisch' : 'Vegetarian'}</span>
+                <span className="inline-flex items-center gap-1.5"><Wheat className="h-3.5 w-3.5 text-amber-600" />{isNL ? 'Glutenvrij' : 'Gluten-free'}</span>
+                <span className="inline-flex items-center gap-1.5"><span>☪️</span>Halal</span>
+                <span className="inline-flex items-center gap-1.5"><X className="h-3.5 w-3.5" />{isNL ? 'Verwijderen' : 'Remove'}</span>
+              </div>
+            </div>
+          )}
+
           {confirmedDishes.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <AlertCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
