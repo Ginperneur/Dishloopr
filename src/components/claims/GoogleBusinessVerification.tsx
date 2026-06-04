@@ -39,32 +39,21 @@ export function GoogleBusinessVerification({
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Generate a unique verification code for this user/restaurant combination
   const generateVerificationCode = async () => {
     setGenerating(true);
     try {
-      // Generate a unique code based on user ID and timestamp
-      const code = `DISH-${user?.id?.slice(0, 4).toUpperCase()}-${Date.now().toString(36).toUpperCase().slice(-4)}`;
-      setExpectedCode(code);
-      
-      // Store the expected code in the claim for later verification
-      const { error } = await supabase
-        .from('restaurant_claims')
-        .update({
-          verification_proof: { 
-            method: 'google_business',
-            expected_code: code,
-            generated_at: new Date().toISOString()
-          }
-        })
-        .eq('id', claimId);
-
+      const { data, error } = await supabase.functions.invoke('verify-claim', {
+        body: { action: 'start_google_verification', claimId },
+      });
       if (error) throw error;
-      
+      const payload = data as any;
+      if (payload?.error) throw new Error(payload.error);
+      if (!payload?.code) throw new Error('Geen code ontvangen');
+      setExpectedCode(payload.code);
       setStep('code_entry');
-    } catch (error) {
-      console.error('Error generating code:', error);
-      toast.error('Kon verificatiecode niet genereren');
+    } catch (err: any) {
+      console.error('Error generating code:', err);
+      toast.error(err?.message || 'Kon verificatiecode niet genereren');
     } finally {
       setGenerating(false);
     }
@@ -83,7 +72,7 @@ export function GoogleBusinessVerification({
       return;
     }
 
-    // Check if the entered code matches (case-insensitive)
+    // Local sanity-check only — real check happens server-side after manual admin review.
     if (verificationCode.trim().toUpperCase() !== expectedCode.toUpperCase()) {
       toast.error('De code komt niet overeen. Controleer je Google Business profiel.');
       return;
@@ -91,86 +80,17 @@ export function GoogleBusinessVerification({
 
     setVerifying(true);
     try {
-      // Update the claim with verification completed
-      const { error: claimError } = await supabase
-        .from('restaurant_claims')
-        .update({
-          status: 'verified',
-          verification_method: 'google_business',
-          verification_completed_at: new Date().toISOString(),
-          verification_proof: {
-            method: 'google_business',
-            verified_code: verificationCode,
-            verified_at: new Date().toISOString()
-          },
-          is_primary: true,
-        })
-        .eq('id', claimId);
+      const { data, error } = await supabase.functions.invoke('verify-claim', {
+        body: { action: 'submit_google_for_review', claimId },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
 
-      if (claimError) throw claimError;
-
-      // Update restaurant status to verified_owner
-      const { error: restaurantError } = await supabase
-        .from('restaurants')
-        .update({ 
-          claim_status: 'verified_owner',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', restaurantId);
-
-      if (restaurantError) throw restaurantError;
-
-      // Add user as primary owner in managers table
-      const { error: managerError } = await supabase
-        .from('restaurant_managers')
-        .upsert({
-          restaurant_id: restaurantId,
-          user_id: user?.id,
-          role: 'primary_owner',
-          accepted_at: new Date().toISOString(),
-        }, { onConflict: 'restaurant_id,user_id' });
-
-      if (managerError) console.error('Error adding manager:', managerError);
-
-      // Give user the owner role if they don't have it
-      const { data: existingRole } = await supabase
-        .from('user_roles')
-        .select('id')
-        .eq('user_id', user?.id)
-        .eq('role', 'owner')
-        .maybeSingle();
-
-      if (!existingRole) {
-        await supabase
-          .from('user_roles')
-          .insert({ user_id: user?.id, role: 'owner' });
-      }
-
-      // Mark any other claims as superseded
-      await supabase
-        .from('restaurant_claims')
-        .update({ status: 'superseded' })
-        .eq('restaurant_id', restaurantId)
-        .neq('id', claimId);
-
-      // Log activity
-      await supabase
-        .from('claim_activity_logs')
-        .insert({
-          actor_id: user?.id,
-          actor_role: 'user',
-          restaurant_id: restaurantId,
-          claim_id: claimId,
-          action_type: 'VERIFICATION_COMPLETED',
-          action_category: 'verification',
-          after_data: { method: 'google_business' },
-        });
-
-      toast.success('Verificatie geslaagd! Je bent nu geverifieerde eigenaar.');
+      toast.success('Aanvraag ingediend! Een admin controleert je Google Business profiel binnen 1-2 werkdagen.');
       onVerified();
-    } catch (error) {
-      console.error('Verification error:', error);
-      toast.error('Verificatie mislukt. Probeer het opnieuw.');
+    } catch (err: any) {
+      console.error('Verification error:', err);
+      toast.error(err?.message || 'Verificatie mislukt.');
     } finally {
       setVerifying(false);
     }

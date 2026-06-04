@@ -1,8 +1,17 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
+  const __rl = await enforceRateLimit(req, {
+    functionName: "generate-review-response",
+    isAi: true,
+    user: { max: 15, window: 1800 },
+    anon: { max: 0, window: 3600 },
+  });
+  if (!__rl.allowed && __rl.response) return __rl.response;
 
   try {
     const authHeader = req.headers.get('Authorization');

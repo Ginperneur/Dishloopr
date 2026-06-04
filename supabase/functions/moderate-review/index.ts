@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -15,6 +16,14 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const __rl = await enforceRateLimit(req, {
+    functionName: "moderate-review",
+    isAi: true,
+    user: { max: 30, window: 1800 },
+    anon: { max: 10, window: 3600 },
+  });
+  if (!__rl.allowed && __rl.response) return __rl.response;
 
   try {
     const { title, body, rating } = await req.json();
