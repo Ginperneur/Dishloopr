@@ -133,6 +133,8 @@ export function Header() {
               <button
                 key={lang.code}
                 onClick={() => i18n.changeLanguage(lang.code)}
+                aria-label={`${t('home.language', 'Taal')}: ${lang.label}`}
+                aria-pressed={i18n.language === lang.code}
                 className={`px-2 py-1 text-xs font-semibold rounded-md transition-colors ${
                   i18n.language === lang.code
                     ? 'bg-primary text-primary-foreground'
@@ -297,6 +299,8 @@ export function Header() {
                     <button
                       key={lang.code}
                       onClick={() => i18n.changeLanguage(lang.code)}
+                      aria-label={`${t('home.language', 'Taal')}: ${lang.label}`}
+                      aria-pressed={i18n.language === lang.code}
                       className={`px-3 py-1.5 text-sm font-semibold rounded-lg transition-colors ${
                         i18n.language === lang.code
                           ? 'bg-primary text-primary-foreground'
