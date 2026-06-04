@@ -1087,6 +1087,7 @@ export default function OwnerDashboard() {
               <ProPaywall
                 featureName="Inzichten & Analytics"
                 description="Begrijp precies hoe gasten je restaurant vinden, wat ze bestellen en waar je groei laat liggen."
+                previewVariant="insights"
                 benefits={[
                   'Volledige prestatie-analytics: weergaven, kliks en conversies per dag',
                   'Live zoekpositie en zoektermen waarop je gevonden wordt',
@@ -1344,6 +1345,7 @@ export default function OwnerDashboard() {
               <ProPaywall
                 featureName="Markt & Concurrentie"
                 description="Zie precies hoe je presteert ten opzichte van de concurrentie in jouw buurt en stad."
+                previewVariant="market"
                 benefits={[
                   'Buurtanalyse: vergelijk rating, reviews en prijsniveau van directe concurrenten',
                   'Competitor benchmark op keuken, stad en prijsklasse',
