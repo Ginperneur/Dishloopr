@@ -1721,6 +1721,8 @@ export type Database = {
       }
       owner_email_preferences: {
         Row: {
+          anomaly_alert_frequency: string
+          anomaly_alert_severity: string
           anomaly_alerts: boolean
           created_at: string
           updated_at: string
@@ -1728,6 +1730,8 @@ export type Database = {
           weekly_report: boolean
         }
         Insert: {
+          anomaly_alert_frequency?: string
+          anomaly_alert_severity?: string
           anomaly_alerts?: boolean
           created_at?: string
           updated_at?: string
@@ -1735,6 +1739,8 @@ export type Database = {
           weekly_report?: boolean
         }
         Update: {
+          anomaly_alert_frequency?: string
+          anomaly_alert_severity?: string
           anomaly_alerts?: boolean
           created_at?: string
           updated_at?: string
