@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -95,7 +95,9 @@ export function RestaurantDiscovery() {
   const [bulkCategories, setBulkCategories] = useState<Array<'restaurant' | 'cafe' | 'bakery'>>(['restaurant', 'cafe', 'bakery']);
 
   // Search + multi-select for queue
+  const [queueSearchInput, setQueueSearchInput] = useState<string>('');
   const [queueSearch, setQueueSearch] = useState<string>('');
+  const loadSeqRef = useRef(0);
   const SELECTION_STORAGE_KEY = 'discovery_selected_ids';
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => {
     try {
@@ -217,7 +219,14 @@ export function RestaurantDiscovery() {
     } catch {}
   }, [selectedIds]);
 
+  // Debounce search input → query (avoids per-keystroke fetch + re-render churn)
+  useEffect(() => {
+    const t = setTimeout(() => setQueueSearch(queueSearchInput.trim()), 350);
+    return () => clearTimeout(t);
+  }, [queueSearchInput]);
+
   const loadData = async () => {
+    const seq = ++loadSeqRef.current;
     setLoading(true);
 
     let queueQuery = supabase
@@ -257,6 +266,9 @@ export function RestaurantDiscovery() {
       countByStatus('duplicate'),
       countByStatus('rejected'),
     ]);
+
+    // Ignore stale responses (newer query already kicked off)
+    if (seq !== loadSeqRef.current) return;
 
     if (citiesRes.data) setCities(citiesRes.data);
     if (gpRes.data) setGridPoints(gpRes.data as GridPoint[]);
@@ -835,8 +847,8 @@ export function RestaurantDiscovery() {
                   <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Zoek op naam of adres..."
-                    value={queueSearch}
-                    onChange={(e) => setQueueSearch(e.target.value)}
+                    value={queueSearchInput}
+                    onChange={(e) => setQueueSearchInput(e.target.value)}
                     className="pl-8"
                   />
                 </div>
