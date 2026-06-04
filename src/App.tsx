@@ -33,6 +33,8 @@ const TermsPage = lazy(() => import("./pages/TermsPage"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const ClaimPage = lazy(() => import("./pages/ClaimPage"));
 const FavoritesPage = lazy(() => import("./pages/FavoritesPage"));
+const ListsPage = lazy(() => import("./pages/ListsPage"));
+const ListDetailPage = lazy(() => import("./pages/ListDetailPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const AccountPage = lazy(() => import("./pages/AccountPage"));
 const InsightsPage = lazy(() => import("./pages/InsightsPage"));
@@ -115,6 +117,8 @@ const App = () => (
                   <Route path="/add-restaurant" element={<AddRestaurantPage />} />
                   <Route path="/suggest-restaurant" element={<SuggestRestaurantPage />} />
                   <Route path="/favorites" element={<FavoritesPage />} />
+                  <Route path="/lists" element={<ListsPage />} />
+                  <Route path="/lists/:id" element={<ListDetailPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/account" element={<AccountPage />} />
                   <Route path="/insights" element={<InsightsPage />} />
