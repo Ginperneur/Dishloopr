@@ -229,6 +229,31 @@ Deno.serve(async (req) => {
     }
 
     // ============================================
+    // STEP 4c: Detect reservation links (Zenchef, TheFork, OpenTable, ...)
+    // ============================================
+    if (websiteUrl) {
+      try {
+        const resvRes = await fetch(`${supabaseUrl}/functions/v1/detect-reservation-links`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${serviceKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ restaurantId, forceRefresh: true }),
+        });
+        const resvData = await resvRes.json().catch(() => ({}));
+        const found = resvData?.results?.[0];
+        steps.push({
+          step: 'detect_reservation',
+          ok: resvRes.ok && found?.status === 'found',
+          detail: found?.status === 'found' ? `${found.provider}` : (found?.status || 'no_provider'),
+        });
+      } catch (e: any) {
+        steps.push({ step: 'detect_reservation', ok: false, detail: e.message });
+      }
+    }
+
+    // ============================================
     // STEP 4b: Fetch Google photos (if none yet)
     // ============================================
     try {

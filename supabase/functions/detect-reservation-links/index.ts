@@ -86,15 +86,43 @@ Deno.serve(async (req) => {
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-    const authClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!);
-    const { data: { user } } = await authClient.auth.getUser(authHeader.replace('Bearer ', ''));
-    if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
-    if (!isAdmin) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-
+    const token = authHeader.replace('Bearer ', '');
     const body = await req.json().catch(() => ({}));
-    const batchSize: number = Math.min(body.batchSize || 25, 50);
     const restaurantId: string | undefined = body.restaurantId;
+
+    // Allow service-role internal calls (used by triggers/other edge functions)
+    const isServiceCall = token === supabaseKey;
+    if (!isServiceCall) {
+      const authClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!);
+      const { data: { user } } = await authClient.auth.getUser(token);
+      if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
+      if (!isAdmin) {
+        // Allow owners/managers to scan their own single restaurant
+        if (!restaurantId) {
+          return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+        const { data: hasAccess } = await supabase.rpc('has_restaurant_access', {
+          _user_id: user.id,
+          _restaurant_id: restaurantId,
+          _min_role: 'editor',
+        });
+        let allowed = !!hasAccess;
+        if (!allowed) {
+          const { data: rest } = await supabase
+            .from('restaurants')
+            .select('claimed_by_owner_id')
+            .eq('id', restaurantId)
+            .maybeSingle();
+          if (rest?.claimed_by_owner_id === user.id) allowed = true;
+        }
+        if (!allowed) {
+          return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      }
+    }
+
+    const batchSize: number = Math.min(body.batchSize || 25, 50);
     const forceRefresh: boolean = !!body.forceRefresh;
 
     // Build candidate list

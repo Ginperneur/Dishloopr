@@ -340,6 +340,13 @@ export default function AddRestaurantPage() {
         }).catch(err => console.error('Failed to fetch photos:', err));
       }
 
+      // Auto-detect reservation provider in background (Zenchef/TheFork/OpenTable/...)
+      if (formData.website) {
+        supabase.functions.invoke('detect-reservation-links', {
+          body: { restaurantId: restaurant.id, forceRefresh: true },
+        }).catch(err => console.error('Failed to detect reservation link:', err));
+      }
+
       setStep('done');
       toast.success('Restaurant ingediend voor review!');
       // Auto-send magic link so the owner has a one-click way back to the dashboard
