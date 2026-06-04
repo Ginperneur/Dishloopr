@@ -85,6 +85,27 @@ export default function TermsPage() {
             </section>
 
             <section>
+              <h2 className="text-2xl font-semibold mb-4">7a. Herroepingsrecht (consumenten)</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Consumenten in de EU hebben in principe 14 dagen herroepingsrecht bij online aankopen.
+                Bij betaalde digitale diensten (zoals premium-listings, claim-verificatie en nieuwsbriefcampagnes)
+                start de dienst direct na betaling op jouw uitdrukkelijk verzoek; je doet daarmee afstand van het
+                herroepingsrecht voor reeds geleverde dienstdelen. Reeds gepubliceerde plaatsingen en verstuurde
+                campagnes worden niet gerestitueerd.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4">7b. Toepasselijk recht en geschillen</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Op deze voorwaarden is Nederlands recht van toepassing. Geschillen worden voorgelegd aan de
+                bevoegde rechter in Nederland, tenzij dwingend consumentenrecht anders bepaalt. Consumenten
+                kunnen ook gebruik maken van het ODR-platform van de Europese Commissie
+                (ec.europa.eu/consumers/odr).
+              </p>
+            </section>
+
+            <section>
               <h2 className="text-2xl font-semibold mb-4">8. Contact</h2>
               <p className="text-muted-foreground leading-relaxed">
               Voor vragen over deze voorwaarden kun je contact opnemen via{' '}

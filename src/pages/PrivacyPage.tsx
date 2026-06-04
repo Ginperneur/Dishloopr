@@ -35,6 +35,25 @@ export default function PrivacyPage() {
             </section>
 
             <section>
+              <h2 className="text-2xl font-semibold mb-4">1a. Verwerkingsverantwoordelijke</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Verwerkingsverantwoordelijke in de zin van de AVG is Dishloopr, gevestigd in Nederland.
+                Voor vragen of verzoeken kun je contact opnemen via{' '}
+                <a href="mailto:privacy@dishloopr.com" className="text-primary hover:underline">privacy@dishloopr.com</a>.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4">1b. Grondslagen voor verwerking (AVG art. 6)</h2>
+              <ul className="text-muted-foreground space-y-2">
+                <li><strong>Uitvoering overeenkomst:</strong> account, reviews, favorieten, lijsten.</li>
+                <li><strong>Gerechtvaardigd belang:</strong> beveiliging, fraudepreventie, productverbetering en geaggregeerde analyse.</li>
+                <li><strong>Toestemming:</strong> optionele analytics, marketing e-mails en cookies (in te trekken via je instellingen of de cookie-banner).</li>
+                <li><strong>Wettelijke verplichting:</strong> fiscale en boekhoudkundige bewaarplicht voor betaalde diensten.</li>
+              </ul>
+            </section>
+
+            <section>
               <h2 className="text-2xl font-semibold mb-4">2. Welke gegevens verzamelen wij?</h2>
               <ul className="text-muted-foreground space-y-2">
                 <li><strong>Accountgegevens:</strong> naam, e-mailadres, en eventueel profielfoto</li>
@@ -61,9 +80,17 @@ export default function PrivacyPage() {
                 Wij verkopen je gegevens niet aan derden. Wij delen gegevens alleen met:
               </p>
               <ul className="text-muted-foreground space-y-2 mt-2">
-                <li>Dienstverleners die ons helpen de service te leveren (hosting, analytics)</li>
-                <li>Wanneer wettelijk vereist of ter bescherming van rechten</li>
+                <li><strong>Supabase</strong> (database, authenticatie, opslag, edge functions) — verwerker, EU-regio.</li>
+                <li><strong>Resend</strong> — transactionele en marketing e-mails.</li>
+                <li><strong>Stripe</strong> — betalingen voor premium diensten en abonnementen.</li>
+                <li><strong>Google Maps & Places</strong> — kaarten en restaurantverrijking.</li>
+                <li><strong>Lovable AI Gateway</strong> — AI-functies zoals "Surprise Me" en classificatie.</li>
+                <li>Wanneer wettelijk vereist of ter bescherming van rechten.</li>
               </ul>
+              <p className="text-muted-foreground leading-relaxed mt-4">
+                Sommige verwerkers (bv. Stripe, Google) kunnen gegevens buiten de EER verwerken. Doorgifte vindt plaats
+                op basis van Standard Contractual Clauses (SCC's) van de Europese Commissie.
+              </p>
             </section>
 
             <section>
@@ -80,11 +107,16 @@ export default function PrivacyPage() {
                 Je hebt het recht om:
               </p>
               <ul className="text-muted-foreground space-y-2 mt-2">
-                <li>Je gegevens in te zien, te corrigeren of te laten verwijderen</li>
-                <li>Bezwaar te maken tegen verwerking</li>
-                <li>Je toestemming in te trekken</li>
-                <li>Een klacht in te dienen bij de Autoriteit Persoonsgegevens</li>
+                <li>Inzage, rectificatie of verwijdering van je gegevens (AVG art. 15–17).</li>
+                <li>Beperking van of bezwaar tegen de verwerking (art. 18, 21).</li>
+                <li>Gegevensoverdraagbaarheid in een gangbaar formaat (art. 20).</li>
+                <li>Toestemming op elk moment in te trekken zonder gevolgen voor eerdere verwerkingen.</li>
+                <li>Een klacht in te dienen bij de Autoriteit Persoonsgegevens (autoriteitpersoonsgegevens.nl).</li>
               </ul>
+              <p className="text-muted-foreground leading-relaxed mt-2">
+                Verzoeken kun je sturen naar <a href="mailto:privacy@dishloopr.com" className="text-primary hover:underline">privacy@dishloopr.com</a>.
+                Wij reageren binnen 30 dagen.
+              </p>
             </section>
 
             <section>
@@ -97,9 +129,20 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="text-2xl font-semibold mb-4">8. Bewaartermijn</h2>
+              <ul className="text-muted-foreground space-y-2">
+                <li><strong>Accountgegevens:</strong> zolang het account bestaat; verwijderd binnen 30 dagen na opzegging.</li>
+                <li><strong>Reviews & content:</strong> behouden (geanonimiseerd) na accountverwijdering om de integriteit van de site te bewaren.</li>
+                <li><strong>Logs & beveiligingsgegevens:</strong> maximaal 12 maanden.</li>
+                <li><strong>Facturen & betalingsgegevens:</strong> 7 jaar (fiscale bewaarplicht).</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4">8a. Geautomatiseerde besluitvorming</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Wij bewaren je gegevens niet langer dan noodzakelijk voor de doeleinden waarvoor ze zijn 
-                verzameld, tenzij we wettelijk verplicht zijn ze langer te bewaren.
+                Dishloopr gebruikt AI om gerechten te classificeren en aanbevelingen te genereren. Er vindt
+                geen geautomatiseerde besluitvorming plaats met rechtsgevolgen of vergelijkbaar significante
+                gevolgen voor jou in de zin van AVG art. 22.
               </p>
             </section>
 
