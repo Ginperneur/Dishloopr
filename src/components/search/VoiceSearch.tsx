@@ -123,6 +123,9 @@ export function VoiceSearch({ onResult, onSearch }: VoiceSearchProps) {
             <DialogTitle className="text-center">
               {t('voice.title', 'Spraak zoeken')}
             </DialogTitle>
+            <DialogDescription className="text-center">
+              {t('voice.description', 'Spreek je zoekopdracht uit, bijvoorbeeld een gerecht of een stad.')}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col items-center py-8 space-y-6">

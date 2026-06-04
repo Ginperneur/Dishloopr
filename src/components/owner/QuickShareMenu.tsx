@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Share2, MessageCircle, Copy, QrCode, MapPin, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { QRCodeGenerator } from './QRCodeGenerator';
 import { toast } from 'sonner';
 
@@ -68,6 +68,9 @@ export function QuickShareMenu({ restaurantSlug, restaurantName, address }: Quic
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>QR-code voor {restaurantName}</DialogTitle>
+            <DialogDescription>
+              Scan deze QR-code om direct naar de restaurantpagina te gaan.
+            </DialogDescription>
           </DialogHeader>
           <QRCodeGenerator restaurantSlug={restaurantSlug} restaurantName={restaurantName} />
         </DialogContent>
