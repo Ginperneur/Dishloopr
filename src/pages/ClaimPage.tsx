@@ -68,6 +68,22 @@ export default function ClaimPage() {
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Resolve claim-limit boolean (canCreateClaim from the hook is an async function).
+  const [canClaim, setCanClaim] = useState(true);
+  useEffect(() => {
+    let active = true;
+    if (!user) {
+      setCanClaim(true);
+      return;
+    }
+    canCreateClaim().then((allowed) => {
+      if (active) setCanClaim(allowed);
+    }).catch(() => {
+      if (active) setCanClaim(true);
+    });
+    return () => { active = false; };
+  }, [user, userClaims, canCreateClaim]);
+
   const benefits = [
     {
       icon: CheckCircle,
