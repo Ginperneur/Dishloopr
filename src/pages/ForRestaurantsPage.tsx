@@ -20,10 +20,8 @@ import {
   Building2,
   TrendingUp,
   Eye,
-  Star,
   BarChart3,
   Sparkles,
-  Quote,
   Store
 } from 'lucide-react';
 import { motion } from 'framer-motion';
