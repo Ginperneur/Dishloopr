@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
-import { Search, BookOpen, Heart, Sparkles } from 'lucide-react';
+import { Search, FolderOpen, Heart, Sparkles } from 'lucide-react';
 
 export function QuickActions() {
   const actions = [
     { icon: Search, label: 'Ontdek', to: '/search', color: 'bg-primary/10 text-primary' },
-    { icon: BookOpen, label: 'Collecties', to: '/collections', color: 'bg-blue-500/10 text-blue-500' },
+    { icon: FolderOpen, label: 'Mijn lijstjes', to: '/lists', color: 'bg-blue-500/10 text-blue-500' },
     { icon: Heart, label: 'Favorieten', to: '/favorites', color: 'bg-rose-500/10 text-rose-500' },
     { icon: Sparkles, label: 'Inzichten', to: '/insights', color: 'bg-purple-500/10 text-purple-500' },
   ];

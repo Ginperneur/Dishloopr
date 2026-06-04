@@ -2,7 +2,7 @@ import { SEOHead } from '@/components/seo/SEOHead';
 import { Layout } from '@/components/layout/Layout';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Heart, Search } from 'lucide-react';
+import { Heart, Search, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -87,6 +87,12 @@ export default function FavoritesPage() {
           <p className="text-muted-foreground text-sm md:text-base">
             {t('favorites.savedCount', '{{count}} opgeslagen restaurant(s)', { count: restaurants.length })}
           </p>
+          <Button asChild variant="outline" size="sm" className="mt-3">
+            <Link to="/lists">
+              <FolderOpen className="w-4 h-4 mr-1.5" />
+              Bekijk mijn lijstjes
+            </Link>
+          </Button>
         </motion.div>
 
         {loading || favoritesLoading ? (

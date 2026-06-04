@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Star, MapPin, Heart, Sparkles, Trophy, ImageOff, UtensilsCrossed, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useFavorites } from '@/hooks/useFavorites';
+import { SaveToListButton } from '@/components/lists/SaveToListButton';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { useState } from 'react';
 import type { Database } from '@/integrations/supabase/types';
@@ -153,6 +154,9 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
               className={`h-4 w-4 ${isFavorite(restaurant.id) ? 'fill-current' : ''} ${isLikeAnimating ? 'like-pop' : ''}`} 
             />
           </motion.button>
+
+          {/* Save to list button */}
+          <SaveToListButton restaurantId={restaurant.id} />
 
           {/* Price Badge */}
           <div className="absolute bottom-3 right-3">

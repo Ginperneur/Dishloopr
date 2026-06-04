@@ -3469,6 +3469,87 @@ export type Database = {
         }
         Relationships: []
       }
+      user_list_items: {
+        Row: {
+          added_at: string
+          id: string
+          list_id: string
+          note: string | null
+          restaurant_id: string
+          sort_order: number
+        }
+        Insert: {
+          added_at?: string
+          id?: string
+          list_id: string
+          note?: string | null
+          restaurant_id: string
+          sort_order?: number
+        }
+        Update: {
+          added_at?: string
+          id?: string
+          list_id?: string
+          note?: string | null
+          restaurant_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_list_items_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "user_lists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_list_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_lists: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          emoji: string | null
+          id: string
+          is_public: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          emoji?: string | null
+          id?: string
+          is_public?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          emoji?: string | null
+          id?: string
+          is_public?: boolean
+          name?: string
+          sort_order?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_perks: {
         Row: {
           created_at: string
