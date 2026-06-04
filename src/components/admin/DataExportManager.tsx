@@ -165,6 +165,122 @@ const EXPORTS: ExportConfig[] = [
     fetchData: () =>
       fetchAllRows('newsletter_subscribers', 'id, email, is_active, subscribed_at, unsubscribed_at', 'subscribed_at'),
   },
+  {
+    key: 'discovery_results',
+    label: 'Discovery resultaten',
+    description: 'Restaurants gevonden via Google Places discovery scans.',
+    icon: <Database className="w-5 h-5" />,
+    fetchData: () =>
+      fetchAllRows(
+        'discovery_results',
+        'id, name, address, city, google_place_id, status, source, created_at',
+        'created_at'
+      ),
+  },
+  {
+    key: 'restaurant_suggestions',
+    label: 'Restaurant suggesties',
+    description: 'Door bezoekers ingediende restaurant-suggesties.',
+    icon: <Database className="w-5 h-5" />,
+    fetchData: () =>
+      fetchAllRows(
+        'restaurant_suggestions',
+        'id, name, address, city, website, phone, cuisine, notes, suggester_email, status, created_at, reviewed_at',
+        'created_at'
+      ),
+  },
+  {
+    key: 'restaurant_claims',
+    label: 'Claim aanvragen',
+    description: 'Alle claim aanvragen met status en verificatiedata.',
+    icon: <Database className="w-5 h-5" />,
+    fetchData: () =>
+      fetchAllRows(
+        'restaurant_claims',
+        'id, status, email_verified, phone_verified, verification_completed_at, created_at, restaurant:restaurants(name, slug)',
+        'created_at'
+      ),
+  },
+  {
+    key: 'claim_requests',
+    label: 'Claim requests (legacy)',
+    description: 'Legacy claim requests vanuit eigenaren.',
+    icon: <Database className="w-5 h-5" />,
+    fetchData: () =>
+      fetchAllRows(
+        'claim_requests',
+        'id, status, user_id, created_at, restaurant:restaurants(name, slug)',
+        'created_at'
+      ),
+  },
+  {
+    key: 'profiles',
+    label: 'Gebruikersprofielen',
+    description: 'Geregistreerde gebruikers (naam, e-mail, reviewer level).',
+    icon: <Database className="w-5 h-5" />,
+    fetchData: () =>
+      fetchAllRows(
+        'profiles',
+        'id, name, email, reviewer_level, total_reviews, helpful_votes, created_at',
+        'created_at'
+      ),
+  },
+  {
+    key: 'user_roles',
+    label: 'Gebruikersrollen',
+    description: 'Toegewezen rollen per gebruiker.',
+    icon: <Database className="w-5 h-5" />,
+    fetchData: () =>
+      fetchAllRows('user_roles', 'id, user_id, role', 'role'),
+  },
+  {
+    key: 'featured_subscriptions',
+    label: 'Featured abonnementen',
+    description: 'Actieve en historische featured plaatsingen.',
+    icon: <Database className="w-5 h-5" />,
+    fetchData: () =>
+      fetchAllRows(
+        'featured_subscriptions',
+        'id, restaurant_id, slot_id, status, started_at, expires_at, cooling_off_until, amount_cents, created_at',
+        'created_at'
+      ),
+  },
+  {
+    key: 'sponsored_purchases',
+    label: 'Sponsored aankopen',
+    description: 'Alle sponsored aankopen incl. duur en betaling.',
+    icon: <Database className="w-5 h-5" />,
+    fetchData: () =>
+      fetchAllRows(
+        'sponsored_purchases',
+        'id, product_id, restaurant_id, is_active, started_at, expires_at, amount_cents, created_at',
+        'created_at'
+      ),
+  },
+  {
+    key: 'analytics_events',
+    label: 'Analytics events',
+    description: 'View/click/conversion events (alle restaurants).',
+    icon: <Database className="w-5 h-5" />,
+    fetchData: () =>
+      fetchAllRows(
+        'analytics_events',
+        'id, restaurant_id, event_type, session_id, metadata, created_at',
+        'created_at'
+      ),
+  },
+  {
+    key: 'owner_pro_subscriptions',
+    label: 'Owner Pro abonnementen',
+    description: 'Stripe abonnementen van Pro eigenaren.',
+    icon: <Database className="w-5 h-5" />,
+    fetchData: () =>
+      fetchAllRows(
+        'owner_pro_subscriptions',
+        'id, user_id, status, current_period_start, current_period_end, stripe_subscription_id, created_at',
+        'created_at'
+      ),
+  },
 ];
 
 export function DataExportManager() {
