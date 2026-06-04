@@ -82,6 +82,7 @@ const navGroups = [
     label: 'Tools & Systeem',
     items: [
       { id: 'audit', label: 'Audit', icon: ShieldAlert },
+      { id: 'ai-classify', label: 'AI Classificatie', icon: Sparkles },
       { id: 'broken-images', label: 'Broken Images', icon: Image },
       { id: 'duplicates', label: 'Duplicaten', icon: AlertCircle },
       { id: 'completeness', label: 'Completeness', icon: Eye },
