@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -84,6 +85,12 @@ export function OnboardingDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+        <VisuallyHidden>
+          <DialogTitle>Welkom bij Dishloopr</DialogTitle>
+          <DialogDescription>
+            Korte rondleiding langs de belangrijkste functies van Dishloopr.
+          </DialogDescription>
+        </VisuallyHidden>
         <AnimatePresence mode="wait">
           <motion.div
             key={step}
