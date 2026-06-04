@@ -533,6 +533,11 @@ export function DishApprovalManager() {
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="w-6 h-6 animate-spin text-primary" />
                 </div>
+              ) : filteredDishes.length === 0 && refilling ? (
+                <div className="flex items-center justify-center py-8 text-muted-foreground gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span className="text-sm">Volgende gerechten laden…</span>
+                </div>
               ) : filteredDishes.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <AlertCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
@@ -541,6 +546,12 @@ export function DishApprovalManager() {
               ) : (
                 <>
                   <div className="space-y-2">
+                    {refilling && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground pb-1">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Nieuwe gerechten worden bijgeladen…
+                      </div>
+                    )}
                     {filteredDishes.map((item) => (
                       <div
                         key={item.id}
