@@ -658,6 +658,7 @@ export default function OwnerDashboard() {
             <TabsTrigger value="overview">Overzicht</TabsTrigger>
             <TabsTrigger value="content">Content</TabsTrigger>
             <TabsTrigger value="insights">Inzichten</TabsTrigger>
+            <TabsTrigger value="promotions">Promoties</TabsTrigger>
             <TabsTrigger value="marketing">Marketing</TabsTrigger>
             <TabsTrigger value="market">Markt</TabsTrigger>
             <TabsTrigger value="invoices">Facturen</TabsTrigger>
