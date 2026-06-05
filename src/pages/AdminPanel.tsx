@@ -616,6 +616,7 @@ export default function AdminPanel() {
                 </Card>
               )}
               {activeSection === 'restaurant-mail' && <RestaurantBulkMailer />}
+              {activeSection === 'upgrade-reviews' && <UpgradeReviewRequests />}
               {activeSection === 'menu-scraper' && <MenuScraper />}
               {activeSection === 'manual-menu' && <ManualMenuUpload />}
               {activeSection === 'empty-dishes' && <EmptyDishesManager onNavigateToTab={handleNavigateToTab} />}
