@@ -75,6 +75,7 @@ const navGroups = [
       { id: 'newsletter', label: 'Nieuwsbrief', icon: FileText },
       { id: 'restaurant-mail', label: 'Mail Restaurants', icon: FileText },
       { id: 'upgrade-reviews', label: 'Review-verzoeken', icon: MessageSquare },
+      { id: 'reservation-outreach', label: 'Reservering-mail', icon: Calendar },
       { id: 'seo', label: 'SEO Pages', icon: TrendingUp },
       { id: 'notifications', label: 'Notificaties', icon: Bell },
     ],
