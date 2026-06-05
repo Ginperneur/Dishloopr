@@ -1131,6 +1131,7 @@ export type Database = {
           max_duration_months: number
           monthly_price: number
           restaurant_id: string
+          review_request_sent_at: string | null
           slot_id: string
           starts_at: string
           status: Database["public"]["Enums"]["featured_subscription_status"]
@@ -1153,6 +1154,7 @@ export type Database = {
           max_duration_months?: number
           monthly_price: number
           restaurant_id: string
+          review_request_sent_at?: string | null
           slot_id: string
           starts_at?: string
           status?: Database["public"]["Enums"]["featured_subscription_status"]
@@ -1175,6 +1177,7 @@ export type Database = {
           max_duration_months?: number
           monthly_price?: number
           restaurant_id?: string
+          review_request_sent_at?: string | null
           slot_id?: string
           starts_at?: string
           status?: Database["public"]["Enums"]["featured_subscription_status"]
@@ -1533,6 +1536,7 @@ export type Database = {
           price_paid: number
           promo_type: string
           restaurant_id: string
+          review_request_sent_at: string | null
           scope: string
           status: string
           stripe_payment_id: string | null
@@ -1551,6 +1555,7 @@ export type Database = {
           price_paid?: number
           promo_type?: string
           restaurant_id: string
+          review_request_sent_at?: string | null
           scope?: string
           status?: string
           stripe_payment_id?: string | null
@@ -1569,6 +1574,7 @@ export type Database = {
           price_paid?: number
           promo_type?: string
           restaurant_id?: string
+          review_request_sent_at?: string | null
           scope?: string
           status?: string
           stripe_payment_id?: string | null
@@ -1834,6 +1840,7 @@ export type Database = {
           current_period_end: string | null
           current_period_start: string | null
           id: string
+          review_request_sent_at: string | null
           status: string
           stripe_customer_id: string | null
           stripe_price_id: string | null
@@ -1848,6 +1855,7 @@ export type Database = {
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
+          review_request_sent_at?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_price_id?: string | null
@@ -1862,6 +1870,7 @@ export type Database = {
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
+          review_request_sent_at?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_price_id?: string | null
@@ -3286,6 +3295,7 @@ export type Database = {
           product_id: string
           purchased_by: string
           restaurant_id: string
+          review_request_sent_at: string | null
           starts_at: string
           stripe_payment_id: string | null
           updated_at: string
@@ -3300,6 +3310,7 @@ export type Database = {
           product_id: string
           purchased_by: string
           restaurant_id: string
+          review_request_sent_at?: string | null
           starts_at?: string
           stripe_payment_id?: string | null
           updated_at?: string
@@ -3314,6 +3325,7 @@ export type Database = {
           product_id?: string
           purchased_by?: string
           restaurant_id?: string
+          review_request_sent_at?: string | null
           starts_at?: string
           stripe_payment_id?: string | null
           updated_at?: string
