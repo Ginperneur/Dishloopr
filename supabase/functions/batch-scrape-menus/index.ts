@@ -412,7 +412,7 @@ Deno.serve(async (req) => {
             restaurant_id: restaurant.id,
             dish_id: dishId,
             confidence_score: 0.85,
-            status: 'approved_by_admin',
+            status: 'suggested',
             source: 'website_scrape',
             is_signature: false,
             course_type: 'hoofdgerecht',
