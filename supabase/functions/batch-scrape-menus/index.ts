@@ -317,7 +317,7 @@ Deno.serve(async (req) => {
     };
 
     for (const restaurant of restaurants) {
-      if (Date.now() - startedAt > MAX_FUNCTION_MS) {
+      if (stats.processed > 0 && Date.now() - startedAt > MAX_FUNCTION_MS) {
         stats.log.push('⏱️ Batch gepauzeerd om compute-limiet te vermijden');
         break;
       }
