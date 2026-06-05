@@ -2787,6 +2787,7 @@ export type Database = {
           postal_code: string | null
           price_level: number
           rating: number
+          reservation_reminder_sent_at: string | null
           reservation_url: string | null
           review_count: number
           routed_demand_dishes: string[] | null
@@ -2841,6 +2842,7 @@ export type Database = {
           postal_code?: string | null
           price_level?: number
           rating?: number
+          reservation_reminder_sent_at?: string | null
           reservation_url?: string | null
           review_count?: number
           routed_demand_dishes?: string[] | null
@@ -2895,6 +2897,7 @@ export type Database = {
           postal_code?: string | null
           price_level?: number
           rating?: number
+          reservation_reminder_sent_at?: string | null
           reservation_url?: string | null
           review_count?: number
           routed_demand_dishes?: string[] | null

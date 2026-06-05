@@ -46,6 +46,7 @@ import { AdminNotifications } from '@/components/admin/AdminNotifications';
 import { NewsletterManager } from '@/components/admin/NewsletterManager';
 import { RestaurantBulkMailer } from '@/components/admin/RestaurantBulkMailer';
 import { UpgradeReviewRequests } from '@/components/admin/UpgradeReviewRequests';
+import { MissingReservationOutreach } from '@/components/admin/MissingReservationOutreach';
 import { MenuScraper } from '@/components/admin/MenuScraper';
 import { ManualMenuUpload } from '@/components/admin/ManualMenuUpload';
 import { EmptyDishesManager } from '@/components/admin/EmptyDishesManager';
@@ -136,6 +137,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'settings': { title: "Instellingen", description: "Platform configuratie" },
   'error-logs': { title: "Error Logs", description: "Frontend crashes en errors van gebruikers" },
   'reservation-detect': { title: "Reserveringslinks", description: "Detecteer TheFork/Zenchef/OpenTable links via websites" },
+  'reservation-outreach': { title: "Reservering-mail", description: "Mail eigenaren zonder reserveringslink" },
   'rate-limits': { title: "API Bescherming", description: "Rate limits, kill-switch en monitoring van AI/API gebruik" },
 };
 
@@ -617,6 +619,7 @@ export default function AdminPanel() {
               )}
               {activeSection === 'restaurant-mail' && <RestaurantBulkMailer />}
               {activeSection === 'upgrade-reviews' && <UpgradeReviewRequests />}
+              {activeSection === 'reservation-outreach' && <MissingReservationOutreach />}
               {activeSection === 'menu-scraper' && <MenuScraper />}
               {activeSection === 'manual-menu' && <ManualMenuUpload />}
               {activeSection === 'empty-dishes' && <EmptyDishesManager onNavigateToTab={handleNavigateToTab} />}

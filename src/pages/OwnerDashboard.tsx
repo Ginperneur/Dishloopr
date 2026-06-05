@@ -36,6 +36,7 @@ import {
   ChevronsUpDown
 } from 'lucide-react';
 import { HelpCircle } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -85,6 +86,7 @@ import { PromotionROI } from '@/components/owner/PromotionROI';
 import { PremiumReachChart } from '@/components/owner/PremiumReachChart';
 import { OwnerEventsManager } from '@/components/owner/OwnerEventsManager';
 import { SocialLinksManager } from '@/components/owner/SocialLinksManager';
+import { ReservationLinkManager } from '@/components/owner/ReservationLinkManager';
 import { NewsletterPlacement } from '@/components/owner/NewsletterPlacement';
 import { InvoicesTab } from '@/components/owner/InvoicesTab';
 import { QRCodeGenerator } from '@/components/owner/QRCodeGenerator';
@@ -1100,6 +1102,24 @@ export default function OwnerDashboard() {
                 />
               )}
             </div>
+
+            {/* Reservation link */}
+            {selectedRestaurant && (
+              <div className="border-t pt-8">
+                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                  <Calendar className="h-5 w-5 text-primary" />
+                  Reserveringslink
+                </h3>
+                <ReservationLinkManager
+                  restaurantId={selectedRestaurant.id}
+                  reservationUrl={(selectedRestaurant as any).reservation_url || ''}
+                  hasWebsite={!!(selectedRestaurant as any).website_url}
+                  onUpdate={(url) =>
+                    setSelectedRestaurant({ ...selectedRestaurant, reservation_url: url, accepts_reservations: !!url } as any)
+                  }
+                />
+              </div>
+            )}
 
             {/* Response Templates / AI antwoord-assistent (Pro) */}
             {selectedRestaurant && isVerified && (
