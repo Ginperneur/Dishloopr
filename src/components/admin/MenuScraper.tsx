@@ -486,7 +486,7 @@ export function MenuScraper() {
           {batchRunning && (
             <Button onClick={() => { batchStopRef.current = true; setBatchStop(true); }} variant="destructive" size="sm">
               <XCircle className="h-4 w-4 mr-2" />
-              Stop na huidige batch
+              {batchStop ? 'Stop aangevraagd...' : 'Stop na huidige batch'}
             </Button>
           )}
           <Button
