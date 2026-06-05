@@ -1102,6 +1102,24 @@ export default function OwnerDashboard() {
               )}
             </div>
 
+            {/* Reservation link */}
+            {selectedRestaurant && (
+              <div className="border-t pt-8">
+                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                  <Calendar className="h-5 w-5 text-primary" />
+                  Reserveringslink
+                </h3>
+                <ReservationLinkManager
+                  restaurantId={selectedRestaurant.id}
+                  reservationUrl={(selectedRestaurant as any).reservation_url || ''}
+                  hasWebsite={!!(selectedRestaurant as any).website_url}
+                  onUpdate={(url) =>
+                    setSelectedRestaurant({ ...selectedRestaurant, reservation_url: url, accepts_reservations: !!url } as any)
+                  }
+                />
+              </div>
+            )}
+
             {/* Response Templates / AI antwoord-assistent (Pro) */}
             {selectedRestaurant && isVerified && (
               <div className="border-t pt-8">
