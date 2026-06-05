@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Globe, Loader2, CheckCircle2, AlertCircle, Play, ListPlus, Trash2, XCircle, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,6 +41,8 @@ const FILTER_LABELS: Record<ScrapeFilter, { label: string; description: string }
   scrape_failed: { label: 'Scrape mislukt', description: 'Vorige scrape-poging faalde — overweeg handmatige upload' },
 };
 
+const MAX_SAFE_BATCH_SIZE = 5;
+
 export function MenuScraper() {
   const [results, setResults] = useState<ScrapeResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
@@ -52,14 +54,16 @@ export function MenuScraper() {
   const [queueRecent, setQueueRecent] = useState<QueueRecentItem[]>([]);
   const [batchRunning, setBatchRunning] = useState(false);
   const [batchOffset, setBatchOffset] = useState(0);
-  const [batchSize, setBatchSize] = useState(40);
+  const [batchSize, setBatchSize] = useState(3);
   const [batchLog, setBatchLog] = useState<string[]>([]);
   const [batchTotals, setBatchTotals] = useState({ processed: 0, dishes_new: 0, links_created: 0, skipped: 0 });
   const [batchStop, setBatchStop] = useState(false);
+  const batchStopRef = useRef(false);
 
   const runBatchScraper = async (continuous: boolean) => {
     setBatchRunning(true);
     setBatchStop(false);
+    batchStopRef.current = false;
     if (!continuous) {
       setBatchLog([]);
       setBatchTotals({ processed: 0, dishes_new: 0, links_created: 0, skipped: 0 });
@@ -89,7 +93,7 @@ export function MenuScraper() {
         done = data.done;
         if (done) toast.success('✅ Alle restaurants verwerkt');
         if (!continuous) break;
-        if (batchStop) {
+        if (batchStopRef.current) {
           toast.info('Batch gestopt');
           break;
         }
@@ -453,7 +457,7 @@ export function MenuScraper() {
           Batch Scraper (snel, server-side)
         </CardTitle>
         <CardDescription>
-          Roept de <code>batch-scrape-menus</code> edge function aan. Verwerkt alle actieve restaurants met een website in batches. Slaat restaurants over die al ≥10 gerechten hebben.
+          Roept de <code>batch-scrape-menus</code> edge function aan in kleine veilige batches. Slaat restaurants over die al ≥10 gerechten hebben.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -462,9 +466,9 @@ export function MenuScraper() {
           <input
             type="number"
             min={1}
-            max={100}
+            max={MAX_SAFE_BATCH_SIZE}
             value={batchSize}
-            onChange={(e) => setBatchSize(Math.min(100, Math.max(1, Number(e.target.value) || 40)))}
+            onChange={(e) => setBatchSize(Math.min(MAX_SAFE_BATCH_SIZE, Math.max(1, Number(e.target.value) || 3)))}
             disabled={batchRunning}
             className="w-20 h-9 rounded-md border border-input bg-background px-2 text-sm"
           />
@@ -480,9 +484,9 @@ export function MenuScraper() {
             Enkele batch ({batchSize})
           </Button>
           {batchRunning && (
-            <Button onClick={() => setBatchStop(true)} variant="destructive" size="sm">
+            <Button onClick={() => { batchStopRef.current = true; setBatchStop(true); }} variant="destructive" size="sm">
               <XCircle className="h-4 w-4 mr-2" />
-              Stop na huidige batch
+              {batchStop ? 'Stop aangevraagd...' : 'Stop na huidige batch'}
             </Button>
           )}
           <Button
