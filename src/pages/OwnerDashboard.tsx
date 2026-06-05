@@ -36,6 +36,7 @@ import {
   ChevronsUpDown
 } from 'lucide-react';
 import { HelpCircle } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
