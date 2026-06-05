@@ -252,7 +252,7 @@ Deno.serve(async (req) => {
 
     const { data: restaurants, error: restaurantsError } = await supabase
       .from('restaurants')
-      .select('id, name, website_url, city_name')
+      .select('id, name, website_url')
       .eq('is_active', true)
       .not('website_url', 'is', null)
       .neq('website_url', '')
