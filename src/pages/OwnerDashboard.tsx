@@ -1555,6 +1555,10 @@ export default function OwnerDashboard() {
                   </h3>
                   <PromotionROI promotions={promotionROI} />
                 </div>
+
+                <div className="border-t pt-8">
+                  <PremiumReachChart restaurantId={selectedRestaurant?.id} />
+                </div>
               </div>
             ) : (
               <LockedFeatureOverlay 
