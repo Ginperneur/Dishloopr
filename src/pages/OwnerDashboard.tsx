@@ -82,6 +82,7 @@ import { ReviewIntelligence } from '@/components/owner/ReviewIntelligence';
 import { NeighborhoodAnalysis } from '@/components/owner/NeighborhoodAnalysis';
 import { PeakHoursInsight } from '@/components/owner/PeakHoursInsight';
 import { PromotionROI } from '@/components/owner/PromotionROI';
+import { PremiumReachChart } from '@/components/owner/PremiumReachChart';
 import { OwnerEventsManager } from '@/components/owner/OwnerEventsManager';
 import { SocialLinksManager } from '@/components/owner/SocialLinksManager';
 import { NewsletterPlacement } from '@/components/owner/NewsletterPlacement';
@@ -1553,6 +1554,10 @@ export default function OwnerDashboard() {
                     Promotie ROI
                   </h3>
                   <PromotionROI promotions={promotionROI} />
+                </div>
+
+                <div className="border-t pt-8">
+                  <PremiumReachChart restaurantId={selectedRestaurant?.id} />
                 </div>
               </div>
             ) : (
