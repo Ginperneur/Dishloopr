@@ -85,6 +85,7 @@ import { PromotionROI } from '@/components/owner/PromotionROI';
 import { PremiumReachChart } from '@/components/owner/PremiumReachChart';
 import { OwnerEventsManager } from '@/components/owner/OwnerEventsManager';
 import { SocialLinksManager } from '@/components/owner/SocialLinksManager';
+import { ReservationLinkManager } from '@/components/owner/ReservationLinkManager';
 import { NewsletterPlacement } from '@/components/owner/NewsletterPlacement';
 import { InvoicesTab } from '@/components/owner/InvoicesTab';
 import { QRCodeGenerator } from '@/components/owner/QRCodeGenerator';
