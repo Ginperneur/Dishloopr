@@ -22,6 +22,14 @@ const MENU_KEYWORDS = [
   '/onze-kaart', '/ons-menu', '/a-la-carte', '/carte', '/eat',
 ];
 
+const DEFAULT_BATCH_SIZE = 3;
+const MAX_BATCH_SIZE = 5;
+const FETCH_TIMEOUT_MS = 3500;
+const MAX_HTML_CHARS = 160_000;
+const MAX_CONTENT_LENGTH = 650_000;
+const MAX_FUNCTION_MS = 18_000;
+const MAX_DISHES_PER_RESTAURANT = 12;
+
 const BLACKLIST = new Set([
   'contact', 'reserveer', 'reserveren', 'over ons', 'home', 'welkom',
   'openingstijden', 'locatie', 'route', 'team', 'vacature', 'privacy',
@@ -138,13 +146,13 @@ function extractDishesFromHtml(html: string): string[] {
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
-  }).slice(0, 25);
+  }).slice(0, MAX_DISHES_PER_RESTAURANT);
 }
 
-async function fetchWithTimeout(url: string, timeoutMs = 8000): Promise<Response | null> {
+async function fetchWithTimeout(url: string, timeoutMs = FETCH_TIMEOUT_MS): Promise<Response | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
@@ -153,11 +161,46 @@ async function fetchWithTimeout(url: string, timeoutMs = 8000): Promise<Response
         'Accept': 'text/html,application/xhtml+xml,*/*;q=0.8',
       },
     });
-    clearTimeout(timer);
-    return response.ok ? response : null;
+    if (!response.ok) return null;
+    const contentLength = Number(response.headers.get('content-length') || 0);
+    if (contentLength > MAX_CONTENT_LENGTH) {
+      await response.body?.cancel();
+      return null;
+    }
+    return response;
   } catch {
     return null;
+  } finally {
+    clearTimeout(timer);
   }
+}
+
+async function readLimitedText(response: Response): Promise<string> {
+  if (!response.body) {
+    const text = await response.text().catch(() => '');
+    return text.slice(0, MAX_HTML_CHARS);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let html = '';
+
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      html += decoder.decode(value, { stream: true });
+      if (html.length >= MAX_HTML_CHARS) {
+        await reader.cancel();
+        break;
+      }
+    }
+    html += decoder.decode();
+  } catch {
+    await reader.cancel().catch(() => undefined);
+  }
+
+  return html.slice(0, MAX_HTML_CHARS);
 }
 
 async function getDishesForRestaurant(restaurant: { id: string; name: string; website_url: string }): Promise<string[]> {
@@ -176,7 +219,7 @@ async function getDishesForRestaurant(restaurant: { id: string; name: string; we
     return [];
   }
 
-  const homepageHtml = await homepageResp.text().catch(() => '');
+  const homepageHtml = await readLimitedText(homepageResp);
   if (!homepageHtml) return [];
 
   const menuUrl = findMenuUrl(homepageHtml, fullUrl);
@@ -186,7 +229,7 @@ async function getDishesForRestaurant(restaurant: { id: string; name: string; we
     if (menuResp) {
       const menuCt = menuResp.headers.get('content-type') || '';
       if (!menuCt.includes('pdf')) {
-        const menuHtml = await menuResp.text().catch(() => '');
+        const menuHtml = await readLimitedText(menuResp);
         const dishes = extractDishesFromHtml(menuHtml);
         if (dishes.length >= 3) return dishes;
       } else {
