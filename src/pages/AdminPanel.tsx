@@ -45,6 +45,7 @@ import { AmbiancePricingManager } from '@/components/admin/AmbiancePricingManage
 import { AdminNotifications } from '@/components/admin/AdminNotifications';
 import { NewsletterManager } from '@/components/admin/NewsletterManager';
 import { RestaurantBulkMailer } from '@/components/admin/RestaurantBulkMailer';
+import { UpgradeReviewRequests } from '@/components/admin/UpgradeReviewRequests';
 import { MenuScraper } from '@/components/admin/MenuScraper';
 import { ManualMenuUpload } from '@/components/admin/ManualMenuUpload';
 import { EmptyDishesManager } from '@/components/admin/EmptyDishesManager';
