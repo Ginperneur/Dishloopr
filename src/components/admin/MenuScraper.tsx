@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Globe, Loader2, CheckCircle2, AlertCircle, Play, ListPlus, Trash2, XCircle } from 'lucide-react';
+import { Globe, Loader2, CheckCircle2, AlertCircle, Play, ListPlus, Trash2, XCircle, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -50,6 +50,54 @@ export function MenuScraper() {
   const [queueing, setQueueing] = useState(false);
   const [queueStats, setQueueStats] = useState({ queued: 0, processing: 0, done: 0, failed: 0, canceled: 0 });
   const [queueRecent, setQueueRecent] = useState<QueueRecentItem[]>([]);
+  const [batchRunning, setBatchRunning] = useState(false);
+  const [batchOffset, setBatchOffset] = useState(0);
+  const [batchSize, setBatchSize] = useState(40);
+  const [batchLog, setBatchLog] = useState<string[]>([]);
+  const [batchTotals, setBatchTotals] = useState({ processed: 0, dishes_new: 0, links_created: 0, skipped: 0 });
+  const [batchStop, setBatchStop] = useState(false);
+
+  const runBatchScraper = async (continuous: boolean) => {
+    setBatchRunning(true);
+    setBatchStop(false);
+    if (!continuous) {
+      setBatchLog([]);
+      setBatchTotals({ processed: 0, dishes_new: 0, links_created: 0, skipped: 0 });
+      setBatchOffset(0);
+    }
+    let offset = continuous ? batchOffset : 0;
+    let done = false;
+    try {
+      while (!done) {
+        const { data, error } = await supabase.functions.invoke('batch-scrape-menus', {
+          body: { batch_size: batchSize, offset },
+        });
+        if (error || !data?.success) {
+          toast.error(error?.message || data?.error || 'Batch mislukt');
+          break;
+        }
+        const s = data.stats || {};
+        setBatchTotals((prev) => ({
+          processed: prev.processed + (s.processed || 0),
+          dishes_new: prev.dishes_new + (s.dishes_new || 0),
+          links_created: prev.links_created + (s.links_created || 0),
+          skipped: prev.skipped + (s.skipped || 0),
+        }));
+        setBatchLog((prev) => [...(s.log || []), ...prev].slice(0, 200));
+        offset = data.next_offset;
+        setBatchOffset(offset);
+        done = data.done;
+        if (done) toast.success('✅ Alle restaurants verwerkt');
+        if (!continuous) break;
+        if (batchStop) {
+          toast.info('Batch gestopt');
+          break;
+        }
+      }
+    } finally {
+      setBatchRunning(false);
+    }
+  };
 
   // Poll queue stats every 5s
   useEffect(() => {
@@ -398,6 +446,74 @@ export function MenuScraper() {
 
   return (
     <div className="space-y-4">
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Zap className="h-5 w-5" />
+          Batch Scraper (snel, server-side)
+        </CardTitle>
+        <CardDescription>
+          Roept de <code>batch-scrape-menus</code> edge function aan. Verwerkt alle actieve restaurants met een website in batches. Slaat restaurants over die al ≥10 gerechten hebben.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="text-sm text-muted-foreground">Batch grootte:</label>
+          <input
+            type="number"
+            min={1}
+            max={100}
+            value={batchSize}
+            onChange={(e) => setBatchSize(Math.min(100, Math.max(1, Number(e.target.value) || 40)))}
+            disabled={batchRunning}
+            className="w-20 h-9 rounded-md border border-input bg-background px-2 text-sm"
+          />
+          <span className="text-sm text-muted-foreground">Offset: {batchOffset}</span>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => runBatchScraper(true)} disabled={batchRunning}>
+            {batchRunning ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
+            Start volledige batch
+          </Button>
+          <Button onClick={() => runBatchScraper(false)} disabled={batchRunning} variant="outline">
+            Enkele batch ({batchSize})
+          </Button>
+          {batchRunning && (
+            <Button onClick={() => setBatchStop(true)} variant="destructive" size="sm">
+              <XCircle className="h-4 w-4 mr-2" />
+              Stop na huidige batch
+            </Button>
+          )}
+          <Button
+            onClick={() => { setBatchOffset(0); setBatchLog([]); setBatchTotals({ processed: 0, dishes_new: 0, links_created: 0, skipped: 0 }); }}
+            disabled={batchRunning}
+            variant="ghost"
+            size="sm"
+          >
+            Reset
+          </Button>
+        </div>
+
+        <div className="flex flex-wrap gap-2 text-sm">
+          <Badge variant="outline">Verwerkt: {batchTotals.processed}</Badge>
+          <Badge variant="default">Nieuwe gerechten: {batchTotals.dishes_new}</Badge>
+          <Badge variant="secondary">Koppelingen: {batchTotals.links_created}</Badge>
+          <Badge variant="outline">Overgeslagen: {batchTotals.skipped}</Badge>
+        </div>
+
+        {batchLog.length > 0 && (
+          <ScrollArea className="h-[200px] border rounded-md p-2">
+            <div className="space-y-1 font-mono text-xs">
+              {batchLog.map((line, i) => (
+                <div key={i} className="truncate">{line}</div>
+              ))}
+            </div>
+          </ScrollArea>
+        )}
+      </CardContent>
+    </Card>
+
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
