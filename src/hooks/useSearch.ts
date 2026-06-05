@@ -472,6 +472,23 @@ export function useSearch() {
       }
     }
 
+    // ── Step 7b: Total dish count per restaurant (for thin-menu penalty) ──
+    const restaurantDishCount = new Map<string, number>();
+    if (filteredRestaurants.length > 0) {
+      const ids = filteredRestaurants.map(r => r.id);
+      const allLinks = await fetchAllRows<{ restaurant_id: string }>((from, to) =>
+        supabase
+          .from('restaurant_dishes')
+          .select('restaurant_id')
+          .in('restaurant_id', ids)
+          .neq('status', 'rejected')
+          .range(from, to)
+      );
+      allLinks.forEach(l => {
+        restaurantDishCount.set(l.restaurant_id, (restaurantDishCount.get(l.restaurant_id) || 0) + 1);
+      });
+    }
+
     // ── Step 8: Score & rank ──
     const scoredResults: SearchResult[] = [];
     const totalQueryTerms = isMultiDish ? queryTerms.length : 1;
@@ -499,6 +516,7 @@ export function useSearch() {
           isSponsored: sponsoredRestaurants.has(restaurant.id),
           queryTermsCovered: restaurantTermCoverage.get(restaurant.id) || 0,
           totalQueryTerms,
+          totalDishCount: restaurantDishCount.get(restaurant.id) || 0,
         },
         ctx
       );
