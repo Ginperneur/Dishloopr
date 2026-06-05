@@ -51,6 +51,9 @@ export const WEIGHTS = {
     inactiveDecayPenalty: 15,
     lowQualityMinRating: 3.0,
     lowQualityPenalty: 10,
+    thinMenuMinDishes: 5,
+    thinMenuPenaltyPerMissing: 4,
+    thinMenuPenaltyMax: 20,
   },
 } as const;
 
@@ -103,6 +106,8 @@ export interface RestaurantScoringInput {
   engagement?: EngagementMetrics;
   /** Last meaningful update — used for inactive decay */
   last_active_at?: string | null;
+  /** Total non-rejected dishes linked to this restaurant (used for thin-menu penalty) */
+  totalDishCount?: number;
 }
 
 export interface ScoreBreakdown {
@@ -120,7 +125,7 @@ export interface ScoreBreakdown {
   quality: { bayesianPoints: number; bayesianRaw: number };
   engagement: { dish: number; save: number; repeat: number; lowBounce: number; subtotal: number };
   commercial: { sponsored: number; featured: number; newness: number; subtotal: number };
-  fairness: { inactivePenalty: number; lowQualityPenalty: number; subtotal: number };
+  fairness: { inactivePenalty: number; lowQualityPenalty: number; thinMenuPenalty: number; subtotal: number };
   finalScore: number;
   explanation: string[];
 }
@@ -318,10 +323,18 @@ function scoreFairnessPenalties(
   const lowQualityPenalty =
     qualityRaw > 0 && qualityRaw < W.lowQualityMinRating ? -W.lowQualityPenalty : 0;
 
+  // Thin-menu penalty: restaurants with < thinMenuMinDishes total dishes are penalized
+  let thinMenuPenalty = 0;
+  if (typeof r.totalDishCount === 'number' && r.totalDishCount < W.thinMenuMinDishes) {
+    const missing = W.thinMenuMinDishes - r.totalDishCount;
+    thinMenuPenalty = -Math.min(missing * W.thinMenuPenaltyPerMissing, W.thinMenuPenaltyMax);
+  }
+
   return {
     inactivePenalty,
     lowQualityPenalty,
-    subtotal: inactivePenalty + lowQualityPenalty,
+    thinMenuPenalty,
+    subtotal: inactivePenalty + lowQualityPenalty + thinMenuPenalty,
   };
 }
 
@@ -373,6 +386,8 @@ export function scoreRestaurant(
     explanation.push(`inactive ${fairness.inactivePenalty.toFixed(1)}`);
   if (fairness.lowQualityPenalty)
     explanation.push(`low-quality ${fairness.lowQualityPenalty}`);
+  if (fairness.thinMenuPenalty)
+    explanation.push(`thin menu ${fairness.thinMenuPenalty}`);
 
   const breakdown: ScoreBreakdown = {
     relevance,
