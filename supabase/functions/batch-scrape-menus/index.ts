@@ -284,14 +284,12 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const body = await req.json().catch(() => ({}));
-    const batchSize: number = Math.min(Math.max(body.batch_size ?? 40, 1), 100);
-    const offset: number = body.offset ?? 0;
+    const requestedBatchSize = Number(body.batch_size ?? DEFAULT_BATCH_SIZE);
+    const batchSize: number = Math.min(Math.max(requestedBatchSize || DEFAULT_BATCH_SIZE, 1), MAX_BATCH_SIZE);
+    const offset: number = Math.max(Number(body.offset ?? 0) || 0, 0);
+    const startedAt = Date.now();
 
-    // ── Laad alle dish slugs in één keer ──
-    const { data: allDishes } = await supabase.from('dishes').select('id, slug');
-    const slugToId = new Map<string, string>(
-      (allDishes || []).map((d: { id: string; slug: string }) => [d.slug, d.id])
-    );
+    const slugToId = new Map<string, string>();
 
     const { data: restaurants, error: restaurantsError } = await supabase
       .from('restaurants')
@@ -319,6 +317,11 @@ Deno.serve(async (req) => {
     };
 
     for (const restaurant of restaurants) {
+      if (Date.now() - startedAt > MAX_FUNCTION_MS) {
+        stats.log.push('⏱️ Batch gepauzeerd om compute-limiet te vermijden');
+        break;
+      }
+
       stats.processed++;
 
       const { count } = await supabase
@@ -349,6 +352,19 @@ Deno.serve(async (req) => {
         if (!slug || slug.length < 2) continue;
 
         let dishId = slugToId.get(slug);
+
+        if (!dishId) {
+          const { data: existing } = await supabase
+            .from('dishes')
+            .select('id')
+            .eq('slug', slug)
+            .maybeSingle();
+
+          if (existing) {
+            dishId = existing.id;
+            slugToId.set(slug, existing.id);
+          }
+        }
 
         if (!dishId) {
           const newId = crypto.randomUUID();
@@ -416,11 +432,11 @@ Deno.serve(async (req) => {
         `✓ ${restaurant.name}: ${dishes.length} gerechten (${newForRestaurant} nieuw, ${linksForRestaurant} koppelingen)`
       );
 
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
 
     const done = restaurants.length < batchSize;
-    const nextOffset = offset + batchSize;
+    const nextOffset = offset + stats.processed;
 
     return new Response(
       JSON.stringify({
