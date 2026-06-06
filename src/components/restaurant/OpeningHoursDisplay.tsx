@@ -82,13 +82,27 @@ function normalizeOpeningHours(openingHours: { [key: string]: string | string[] 
   if (openingHours.weekday_text && Array.isArray(openingHours.weekday_text)) {
     return parseWeekdayText(openingHours.weekday_text as string[]);
   }
-  
-  // Already in correct format, just ensure string values
+
+  // Accept English short keys (mon/tue/…) and Dutch/English full day names
+  // (maandag, dinsdag, monday, tuesday, …) as object keys.
   const result: { [key: string]: string } = {};
-  for (const key of DAY_ORDER) {
-    const value = openingHours[key];
-    if (typeof value === 'string') {
-      result[key] = value;
+  for (const rawKey of Object.keys(openingHours)) {
+    const value = openingHours[rawKey];
+    if (typeof value !== 'string') continue;
+    const lower = rawKey.toLowerCase().trim();
+    const dayKey = (DAY_ORDER as readonly string[]).includes(lower)
+      ? lower
+      : DAY_NAME_TO_KEY[lower];
+    if (!dayKey) continue;
+    const normalized = value
+      .replace(/–/g, ' - ')
+      .replace(/-/g, ' - ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (normalized.toLowerCase().includes('gesloten') || normalized.toLowerCase().includes('closed')) {
+      result[dayKey] = 'closed';
+    } else {
+      result[dayKey] = normalized;
     }
   }
   return result;
