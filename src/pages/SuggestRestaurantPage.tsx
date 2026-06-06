@@ -97,42 +97,42 @@ export default function SuggestRestaurantPage() {
                 <Button asChild variant="outline"><Link to="/">Terug naar de homepage</Link></Button>
               </div>
             ) : (
-              <form onSubmit={submit} className="space-y-4">
+              <form onSubmit={submit} method="post" className="space-y-4">
                 <div>
                   <Label htmlFor="name">Naam restaurant *</Label>
-                  <Input id="name" required maxLength={120} value={form.name} onChange={update('name')} placeholder="Bijv. Restaurant De Plantage" />
+                  <Input id="name" name="name" required maxLength={120} value={form.name} onChange={update('name')} placeholder="Bijv. Restaurant De Plantage" />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <Label htmlFor="city">Stad</Label>
-                    <Input id="city" maxLength={80} value={form.city} onChange={update('city')} placeholder="Amsterdam" />
+                    <Input id="city" name="city" maxLength={80} value={form.city} onChange={update('city')} placeholder="Amsterdam" />
                   </div>
                   <div>
                     <Label htmlFor="cuisine">Keuken / type</Label>
-                    <Input id="cuisine" maxLength={80} value={form.cuisine} onChange={update('cuisine')} placeholder="Italiaans, sushi, vegan…" />
+                    <Input id="cuisine" name="cuisine" maxLength={80} value={form.cuisine} onChange={update('cuisine')} placeholder="Italiaans, sushi, vegan…" />
                   </div>
                 </div>
                 <div>
                   <Label htmlFor="address">Adres</Label>
-                  <Input id="address" maxLength={200} value={form.address} onChange={update('address')} placeholder="Straatnaam 12, postcode" />
+                  <Input id="address" name="address" maxLength={200} value={form.address} onChange={update('address')} placeholder="Straatnaam 12, postcode" />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <Label htmlFor="website">Website</Label>
-                    <Input id="website" type="url" maxLength={300} value={form.website} onChange={update('website')} placeholder="https://…" />
+                    <Input id="website" name="website" type="url" maxLength={300} value={form.website} onChange={update('website')} placeholder="https://…" />
                   </div>
                   <div>
                     <Label htmlFor="phone">Telefoon</Label>
-                    <Input id="phone" maxLength={40} value={form.phone} onChange={update('phone')} placeholder="020 1234567" />
+                    <Input id="phone" name="phone" autoComplete="tel" maxLength={40} value={form.phone} onChange={update('phone')} placeholder="020 1234567" />
                   </div>
                 </div>
                 <div>
                   <Label htmlFor="notes">Waarom dit restaurant?</Label>
-                  <Textarea id="notes" maxLength={1000} rows={3} value={form.notes} onChange={update('notes')} placeholder="Bekend om hun…" />
+                  <Textarea id="notes" name="notes" maxLength={1000} rows={3} value={form.notes} onChange={update('notes')} placeholder="Bekend om hun…" />
                 </div>
                 <div>
                   <Label htmlFor="email">Jouw e-mail (optioneel)</Label>
-                  <Input id="email" type="email" maxLength={200} value={form.email} onChange={update('email')} placeholder="zodat we contact kunnen opnemen" />
+                  <Input id="email" name="email" type="email" autoComplete="email" maxLength={200} value={form.email} onChange={update('email')} placeholder="zodat we contact kunnen opnemen" />
                 </div>
                 <Button type="submit" disabled={busy} className="w-full">
                   <Send className="h-4 w-4 mr-2" /> {busy ? 'Verzenden…' : 'Verstuur suggestie'}

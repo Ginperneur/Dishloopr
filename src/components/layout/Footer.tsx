@@ -66,9 +66,11 @@ export function Footer() {
             <p className="text-sm text-muted-foreground mb-4">
               {t('footer.newsletterSubtitle', 'Ontvang wekelijks de beste restaurant tips en nieuwe gerechten in je inbox.')}
             </p>
-            <form onSubmit={handleNewsletterSubmit} className="flex gap-2 max-w-md mx-auto">
+            <form onSubmit={handleNewsletterSubmit} method="post" className="flex gap-2 max-w-md mx-auto">
               <Input
                 type="email"
+                name="email"
+                autoComplete="email"
                 placeholder={t('footer.emailPlaceholder', 'Je e-mailadres')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

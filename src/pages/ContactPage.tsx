@@ -142,7 +142,7 @@ export default function ContactPage() {
           transition={{ delay: 0.4 }}
           className="max-w-xl mx-auto"
         >
-          <form onSubmit={handleSubmit} className="bg-card border border-border rounded-xl p-8 space-y-6">
+          <form onSubmit={handleSubmit} method="post" className="bg-card border border-border rounded-xl p-8 space-y-6">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Naam</Label>
