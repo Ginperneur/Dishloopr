@@ -1,0 +1,1 @@
+UPDATE public.restaurants SET opening_hours = NULL WHERE opening_hours::text = '{}';

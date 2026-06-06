@@ -45,6 +45,20 @@ function normalize(openingHours: any): Record<string, string> {
     const value = openingHours[key];
     if (typeof value === 'string') out[key] = value;
   }
+  // Also accept Dutch/English full day-name keys (maandag, monday, …)
+  for (const rawKey of Object.keys(openingHours)) {
+    const lower = rawKey.toLowerCase().trim();
+    const dayKey = DAY_NAME_TO_KEY[lower];
+    if (!dayKey || out[dayKey]) continue;
+    const value = openingHours[rawKey];
+    if (typeof value !== 'string') continue;
+    const normalized = value.replace(/–/g, ' - ').replace(/-/g, ' - ').replace(/\s+/g, ' ').trim();
+    if (normalized.toLowerCase().includes('gesloten') || normalized.toLowerCase().includes('closed')) {
+      out[dayKey] = 'closed';
+    } else {
+      out[dayKey] = normalized;
+    }
+  }
   return out;
 }
 
