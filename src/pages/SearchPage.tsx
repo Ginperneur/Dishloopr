@@ -52,7 +52,8 @@ export default function SearchPage() {
   const { search, results, loading, cities, dishes } = useSearch();
   const { isSaved, toggle: toggleSavedSearch } = useSavedSearches();
   
-  const dishQuery = searchParams.get('dish') || '';
+  // Accept both `?dish=` (internal) and `?q=` (external/SEO/shared links)
+  const dishQuery = searchParams.get('dish') || searchParams.get('q') || '';
   const cityParam = searchParams.get('city') || 'all';
   const featuredOnly = searchParams.get('featured') === 'true';
   const cuisineParam = searchParams.get('cuisine') || '';
