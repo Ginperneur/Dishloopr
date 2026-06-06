@@ -168,9 +168,9 @@ export default function RestaurantPage() {
     return (
       <Layout>
         <div className="container py-16 text-center">
-          <h1 className="text-2xl font-bold mb-4">{error || 'Restaurant niet gevonden'}</h1>
+          <h1 className="text-2xl font-bold mb-4">{error || t('restaurant.notFound', 'Restaurant niet gevonden')}</h1>
           <Button asChild>
-            <Link to="/search">Terug naar zoeken</Link>
+            <Link to="/search">{t('restaurant.backToSearch', 'Terug naar zoeken')}</Link>
           </Button>
         </div>
       </Layout>
