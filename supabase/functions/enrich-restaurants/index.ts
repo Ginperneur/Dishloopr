@@ -48,8 +48,8 @@ Deno.serve(async (req) => {
       .order('name');
 
     if (mode === 'opening_hours_only') {
-      // Restaurants that already have a rating but missing opening_hours
-      query = query.not('google_rating', 'is', null).gt('google_rating', 0).is('opening_hours', null);
+      // Alleen restaurants zonder openingstijden — voorkomt onnodige API-kosten
+      query = query.is('opening_hours', null);
     } else if (mode === 'never_enriched') {
       // Only restaurants that have never been touched (rating IS NULL, excludes failed attempts where rating=0)
       query = query.is('google_rating', null);
@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
       .eq('is_active', true);
 
     if (mode === 'opening_hours_only') {
-      countQuery = countQuery.not('google_rating', 'is', null).gt('google_rating', 0).is('opening_hours', null);
+      countQuery = countQuery.is('opening_hours', null);
     } else if (mode === 'never_enriched') {
       countQuery = countQuery.is('google_rating', null);
     } else if (!forceRefresh) {
