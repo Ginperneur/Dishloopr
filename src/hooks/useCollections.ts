@@ -60,7 +60,8 @@ export function useCollections() {
       .select(`
         *,
         city:city_id (name, slug),
-        dish:dish_id (name, slug)
+        dish:dish_id (name, slug),
+        collection_restaurants(count)
       `)
       .eq('is_active', true)
       .order('sort_order', { ascending: true });
@@ -68,7 +69,13 @@ export function useCollections() {
     if (error) {
       console.error('Error fetching collections:', error);
     } else {
-      setCollections(data as unknown as Collection[]);
+      // Hide collections with zero restaurants so bezoekers nooit op een lege pagina landen
+      const nonEmpty = (data || []).filter((c: any) => {
+        const cr = c.collection_restaurants;
+        const count = Array.isArray(cr) ? (cr[0]?.count ?? 0) : (cr?.count ?? 0);
+        return count > 0;
+      });
+      setCollections(nonEmpty as unknown as Collection[]);
     }
     setLoading(false);
   };
