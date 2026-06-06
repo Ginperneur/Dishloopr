@@ -384,11 +384,11 @@ export default function RestaurantPage() {
                       className={`gap-2 ${isFavorite(restaurant.id) ? 'text-destructive border-destructive/30' : ''}`}
                     >
                       <Heart className={`h-4 w-4 ${isFavorite(restaurant.id) ? 'fill-current' : ''}`} />
-                      <span className="hidden sm:inline">{isFavorite(restaurant.id) ? 'Opgeslagen' : 'Opslaan'}</span>
+                      <span className="hidden sm:inline">{isFavorite(restaurant.id) ? t('restaurant.saved', 'Opgeslagen') : t('restaurant.save', 'Opslaan')}</span>
                     </Button>
                     <SocialShare 
                       title={restaurant.name} 
-                      description={`Bekijk ${restaurant.name} op Dishloopr`}
+                      description={t('restaurant.shareDescription', 'Bekijk {{name}} op Dishloopr', { name: restaurant.name })}
                       hashtags={['dishloopr', ...(restaurant.cuisines || [])]}
                       variant="icon"
                       className="h-8 w-8"
