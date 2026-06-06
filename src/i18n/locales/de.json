@@ -154,7 +154,18 @@
     "addToFavorites": "Zu Favoriten hinzufügen",
     "removeFromFavorites": "Aus Favoriten entfernen",
     "menu": "Speisekarte",
-    "featuredRestaurants": "Empfohlene Restaurants"
+    "featuredRestaurants": "Empfohlene Restaurants",
+    "notFound": "Restaurant nicht gefunden",
+    "backToSearch": "Zurück zur Suche",
+    "saved": "Gespeichert",
+    "save": "Speichern",
+    "callToReserve": "Zum Reservieren anrufen",
+    "shareDescription": "Schau dir {{name}} auf Dishloopr an",
+    "metaTitleSuffix": "Restaurant",
+    "metaDescription": "{{name}} in {{city}} ansehen. {{cuisines}}{{reviewSuffix}}.",
+    "metaDescriptionReviews": " mit {{count}} Bewertungen und {{rating}} Sternen",
+    "metaCuisinesFallback": "Köstliches Essen",
+    "metaCityFallback": "den Niederlanden"
   },
   "reviews": {
     "title": "Bewertungen",
@@ -195,7 +206,8 @@
     "delete": "Löschen",
     "confirm": "Bestätigen",
     "minutes": "Min",
-    "viewAll": "Alle ansehen"
+    "viewAll": "Alle ansehen",
+    "back": "Zurück"
   },
   "footer": {
     "about": "Über Dishloopr",
@@ -514,5 +526,9 @@
       "upscale": "Gehoben",
       "luxury": "Luxus"
     }
+  },
+  "breadcrumb": {
+    "home": "Startseite",
+    "search": "Suche"
   }
 }

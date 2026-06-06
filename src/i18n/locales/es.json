@@ -154,7 +154,18 @@
     "addToFavorites": "Añadir a favoritos",
     "removeFromFavorites": "Quitar de favoritos",
     "menu": "Menú",
-    "featuredRestaurants": "Restaurantes destacados"
+    "featuredRestaurants": "Restaurantes destacados",
+    "notFound": "Restaurante no encontrado",
+    "backToSearch": "Volver a la búsqueda",
+    "saved": "Guardado",
+    "save": "Guardar",
+    "callToReserve": "Llamar para reservar",
+    "shareDescription": "Mira {{name}} en Dishloopr",
+    "metaTitleSuffix": "Restaurante",
+    "metaDescription": "Ver {{name}} en {{city}}. {{cuisines}}{{reviewSuffix}}.",
+    "metaDescriptionReviews": " con {{count}} reseñas y una valoración de {{rating}}",
+    "metaCuisinesFallback": "Comida deliciosa",
+    "metaCityFallback": "los Países Bajos"
   },
   "reviews": {
     "title": "Reseñas",
@@ -195,7 +206,8 @@
     "delete": "Eliminar",
     "confirm": "Confirmar",
     "minutes": "min",
-    "viewAll": "Ver todo"
+    "viewAll": "Ver todo",
+    "back": "Atrás"
   },
   "footer": {
     "about": "Sobre Dishloopr",
@@ -514,5 +526,9 @@
       "upscale": "Selecto",
       "luxury": "Lujo"
     }
+  },
+  "breadcrumb": {
+    "home": "Inicio",
+    "search": "Buscar"
   }
 }
