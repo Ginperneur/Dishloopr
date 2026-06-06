@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Star, Loader2, Play, RefreshCw, Clock } from 'lucide-react';
+import { Star, Loader2, Play, RefreshCw, Clock, Calculator } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -24,6 +24,38 @@ export function GoogleEnrichManager() {
   const [stats, setStats] = useState({ enriched: 0, failed: 0, remaining: 0, total: 0 });
   const [batchesDone, setBatchesDone] = useState(0);
   const [activeMode, setActiveMode] = useState<EnrichMode>('full');
+  const [dryRunResult, setDryRunResult] = useState<{
+    mode: EnrichMode;
+    totalToProcess: number;
+    estimatedCostUsd: number;
+    estimatedCostEur: number;
+    sample: Array<{ id: string; name: string; city?: string }>;
+  } | null>(null);
+
+  const runDryRun = async (mode: EnrichMode) => {
+    setRunning(true);
+    setActiveMode(mode);
+    setDryRunResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('enrich-restaurants', {
+        body: { batchSize: 25, offset: 0, mode, dryRun: true },
+      });
+      if (error) throw error;
+      setDryRunResult({
+        mode,
+        totalToProcess: data.totalToProcess,
+        estimatedCostUsd: data.estimatedCostUsd,
+        estimatedCostEur: data.estimatedCostEur,
+        sample: data.sample || [],
+      });
+      toast.success(`Dry run: ${data.totalToProcess} restaurants → ~$${data.estimatedCostUsd} (~€${data.estimatedCostEur})`);
+    } catch (err) {
+      console.error('Dry run error:', err);
+      toast.error('Fout bij dry run: ' + (err instanceof Error ? err.message : 'Onbekend'));
+    } finally {
+      setRunning(false);
+    }
+  };
 
   const runBatch = async (batchSize = 25, mode: EnrichMode = 'full') => {
     setRunning(true);
@@ -119,6 +151,39 @@ export function GoogleEnrichManager() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Dry run — kostenraming zonder API calls */}
+        <div className="p-3 rounded-lg border border-dashed bg-muted/30">
+          <p className="text-xs font-medium mb-2 flex items-center gap-1.5">
+            <Calculator className="h-3.5 w-3.5" />
+            Dry run — schat kosten zonder Google API calls te doen
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={() => runDryRun('full')} disabled={running} variant="outline" size="sm">
+              Schat: Volledig
+            </Button>
+            <Button onClick={() => runDryRun('never_enriched')} disabled={running} variant="outline" size="sm">
+              Schat: Nieuw
+            </Button>
+            <Button onClick={() => runDryRun('opening_hours_only')} disabled={running} variant="outline" size="sm">
+              Schat: Openingstijden
+            </Button>
+          </div>
+          {dryRunResult && (
+            <div className="mt-3 p-3 rounded-md bg-background border text-sm space-y-1">
+              <p><strong>{dryRunResult.totalToProcess.toLocaleString()}</strong> restaurants zouden worden verwerkt in mode <code>{dryRunResult.mode}</code>.</p>
+              <p>Geschatte kosten: <strong>~${dryRunResult.estimatedCostUsd}</strong> (~€{dryRunResult.estimatedCostEur})</p>
+              {dryRunResult.sample.length > 0 && (
+                <details className="mt-1">
+                  <summary className="text-xs text-muted-foreground cursor-pointer">Voorbeeld (eerste {dryRunResult.sample.length})</summary>
+                  <ul className="mt-1 text-xs text-muted-foreground list-disc pl-4">
+                    {dryRunResult.sample.map(s => <li key={s.id}>{s.name}{s.city ? ` — ${s.city}` : ''}</li>)}
+                  </ul>
+                </details>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Action buttons in two rows */}
         <div className="space-y-3">
           <div>
