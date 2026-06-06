@@ -657,7 +657,7 @@ export default function RestaurantPage() {
             <Button className="w-full bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" onClick={() => trackCTAClick('phone')} asChild>
               <a href={`tel:${restaurant.phone}`} className="gap-2">
                 <Phone className="h-5 w-5" />
-                Bel om te reserveren
+                {t('restaurant.callToReserve', 'Bel om te reserveren')}
               </a>
             </Button>
           ) : null}
