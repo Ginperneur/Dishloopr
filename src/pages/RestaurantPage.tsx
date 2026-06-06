@@ -317,7 +317,13 @@ export default function RestaurantPage() {
                   {/* Location */}
                   <div className="flex items-center gap-2 text-sm md:text-base text-muted-foreground mb-3 min-w-0">
                     <MapPin className="h-4 w-4 shrink-0" />
-                    <span className="truncate block min-w-0">{restaurant.address}, {restaurant.postal_code} {restaurant.city?.name}</span>
+                    <span className="truncate block min-w-0">{(() => {
+                      const cleaned = (restaurant.address || '').replace(/,?\s*(Nederland|Netherlands|NL|Belgi[eë]|Belgium|Deutschland|Germany|France|Frankrijk|Espa[ñn]a|Spain)\s*$/i, '').trim();
+                      const cityName = restaurant.city?.name || '';
+                      const hasCity = cityName && new RegExp(`\\b${cityName.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}\\b`, 'i').test(cleaned);
+                      const postal = restaurant.postal_code ? ` ${restaurant.postal_code}` : '';
+                      return hasCity ? cleaned : `${cleaned}${postal ? ',' + postal : ''}${cityName ? ' ' + cityName : ''}`;
+                    })()}</span>
                   </div>
 
                   {/* Open Status & Busy Level */}
