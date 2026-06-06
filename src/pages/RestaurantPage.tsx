@@ -217,8 +217,15 @@ export default function RestaurantPage() {
   return (
     <Layout>
       <SEOHead
-        title={`${restaurant.name} - ${restaurant.cuisines?.slice(0, 2).join(' & ') || 'Restaurant'} | Dishloopr`}
-        description={`Bekijk ${restaurant.name} in ${restaurant.city?.name || 'Nederland'}. ${restaurant.cuisines?.join(', ') || 'Heerlijk eten'}${restaurant.review_count > 0 ? ` met ${restaurant.review_count} reviews en een ${Number(restaurant.rating).toFixed(1)} rating` : ''}.`}
+        title={`${restaurant.name} - ${restaurant.cuisines?.slice(0, 2).join(' & ') || t('restaurant.metaTitleSuffix', 'Restaurant')} | Dishloopr`}
+        description={t('restaurant.metaDescription', 'Bekijk {{name}} in {{city}}. {{cuisines}}{{reviewSuffix}}.', {
+          name: restaurant.name,
+          city: restaurant.city?.name || t('restaurant.metaCityFallback', 'Nederland'),
+          cuisines: restaurant.cuisines?.join(', ') || t('restaurant.metaCuisinesFallback', 'Heerlijk eten'),
+          reviewSuffix: restaurant.review_count > 0
+            ? t('restaurant.metaDescriptionReviews', ' met {{count}} reviews en een {{rating}} rating', { count: restaurant.review_count, rating: Number(restaurant.rating).toFixed(1) })
+            : '',
+        })}
         canonical={`https://dishloopr.com/restaurant/${restaurant.slug}`}
         ogType="restaurant"
         ogImage={restaurant.images?.[0]}
