@@ -45,6 +45,7 @@ import { useAlternativeRestaurants, type RoutingReason } from '@/hooks/useAltern
 import { useAuth } from '@/contexts/AuthContext';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { PRICE_LABELS_FULL, AMBIENCE_TAG_STYLES, AMBIENCE_TAG_I18N_KEYS, WEEK_DAYS } from '@/lib/constants';
+import { tTaxonomy } from '@/lib/i18n/taxonomy';
 import { TikTokIcon } from '@/components/icons/TikTokIcon';
 import { useClickTracking } from '@/hooks/useClickTracking';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
@@ -369,7 +370,7 @@ export default function RestaurantPage() {
                     ))}
                     {restaurant.cuisines?.map((cuisine) => (
                       <Badge key={cuisine} variant="outline" className="capitalize text-xs md:text-sm">
-                        {cuisine}
+                        {tTaxonomy(t, 'cuisine', cuisine)}
                       </Badge>
                     ))}
                   </div>
