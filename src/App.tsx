@@ -101,6 +101,10 @@ const App = () => (
                   <Route path="/search" element={<SearchPage />} />
                   <Route path="/restaurant/:slug" element={<RestaurantPage />} />
                   <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<Navigate to="/login?tab=signup" replace />} />
+                  <Route path="/signup" element={<Navigate to="/login?tab=signup" replace />} />
+                  <Route path="/sign-up" element={<Navigate to="/login?tab=signup" replace />} />
+                  <Route path="/sign-in" element={<Navigate to="/login?tab=login" replace />} />
                   <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                   <Route path="/reset-password" element={<ResetPasswordPage />} />
                   <Route path="/email-confirm" element={<EmailConfirmPage />} />
