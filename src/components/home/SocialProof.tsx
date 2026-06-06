@@ -10,6 +10,32 @@ interface Stats {
   dishes: number;
 }
 
+// Module-level cache so stats are stable across language switches / remounts
+let cachedStats: Stats | null = null;
+let inflight: Promise<Stats> | null = null;
+
+async function loadStats(): Promise<Stats> {
+  if (cachedStats) return cachedStats;
+  if (inflight) return inflight;
+  inflight = (async () => {
+    const [restaurantsRes, reviewsRes, citiesRes, dishesRes] = await Promise.all([
+      supabase.from('restaurants').select('id', { count: 'exact', head: true }).eq('is_active', true),
+      supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('status', 'published'),
+      supabase.from('cities').select('id', { count: 'exact', head: true }).eq('is_active', true),
+      supabase.from('restaurant_dishes').select('id', { count: 'exact', head: true }).in('status', ['approved_by_admin', 'verified_by_owner']),
+    ]);
+    const result: Stats = {
+      restaurants: restaurantsRes.count || 0,
+      reviews: reviewsRes.count || 0,
+      cities: citiesRes.count || 0,
+      dishes: dishesRes.count || 0,
+    };
+    cachedStats = result;
+    return result;
+  })();
+  return inflight;
+}
+
 function AnimatedCounter({ value, suffix = '' }: { value: number; suffix?: string }) {
   const [count, setCount] = useState(0);
 
@@ -39,35 +65,25 @@ function AnimatedCounter({ value, suffix = '' }: { value: number; suffix?: strin
 }
 
 export function SocialProof() {
-  const [stats, setStats] = useState<Stats>({ restaurants: 0, reviews: 0, cities: 0, dishes: 0 });
+  const [stats, setStats] = useState<Stats>(() => cachedStats ?? { restaurants: 0, reviews: 0, cities: 0, dishes: 0 });
 
   useEffect(() => {
-    async function fetchStats() {
-      const [restaurantsRes, reviewsRes, citiesRes, dishesRes] = await Promise.all([
-        supabase.from('restaurants').select('id', { count: 'exact', head: true }).eq('is_active', true),
-        supabase.from('reviews').select('id', { count: 'exact', head: true }),
-        supabase.from('cities').select('id', { count: 'exact', head: true }).eq('is_active', true),
-        supabase.from('restaurant_dishes').select('id', { count: 'exact', head: true }).in('status', ['approved_by_admin', 'verified_by_owner']),
-      ]);
-
-      setStats({
-        restaurants: restaurantsRes.count || 0,
-        reviews: reviewsRes.count || 0,
-        cities: citiesRes.count || 0,
-        dishes: dishesRes.count || 0,
-      });
-    }
-    fetchStats();
+    let cancelled = false;
+    loadStats().then((s) => {
+      if (!cancelled) setStats(s);
+    });
+    return () => { cancelled = true; };
   }, []);
 
-  // Always show all four stats — even small numbers signal real activity
-  // and beat an empty section.
+  // Only show "+" suffix once a stat reaches a meaningful threshold,
+  // and hide stats that are still empty so we never render "0+".
+  const plus = (n: number) => (n >= 10 ? '+' : '');
   const items = [
-    { icon: Store, value: stats.restaurants, label: 'Restaurants', suffix: '+' },
-    { icon: Star, value: stats.reviews, label: 'Reviews', suffix: '+' },
+    { icon: Store, value: stats.restaurants, label: 'Restaurants', suffix: plus(stats.restaurants) },
+    { icon: Star, value: stats.reviews, label: 'Reviews', suffix: plus(stats.reviews) },
     { icon: MapPin, value: stats.cities, label: 'Steden', suffix: '' },
-    { icon: Utensils, value: stats.dishes, label: 'Gerechten', suffix: '+' },
-  ];
+    { icon: Utensils, value: stats.dishes, label: 'Gerechten', suffix: plus(stats.dishes) },
+  ].filter((item) => item.value > 0);
 
   return (
     <section
