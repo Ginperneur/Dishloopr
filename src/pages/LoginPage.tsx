@@ -65,9 +65,15 @@ export default function LoginPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (user && !loading) {
-      navigate('/');
+      const accountType = user.user_metadata?.account_type;
+      const destination = accountType === 'restaurant' ? '/owner-dashboard' : '/my-dashboard';
+      toast({
+        title: 'Je bent al ingelogd',
+        description: 'We sturen je door naar je dashboard.',
+      });
+      navigate(destination, { replace: true });
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, toast]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
