@@ -194,7 +194,8 @@
     "edit": "Editar",
     "delete": "Eliminar",
     "confirm": "Confirmar",
-    "minutes": "min"
+    "minutes": "min",
+    "viewAll": "Ver todo"
   },
   "footer": {
     "about": "Sobre Dishloopr",
