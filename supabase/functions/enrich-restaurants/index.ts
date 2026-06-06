@@ -48,7 +48,9 @@ Deno.serve(async (req) => {
       .order('name');
 
     if (mode === 'opening_hours_only') {
-      // Alleen restaurants zonder openingstijden — voorkomt onnodige API-kosten
+      // Alleen restaurants zonder openingstijden — voorkomt onnodige API-kosten.
+      // Sentinel `_no_hours_from_google` markeert eerdere mislukte pogingen zodat we
+      // dezelfde restaurants niet eindeloos opnieuw bij Google opvragen.
       query = query.is('opening_hours', null);
     } else if (mode === 'never_enriched') {
       // Only restaurants that have never been touched (rating IS NULL, excludes failed attempts where rating=0)
@@ -124,7 +126,12 @@ Deno.serve(async (req) => {
 
         if (searchData.status !== 'OK' || !searchData.results?.length) {
           console.log(`No Google result for: ${restaurant.name} (status: ${searchData.status})`);
-          if (mode !== 'opening_hours_only') {
+          if (mode === 'opening_hours_only') {
+            // Markeer als geprobeerd zodat we 'm niet eindeloos opnieuw zoeken
+            await supabase.from('restaurants')
+              .update({ opening_hours: { _no_hours_from_google: true, _tried_at: new Date().toISOString() } })
+              .eq('id', restaurant.id);
+          } else {
             await supabase.from('restaurants').update({ google_rating: 0, google_reviews_count: 0 }).eq('id', restaurant.id);
           }
           results.push({ id: restaurant.id, name: restaurant.name, status: 'not_found' });
@@ -150,6 +157,11 @@ Deno.serve(async (req) => {
 
         if (detailsData.status !== 'OK' || !detailsData.result) {
           console.log(`No details for: ${restaurant.name} (status: ${detailsData.status})`);
+          if (mode === 'opening_hours_only') {
+            await supabase.from('restaurants')
+              .update({ opening_hours: { _no_hours_from_google: true, _tried_at: new Date().toISOString() } })
+              .eq('id', restaurant.id);
+          }
           results.push({ id: restaurant.id, name: restaurant.name, status: 'no_details' });
           failed++;
           continue;
@@ -197,7 +209,11 @@ Deno.serve(async (req) => {
         } else {
           // No useful data returned
           if (mode === 'opening_hours_only') {
-            // No opening hours found on Google either — skip silently
+            // Google had de plek wel, maar geen openingstijden — sentinel zodat we niet
+            // elke run dezelfde 25 restaurants blijven opvragen.
+            await supabase.from('restaurants')
+              .update({ opening_hours: { _no_hours_from_google: true, _tried_at: new Date().toISOString() } })
+              .eq('id', restaurant.id);
             results.push({ id: restaurant.id, name: restaurant.name, status: 'no_hours' });
           } else {
             await supabase.from('restaurants').update({ google_rating: 0, google_reviews_count: 0 }).eq('id', restaurant.id);
