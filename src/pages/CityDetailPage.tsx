@@ -58,6 +58,7 @@ export default function CityDetailPage() {
         .select('*', { count: 'exact' })
         .eq('city_id', cityData.id)
         .eq('is_active', true)
+        .ilike('address', `%${cityData.name}%`)
         .not('images', 'is', null)
         .not('images', 'eq', '{}')
         .order('is_featured', { ascending: false })
