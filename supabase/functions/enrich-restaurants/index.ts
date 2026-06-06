@@ -39,6 +39,7 @@ Deno.serve(async (req) => {
     const offset = body.offset || 0;
     const forceRefresh = body.forceRefresh || false;
     const mode = body.mode || 'full'; // 'full' | 'opening_hours_only' | 'never_enriched'
+    const dryRun = body.dryRun === true;
 
     // Build query based on mode
     let query = supabase
@@ -89,6 +90,29 @@ Deno.serve(async (req) => {
     const { count: totalRemaining } = await countQuery;
 
     console.log(`[${mode}] Enriching batch of ${restaurants.length} restaurants (offset: ${offset}, total remaining: ${totalRemaining})`);
+
+    // Dry-run: geen Google API calls, alleen tellen + sample teruggeven.
+    if (dryRun) {
+      // Kostenraming op basis van legacy Places pricing
+      const total = totalRemaining || 0;
+      const textSearchCost = total * 0.032; // $ per Text Search call
+      const detailsCost = total * 0.017;    // $ per Place Details call (alleen bij hit)
+      // Conservatieve aanname: ~50% krijgt ook een details-call
+      const estimatedUsd = textSearchCost + detailsCost * 0.5;
+
+      return new Response(
+        JSON.stringify({
+          dryRun: true,
+          mode,
+          totalToProcess: total,
+          sample: restaurants.slice(0, 10).map((r: any) => ({ id: r.id, name: r.name, city: r.cities?.name })),
+          estimatedCostUsd: Number(estimatedUsd.toFixed(2)),
+          estimatedCostEur: Number((estimatedUsd * 0.93).toFixed(2)),
+          note: 'Geen Google API calls gedaan. Dit is een schatting; werkelijke kost hangt af van hit-rate.',
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Quick API key validation with a simple test query
     if (offset === 0) {
