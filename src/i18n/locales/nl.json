@@ -155,7 +155,18 @@
     "addToFavorites": "Toevoegen aan favorieten",
     "removeFromFavorites": "Verwijderen uit favorieten",
     "menu": "Menukaart",
-    "featuredRestaurants": "Uitgelichte restaurants"
+    "featuredRestaurants": "Uitgelichte restaurants",
+    "notFound": "Restaurant niet gevonden",
+    "backToSearch": "Terug naar zoeken",
+    "saved": "Opgeslagen",
+    "save": "Opslaan",
+    "callToReserve": "Bel om te reserveren",
+    "shareDescription": "Bekijk {{name}} op Dishloopr",
+    "metaTitleSuffix": "Restaurant",
+    "metaDescription": "Bekijk {{name}} in {{city}}. {{cuisines}}{{reviewSuffix}}.",
+    "metaDescriptionReviews": " met {{count}} reviews en een {{rating}} rating",
+    "metaCuisinesFallback": "Heerlijk eten",
+    "metaCityFallback": "Nederland"
   },
   "reviews": {
     "title": "Beoordelingen",
@@ -196,7 +207,8 @@
     "delete": "Verwijderen",
     "confirm": "Bevestigen",
     "minutes": "min",
-    "viewAll": "Bekijk alle"
+    "viewAll": "Bekijk alle",
+    "back": "Terug"
   },
   "footer": {
     "about": "Over Dishloopr",
@@ -515,5 +527,9 @@
       "upscale": "Chic",
       "luxury": "Luxe"
     }
+  },
+  "breadcrumb": {
+    "home": "Home",
+    "search": "Zoeken"
   }
 }

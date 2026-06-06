@@ -155,7 +155,18 @@
     "addToFavorites": "Add to favorites",
     "removeFromFavorites": "Remove from favorites",
     "menu": "Menu",
-    "featuredRestaurants": "Featured restaurants"
+    "featuredRestaurants": "Featured restaurants",
+    "notFound": "Restaurant not found",
+    "backToSearch": "Back to search",
+    "saved": "Saved",
+    "save": "Save",
+    "callToReserve": "Call to reserve",
+    "shareDescription": "Check out {{name}} on Dishloopr",
+    "metaTitleSuffix": "Restaurant",
+    "metaDescription": "See {{name}} in {{city}}. {{cuisines}}{{reviewSuffix}}.",
+    "metaDescriptionReviews": " with {{count}} reviews and a {{rating}} rating",
+    "metaCuisinesFallback": "Delicious food",
+    "metaCityFallback": "the Netherlands"
   },
   "reviews": {
     "title": "Reviews",
@@ -196,7 +207,8 @@
     "delete": "Delete",
     "confirm": "Confirm",
     "minutes": "min",
-    "viewAll": "View all"
+    "viewAll": "View all",
+    "back": "Back"
   },
   "footer": {
     "about": "About Dishloopr",
@@ -515,5 +527,9 @@
       "upscale": "Upscale",
       "luxury": "Luxury"
     }
+  },
+  "breadcrumb": {
+    "home": "Home",
+    "search": "Search"
   }
 }

@@ -45,6 +45,7 @@ import { useAlternativeRestaurants, type RoutingReason } from '@/hooks/useAltern
 import { useAuth } from '@/contexts/AuthContext';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { PRICE_LABELS_FULL, AMBIENCE_TAG_STYLES, AMBIENCE_TAG_I18N_KEYS, WEEK_DAYS } from '@/lib/constants';
+import { tTaxonomy } from '@/lib/i18n/taxonomy';
 import { TikTokIcon } from '@/components/icons/TikTokIcon';
 import { useClickTracking } from '@/hooks/useClickTracking';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
@@ -168,9 +169,9 @@ export default function RestaurantPage() {
     return (
       <Layout>
         <div className="container py-16 text-center">
-          <h1 className="text-2xl font-bold mb-4">{error || 'Restaurant niet gevonden'}</h1>
+          <h1 className="text-2xl font-bold mb-4">{error || t('restaurant.notFound', 'Restaurant niet gevonden')}</h1>
           <Button asChild>
-            <Link to="/search">Terug naar zoeken</Link>
+            <Link to="/search">{t('restaurant.backToSearch', 'Terug naar zoeken')}</Link>
           </Button>
         </div>
       </Layout>
@@ -182,7 +183,7 @@ export default function RestaurantPage() {
   // Generate SEO structured data
   const restaurantSchema = createRestaurantSchema({
     name: restaurant.name,
-    description: `${restaurant.name} - ${restaurant.cuisines?.join(', ') || 'Restaurant'} in ${restaurant.city?.name || 'Nederland'}`,
+    description: `${restaurant.name} - ${restaurant.cuisines?.join(', ') || t('restaurant.metaTitleSuffix', 'Restaurant')} in ${restaurant.city?.name || t('restaurant.metaCityFallback', 'Nederland')}`,
     image: restaurant.images?.[0],
     address: restaurant.address,
     city: restaurant.city?.name || '',
@@ -202,8 +203,8 @@ export default function RestaurantPage() {
   });
 
   const breadcrumbSchema = createBreadcrumbSchema([
-    { name: 'Home', url: 'https://dishloopr.com' },
-    { name: 'Zoeken', url: 'https://dishloopr.com/search' },
+    { name: t('breadcrumb.home', 'Home'), url: 'https://dishloopr.com' },
+    { name: t('breadcrumb.search', 'Zoeken'), url: 'https://dishloopr.com/search' },
     { name: restaurant.name, url: `https://dishloopr.com/restaurant/${restaurant.slug}` }
   ]);
 
@@ -217,8 +218,15 @@ export default function RestaurantPage() {
   return (
     <Layout>
       <SEOHead
-        title={`${restaurant.name} - ${restaurant.cuisines?.slice(0, 2).join(' & ') || 'Restaurant'} | Dishloopr`}
-        description={`Bekijk ${restaurant.name} in ${restaurant.city?.name || 'Nederland'}. ${restaurant.cuisines?.join(', ') || 'Heerlijk eten'}${restaurant.review_count > 0 ? ` met ${restaurant.review_count} reviews en een ${Number(restaurant.rating).toFixed(1)} rating` : ''}.`}
+        title={`${restaurant.name} - ${restaurant.cuisines?.slice(0, 2).join(' & ') || t('restaurant.metaTitleSuffix', 'Restaurant')} | Dishloopr`}
+        description={t('restaurant.metaDescription', 'Bekijk {{name}} in {{city}}. {{cuisines}}{{reviewSuffix}}.', {
+          name: restaurant.name,
+          city: restaurant.city?.name || t('restaurant.metaCityFallback', 'Nederland'),
+          cuisines: restaurant.cuisines?.join(', ') || t('restaurant.metaCuisinesFallback', 'Heerlijk eten'),
+          reviewSuffix: restaurant.review_count > 0
+            ? t('restaurant.metaDescriptionReviews', ' met {{count}} reviews en een {{rating}} rating', { count: restaurant.review_count, rating: Number(restaurant.rating).toFixed(1) })
+            : '',
+        })}
         canonical={`https://dishloopr.com/restaurant/${restaurant.slug}`}
         ogType="restaurant"
         ogImage={restaurant.images?.[0]}
@@ -362,7 +370,7 @@ export default function RestaurantPage() {
                     ))}
                     {restaurant.cuisines?.map((cuisine) => (
                       <Badge key={cuisine} variant="outline" className="capitalize text-xs md:text-sm">
-                        {cuisine}
+                        {tTaxonomy(t, 'cuisine', cuisine)}
                       </Badge>
                     ))}
                   </div>
@@ -377,11 +385,11 @@ export default function RestaurantPage() {
                       className={`gap-2 ${isFavorite(restaurant.id) ? 'text-destructive border-destructive/30' : ''}`}
                     >
                       <Heart className={`h-4 w-4 ${isFavorite(restaurant.id) ? 'fill-current' : ''}`} />
-                      <span className="hidden sm:inline">{isFavorite(restaurant.id) ? 'Opgeslagen' : 'Opslaan'}</span>
+                      <span className="hidden sm:inline">{isFavorite(restaurant.id) ? t('restaurant.saved', 'Opgeslagen') : t('restaurant.save', 'Opslaan')}</span>
                     </Button>
                     <SocialShare 
                       title={restaurant.name} 
-                      description={`Bekijk ${restaurant.name} op Dishloopr`}
+                      description={t('restaurant.shareDescription', 'Bekijk {{name}} op Dishloopr', { name: restaurant.name })}
                       hashtags={['dishloopr', ...(restaurant.cuisines || [])]}
                       variant="icon"
                       className="h-8 w-8"
@@ -650,7 +658,7 @@ export default function RestaurantPage() {
             <Button className="w-full bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" onClick={() => trackCTAClick('phone')} asChild>
               <a href={`tel:${restaurant.phone}`} className="gap-2">
                 <Phone className="h-5 w-5" />
-                Bel om te reserveren
+                {t('restaurant.callToReserve', 'Bel om te reserveren')}
               </a>
             </Button>
           ) : null}
