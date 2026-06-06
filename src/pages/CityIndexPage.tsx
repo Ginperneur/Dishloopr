@@ -22,33 +22,33 @@ export default function CityIndexPage() {
 
   useEffect(() => {
     async function fetchCities() {
-      const [citiesRes, restaurantsRes] = await Promise.all([
-        supabase
-          .from('cities')
-          .select('id, name, slug')
-          .eq('is_active', true)
-          .order('name'),
-        supabase
-          .from('restaurants')
-          .select('city_id')
-          .eq('is_active', true),
-      ]);
+      const { data: citiesData, error: citiesErr } = await supabase
+        .from('cities')
+        .select('id, name, slug')
+        .eq('is_active', true)
+        .order('name');
 
-      const citiesData = citiesRes.data;
-      if (!citiesData) {
+      if (citiesErr || !citiesData) {
+        console.error('[CityIndexPage] cities fetch failed', citiesErr);
         setLoading(false);
         return;
       }
 
-      const counts = new Map<string, number>();
-      for (const r of restaurantsRes.data || []) {
-        if (!r.city_id) continue;
-        counts.set(r.city_id, (counts.get(r.city_id) || 0) + 1);
-      }
+      // Run an exact count per city in parallel (HEAD requests, no row payload).
+      // This avoids the PostgREST 1000-row cap that breaks naive client-side counting.
+      const countResults = await Promise.all(
+        citiesData.map((c) =>
+          supabase
+            .from('restaurants')
+            .select('id', { count: 'exact', head: true })
+            .eq('is_active', true)
+            .eq('city_id', c.id)
+        )
+      );
 
-      const cityOverviews: CityOverview[] = citiesData.map((c) => ({
+      const cityOverviews: CityOverview[] = citiesData.map((c, i) => ({
         ...c,
-        restaurantCount: counts.get(c.id) || 0,
+        restaurantCount: countResults[i].count ?? 0,
       }));
 
       setCities(cityOverviews.sort((a, b) => b.restaurantCount - a.restaurantCount));
