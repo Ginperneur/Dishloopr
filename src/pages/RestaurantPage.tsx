@@ -182,7 +182,7 @@ export default function RestaurantPage() {
   // Generate SEO structured data
   const restaurantSchema = createRestaurantSchema({
     name: restaurant.name,
-    description: `${restaurant.name} - ${restaurant.cuisines?.join(', ') || 'Restaurant'} in ${restaurant.city?.name || 'Nederland'}`,
+    description: `${restaurant.name} - ${restaurant.cuisines?.join(', ') || t('restaurant.metaTitleSuffix', 'Restaurant')} in ${restaurant.city?.name || t('restaurant.metaCityFallback', 'Nederland')}`,
     image: restaurant.images?.[0],
     address: restaurant.address,
     city: restaurant.city?.name || '',
@@ -202,8 +202,8 @@ export default function RestaurantPage() {
   });
 
   const breadcrumbSchema = createBreadcrumbSchema([
-    { name: 'Home', url: 'https://dishloopr.com' },
-    { name: 'Zoeken', url: 'https://dishloopr.com/search' },
+    { name: t('breadcrumb.home', 'Home'), url: 'https://dishloopr.com' },
+    { name: t('breadcrumb.search', 'Zoeken'), url: 'https://dishloopr.com/search' },
     { name: restaurant.name, url: `https://dishloopr.com/restaurant/${restaurant.slug}` }
   ]);
 
