@@ -4110,6 +4110,10 @@ export type Database = {
       }
     }
     Functions: {
+      admin_apply_restaurant_categorization: {
+        Args: { _data: Json }
+        Returns: number
+      }
       audit_and_fix_dish_classifications: { Args: never; Returns: Json }
       auto_enrich_dish_dietary_labels: { Args: never; Returns: Json }
       calculate_featured_market_price: {
