@@ -159,7 +159,7 @@ export function AlternativeRestaurants({
                           variant="secondary"
                           className="text-[10px] px-1.5 py-0 h-5 bg-primary/10 text-primary"
                         >
-                          {reason}
+                          {reason.startsWith('alternatives.') ? t(reason) : reason}
                         </Badge>
                       ))}
                     </div>
