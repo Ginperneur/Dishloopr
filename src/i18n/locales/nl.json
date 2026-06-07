@@ -634,6 +634,10 @@
     "sameDish": "Zelfde gerecht",
     "samePrice": "Zelfde prijsklasse",
     "similarPrice": "Vergelijkbare prijs",
-    "similarCuisine": "Vergelijkbare keuken"
+    "similarCuisine": "Vergelijkbare keuken",
+    "similarAmbience": "Vergelijkbare sfeer",
+    "nearby": "Dichtbij",
+    "inArea": "In de buurt",
+    "openNow": "Nu open"
   }
 }

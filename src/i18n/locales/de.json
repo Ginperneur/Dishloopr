@@ -625,6 +625,10 @@
     "sameDish": "Gleiches Gericht",
     "samePrice": "Gleiche Preisklasse",
     "similarPrice": "Ähnlicher Preis",
-    "similarCuisine": "Ähnliche Küche"
+    "similarCuisine": "Ähnliche Küche",
+    "similarAmbience": "Ähnliches Ambiente",
+    "nearby": "In der Nähe",
+    "inArea": "In der Umgebung",
+    "openNow": "Jetzt geöffnet"
   }
 }

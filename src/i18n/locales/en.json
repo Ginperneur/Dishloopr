@@ -626,6 +626,10 @@
     "sameDish": "Same dish",
     "samePrice": "Same price range",
     "similarPrice": "Similar price",
-    "similarCuisine": "Similar cuisine"
+    "similarCuisine": "Similar cuisine",
+    "similarAmbience": "Similar ambience",
+    "nearby": "Nearby",
+    "inArea": "In the area",
+    "openNow": "Open now"
   }
 }
