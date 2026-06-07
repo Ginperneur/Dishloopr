@@ -175,7 +175,10 @@
     "suggestTags": "Fehlen Tags?",
     "dishesEaten": "Welche Gerichte haben Sie gegessen?",
     "photos": "Fotos hinzufügen",
-    "submit": "Absenden"
+    "submit": "Absenden",
+    "empty": "Noch keine Bewertungen. Sei der Erste!",
+    "anonymous": "Anonym",
+    "photoAlt": "Bewertungsfoto {{n}}"
   },
   "trending": {
     "title": "Trending Gerichte",
@@ -321,7 +324,12 @@
     "youMightAlsoLike": "Das könnte dir auch gefallen"
   },
   "menu": {
-    "allergens": "Allergene"
+    "allergens": "Allergene",
+    "dish": "Gericht",
+    "dishes": "Gerichte",
+    "found": "{{count}} Gericht gefunden",
+    "found_plural": "{{count}} Gerichte gefunden",
+    "clearFilters": "Filter zurücksetzen"
   },
   "busyLevel": {
     "quiet": "Ruhig",
@@ -508,7 +516,13 @@
       "dessert": "Nachtisch",
       "drink": "Getränk",
       "menu": "Menü",
-      "side": "Beilage"
+      "side": "Beilage",
+      "menuEmoji": "📋",
+      "starterEmoji": "🥗",
+      "mainEmoji": "🍽️",
+      "sideEmoji": "🥙",
+      "dessertEmoji": "🍰",
+      "drinkEmoji": "🥤"
     },
     "dietary": {
       "vegetarian": "Vegetarisch",

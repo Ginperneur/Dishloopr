@@ -176,7 +176,10 @@
     "suggestTags": "Mis je tags?",
     "dishesEaten": "Welke gerechten heb je gegeten?",
     "photos": "Foto's toevoegen",
-    "submit": "Versturen"
+    "submit": "Versturen",
+    "empty": "Nog geen reviews. Wees de eerste!",
+    "anonymous": "Anoniem",
+    "photoAlt": "Review foto {{n}}"
   },
   "trending": {
     "title": "Trending gerechten",
@@ -322,7 +325,12 @@
     "youMightAlsoLike": "Misschien vind je dit ook lekker"
   },
   "menu": {
-    "allergens": "Allergenen"
+    "allergens": "Allergenen",
+    "dish": "gerecht",
+    "dishes": "gerechten",
+    "found": "{{count}} gerecht gevonden",
+    "found_plural": "{{count}} gerechten gevonden",
+    "clearFilters": "Filters wissen"
   },
   "busyLevel": {
     "quiet": "Rustig",
@@ -509,7 +517,13 @@
       "dessert": "Dessert",
       "drink": "Drank",
       "menu": "Menu",
-      "side": "Bijgerecht"
+      "side": "Bijgerecht",
+      "menuEmoji": "📋",
+      "starterEmoji": "🥗",
+      "mainEmoji": "🍽️",
+      "sideEmoji": "🥙",
+      "dessertEmoji": "🍰",
+      "drinkEmoji": "🥤"
     },
     "dietary": {
       "vegetarian": "Vegetarisch",
@@ -531,5 +545,13 @@
   "breadcrumb": {
     "home": "Home",
     "search": "Zoeken"
+  },
+  "course": {
+    "menuEmoji": "📋",
+    "starterEmoji": "🥗",
+    "mainEmoji": "🍽️",
+    "sideEmoji": "🥙",
+    "dessertEmoji": "🍰",
+    "drinkEmoji": "🥤"
   }
 }

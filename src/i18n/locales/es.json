@@ -175,7 +175,10 @@
     "suggestTags": "¿Faltan etiquetas?",
     "dishesEaten": "¿Qué platos comiste?",
     "photos": "Añadir fotos",
-    "submit": "Enviar"
+    "submit": "Enviar",
+    "empty": "Aún no hay reseñas. ¡Sé el primero!",
+    "anonymous": "Anónimo",
+    "photoAlt": "Foto de reseña {{n}}"
   },
   "trending": {
     "title": "Platos populares",
@@ -321,7 +324,12 @@
     "youMightAlsoLike": "También te podría gustar"
   },
   "menu": {
-    "allergens": "Alérgenos"
+    "allergens": "Alérgenos",
+    "dish": "plato",
+    "dishes": "platos",
+    "found": "{{count}} plato encontrado",
+    "found_plural": "{{count}} platos encontrados",
+    "clearFilters": "Borrar filtros"
   },
   "busyLevel": {
     "quiet": "Tranquilo",
@@ -508,7 +516,13 @@
       "dessert": "Postre",
       "drink": "Bebida",
       "menu": "Menú",
-      "side": "Guarnición"
+      "side": "Guarnición",
+      "menuEmoji": "📋",
+      "starterEmoji": "🥗",
+      "mainEmoji": "🍽️",
+      "sideEmoji": "🥙",
+      "dessertEmoji": "🍰",
+      "drinkEmoji": "🥤"
     },
     "dietary": {
       "vegetarian": "Vegetariano",

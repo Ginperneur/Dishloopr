@@ -175,7 +175,10 @@
     "suggestTags": "Tags manquants?",
     "dishesEaten": "Quels plats avez-vous mangé?",
     "photos": "Ajouter des photos",
-    "submit": "Envoyer"
+    "submit": "Envoyer",
+    "empty": "Pas encore d'avis. Soyez le premier !",
+    "anonymous": "Anonyme",
+    "photoAlt": "Photo d'avis {{n}}"
   },
   "trending": {
     "title": "Plats tendance",
@@ -321,7 +324,12 @@
     "youMightAlsoLike": "Vous pourriez aussi aimer"
   },
   "menu": {
-    "allergens": "Allergènes"
+    "allergens": "Allergènes",
+    "dish": "plat",
+    "dishes": "plats",
+    "found": "{{count}} plat trouvé",
+    "found_plural": "{{count}} plats trouvés",
+    "clearFilters": "Effacer les filtres"
   },
   "busyLevel": {
     "quiet": "Calme",
@@ -508,7 +516,13 @@
       "dessert": "Dessert",
       "drink": "Boisson",
       "menu": "Menu",
-      "side": "Accompagnement"
+      "side": "Accompagnement",
+      "menuEmoji": "📋",
+      "starterEmoji": "🥗",
+      "mainEmoji": "🍽️",
+      "sideEmoji": "🥙",
+      "dessertEmoji": "🍰",
+      "drinkEmoji": "🥤"
     },
     "dietary": {
       "vegetarian": "Végétarien",
