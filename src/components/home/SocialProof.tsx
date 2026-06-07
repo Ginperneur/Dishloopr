@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Utensils, Star, MapPin, Store } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useTranslation } from 'react-i18next';
 
 interface Stats {
   restaurants: number;
@@ -65,6 +66,7 @@ function AnimatedCounter({ value, suffix = '' }: { value: number; suffix?: strin
 }
 
 export function SocialProof() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<Stats>(() => cachedStats ?? { restaurants: 0, reviews: 0, cities: 0, dishes: 0 });
 
   useEffect(() => {
@@ -79,16 +81,16 @@ export function SocialProof() {
   // and hide stats that are still empty so we never render "0+".
   const plus = (n: number) => (n >= 10 ? '+' : '');
   const items = [
-    { icon: Store, value: stats.restaurants, label: 'Restaurants', suffix: plus(stats.restaurants) },
-    { icon: Star, value: stats.reviews, label: 'Reviews', suffix: plus(stats.reviews) },
-    { icon: MapPin, value: stats.cities, label: 'Steden', suffix: '' },
-    { icon: Utensils, value: stats.dishes, label: 'Gerechten', suffix: plus(stats.dishes) },
+    { icon: Store, value: stats.restaurants, label: t('stats.restaurants', 'Restaurants'), suffix: plus(stats.restaurants) },
+    { icon: Star, value: stats.reviews, label: t('stats.reviews', 'Reviews'), suffix: plus(stats.reviews) },
+    { icon: MapPin, value: stats.cities, label: t('stats.cities', 'Steden'), suffix: '' },
+    { icon: Utensils, value: stats.dishes, label: t('stats.dishes', 'Gerechten'), suffix: plus(stats.dishes) },
   ].filter((item) => item.value > 0);
 
   return (
     <section
       className="py-4 md:py-6 border-y border-border/50 bg-muted/20"
-      aria-label="Statistieken over Dishloopr"
+      aria-label={t('stats.aria', 'Statistieken over Dishloopr')}
     >
       <div className="container px-4 md:px-6">
         {/* Mobile: horizontal scroll strip */}

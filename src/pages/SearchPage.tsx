@@ -247,12 +247,12 @@ export default function SearchPage() {
     if (!userLocation) {
       setPendingNearMe(true);
       requestLocation();
-      toast.info('Locatie wordt opgehaald…');
+      toast.info(t('search.locationToast', 'Locatie wordt opgehaald…'));
     } else {
       // Already have location — open map view centered on user immediately
       handleViewModeChange('map');
       setSortBy('nearest');
-      toast.success('Kaart gecentreerd op jouw locatie');
+      toast.success(t('search.mapCentered', 'Kaart gecentreerd op jouw locatie'));
     }
   };
 
@@ -262,7 +262,7 @@ export default function SearchPage() {
       setPendingNearMe(false);
       handleViewModeChange('map');
       setSortBy('nearest');
-      toast.success('Kaart gecentreerd op jouw locatie');
+      toast.success(t('search.mapCentered', 'Kaart gecentreerd op jouw locatie'));
     }
   }, [userLocation, pendingNearMe]);
 
@@ -365,14 +365,14 @@ export default function SearchPage() {
 
       <div className="container px-4 md:px-6 py-4 md:py-8">
         {/* Breadcrumb — preserve back-context */}
-        <nav aria-label="Kruimelpad" className="text-xs md:text-sm text-muted-foreground mb-2">
+        <nav aria-label={t('search.ariaCrumb', 'Kruimelpad')} className="text-xs md:text-sm text-muted-foreground mb-2">
           <ol className="flex items-center gap-1.5 flex-wrap">
             <li>
               <button
                 onClick={() => navigate('/')}
                 className="hover:text-foreground transition-colors"
               >
-                Home
+                {t('breadcrumb.home', 'Home')}
               </button>
             </li>
             <li aria-hidden="true">/</li>
@@ -381,7 +381,7 @@ export default function SearchPage() {
                 onClick={() => navigate('/search')}
                 className="hover:text-foreground transition-colors"
               >
-                Zoeken
+                {t('breadcrumb.search', 'Zoeken')}
               </button>
             </li>
             {(dishQuery || (selectedCityName && selectedCityId !== 'all')) && (
@@ -403,17 +403,17 @@ export default function SearchPage() {
           <div>
             <h1 className="text-xl md:text-2xl font-bold">
               {featuredOnly ? (
-                <>Uitgelichte restaurants</>
+                <>{t('search.featuredTitleHeading', 'Uitgelichte restaurants')}</>
               ) : dishQuery ? (
                 <>
                   {dishQuery} {cityName && `in ${cityName}`}
                 </>
               ) : (
-                <>Restaurants {cityName && `in ${cityName}`}</>
+                <>{cityName ? t('search.restaurantsInCity', { city: cityName, defaultValue: `Restaurants in ${cityName}` }) : 'Restaurants'}</>
               )}
             </h1>
             <p className="text-muted-foreground text-sm mt-0.5">
-              {loading ? 'Zoeken...' : `${sortedResults.length} ${t('search.results')}`}
+              {loading ? t('search.searching', 'Zoeken...') : `${sortedResults.length} ${t('search.results')}`}
             </p>
           </div>
           
@@ -422,7 +422,7 @@ export default function SearchPage() {
             <div className="flex items-center justify-end gap-2">
               <Select value={selectedCityId} onValueChange={handleCityChange}>
                 <SelectTrigger className="w-auto min-w-[140px] h-9">
-                  <SelectValue placeholder="Kies stad" />
+                  <SelectValue placeholder={t('search.pickCity', 'Kies stad')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t('cities.all')}</SelectItem>
@@ -457,7 +457,7 @@ export default function SearchPage() {
                 ) : (
                   <Navigation className="h-4 w-4 mr-1.5" />
                 )}
-                <span className="hidden sm:inline">Bij mij</span>
+                <span className="hidden sm:inline">{t('search.nearMe', 'Bij mij')}</span>
               </Button>
 
               {/* Open Now quick filter — surfaced early in the flow */}
@@ -473,7 +473,7 @@ export default function SearchPage() {
                 aria-pressed={!!filters.openNow}
               >
                 <Clock className="h-4 w-4 mr-1.5" />
-                <span>Open nu</span>
+                <span>{t('search.openNow', 'Open nu')}</span>
               </Button>
 
               {/* Save Search Button — only meaningful when there is a query/city */}
@@ -485,7 +485,7 @@ export default function SearchPage() {
                   cuisine: cuisineParam || undefined,
                 };
                 const saved = isSaved(parts);
-                const label = [dishQuery, selectedCityName].filter(Boolean).join(' • ') || cuisineParam || 'Zoekopdracht';
+                const label = [dishQuery, selectedCityName].filter(Boolean).join(' • ') || cuisineParam || t('search.searchLabel', 'Zoekopdracht');
                 const url = `/search?${searchParams.toString()}`;
                 return (
                   <Button
@@ -493,7 +493,7 @@ export default function SearchPage() {
                     size="sm"
                     onClick={() => {
                       const nowSaved = toggleSavedSearch({ ...parts, label, url });
-                      toast.success(nowSaved ? 'Zoekopdracht opgeslagen' : 'Zoekopdracht verwijderd');
+                      toast.success(nowSaved ? t('search.queryToast', 'Zoekopdracht opgeslagen') : t('search.queryRemovedToast', 'Zoekopdracht verwijderd'));
                     }}
                     aria-pressed={saved}
                   >
@@ -502,7 +502,7 @@ export default function SearchPage() {
                     ) : (
                       <Bookmark className="h-4 w-4 mr-1.5" />
                     )}
-                    <span className="hidden sm:inline">{saved ? 'Opgeslagen' : 'Bewaar'}</span>
+                    <span className="hidden sm:inline">{saved ? t('search.saved', 'Opgeslagen') : t('search.save', 'Bewaar')}</span>
                   </Button>
                 );
               })()}
@@ -540,7 +540,7 @@ export default function SearchPage() {
                   <SelectItem value="mostReviews">{t('sort.mostReviews')}</SelectItem>
                   <SelectItem value="priceLowHigh">{t('sort.priceLowHigh')}</SelectItem>
                   <SelectItem value="priceHighLow">{t('sort.priceHighLow')}</SelectItem>
-                  {userLocation && <SelectItem value="nearest">Dichtstbij</SelectItem>}
+                  {userLocation && <SelectItem value="nearest">{t('search.nearestSort', 'Dichtstbij')}</SelectItem>}
                 </SelectContent>
               </Select>
               
@@ -620,7 +620,7 @@ export default function SearchPage() {
                 className="cursor-pointer text-xs"
                 onClick={() => setFilters(prev => ({ ...prev, hasTerrace: undefined }))}
               >
-                ☀️ Terras
+                ☀️ {t('filters.terraceLabel', 'Terras')}
                 <X className="h-3 w-3 ml-1" />
               </Badge>
             )}
@@ -689,7 +689,7 @@ export default function SearchPage() {
                   onClick={loadMore}
                   className="min-w-[200px]"
                 >
-                  Meer laden ({sortedResults.length - displayCount} resterend)
+                  {t('search.loadMore', { remaining: sortedResults.length - displayCount, defaultValue: `Meer laden (${sortedResults.length - displayCount} resterend)` })}
                 </Button>
               </div>
             )}
@@ -711,25 +711,25 @@ export default function SearchPage() {
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-muted mb-6">
               <UtensilsCrossed className="h-10 w-10 text-muted-foreground" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">Geen resultaten gevonden</h3>
+            <h3 className="text-xl font-semibold mb-2">{t('search.noResultsTitle', 'Geen resultaten gevonden')}</h3>
             <p className="text-muted-foreground max-w-md mx-auto mb-6">
               {dishQuery 
-                ? `We konden geen restaurants vinden voor "${dishQuery}"${selectedCityName ? ` in ${selectedCityName}` : ''}. Probeer een ander gerecht of verwijder je filters.`
-                : 'Probeer een ander zoekwoord of pas je filters aan.'}
+                ? t('search.noResultsDish', { dish: dishQuery, cityPart: selectedCityName ? t('search.inCityPart', { city: selectedCityName, defaultValue: ` in ${selectedCityName}` }) : '', defaultValue: `We konden geen restaurants vinden voor "${dishQuery}". Probeer een ander gerecht of verwijder je filters.` })
+                : t('search.noResultsGeneric', 'Probeer een ander zoekwoord of pas je filters aan.')}
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
               {activeFilterCount > 0 && (
                 <Button variant="outline" onClick={clearFilters}>
-                  Filters wissen
+                  {t('search.clearFilters', 'Filters wissen')}
                 </Button>
               )}
               {dishQuery && (
                 <Button variant="outline" onClick={() => handleSearch('', 'all')}>
-                  Alles tonen
+                  {t('search.showAll', 'Alles tonen')}
                 </Button>
               )}
               <Button onClick={() => navigate('/')}>
-                Terug naar home
+                {t('search.backHome', 'Terug naar home')}
               </Button>
             </div>
           </motion.div>
@@ -745,7 +745,7 @@ export default function SearchPage() {
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={scrollToTop}
             className="fixed bottom-20 right-4 z-40 p-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-colors md:bottom-6 md:right-6"
-            aria-label="Terug naar boven"
+            aria-label={t('search.scrollTop', 'Terug naar boven')}
           >
             <ArrowUp className="h-5 w-5" />
           </motion.button>

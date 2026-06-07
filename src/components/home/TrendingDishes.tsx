@@ -42,7 +42,7 @@ export function TrendingDishes({ dishes, cityName }: TrendingDishesProps) {
           </div>
           <Button variant="ghost" size="sm" asChild className="hidden md:flex">
             <Link to="/eten" className="flex items-center gap-2">
-              Alle gerechten
+              {t('home.allDishes', 'Alle gerechten')}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
@@ -67,7 +67,7 @@ export function TrendingDishes({ dishes, cityName }: TrendingDishesProps) {
                       {formatDishName(dish.name)}
                     </h3>
                     <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-                      {dish.restaurant_count} {dish.restaurant_count === 1 ? 'restaurant' : 'restaurants'}
+                      {dish.restaurant_count} {dish.restaurant_count === 1 ? t('stats.restaurants', 'restaurant').replace(/s$/i,'') : t('stats.restaurants', 'restaurants')}
                     </p>
                   </div>
                   <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-accent flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors shrink-0">
@@ -89,7 +89,7 @@ export function TrendingDishes({ dishes, cityName }: TrendingDishesProps) {
         >
           <Button variant="outline" asChild>
             <Link to="/eten" className="flex items-center gap-2">
-              Bekijk alle gerechten
+              {t('home.viewAllDishes', 'Bekijk alle gerechten')}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>

@@ -19,7 +19,25 @@
     "popular": "Populaire",
     "myProfile": "Mon Profil",
     "user": "Utilisateur",
-    "language": "Langue"
+    "language": "Langue",
+    "nearby": "Près de moi",
+    "savedSearches": "Vos recherches enregistrées",
+    "forYou": "Pour vous",
+    "nearbyTab": "À proximité",
+    "popularCuisines": "Cuisines populaires",
+    "quickNav": "Navigation rapide",
+    "discoverContent": "Contenu recommandé",
+    "ariaSavedSearches": "Recherches enregistrées",
+    "ariaNearby": "Chercher des restaurants près de moi",
+    "discoverByCity": "Découvrir par ville",
+    "allCities": "Toutes les villes",
+    "discoverMore": "Découvrir plus",
+    "allDishes": "Tous les plats",
+    "viewAllDishes": "Voir tous les plats",
+    "collectionsLabel": "Collections",
+    "alertsBlocked": "Notifications bloquées dans le navigateur",
+    "alertsOn": "Vous serez notifié des nouvelles correspondances",
+    "alertsOff": "Notifications désactivées"
   },
   "hero": {
     "title": "Trouvez des restaurants",
@@ -95,7 +113,12 @@
     "fineDining": "Gastronomique",
     "minimalist": "Minimaliste",
     "vibrant": "Vibrant",
-    "bohemian": "Bohème"
+    "bohemian": "Bohème",
+    "openNow": "Ouvert maintenant",
+    "distanceFromCity": "Distance autour de la ville",
+    "onlyInCity": "Uniquement en ville",
+    "distanceAria": "Distance maximale de la ville en kilomètres",
+    "terraceLabel": "Terrasse"
   },
   "cuisines": {
     "japanese": "Japonaise",
@@ -197,7 +220,32 @@
     "descDishInCity": "Trouvez les meilleurs restaurants {{dish}} à {{city}}. Comparez les options, lisez les avis et réservez directement.",
     "descDishInCountry": "Trouvez les meilleurs restaurants {{dish}} en Europe. Comparez les options, lisez les avis et réservez directement.",
     "descSearchInCity": "Recherchez et découvrez les restaurants à {{city}}. Filtrez par plat, ambiance et prix.",
-    "descSearchInCountry": "Recherchez et découvrez les restaurants en Europe. Filtrez par plat, ambiance et prix."
+    "descSearchInCountry": "Recherchez et découvrez les restaurants en Europe. Filtrez par plat, ambiance et prix.",
+    "searching": "Recherche...",
+    "pickCity": "Choisir une ville",
+    "nearMe": "Près de moi",
+    "openNow": "Ouvert maintenant",
+    "saved": "Enregistré",
+    "save": "Enregistrer",
+    "searchLabel": "Recherche",
+    "queryToast": "Recherche enregistrée",
+    "queryRemovedToast": "Recherche supprimée",
+    "noResultsTitle": "Aucun résultat",
+    "noResultsDish": "Nous n'avons trouvé aucun restaurant pour « {{dish}} »{{cityPart}}. Essayez un autre plat ou retirez vos filtres.",
+    "noResultsGeneric": "Essayez un autre mot-clé ou ajustez vos filtres.",
+    "inCityPart": " à {{city}}",
+    "clearFilters": "Effacer les filtres",
+    "showAll": "Tout afficher",
+    "backHome": "Retour à l'accueil",
+    "loadMore": "Charger plus ({{remaining}} restants)",
+    "nearestSort": "Plus proche",
+    "locationToast": "Localisation en cours…",
+    "mapCentered": "Carte centrée sur votre position",
+    "anotherDish": "Un autre plat...",
+    "featuredTitleHeading": "Restaurants en vedette",
+    "restaurantsInCity": "Restaurants à {{city}}",
+    "scrollTop": "Retour en haut",
+    "ariaCrumb": "Fil d'Ariane"
   },
   "common": {
     "loading": "Chargement...",
@@ -544,5 +592,43 @@
   "breadcrumb": {
     "home": "Accueil",
     "search": "Recherche"
+  },
+  "howItWorks": {
+    "title": "Comment fonctionne Dishloopr",
+    "subtitle": "Plus de roulette restaurant. Trouvez le plat qui vous tente en trois étapes.",
+    "step1Title": "Chercher par plat",
+    "step1Desc": "Tapez ce dont vous avez vraiment envie — sushi, ramen, un burger halal.",
+    "step2Title": "Choisir une ville",
+    "step2Desc": "Filtrez par quartier, ambiance ou régime. Voyez uniquement les lieux qui correspondent.",
+    "step3Title": "Mangez ce que vous voulez",
+    "step3Desc": "Comparez les menus, lisez de vrais avis et réservez directement."
+  },
+  "stats": {
+    "restaurants": "Restaurants",
+    "reviews": "Avis",
+    "cities": "Villes",
+    "dishes": "Plats",
+    "aria": "Statistiques Dishloopr"
+  },
+  "season": {
+    "lente": "Printemps",
+    "zomer": "Été",
+    "herfst": "Automne",
+    "winter": "Hiver",
+    "title": "Saison {{season}} : à manger maintenant",
+    "winterSubtitle": "Parfait pour une soirée d'hiver",
+    "springSubtitle": "Frais pour le printemps",
+    "summerSubtitle": "Terrasses d'été",
+    "autumnSubtitle": "Chaleureux et cosy"
+  },
+  "alternatives": {
+    "sameDish": "Même plat",
+    "samePrice": "Même gamme de prix",
+    "similarPrice": "Prix similaire",
+    "similarCuisine": "Cuisine similaire",
+    "similarAmbience": "Ambiance similaire",
+    "nearby": "À proximité",
+    "inArea": "Dans les environs",
+    "openNow": "Ouvert maintenant"
   }
 }

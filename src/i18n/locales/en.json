@@ -19,7 +19,25 @@
     "popular": "Popular",
     "myProfile": "My Profile",
     "user": "User",
-    "language": "Language"
+    "language": "Language",
+    "nearby": "Near me",
+    "savedSearches": "Your saved searches",
+    "forYou": "For you",
+    "nearbyTab": "Nearby",
+    "popularCuisines": "Popular cuisines",
+    "quickNav": "Quick navigation",
+    "discoverContent": "Recommended content",
+    "ariaSavedSearches": "Saved searches",
+    "ariaNearby": "Search restaurants near me",
+    "discoverByCity": "Discover by city",
+    "allCities": "All cities",
+    "discoverMore": "Discover more",
+    "allDishes": "All dishes",
+    "viewAllDishes": "View all dishes",
+    "collectionsLabel": "Collections",
+    "alertsBlocked": "Notifications blocked in your browser",
+    "alertsOn": "You'll get notified about new matches",
+    "alertsOff": "Notifications off"
   },
   "hero": {
     "title": "Find restaurants",
@@ -96,7 +114,12 @@
     "fineDining": "Fine Dining",
     "minimalist": "Minimalist",
     "vibrant": "Vibrant",
-    "bohemian": "Bohemian"
+    "bohemian": "Bohemian",
+    "openNow": "Open now",
+    "distanceFromCity": "Distance from city",
+    "onlyInCity": "City only",
+    "distanceAria": "Maximum distance from the city in kilometers",
+    "terraceLabel": "Terrace"
   },
   "cuisines": {
     "japanese": "Japanese",
@@ -198,7 +221,32 @@
     "descDishInCity": "Find the best {{dish}} restaurants in {{city}}. Compare options, read reviews and reserve directly.",
     "descDishInCountry": "Find the best {{dish}} restaurants in Europe. Compare options, read reviews and reserve directly.",
     "descSearchInCity": "Search and discover restaurants in {{city}}. Filter by dish, ambience and price.",
-    "descSearchInCountry": "Search and discover restaurants in Europe. Filter by dish, ambience and price."
+    "descSearchInCountry": "Search and discover restaurants in Europe. Filter by dish, ambience and price.",
+    "searching": "Searching...",
+    "pickCity": "Pick a city",
+    "nearMe": "Near me",
+    "openNow": "Open now",
+    "saved": "Saved",
+    "save": "Save",
+    "searchLabel": "Search",
+    "queryToast": "Search saved",
+    "queryRemovedToast": "Search removed",
+    "noResultsTitle": "No results found",
+    "noResultsDish": "We couldn't find restaurants for \"{{dish}}\"{{cityPart}}. Try another dish or clear your filters.",
+    "noResultsGeneric": "Try another search term or adjust your filters.",
+    "inCityPart": " in {{city}}",
+    "clearFilters": "Clear filters",
+    "showAll": "Show all",
+    "backHome": "Back home",
+    "loadMore": "Load more ({{remaining}} remaining)",
+    "nearestSort": "Nearest",
+    "locationToast": "Getting your location…",
+    "mapCentered": "Map centered on your location",
+    "anotherDish": "Another dish...",
+    "featuredTitleHeading": "Featured restaurants",
+    "restaurantsInCity": "Restaurants in {{city}}",
+    "scrollTop": "Back to top",
+    "ariaCrumb": "Breadcrumb"
   },
   "common": {
     "loading": "Loading...",
@@ -545,5 +593,43 @@
   "breadcrumb": {
     "home": "Home",
     "search": "Search"
+  },
+  "howItWorks": {
+    "title": "How Dishloopr works",
+    "subtitle": "No more restaurant roulette. Find the dish you're craving in three steps.",
+    "step1Title": "Search by dish",
+    "step1Desc": "Type what you actually crave — sushi, ramen, a halal burger.",
+    "step2Title": "Pick a city",
+    "step2Desc": "Filter by neighborhood, vibe or diet. See only places that fit.",
+    "step3Title": "Eat what you want",
+    "step3Desc": "Compare menus, read real reviews and book directly."
+  },
+  "stats": {
+    "restaurants": "Restaurants",
+    "reviews": "Reviews",
+    "cities": "Cities",
+    "dishes": "Dishes",
+    "aria": "Dishloopr statistics"
+  },
+  "season": {
+    "lente": "Spring",
+    "zomer": "Summer",
+    "herfst": "Autumn",
+    "winter": "Winter",
+    "title": "{{season}} season: eat this now",
+    "winterSubtitle": "Perfect for a winter evening",
+    "springSubtitle": "Fresh for spring",
+    "summerSubtitle": "Summer terraces",
+    "autumnSubtitle": "Warm and cozy"
+  },
+  "alternatives": {
+    "sameDish": "Same dish",
+    "samePrice": "Same price range",
+    "similarPrice": "Similar price",
+    "similarCuisine": "Similar cuisine",
+    "similarAmbience": "Similar ambience",
+    "nearby": "Nearby",
+    "inArea": "In the area",
+    "openNow": "Open now"
   }
 }

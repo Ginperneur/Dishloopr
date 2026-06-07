@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Leaf, Snowflake, Sun, CloudRain } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
+import { useTranslation } from 'react-i18next';
 
 interface SeasonalDish {
   id: string;
@@ -11,11 +12,11 @@ interface SeasonalDish {
   seasonal_tags: string[];
 }
 
-const SEASON_CONFIG: Record<string, { label: string; icon: any; color: string; emoji: string }> = {
-  lente: { label: 'Lente', icon: Leaf, color: 'text-green-500', emoji: '🌱' },
-  zomer: { label: 'Zomer', icon: Sun, color: 'text-amber-500', emoji: '☀️' },
-  herfst: { label: 'Herfst', icon: CloudRain, color: 'text-orange-500', emoji: '🍂' },
-  winter: { label: 'Winter', icon: Snowflake, color: 'text-blue-400', emoji: '❄️' },
+const SEASON_CONFIG: Record<string, { icon: any; color: string; emoji: string }> = {
+  lente: { icon: Leaf, color: 'text-green-500', emoji: '🌱' },
+  zomer: { icon: Sun, color: 'text-amber-500', emoji: '☀️' },
+  herfst: { icon: CloudRain, color: 'text-orange-500', emoji: '🍂' },
+  winter: { icon: Snowflake, color: 'text-blue-400', emoji: '❄️' },
 };
 
 function getCurrentSeason(): string {
@@ -27,6 +28,7 @@ function getCurrentSeason(): string {
 }
 
 export function SeasonalSuggestions() {
+  const { t } = useTranslation();
   const [dishes, setDishes] = useState<SeasonalDish[]>([]);
   const season = getCurrentSeason();
   const config = SEASON_CONFIG[season];
@@ -52,7 +54,7 @@ export function SeasonalSuggestions() {
         <div className="flex items-center gap-2 mb-4">
           <span className="text-xl">{config.emoji}</span>
           <h2 className="text-lg sm:text-xl font-bold">
-            {config.label}seizoen: dit eet je nu
+            {t('season.title', { season: t(`season.${season}`), defaultValue: '{{season}}seizoen: dit eet je nu' })}
           </h2>
         </div>
         <div className="flex flex-wrap gap-2">

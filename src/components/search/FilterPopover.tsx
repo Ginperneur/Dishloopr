@@ -199,7 +199,7 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
               }`}
             >
               <span>🕐</span>
-              <span>Open nu</span>
+              <span>{t('filters.openNow', 'Open nu')}</span>
             </button>
             {/* Terrace filter */}
             <button
@@ -235,12 +235,12 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
           <div className="mt-4 space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-medium text-muted-foreground">
-                Afstand rond stad
+                {t('filters.distanceFromCity', 'Afstand rond stad')}
               </label>
               <span className="text-xs font-semibold">
                 {filters.radiusKm && filters.radiusKm > 0
                   ? `+${filters.radiusKm} km`
-                  : 'Alleen in stad'}
+                  : t('filters.onlyInCity', 'Alleen in stad')}
               </span>
             </div>
             <Slider
@@ -249,7 +249,7 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
               max={60}
               step={5}
               onValueChange={(v) => onFiltersChange({ ...filters, radiusKm: v[0] })}
-              aria-label="Maximale afstand tot de stad in kilometers"
+              aria-label={t('filters.distanceAria', 'Maximale afstand tot de stad in kilometers')}
             />
             <div className="flex justify-between text-[10px] text-muted-foreground">
               <span>0</span>

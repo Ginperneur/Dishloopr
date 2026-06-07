@@ -162,7 +162,7 @@ export function useAlternativeRestaurants(): UseAlternativeRestaurantsReturn {
       const matchedDishes = dishMatches[restaurant.id] || [];
       if (matchedDishes.length > 0) {
         score += Math.min(matchedDishes.length * 20, 40);
-        matchReasons.push('Zelfde gerecht');
+        matchReasons.push('alternatives.sameDish');
       }
 
       // Price level match (20 points)
@@ -170,10 +170,10 @@ export function useAlternativeRestaurants(): UseAlternativeRestaurantsReturn {
         const priceDiff = Math.abs(restaurant.price_level - priceLevel);
         if (priceDiff === 0) {
           score += 20;
-          matchReasons.push('Zelfde prijsklasse');
+          matchReasons.push('alternatives.samePrice');
         } else if (priceDiff === 1) {
           score += 10;
-          matchReasons.push('Vergelijkbare prijs');
+          matchReasons.push('alternatives.similarPrice');
         }
       }
 
@@ -182,7 +182,7 @@ export function useAlternativeRestaurants(): UseAlternativeRestaurantsReturn {
       const cuisineMatches = cuisines.filter(c => restaurantCuisines.includes(c));
       if (cuisineMatches.length > 0) {
         score += Math.min(cuisineMatches.length * 10, 20);
-        matchReasons.push('Vergelijkbare keuken');
+        matchReasons.push('alternatives.similarCuisine');
       }
 
       // Ambience match (10 points max)
@@ -190,7 +190,7 @@ export function useAlternativeRestaurants(): UseAlternativeRestaurantsReturn {
       const ambienceMatches = ambienceTags.filter(t => restaurantAmbience.includes(t));
       if (ambienceMatches.length > 0) {
         score += Math.min(ambienceMatches.length * 5, 10);
-        matchReasons.push('Vergelijkbare sfeer');
+        matchReasons.push('alternatives.similarAmbience');
       }
 
       // Proximity (10 points max)
@@ -203,10 +203,10 @@ export function useAlternativeRestaurants(): UseAlternativeRestaurantsReturn {
         );
         if (distance <= 2) {
           score += 10;
-          matchReasons.push('Dichtbij');
+          matchReasons.push('alternatives.nearby');
         } else if (distance <= 5) {
           score += 5;
-          matchReasons.push('In de buurt');
+          matchReasons.push('alternatives.inArea');
         }
       }
 
@@ -222,7 +222,7 @@ export function useAlternativeRestaurants(): UseAlternativeRestaurantsReturn {
       if (!isOpen) {
         score -= 20; // Penalize closed restaurants
       } else {
-        matchReasons.push('Nu open');
+        matchReasons.push('alternatives.openNow');
       }
 
       return {

@@ -14,11 +14,11 @@ const seasonIcons: Record<string, React.ElementType> = {
   autumn: Cloud,
 };
 
-const seasonLabels: Record<string, { nl: string; en: string }> = {
-  winter: { nl: 'Perfect voor een winteravond', en: 'Perfect for a winter evening' },
-  spring: { nl: 'Fris voor de lente', en: 'Fresh for spring' },
-  summer: { nl: 'Zomerse terrassen', en: 'Summer terraces' },
-  autumn: { nl: 'Warm en gezellig', en: 'Warm and cozy' },
+const SEASON_KEY: Record<string, string> = {
+  winter: 'season.winterSubtitle',
+  spring: 'season.springSubtitle',
+  summer: 'season.summerSubtitle',
+  autumn: 'season.autumnSubtitle',
 };
 
 interface TrendingNowProps {
@@ -30,7 +30,7 @@ export function TrendingNow({ cityId }: TrendingNowProps) {
   const { trendingDishes, seasonalDishes, currentSeason, loading } = useTrendingNow(cityId);
 
   const SeasonIcon = seasonIcons[currentSeason] || Sun;
-  const seasonLabel = seasonLabels[currentSeason]?.[i18n.language as 'nl' | 'en'] || seasonLabels[currentSeason]?.nl;
+  const seasonLabel = t(SEASON_KEY[currentSeason] || 'season.winterSubtitle');
 
   if (loading) {
     return (
@@ -80,7 +80,7 @@ export function TrendingNow({ cityId }: TrendingNowProps) {
                       </span>
                       <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                         <TrendingUp className="h-3 w-3 text-green-500" />
-                        <span>{dish.restaurant_count} restaurants</span>
+                        <span>{dish.restaurant_count} {t('stats.restaurants', 'restaurants')}</span>
                       </div>
                     </div>
                     <Badge variant="secondary" className="text-xs shrink-0">

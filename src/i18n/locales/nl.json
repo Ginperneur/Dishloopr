@@ -19,7 +19,25 @@
     "popular": "Populair",
     "myProfile": "Mijn Profiel",
     "user": "Gebruiker",
-    "language": "Taal"
+    "language": "Taal",
+    "nearby": "Bij mij in de buurt",
+    "savedSearches": "Jouw opgeslagen zoekopdrachten",
+    "forYou": "Voor jou",
+    "nearbyTab": "In de buurt",
+    "popularCuisines": "Populaire keukens",
+    "quickNav": "Snelle navigatie",
+    "discoverContent": "Aanbevolen content",
+    "ariaSavedSearches": "Opgeslagen zoekopdrachten",
+    "ariaNearby": "Zoek restaurants in mijn buurt",
+    "discoverByCity": "Ontdek per stad",
+    "allCities": "Alle steden",
+    "discoverMore": "Ontdek meer",
+    "allDishes": "Alle gerechten",
+    "viewAllDishes": "Bekijk alle gerechten",
+    "collectionsLabel": "Collecties",
+    "alertsBlocked": "Notificaties geblokkeerd in de browser",
+    "alertsOn": "Je krijgt een melding bij nieuwe matches",
+    "alertsOff": "Meldingen uitgezet"
   },
   "hero": {
     "title": "Vind restaurants",
@@ -96,7 +114,12 @@
     "fineDining": "Fine Dining",
     "minimalist": "Minimalistisch",
     "vibrant": "Bruisend",
-    "bohemian": "Bohemian"
+    "bohemian": "Bohemian",
+    "openNow": "Open nu",
+    "distanceFromCity": "Afstand rond stad",
+    "onlyInCity": "Alleen in stad",
+    "distanceAria": "Maximale afstand tot de stad in kilometers",
+    "terraceLabel": "Terras"
   },
   "cuisines": {
     "japanese": "Japans",
@@ -198,7 +221,32 @@
     "descDishInCity": "Vind de beste {{dish}} restaurants in {{city}}. Vergelijk opties, bekijk reviews en reserveer direct.",
     "descDishInCountry": "Vind de beste {{dish}} restaurants in Europa. Vergelijk opties, bekijk reviews en reserveer direct.",
     "descSearchInCity": "Zoek en ontdek restaurants in {{city}}. Filter op gerecht, sfeer en prijs.",
-    "descSearchInCountry": "Zoek en ontdek restaurants in Europa. Filter op gerecht, sfeer en prijs."
+    "descSearchInCountry": "Zoek en ontdek restaurants in Europa. Filter op gerecht, sfeer en prijs.",
+    "searching": "Zoeken...",
+    "pickCity": "Kies stad",
+    "nearMe": "Bij mij",
+    "openNow": "Open nu",
+    "saved": "Opgeslagen",
+    "save": "Bewaar",
+    "searchLabel": "Zoekopdracht",
+    "queryToast": "Zoekopdracht opgeslagen",
+    "queryRemovedToast": "Zoekopdracht verwijderd",
+    "noResultsTitle": "Geen resultaten gevonden",
+    "noResultsDish": "We konden geen restaurants vinden voor \"{{dish}}\"{{cityPart}}. Probeer een ander gerecht of verwijder je filters.",
+    "noResultsGeneric": "Probeer een ander zoekwoord of pas je filters aan.",
+    "inCityPart": " in {{city}}",
+    "clearFilters": "Filters wissen",
+    "showAll": "Alles tonen",
+    "backHome": "Terug naar home",
+    "loadMore": "Meer laden ({{remaining}} resterend)",
+    "nearestSort": "Dichtstbij",
+    "locationToast": "Locatie wordt opgehaald…",
+    "mapCentered": "Kaart gecentreerd op jouw locatie",
+    "anotherDish": "Nog een gerecht...",
+    "featuredTitleHeading": "Uitgelichte restaurants",
+    "restaurantsInCity": "Restaurants in {{city}}",
+    "scrollTop": "Terug naar boven",
+    "ariaCrumb": "Kruimelpad"
   },
   "common": {
     "loading": "Laden...",
@@ -553,5 +601,43 @@
     "sideEmoji": "🥙",
     "dessertEmoji": "🍰",
     "drinkEmoji": "🥤"
+  },
+  "howItWorks": {
+    "title": "Hoe Dishloopr werkt",
+    "subtitle": "Geen restaurant-roulette meer. Vind in drie stappen het gerecht waar je nu zin in hebt.",
+    "step1Title": "Zoek op gerecht",
+    "step1Desc": "Type waar je écht trek in hebt — sushi, ramen, een halal burger.",
+    "step2Title": "Kies een stad",
+    "step2Desc": "Filter op buurt, sfeer of dieet. Zie alleen plekken die passen.",
+    "step3Title": "Eet wat je wil",
+    "step3Desc": "Vergelijk menu’s, lees echte reviews en reserveer direct."
+  },
+  "stats": {
+    "restaurants": "Restaurants",
+    "reviews": "Reviews",
+    "cities": "Steden",
+    "dishes": "Gerechten",
+    "aria": "Statistieken over Dishloopr"
+  },
+  "season": {
+    "lente": "Lente",
+    "zomer": "Zomer",
+    "herfst": "Herfst",
+    "winter": "Winter",
+    "title": "{{season}}seizoen: dit eet je nu",
+    "winterSubtitle": "Perfect voor een winteravond",
+    "springSubtitle": "Fris voor de lente",
+    "summerSubtitle": "Zomerse terrassen",
+    "autumnSubtitle": "Warm en gezellig"
+  },
+  "alternatives": {
+    "sameDish": "Zelfde gerecht",
+    "samePrice": "Zelfde prijsklasse",
+    "similarPrice": "Vergelijkbare prijs",
+    "similarCuisine": "Vergelijkbare keuken",
+    "similarAmbience": "Vergelijkbare sfeer",
+    "nearby": "Dichtbij",
+    "inArea": "In de buurt",
+    "openNow": "Nu open"
   }
 }
