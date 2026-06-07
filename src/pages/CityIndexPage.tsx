@@ -150,13 +150,13 @@ export default function CityIndexPage() {
 
       {/* Internal Links */}
       <section className="container px-4 md:px-6 py-8 border-t border-border">
-        <h3 className="font-semibold mb-4">Ontdek meer</h3>
+        <h3 className="font-semibold mb-4">{t('home.discoverMore', 'Ontdek meer')}</h3>
         <div className="flex flex-wrap gap-2">
           <Link to="/eten" className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-full border border-border hover:bg-primary/10 transition-colors">
-            <Utensils className="h-3 w-3" /> Alle gerechten
+            <Utensils className="h-3 w-3" /> {t('home.allDishes', 'Alle gerechten')}
           </Link>
           <Link to="/collections" className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-full border border-border hover:bg-primary/10 transition-colors">
-            Collecties
+            {t('home.collectionsLabel', 'Collecties')}
           </Link>
         </div>
       </section>

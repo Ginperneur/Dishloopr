@@ -168,7 +168,7 @@ export function Footer() {
 
             <h4 className="font-semibold mt-5 mb-3 text-sm md:text-base">{t('footer.popularDishes', 'Populaire gerechten')}</h4>
             <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
-              <li><Link to="/eten" className="hover:text-foreground transition-colors font-medium">Alle gerechten</Link></li>
+              <li><Link to="/eten" className="hover:text-foreground transition-colors font-medium">{t('home.allDishes', 'Alle gerechten')}</Link></li>
               <li><Link to="/eten/gerecht/sushi" className="hover:text-foreground transition-colors">Sushi</Link></li>
               <li><Link to="/eten/gerecht/ramen" className="hover:text-foreground transition-colors">Ramen</Link></li>
               <li><Link to="/eten/gerecht/pizza" className="hover:text-foreground transition-colors">Pizza</Link></li>
