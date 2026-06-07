@@ -176,7 +176,10 @@
     "suggestTags": "Missing any tags?",
     "dishesEaten": "What dishes did you eat?",
     "photos": "Add photos",
-    "submit": "Submit"
+    "submit": "Submit",
+    "empty": "No reviews yet. Be the first!",
+    "anonymous": "Anonymous",
+    "photoAlt": "Review photo {{n}}"
   },
   "trending": {
     "title": "Trending dishes",
@@ -322,7 +325,12 @@
     "youMightAlsoLike": "You might also like these"
   },
   "menu": {
-    "allergens": "Allergens"
+    "allergens": "Allergens",
+    "dish": "dish",
+    "dishes": "dishes",
+    "found": "{{count}} dish found",
+    "found_plural": "{{count}} dishes found",
+    "clearFilters": "Clear filters"
   },
   "busyLevel": {
     "quiet": "Quiet",
@@ -509,7 +517,13 @@
       "dessert": "Dessert",
       "drink": "Drink",
       "menu": "Menu",
-      "side": "Side"
+      "side": "Side",
+      "menuEmoji": "📋",
+      "starterEmoji": "🥗",
+      "mainEmoji": "🍽️",
+      "sideEmoji": "🥙",
+      "dessertEmoji": "🍰",
+      "drinkEmoji": "🥤"
     },
     "dietary": {
       "vegetarian": "Vegetarian",

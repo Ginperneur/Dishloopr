@@ -1,5 +1,6 @@
 import { Star, Image as ImageIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ReviewerBadge, VerifiedBadge } from './ReviewerBadge';
 import { HelpfulButton } from './HelpfulButton';
@@ -14,6 +15,11 @@ interface ReviewListProps {
 }
 
 export function ReviewList({ reviews, loading, isOwner = false, onRefetch }: ReviewListProps) {
+  const { t, i18n } = useTranslation();
+  const dateLocaleMap: Record<string, string> = {
+    nl: 'nl-NL', en: 'en-GB', de: 'de-DE', fr: 'fr-FR', es: 'es-ES',
+  };
+  const dateLocale = dateLocaleMap[i18n.language?.slice(0, 2) ?? 'nl'] || 'nl-NL';
   if (loading) {
     return (
       <div className="space-y-4">
@@ -32,7 +38,7 @@ export function ReviewList({ reviews, loading, isOwner = false, onRefetch }: Rev
   if (reviews.length === 0) {
     return (
       <p className="text-center text-muted-foreground py-8">
-        Nog geen reviews. Wees de eerste!
+        {t('reviews.empty', 'Nog geen reviews. Wees de eerste!')}
       </p>
     );
   }
@@ -59,7 +65,7 @@ export function ReviewList({ reviews, loading, isOwner = false, onRefetch }: Rev
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="font-semibold text-sm md:text-base truncate">
-                    {review.profile?.name || 'Anoniem'}
+                    {review.profile?.name || t('reviews.anonymous', 'Anoniem')}
                   </p>
                   {review.profile?.reviewer_level && (
                     <ReviewerBadge 
@@ -72,7 +78,7 @@ export function ReviewList({ reviews, loading, isOwner = false, onRefetch }: Rev
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-xs md:text-sm text-muted-foreground">
-                    {new Date(review.created_at).toLocaleDateString('nl-NL', {
+                    {new Date(review.created_at).toLocaleDateString(dateLocale, {
                       year: 'numeric',
                       month: 'short',
                       day: 'numeric'
@@ -115,7 +121,7 @@ export function ReviewList({ reviews, loading, isOwner = false, onRefetch }: Rev
                 >
                   <img
                     src={photo}
-                    alt={`Review foto ${photoIndex + 1}`}
+                    alt={t('reviews.photoAlt', 'Review foto {{n}}', { n: photoIndex + 1 })}
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute bottom-1 right-1 bg-black/50 rounded px-1 py-0.5">
