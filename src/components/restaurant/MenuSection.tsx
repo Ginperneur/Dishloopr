@@ -4,10 +4,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Leaf, Wheat, AlertCircle, Star, Filter } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { useMenuItems, COURSE_TYPE_LABELS, type CourseType } from '@/hooks/useMenuItems';
+import { useMenuItems, type CourseType } from '@/hooks/useMenuItems';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Toggle } from '@/components/ui/toggle';
 import { formatDishName } from '@/lib/utils';
+import { tTaxonomy } from '@/lib/i18n/taxonomy';
+
+const COURSE_EMOJI_KEY: Record<CourseType, string> = {
+  menu: 'taxonomy.course.menuEmoji',
+  voorgerecht: 'taxonomy.course.starterEmoji',
+  hoofdgerecht: 'taxonomy.course.mainEmoji',
+  bijgerecht: 'taxonomy.course.sideEmoji',
+  dessert: 'taxonomy.course.dessertEmoji',
+  drank: 'taxonomy.course.drinkEmoji',
+};
 
 interface MenuSectionProps {
   restaurantId: string;
@@ -151,13 +161,13 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
         <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
           <Filter className="h-4 w-4" />
           <span>
-            {filteredMenuItems.length} {filteredMenuItems.length === 1 ? 'gerecht' : 'gerechten'} gevonden
+            {t('menu.found', { count: filteredMenuItems.length, defaultValue: '{{count}} gerechten gevonden' })}
           </span>
           <button
             onClick={() => setActiveFilters(new Set())}
             className="ml-auto text-xs text-primary hover:underline"
           >
-            Filters wissen
+            {t('menu.clearFilters', 'Filters wissen')}
           </button>
         </div>
       )}
@@ -176,10 +186,12 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
                 onClick={() => toggleCategory(courseType)}
                 className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
               >
-                <span className="font-semibold text-sm md:text-base">{COURSE_TYPE_LABELS[courseType as CourseType] || courseType}</span>
+                <span className="font-semibold text-sm md:text-base">
+                  {t(COURSE_EMOJI_KEY[courseType as CourseType], '')} {tTaxonomy(t, 'course', courseType)}
+                </span>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">
-                    {courseItems.length} {courseItems.length === 1 ? 'gerecht' : 'gerechten'}
+                    {courseItems.length} {t(courseItems.length === 1 ? 'menu.dish' : 'menu.dishes', courseItems.length === 1 ? 'gerecht' : 'gerechten')}
                   </span>
                   <ChevronDown 
                     className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
@@ -214,24 +226,24 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
                               {item.is_vegetarian && (
                                 <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 gap-0.5 text-[10px] px-1.5 py-0">
                                   <Leaf className="h-2.5 w-2.5" />
-                                  Vegetarisch
+                                  {tTaxonomy(t, 'dietary', 'vegetarian')}
                                 </Badge>
                               )}
                               {item.is_vegan && (
                                 <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 gap-0.5 text-[10px] px-1.5 py-0">
                                   <Leaf className="h-2.5 w-2.5" />
-                                  Vegan
+                                  {tTaxonomy(t, 'dietary', 'vegan')}
                                 </Badge>
                               )}
                               {item.is_gluten_free && (
                                 <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 gap-0.5 text-[10px] px-1.5 py-0">
                                   <Wheat className="h-2.5 w-2.5" />
-                                  Glutenvrij
+                                  {tTaxonomy(t, 'dietary', 'glutenFree')}
                                 </Badge>
                               )}
                               {item.is_halal && (
                                 <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 gap-0.5 text-[10px] px-1.5 py-0">
-                                  Halal
+                                  {tTaxonomy(t, 'dietary', 'halal')}
                                 </Badge>
                               )}
                             </div>
