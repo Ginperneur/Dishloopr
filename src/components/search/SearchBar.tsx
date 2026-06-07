@@ -329,7 +329,7 @@ export function SearchBar({
                   setShowSuggestions(true);
                 }
               }}
-              placeholder={selectedDishes.length > 0 ? 'Nog een gerecht...' : placeholderHints[hintIndex]}
+              placeholder={selectedDishes.length > 0 ? t('search.anotherDish', 'Nog een gerecht...') : placeholderHints[hintIndex]}
               className={`flex-1 min-w-[60px] bg-transparent border-0 outline-none placeholder:text-muted-foreground ${
                 isHero 
                   ? 'py-1 text-sm md:text-lg' 

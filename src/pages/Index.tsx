@@ -139,12 +139,12 @@ const Index = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25, duration: 0.4 }}
               className="mt-3 max-w-3xl mx-auto"
-              aria-label="Opgeslagen zoekopdrachten"
+              aria-label={t('home.ariaSavedSearches', 'Opgeslagen zoekopdrachten')}
             >
               <div className="flex items-center gap-2 mb-1.5 px-1">
                 <BookmarkCheck className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
                 <span className="text-xs font-medium text-muted-foreground">
-                  Jouw opgeslagen zoekopdrachten
+                  {t('home.savedSearches', 'Jouw opgeslagen zoekopdrachten')}
                 </span>
               </div>
               <div className="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:overflow-visible">
@@ -165,11 +165,11 @@ const Index = () => {
                         const enabled = !s.alertsEnabled;
                         const ok = await setSavedAlerts(s.id, enabled);
                         if (enabled && !ok) {
-                          toast.error('Notificaties geblokkeerd in de browser');
+                          toast.error(t('home.alertsBlocked', 'Notificaties geblokkeerd in de browser'));
                         } else if (enabled) {
-                          toast.success('Je krijgt een melding bij nieuwe matches');
+                          toast.success(t('home.alertsOn', 'Je krijgt een melding bij nieuwe matches'));
                         } else {
-                          toast('Meldingen uitgezet');
+                          toast(t('home.alertsOff', 'Meldingen uitgezet'));
                         }
                       }}
                       className="p-1 rounded-full hover:bg-primary/20 transition-colors"
@@ -204,7 +204,7 @@ const Index = () => {
               <div
                 role="region"
                 aria-roledescription="carousel"
-                aria-label="Populaire keukens"
+                aria-label={t('home.popularCuisines', 'Populaire keukens')}
                 className="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1"
               >
                 {POPULAR_CUISINES.map((cuisine) => (
@@ -249,14 +249,14 @@ const Index = () => {
               onClick={handleNearbyClick}
               disabled={geoLoading}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border border-border bg-card hover:bg-muted transition-colors min-h-[36px] disabled:opacity-60"
-              aria-label="Zoek restaurants in mijn buurt"
+              aria-label={t('home.ariaNearby', 'Zoek restaurants in mijn buurt')}
             >
               {geoLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Navigation className="h-4 w-4 text-primary" />
               )}
-              <span>Bij mij in de buurt</span>
+              <span>{t('home.nearby', 'Bij mij in de buurt')}</span>
             </button>
           </motion.div>
         </div>
@@ -267,7 +267,7 @@ const Index = () => {
 
       {/* Feed tab switcher: For You vs Nearby (P2 hierarchy) */}
       <section
-        aria-label="Aanbevolen content"
+        aria-label={t('home.discoverContent', 'Aanbevolen content')}
         className="container px-4 md:px-6 pt-4 sm:pt-6"
       >
         <Tabs
@@ -281,16 +281,16 @@ const Index = () => {
           }}
         >
           <TabsList className="w-full max-w-md mx-auto grid grid-cols-2">
-            <TabsTrigger value="foryou" aria-label="Persoonlijke aanbevelingen">
-              Voor jou
+            <TabsTrigger value="foryou" aria-label={t('home.forYou', 'Voor jou')}>
+              {t('home.forYou', 'Voor jou')}
             </TabsTrigger>
-            <TabsTrigger value="nearby" aria-label="Restaurants in de buurt">
+            <TabsTrigger value="nearby" aria-label={t('home.nearbyTab', 'In de buurt')}>
               {geoLoading ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
               ) : (
                 <Navigation className="h-3.5 w-3.5 mr-1.5" />
               )}
-              In de buurt
+              {t('home.nearbyTab', 'In de buurt')}
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -299,7 +299,7 @@ const Index = () => {
       {/* Mobile quick-jump strip — reduces perceived page length by giving
           immediate access to key sections (P2 content hierarchy). */}
       <nav
-        aria-label="Snelle navigatie"
+        aria-label={t('home.quickNav', 'Snelle navigatie')}
         className="sm:hidden sticky top-12 z-30 bg-background/95 backdrop-blur border-b border-border"
       >
         <div className="-mx-0 px-4">

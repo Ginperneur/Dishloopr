@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, ArrowRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useTranslation } from 'react-i18next';
 
 interface CityRow {
   id: string;
@@ -17,6 +18,7 @@ interface CityRow {
  * Mobile: 2-col grid with subtle cards and a horizontal scroll fallback look.
  */
 export function ExploreCities() {
+  const { t } = useTranslation();
   const [cities, setCities] = useState<CityRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -80,13 +82,13 @@ export function ExploreCities() {
           className="flex items-center justify-between mb-4 md:mb-6"
         >
           <h2 className="text-lg sm:text-xl md:text-3xl font-bold">
-            Ontdek per stad
+            {t('home.discoverByCity', 'Ontdek per stad')}
           </h2>
           <Link
             to="/steden"
             className="text-xs sm:text-sm text-primary font-medium flex items-center gap-1 hover:underline"
           >
-            Alle steden
+            {t('home.allCities', 'Alle steden')}
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </motion.div>

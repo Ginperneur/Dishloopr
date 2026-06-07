@@ -1,25 +1,14 @@
 import { motion } from 'framer-motion';
 import { Search, MapPin, Utensils } from 'lucide-react';
-
-const steps = [
-  {
-    icon: Search,
-    title: 'Zoek op gerecht',
-    description: 'Type waar je écht trek in hebt — sushi, ramen, een halal burger.',
-  },
-  {
-    icon: MapPin,
-    title: 'Kies een stad',
-    description: 'Filter op buurt, sfeer of dieet. Zie alleen plekken die passen.',
-  },
-  {
-    icon: Utensils,
-    title: 'Eet wat je wil',
-    description: 'Vergelijk menu’s, lees echte reviews en reserveer direct.',
-  },
-];
+import { useTranslation } from 'react-i18next';
 
 export function HowItWorks() {
+  const { t } = useTranslation();
+  const steps = [
+    { icon: Search, title: t('howItWorks.step1Title'), description: t('howItWorks.step1Desc') },
+    { icon: MapPin, title: t('howItWorks.step2Title'), description: t('howItWorks.step2Desc') },
+    { icon: Utensils, title: t('howItWorks.step3Title'), description: t('howItWorks.step3Desc') },
+  ];
   return (
     <section className="py-8 md:py-14">
       <div className="container px-4 md:px-6">
@@ -30,10 +19,10 @@ export function HowItWorks() {
           className="text-center mb-6 md:mb-10"
         >
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold font-display">
-            Hoe Dishloopr werkt
+            {t('howItWorks.title', 'Hoe Dishloopr werkt')}
           </h2>
           <p className="text-sm md:text-base text-muted-foreground mt-2 max-w-xl mx-auto">
-            Geen restaurant-roulette meer. Vind in drie stappen het gerecht waar je nu zin in hebt.
+            {t('howItWorks.subtitle', 'Geen restaurant-roulette meer. Vind in drie stappen het gerecht waar je nu zin in hebt.')}
           </p>
         </motion.div>
 
