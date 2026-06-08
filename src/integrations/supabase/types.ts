@@ -397,6 +397,7 @@ export type Database = {
           created_by: string | null
           cuisine: string | null
           description: string | null
+          description_i18n: Json
           dish_id: string | null
           id: string
           is_active: boolean | null
@@ -406,7 +407,9 @@ export type Database = {
           slug: string
           sort_order: number | null
           subtitle: string | null
+          subtitle_i18n: Json
           title: string
+          title_i18n: Json
           updated_at: string
         }
         Insert: {
@@ -417,6 +420,7 @@ export type Database = {
           created_by?: string | null
           cuisine?: string | null
           description?: string | null
+          description_i18n?: Json
           dish_id?: string | null
           id?: string
           is_active?: boolean | null
@@ -426,7 +430,9 @@ export type Database = {
           slug: string
           sort_order?: number | null
           subtitle?: string | null
+          subtitle_i18n?: Json
           title: string
+          title_i18n?: Json
           updated_at?: string
         }
         Update: {
@@ -437,6 +443,7 @@ export type Database = {
           created_by?: string | null
           cuisine?: string | null
           description?: string | null
+          description_i18n?: Json
           dish_id?: string | null
           id?: string
           is_active?: boolean | null
@@ -446,7 +453,9 @@ export type Database = {
           slug?: string
           sort_order?: number | null
           subtitle?: string | null
+          subtitle_i18n?: Json
           title?: string
+          title_i18n?: Json
           updated_at?: string
         }
         Relationships: [
