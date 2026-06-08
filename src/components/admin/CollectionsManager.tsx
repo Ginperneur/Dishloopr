@@ -11,8 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { I18N_LANGUAGES } from '@/lib/i18n/localizedField';
 
 import { openConfirm } from '@/components/ui/confirm-dialog';
 interface Collection {
@@ -21,6 +23,9 @@ interface Collection {
   title: string;
   subtitle: string | null;
   description: string | null;
+  title_i18n?: Record<string, string> | null;
+  subtitle_i18n?: Record<string, string> | null;
+  description_i18n?: Record<string, string> | null;
   cover_image: string | null;
   city_id: string | null;
   dish_id: string | null;
@@ -69,6 +74,9 @@ const emptyCollection: Partial<Collection> = {
   slug: '',
   subtitle: '',
   description: '',
+  title_i18n: {},
+  subtitle_i18n: {},
+  description_i18n: {},
   cover_image: '',
   city_id: null,
   dish_id: null,
