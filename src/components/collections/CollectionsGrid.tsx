@@ -5,6 +5,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCollections, Collection } from '@/hooks/useCollections';
+import { localizedField } from '@/lib/i18n/localizedField';
+import { useTranslation } from 'react-i18next';
 
 interface CollectionCardProps {
   collection: Collection;
@@ -12,6 +14,10 @@ interface CollectionCardProps {
 }
 
 function CollectionCard({ collection, index }: CollectionCardProps) {
+  const { i18n } = useTranslation();
+  const title = localizedField(collection.title_i18n, collection.title, i18n.language);
+  const subtitle = localizedField(collection.subtitle_i18n, collection.subtitle, i18n.language);
+  const description = localizedField(collection.description_i18n, collection.description, i18n.language);
   const placeholderImages = [
     'https://images.unsplash.com/photo-1555126634-323283e090fa?w=600&q=80',
     'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80',
@@ -30,7 +36,7 @@ function CollectionCard({ collection, index }: CollectionCardProps) {
           <div className="relative h-48 overflow-hidden">
             <img
               src={collection.cover_image || placeholderImages[index % placeholderImages.length]}
-              alt={collection.title}
+              alt={title}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
@@ -58,9 +64,9 @@ function CollectionCard({ collection, index }: CollectionCardProps) {
 
             {/* Title Overlay */}
             <div className="absolute bottom-0 left-0 right-0 p-4">
-              <h3 className="text-xl font-bold text-white mb-1">{collection.title}</h3>
-              {collection.subtitle && (
-                <p className="text-white/80 text-sm">{collection.subtitle}</p>
+              <h3 className="text-xl font-bold text-white mb-1">{title}</h3>
+              {subtitle && (
+                <p className="text-white/80 text-sm">{subtitle}</p>
               )}
             </div>
           </div>
@@ -68,7 +74,7 @@ function CollectionCard({ collection, index }: CollectionCardProps) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground line-clamp-2">
-                {collection.description?.slice(0, 100) || 'Ontdek onze handgeselecteerde restaurants'}
+                {description?.slice(0, 100) || ''}
               </p>
               <ArrowRight className="h-5 w-5 text-primary flex-shrink-0 ml-3 transition-transform group-hover:translate-x-1" />
             </div>
