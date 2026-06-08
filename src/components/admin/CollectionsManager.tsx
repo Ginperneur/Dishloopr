@@ -325,6 +325,18 @@ export function CollectionsManager() {
       slug,
       subtitle: editingCollection.subtitle || null,
       description: editingCollection.description || null,
+      title_i18n: {
+        ...(editingCollection.title_i18n || {}),
+        nl: editingCollection.title || (editingCollection.title_i18n as any)?.nl || '',
+      },
+      subtitle_i18n: {
+        ...(editingCollection.subtitle_i18n || {}),
+        nl: editingCollection.subtitle || (editingCollection.subtitle_i18n as any)?.nl || '',
+      },
+      description_i18n: {
+        ...(editingCollection.description_i18n || {}),
+        nl: editingCollection.description || (editingCollection.description_i18n as any)?.nl || '',
+      },
       cover_image: editingCollection.cover_image || null,
       city_id: editingCollection.city_id || null,
       dish_id: editingCollection.dish_id || null,
