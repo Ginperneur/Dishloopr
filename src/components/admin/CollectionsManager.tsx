@@ -631,47 +631,133 @@ export function CollectionsManager() {
                 </div>
               </div>
 
-              {/* Basic Info */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Titel *</Label>
-                  <Input
-                    value={editingCollection.title || ''}
-                    onChange={(e) => setEditingCollection({ 
-                      ...editingCollection, 
-                      title: e.target.value,
-                      slug: editingCollection.id ? editingCollection.slug : generateSlug(e.target.value)
-                    })}
-                    placeholder="Beste Ramen in Amsterdam"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Slug</Label>
-                  <Input
-                    value={editingCollection.slug || ''}
-                    onChange={(e) => setEditingCollection({ ...editingCollection, slug: e.target.value })}
-                    placeholder="beste-ramen-amsterdam"
-                  />
-                </div>
-              </div>
-
+              {/* Slug */}
               <div className="space-y-2">
-                <Label>Subtitel</Label>
+                <Label>Slug</Label>
                 <Input
-                  value={editingCollection.subtitle || ''}
-                  onChange={(e) => setEditingCollection({ ...editingCollection, subtitle: e.target.value })}
-                  placeholder="Dampende kommen vol umami"
+                  value={editingCollection.slug || ''}
+                  onChange={(e) => setEditingCollection({ ...editingCollection, slug: e.target.value })}
+                  placeholder="beste-ramen-amsterdam"
                 />
+                <p className="text-xs text-muted-foreground">
+                  URL-pad. Talen worden via ?lang= geserveerd; één slug per collectie.
+                </p>
               </div>
 
+              {/* Multilingual content */}
               <div className="space-y-2">
-                <Label>Beschrijving</Label>
-                <Textarea
-                  value={editingCollection.description || ''}
-                  onChange={(e) => setEditingCollection({ ...editingCollection, description: e.target.value })}
-                  placeholder="Ontdek de beste ramen restaurants..."
-                  rows={3}
-                />
+                <Label>Inhoud per taal</Label>
+                <Tabs defaultValue="nl">
+                  <TabsList className="grid grid-cols-5 w-full">
+                    {I18N_LANGUAGES.map((l) => (
+                      <TabsTrigger key={l.code} value={l.code} className="text-xs">
+                        {l.label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                  {I18N_LANGUAGES.map((l) => {
+                    const isNl = l.code === 'nl';
+                    const titleValue = isNl
+                      ? (editingCollection.title || '')
+                      : ((editingCollection.title_i18n as any)?.[l.code] || '');
+                    const subtitleValue = isNl
+                      ? (editingCollection.subtitle || '')
+                      : ((editingCollection.subtitle_i18n as any)?.[l.code] || '');
+                    const descriptionValue = isNl
+                      ? (editingCollection.description || '')
+                      : ((editingCollection.description_i18n as any)?.[l.code] || '');
+
+                    const setI18n = (
+                      field: 'title_i18n' | 'subtitle_i18n' | 'description_i18n',
+                      value: string,
+                    ) => {
+                      setEditingCollection({
+                        ...editingCollection,
+                        [field]: {
+                          ...((editingCollection as any)[field] || {}),
+                          [l.code]: value,
+                        },
+                      });
+                    };
+
+                    return (
+                      <TabsContent key={l.code} value={l.code} className="space-y-3 pt-3">
+                        <div className="space-y-2">
+                          <Label className="text-xs">Titel {isNl && '*'}</Label>
+                          <Input
+                            value={titleValue}
+                            onChange={(e) => {
+                              if (isNl) {
+                                setEditingCollection({
+                                  ...editingCollection,
+                                  title: e.target.value,
+                                  slug: editingCollection.id
+                                    ? editingCollection.slug
+                                    : generateSlug(e.target.value),
+                                  title_i18n: {
+                                    ...((editingCollection.title_i18n as any) || {}),
+                                    nl: e.target.value,
+                                  },
+                                });
+                              } else {
+                                setI18n('title_i18n', e.target.value);
+                              }
+                            }}
+                            placeholder={isNl ? 'Beste Ramen in Amsterdam' : 'Best Ramen in Amsterdam'}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Subtitel</Label>
+                          <Input
+                            value={subtitleValue}
+                            onChange={(e) => {
+                              if (isNl) {
+                                setEditingCollection({
+                                  ...editingCollection,
+                                  subtitle: e.target.value,
+                                  subtitle_i18n: {
+                                    ...((editingCollection.subtitle_i18n as any) || {}),
+                                    nl: e.target.value,
+                                  },
+                                });
+                              } else {
+                                setI18n('subtitle_i18n', e.target.value);
+                              }
+                            }}
+                            placeholder="Dampende kommen vol umami"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Beschrijving</Label>
+                          <Textarea
+                            rows={3}
+                            value={descriptionValue}
+                            onChange={(e) => {
+                              if (isNl) {
+                                setEditingCollection({
+                                  ...editingCollection,
+                                  description: e.target.value,
+                                  description_i18n: {
+                                    ...((editingCollection.description_i18n as any) || {}),
+                                    nl: e.target.value,
+                                  },
+                                });
+                              } else {
+                                setI18n('description_i18n', e.target.value);
+                              }
+                            }}
+                            placeholder="Ontdek de beste ramen restaurants..."
+                          />
+                        </div>
+                        {!isNl && (
+                          <p className="text-xs text-muted-foreground">
+                            Leeg laten = NL-versie wordt automatisch getoond.
+                          </p>
+                        )}
+                      </TabsContent>
+                    );
+                  })}
+                </Tabs>
               </div>
 
               {/* Filters */}
