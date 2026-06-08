@@ -124,6 +124,7 @@ export function CollectionsGrid() {
 
 export function FeaturedCollections() {
   const { collections, loading } = useCollections();
+  const { i18n } = useTranslation();
   const featured = collections.filter(c => c.is_featured).slice(0, 4);
 
   if (loading) {
@@ -143,6 +144,8 @@ export function FeaturedCollections() {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
       {featured.map((collection, index) => (
+        // eslint-disable-next-line @typescript-eslint/no-shadow
+        // resolve localized strings per card
         <motion.div
           key={collection.id}
           initial={{ opacity: 0, scale: 0.95 }}
@@ -153,15 +156,20 @@ export function FeaturedCollections() {
             <div className="group relative h-32 md:h-40 rounded-xl overflow-hidden">
               <img
                 src={collection.cover_image || `https://images.unsplash.com/photo-155512663${index}?w=400&q=80`}
-                alt={collection.title}
+                alt={localizedField(collection.title_i18n, collection.title, i18n.language)}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
-                <h3 className="font-bold text-white text-sm md:text-lg line-clamp-2">{collection.title}</h3>
-                {collection.subtitle && (
-                  <p className="text-white/70 text-xs md:text-sm line-clamp-1 hidden sm:block">{collection.subtitle}</p>
-                )}
+                <h3 className="font-bold text-white text-sm md:text-lg line-clamp-2">
+                  {localizedField(collection.title_i18n, collection.title, i18n.language)}
+                </h3>
+                {(() => {
+                  const sub = localizedField(collection.subtitle_i18n, collection.subtitle, i18n.language);
+                  return sub ? (
+                    <p className="text-white/70 text-xs md:text-sm line-clamp-1 hidden sm:block">{sub}</p>
+                  ) : null;
+                })()}
               </div>
             </div>
           </Link>
