@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SEOHead, createBreadcrumbSchema, createItemListSchema } from '@/components/seo/SEOHead';
 import { useCollection, CollectionRestaurant } from '@/hooks/useCollections';
+import { localizedField } from '@/lib/i18n/localizedField';
+import { useTranslation } from 'react-i18next';
 
 function RestaurantCard({ item, index }: { item: CollectionRestaurant; index: number }) {
   const { restaurant } = item;
@@ -106,6 +108,7 @@ function RestaurantCard({ item, index }: { item: CollectionRestaurant; index: nu
 export default function CollectionPage() {
   const { slug } = useParams<{ slug: string }>();
   const { collection, restaurants, loading } = useCollection(slug);
+  const { i18n } = useTranslation();
 
   if (loading) {
     return (
@@ -137,10 +140,14 @@ export default function CollectionPage() {
     );
   }
 
+  const title = localizedField(collection.title_i18n, collection.title, i18n.language);
+  const subtitle = localizedField(collection.subtitle_i18n, collection.subtitle, i18n.language);
+  const description = localizedField(collection.description_i18n, collection.description, i18n.language);
+
   const breadcrumbSchema = createBreadcrumbSchema([
     { name: 'Home', url: 'https://dishloopr.com' },
     { name: 'Collecties', url: 'https://dishloopr.com/collections' },
-    { name: collection.title, url: `https://dishloopr.com/collection/${collection.slug}` }
+    { name: title, url: `https://dishloopr.com/collection/${collection.slug}` }
   ]);
 
   const itemListSchema = createItemListSchema(
@@ -155,13 +162,13 @@ export default function CollectionPage() {
   return (
     <Layout>
       <SEOHead
-        title={collection.seo_title || `${collection.title} | Dishloopr`}
-        description={collection.seo_description || collection.description || `Ontdek de beste restaurants in onze ${collection.title} collectie.`}
+        title={collection.seo_title || `${title} | Dishloopr`}
+        description={collection.seo_description || description || `Ontdek de beste restaurants in onze ${title} collectie.`}
         ogType="article"
         ogImage={collection.cover_image || undefined}
         canonical={`https://dishloopr.com/collection/${collection.slug}`}
         keywords={[
-          collection.title,
+          title,
           collection.city?.name || '',
           collection.dish?.name || '',
           collection.cuisine || '',
@@ -179,7 +186,7 @@ export default function CollectionPage() {
       <div className="relative h-64 md:h-80 overflow-hidden">
         <img
           src={collection.cover_image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80'}
-          alt={collection.title}
+          alt={title}
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
@@ -205,9 +212,9 @@ export default function CollectionPage() {
                   {collection.city.name}
                 </Badge>
               )}
-              <h1 className="text-3xl md:text-5xl font-bold mb-2">{collection.title}</h1>
-              {collection.subtitle && (
-                <p className="text-lg md:text-xl text-muted-foreground">{collection.subtitle}</p>
+              <h1 className="text-3xl md:text-5xl font-bold mb-2">{title}</h1>
+              {subtitle && (
+                <p className="text-lg md:text-xl text-muted-foreground">{subtitle}</p>
               )}
             </motion.div>
           </div>
@@ -216,14 +223,14 @@ export default function CollectionPage() {
 
       <div className="container py-8">
         {/* Description */}
-        {collection.description && (
+        {description && (
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
             className="text-lg text-muted-foreground max-w-3xl mb-8"
           >
-            {collection.description}
+            {description}
           </motion.p>
         )}
 

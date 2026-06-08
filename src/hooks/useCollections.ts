@@ -7,6 +7,9 @@ export interface Collection {
   title: string;
   subtitle: string | null;
   description: string | null;
+  title_i18n?: Record<string, string> | null;
+  subtitle_i18n?: Record<string, string> | null;
+  description_i18n?: Record<string, string> | null;
   cover_image: string | null;
   city_id: string | null;
   dish_id: string | null;

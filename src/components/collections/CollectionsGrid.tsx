@@ -5,6 +5,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCollections, Collection } from '@/hooks/useCollections';
+import { localizedField } from '@/lib/i18n/localizedField';
+import { useTranslation } from 'react-i18next';
 
 interface CollectionCardProps {
   collection: Collection;
@@ -12,6 +14,10 @@ interface CollectionCardProps {
 }
 
 function CollectionCard({ collection, index }: CollectionCardProps) {
+  const { i18n } = useTranslation();
+  const title = localizedField(collection.title_i18n, collection.title, i18n.language);
+  const subtitle = localizedField(collection.subtitle_i18n, collection.subtitle, i18n.language);
+  const description = localizedField(collection.description_i18n, collection.description, i18n.language);
   const placeholderImages = [
     'https://images.unsplash.com/photo-1555126634-323283e090fa?w=600&q=80',
     'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80',
@@ -30,7 +36,7 @@ function CollectionCard({ collection, index }: CollectionCardProps) {
           <div className="relative h-48 overflow-hidden">
             <img
               src={collection.cover_image || placeholderImages[index % placeholderImages.length]}
-              alt={collection.title}
+              alt={title}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
@@ -58,9 +64,9 @@ function CollectionCard({ collection, index }: CollectionCardProps) {
 
             {/* Title Overlay */}
             <div className="absolute bottom-0 left-0 right-0 p-4">
-              <h3 className="text-xl font-bold text-white mb-1">{collection.title}</h3>
-              {collection.subtitle && (
-                <p className="text-white/80 text-sm">{collection.subtitle}</p>
+              <h3 className="text-xl font-bold text-white mb-1">{title}</h3>
+              {subtitle && (
+                <p className="text-white/80 text-sm">{subtitle}</p>
               )}
             </div>
           </div>
@@ -68,7 +74,7 @@ function CollectionCard({ collection, index }: CollectionCardProps) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground line-clamp-2">
-                {collection.description?.slice(0, 100) || 'Ontdek onze handgeselecteerde restaurants'}
+                {description?.slice(0, 100) || ''}
               </p>
               <ArrowRight className="h-5 w-5 text-primary flex-shrink-0 ml-3 transition-transform group-hover:translate-x-1" />
             </div>
@@ -118,6 +124,7 @@ export function CollectionsGrid() {
 
 export function FeaturedCollections() {
   const { collections, loading } = useCollections();
+  const { i18n } = useTranslation();
   const featured = collections.filter(c => c.is_featured).slice(0, 4);
 
   if (loading) {
@@ -137,6 +144,8 @@ export function FeaturedCollections() {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
       {featured.map((collection, index) => (
+        // eslint-disable-next-line @typescript-eslint/no-shadow
+        // resolve localized strings per card
         <motion.div
           key={collection.id}
           initial={{ opacity: 0, scale: 0.95 }}
@@ -147,15 +156,20 @@ export function FeaturedCollections() {
             <div className="group relative h-32 md:h-40 rounded-xl overflow-hidden">
               <img
                 src={collection.cover_image || `https://images.unsplash.com/photo-155512663${index}?w=400&q=80`}
-                alt={collection.title}
+                alt={localizedField(collection.title_i18n, collection.title, i18n.language)}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
-                <h3 className="font-bold text-white text-sm md:text-lg line-clamp-2">{collection.title}</h3>
-                {collection.subtitle && (
-                  <p className="text-white/70 text-xs md:text-sm line-clamp-1 hidden sm:block">{collection.subtitle}</p>
-                )}
+                <h3 className="font-bold text-white text-sm md:text-lg line-clamp-2">
+                  {localizedField(collection.title_i18n, collection.title, i18n.language)}
+                </h3>
+                {(() => {
+                  const sub = localizedField(collection.subtitle_i18n, collection.subtitle, i18n.language);
+                  return sub ? (
+                    <p className="text-white/70 text-xs md:text-sm line-clamp-1 hidden sm:block">{sub}</p>
+                  ) : null;
+                })()}
               </div>
             </div>
           </Link>
