@@ -47,7 +47,7 @@ export function DuplicateMerger() {
       const { data } = await supabase
         .from('restaurants')
         .select('id, name, slug, address, is_active, review_count, rating, created_at, images, cities:city_id(name)')
-        .range(from, from + 999);
+        .range(from, from + 299);
       if (!data || data.length === 0) break;
       allRestaurants = allRestaurants.concat(data);
       if (data.length < 1000) break;

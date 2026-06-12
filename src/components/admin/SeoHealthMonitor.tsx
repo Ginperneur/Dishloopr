@@ -36,7 +36,7 @@ export function SeoHealthMonitor() {
           .from('restaurants')
           .select('id, name, slug, is_active')
           .eq('is_active', true)
-          .range(from, from + 999);
+          .range(from, from + 299);
         if (!data || data.length === 0) break;
         allRestaurants = allRestaurants.concat(data);
         if (data.length < 1000) break;

@@ -51,7 +51,7 @@ export function BrokenImageChecker() {
         .from('restaurants')
         .select('id, name, slug, images')
         .not('images', 'is', null)
-        .range(from, from + 999);
+        .range(from, from + 299);
       if (!data || data.length === 0) break;
       allRestaurants = allRestaurants.concat(data);
       if (data.length < 1000) break;

@@ -29,7 +29,7 @@ interface ExportConfig {
   pii?: boolean;
 }
 
-const BATCH_SIZE = 1000;
+const BATCH_SIZE = 300;
 
 async function fetchAllRows(
   table: string,

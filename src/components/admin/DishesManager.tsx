@@ -64,7 +64,7 @@ export function DishesManager({ onUpdate }: DishesManagerProps) {
     setLoading(true);
     let allDishes: Dish[] = [];
     let from = 0;
-    const pageSize = 1000;
+    const pageSize = 300;
     let hasMore = true;
 
     while (hasMore) {

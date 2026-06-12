@@ -53,7 +53,7 @@ export function CompletenessScore() {
         .from('restaurants')
         .select('id, name, slug, images, phone, website_url, geo_lat, geo_lng, cuisines, opening_hours, ambience_tags, price_level, postal_code, cities:city_id(name)')
         .eq('is_active', true)
-        .range(from, from + 999);
+        .range(from, from + 299);
       if (!data || data.length === 0) break;
       allRestaurants = allRestaurants.concat(data);
       if (data.length < 1000) break;
@@ -67,10 +67,10 @@ export function CompletenessScore() {
         .from('restaurant_dishes')
         .select('restaurant_id')
         .neq('status', 'rejected')
-        .range(dishFrom, dishFrom + 999);
+        .range(dishFrom, dishFrom + 299);
       if (!batch || batch.length === 0) break;
       allDishLinks = allDishLinks.concat(batch);
-      if (batch.length < 1000) break;
+      if (batch.length < 300) break;
       dishFrom += 1000;
     }
     const dishSet = new Set(allDishLinks.map((d: any) => d.restaurant_id));

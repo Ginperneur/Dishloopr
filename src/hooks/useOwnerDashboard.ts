@@ -57,15 +57,24 @@ export function useOwnerDashboard() {
 
     // Admin can see all restaurants
     if (isAdmin) {
-      const { data: allData } = await supabase
-        .from('restaurants')
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
-
-      if (allData && allData.length > 0) {
-        setRestaurants(allData);
-        setSelectedRestaurant(allData[0]);
+      // Paginate to bypass the 1000 row PostgREST limit (admins may manage 1000+ restaurants).
+      const pageSize = 300;
+      let from = 0;
+      const all: Restaurant[] = [];
+      while (true) {
+        const { data: batch } = await supabase
+          .from('restaurants')
+          .select('*')
+          .order('name')
+          .range(from, from + pageSize - 1);
+        if (!batch || batch.length === 0) break;
+        all.push(...batch);
+        if (batch.length < pageSize) break;
+        from += pageSize;
+      }
+      if (all.length > 0) {
+        setRestaurants(all);
+        setSelectedRestaurant(all[0]);
       }
       setLoading(false);
       return;

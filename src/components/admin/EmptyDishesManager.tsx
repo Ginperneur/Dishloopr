@@ -52,7 +52,7 @@ export function EmptyDishesManager({ onNavigateToTab }: Props) {
   const fetchAll = async <T,>(builder: () => any): Promise<T[]> => {
     const all: T[] = [];
     let from = 0;
-    const pageSize = 1000;
+    const pageSize = 300;
     while (true) {
       const { data, error } = await builder().range(from, from + pageSize - 1);
       if (error) {
