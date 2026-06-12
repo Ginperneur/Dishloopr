@@ -81,7 +81,7 @@ export function RestaurantAudit() {
         .range(from, from + 299);
       if (!batch || batch.length === 0) break;
       allRestaurants = allRestaurants.concat(batch);
-      if (batch.length < 1000) break;
+      if (batch.length < 300) break;
       from += 1000;
     }
 
@@ -101,7 +101,7 @@ export function RestaurantAudit() {
         .range(dishFrom, dishFrom + 299);
       if (!batch || batch.length === 0) break;
       allDishCounts = allDishCounts.concat(batch);
-      if (batch.length < 1000) break;
+      if (batch.length < 300) break;
       dishFrom += 1000;
     }
 

@@ -131,7 +131,7 @@ export function KpiDashboard() {
         .range(from, from + 299);
       if (!batch || batch.length === 0) break;
       allRestaurants = allRestaurants.concat(batch);
-      if (batch.length < 1000) break;
+      if (batch.length < 300) break;
       from += 1000;
     }
 
@@ -154,7 +154,7 @@ export function KpiDashboard() {
         const { data: batch } = await supabase.from(table).select('created_at').order('created_at', { ascending: true }).range(f, f + 299);
         if (!batch || batch.length === 0) break;
         all = all.concat(batch);
-        if (batch.length < 1000) break;
+        if (batch.length < 300) break;
         f += 1000;
       }
       return all;
@@ -176,7 +176,7 @@ export function KpiDashboard() {
         .range(dishFrom, dishFrom + 299);
       if (!batch || batch.length === 0) break;
       allDishLinks = allDishLinks.concat(batch);
-      if (batch.length < 1000) break;
+      if (batch.length < 300) break;
       dishFrom += 1000;
     }
     const restaurantsWithDishesSet = new Set(allDishLinks.map((d: any) => d.restaurant_id));

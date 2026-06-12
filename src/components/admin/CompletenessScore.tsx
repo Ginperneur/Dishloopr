@@ -70,7 +70,7 @@ export function CompletenessScore() {
         .range(dishFrom, dishFrom + 299);
       if (!batch || batch.length === 0) break;
       allDishLinks = allDishLinks.concat(batch);
-      if (batch.length < 1000) break;
+      if (batch.length < 300) break;
       dishFrom += 1000;
     }
     const dishSet = new Set(allDishLinks.map((d: any) => d.restaurant_id));
