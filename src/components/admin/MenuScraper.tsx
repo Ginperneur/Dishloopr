@@ -171,7 +171,7 @@ export function MenuScraper() {
     for (let i = 0; i < restaurantIds.length; i += chunkSize) {
       const chunk = restaurantIds.slice(i, i + chunkSize);
       let from = 0;
-      const pageSize = 1000;
+      const pageSize = 300;
 
       while (true) {
         let data: { restaurant_id: string }[] | null = null;
@@ -216,7 +216,7 @@ export function MenuScraper() {
     for (let i = 0; i < restaurantIds.length; i += chunkSize) {
       const chunk = restaurantIds.slice(i, i + chunkSize);
       let from = 0;
-      const pageSize = 1000;
+      const pageSize = 300;
 
       while (true) {
         const { data } = await supabase
@@ -243,7 +243,7 @@ export function MenuScraper() {
     for (let i = 0; i < restaurantIds.length; i += chunkSize) {
       const chunk = restaurantIds.slice(i, i + chunkSize);
       let from = 0;
-      const pageSize = 1000;
+      const pageSize = 300;
       while (true) {
         const { data } = await supabase
           .from('menu_scrape_runs')

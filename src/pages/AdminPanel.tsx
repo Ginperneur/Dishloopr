@@ -215,7 +215,7 @@ export default function AdminPanel() {
   const fetchRestaurants = async () => {
     let allRestaurants: any[] = [];
     let from = 0;
-    const batchSize = 1000;
+    const batchSize = 300;
     while (true) {
       const { data: batch } = await supabase.from('restaurants').select('*, cities:city_id (name)').order('created_at', { ascending: false }).range(from, from + batchSize - 1);
       if (!batch || batch.length === 0) break;
@@ -229,7 +229,7 @@ export default function AdminPanel() {
   const fetchUsers = async () => {
     let allUsers: any[] = [];
     let from = 0;
-    const batchSize = 1000;
+    const batchSize = 300;
     while (true) {
       const { data: batch } = await supabase
         .from('profiles')

@@ -128,7 +128,7 @@ export function KpiDashboard() {
       const { data: batch } = await supabase
         .from('restaurants')
         .select('id, images, geo_lat, geo_lng, phone, website_url, cuisines')
-        .range(from, from + 999);
+        .range(from, from + 299);
       if (!batch || batch.length === 0) break;
       allRestaurants = allRestaurants.concat(batch);
       if (batch.length < 1000) break;
@@ -151,7 +151,7 @@ export function KpiDashboard() {
       let all: any[] = [];
       let f = 0;
       while (true) {
-        const { data: batch } = await supabase.from(table).select('created_at').order('created_at', { ascending: true }).range(f, f + 999);
+        const { data: batch } = await supabase.from(table).select('created_at').order('created_at', { ascending: true }).range(f, f + 299);
         if (!batch || batch.length === 0) break;
         all = all.concat(batch);
         if (batch.length < 1000) break;
@@ -173,7 +173,7 @@ export function KpiDashboard() {
         .from('restaurant_dishes')
         .select('restaurant_id')
         .in('status', ['approved_by_admin', 'verified_by_owner'])
-        .range(dishFrom, dishFrom + 999);
+        .range(dishFrom, dishFrom + 299);
       if (!batch || batch.length === 0) break;
       allDishLinks = allDishLinks.concat(batch);
       if (batch.length < 1000) break;

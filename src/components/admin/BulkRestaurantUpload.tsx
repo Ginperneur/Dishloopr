@@ -138,7 +138,7 @@ export function BulkRestaurantUpload({ onSuccess }: BulkRestaurantUploadProps) {
       const { data } = await supabase
         .from('restaurants')
         .select('name, address')
-        .range(from, from + 999);
+        .range(from, from + 299);
       if (!data || data.length === 0) break;
       for (const r of data) {
         if (r.name && r.address) {
