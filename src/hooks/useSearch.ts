@@ -380,10 +380,12 @@ export function useSearch() {
       return q;
     };
 
-    const { data: restaurants, error } = await buildRestaurantQuery();
+    // Paginate to bypass PostgREST's 1000-row cap so the full result set is loaded.
+    const restaurants = await fetchAllRows<Restaurant>((from, to) =>
+      buildRestaurantQuery().range(from, to)
+    );
 
-    if (error || !restaurants) {
-      if (error) console.error('Search error:', error);
+    if (!restaurants) {
       setResults([]);
       setLoading(false);
       return;
