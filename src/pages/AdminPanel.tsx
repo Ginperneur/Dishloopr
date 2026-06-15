@@ -640,6 +640,7 @@ export default function AdminPanel() {
               {activeSection === 'bulk-actions' && <BulkActionsManager />}
               {activeSection === 'audit-trail' && <AuditTrail />}
               {activeSection === 'error-logs' && <ErrorLogsViewer />}
+              {activeSection === 'link-health' && <LinkHealthChecker />}
             </div>
           </main>
         </div>
