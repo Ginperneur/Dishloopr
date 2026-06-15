@@ -2805,6 +2805,9 @@ export type Database = {
           tiktok_url: string | null
           top_until: string | null
           updated_at: string
+          website_checked_at: string | null
+          website_status: string | null
+          website_status_code: number | null
           website_url: string | null
           zenchef_id: string | null
         }
@@ -2860,6 +2863,9 @@ export type Database = {
           tiktok_url?: string | null
           top_until?: string | null
           updated_at?: string
+          website_checked_at?: string | null
+          website_status?: string | null
+          website_status_code?: number | null
           website_url?: string | null
           zenchef_id?: string | null
         }
@@ -2915,6 +2921,9 @@ export type Database = {
           tiktok_url?: string | null
           top_until?: string | null
           updated_at?: string
+          website_checked_at?: string | null
+          website_status?: string | null
+          website_status_code?: number | null
           website_url?: string | null
           zenchef_id?: string | null
         }

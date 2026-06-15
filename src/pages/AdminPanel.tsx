@@ -74,6 +74,7 @@ import { RestaurantSuggestionsQueue } from '@/components/admin/RestaurantSuggest
 import { ErrorLogsViewer } from '@/components/admin/ErrorLogsViewer';
 import { ReservationLinkDetector } from '@/components/admin/ReservationLinkDetector';
 import { RateLimitMonitor } from '@/components/admin/RateLimitMonitor';
+import { LinkHealthChecker } from '@/components/admin/LinkHealthChecker';
 
 import { openConfirm } from '@/components/ui/confirm-dialog';
 interface Stats {
@@ -139,6 +140,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'reservation-detect': { title: "Reserveringslinks", description: "Detecteer TheFork/Zenchef/OpenTable links via websites" },
   'reservation-outreach': { title: "Reservering-mail", description: "Mail eigenaren zonder reserveringslink" },
   'rate-limits': { title: "API Bescherming", description: "Rate limits, kill-switch en monitoring van AI/API gebruik" },
+  'link-health': { title: "Link Health", description: "Controleer of restaurant-websites nog werken (HEAD-ping)" },
 };
 
 export default function AdminPanel() {
@@ -638,6 +640,7 @@ export default function AdminPanel() {
               {activeSection === 'bulk-actions' && <BulkActionsManager />}
               {activeSection === 'audit-trail' && <AuditTrail />}
               {activeSection === 'error-logs' && <ErrorLogsViewer />}
+              {activeSection === 'link-health' && <LinkHealthChecker />}
             </div>
           </main>
         </div>
