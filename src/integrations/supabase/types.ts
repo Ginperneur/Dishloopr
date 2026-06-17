@@ -2772,6 +2772,7 @@ export type Database = {
           featured_until: string | null
           geo_lat: number | null
           geo_lng: number | null
+          google_enriched_at: string | null
           google_place_id: string | null
           google_rating: number | null
           google_reviews_count: number | null
@@ -2830,6 +2831,7 @@ export type Database = {
           featured_until?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
+          google_enriched_at?: string | null
           google_place_id?: string | null
           google_rating?: number | null
           google_reviews_count?: number | null
@@ -2888,6 +2890,7 @@ export type Database = {
           featured_until?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
+          google_enriched_at?: string | null
           google_place_id?: string | null
           google_rating?: number | null
           google_reviews_count?: number | null
