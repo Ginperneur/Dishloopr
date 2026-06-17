@@ -95,6 +95,7 @@ const navGroups = [
       { id: 'discovery', label: 'Discovery', icon: Search },
       { id: 'geocode', label: 'Geocode', icon: MapPin },
       { id: 'google-enrich', label: 'Google Verrijking', icon: Star },
+      { id: 'missing-website', label: 'Zonder website', icon: Globe },
       { id: 'reservation-detect', label: 'Reserveringslinks', icon: Calendar },
       { id: 'link-health', label: 'Link Health', icon: Globe },
       { id: 'photos', label: "Foto's", icon: Image },
