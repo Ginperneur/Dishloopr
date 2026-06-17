@@ -75,6 +75,7 @@ import { ErrorLogsViewer } from '@/components/admin/ErrorLogsViewer';
 import { ReservationLinkDetector } from '@/components/admin/ReservationLinkDetector';
 import { RateLimitMonitor } from '@/components/admin/RateLimitMonitor';
 import { LinkHealthChecker } from '@/components/admin/LinkHealthChecker';
+import { MissingWebsiteUrls } from '@/components/admin/MissingWebsiteUrls';
 
 import { openConfirm } from '@/components/ui/confirm-dialog';
 interface Stats {
@@ -141,6 +142,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'reservation-outreach': { title: "Reservering-mail", description: "Mail eigenaren zonder reserveringslink" },
   'rate-limits': { title: "API Bescherming", description: "Rate limits, kill-switch en monitoring van AI/API gebruik" },
   'link-health': { title: "Link Health", description: "Controleer of restaurant-websites nog werken (HEAD-ping)" },
+  'missing-website': { title: "Zonder website", description: "Restaurants zonder website-URL — automatisch aanvullen via Google Places" },
 };
 
 export default function AdminPanel() {
@@ -641,6 +643,7 @@ export default function AdminPanel() {
               {activeSection === 'audit-trail' && <AuditTrail />}
               {activeSection === 'error-logs' && <ErrorLogsViewer />}
               {activeSection === 'link-health' && <LinkHealthChecker />}
+              {activeSection === 'missing-website' && <MissingWebsiteUrls />}
             </div>
           </main>
         </div>

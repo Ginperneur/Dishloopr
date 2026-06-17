@@ -38,13 +38,14 @@ Deno.serve(async (req) => {
     const batchSize = body.batchSize || 25;
     const offset = body.offset || 0;
     const forceRefresh = body.forceRefresh || false;
-    const mode = body.mode || 'full'; // 'full' | 'opening_hours_only' | 'never_enriched'
+    const mode = body.mode || 'full'; // 'full' | 'opening_hours_only' | 'never_enriched' | 'stale' | 'missing_website_only'
+    const staleMonths: number = Math.max(1, Math.min(36, Number(body.staleMonths) || 3));
     const dryRun = body.dryRun === true;
 
     // Build query based on mode
     let query = supabase
       .from('restaurants')
-      .select('id, name, address, city_id, cities(name), google_rating, opening_hours')
+      .select('id, name, address, city_id, cities(name), google_rating, opening_hours, website_url, google_enriched_at')
       .eq('is_active', true)
       .order('name');
 
@@ -56,6 +57,11 @@ Deno.serve(async (req) => {
     } else if (mode === 'never_enriched') {
       // Only restaurants that have never been touched (rating IS NULL, excludes failed attempts where rating=0)
       query = query.is('google_rating', null);
+    } else if (mode === 'stale') {
+      const cutoff = new Date(Date.now() - staleMonths * 30 * 24 * 60 * 60 * 1000).toISOString();
+      query = query.or(`google_enriched_at.is.null,google_enriched_at.lt.${cutoff}`);
+    } else if (mode === 'missing_website_only') {
+      query = query.is('website_url', null);
     } else if (!forceRefresh) {
       query = query.is('google_rating', null);
     }
@@ -84,6 +90,11 @@ Deno.serve(async (req) => {
       countQuery = countQuery.is('opening_hours', null);
     } else if (mode === 'never_enriched') {
       countQuery = countQuery.is('google_rating', null);
+    } else if (mode === 'stale') {
+      const cutoff = new Date(Date.now() - staleMonths * 30 * 24 * 60 * 60 * 1000).toISOString();
+      countQuery = countQuery.or(`google_enriched_at.is.null,google_enriched_at.lt.${cutoff}`);
+    } else if (mode === 'missing_website_only') {
+      countQuery = countQuery.is('website_url', null);
     } else if (!forceRefresh) {
       countQuery = countQuery.is('google_rating', null);
     }
@@ -198,6 +209,10 @@ Deno.serve(async (req) => {
           if (place.rating != null) updateData.google_rating = place.rating;
           if (place.user_ratings_total != null) updateData.google_reviews_count = place.user_ratings_total;
           if (place.price_level != null) updateData.price_level = Math.min(Math.max(place.price_level, 1), 4);
+          // Fill missing website_url from Google
+          if (place.website && !restaurant.website_url) {
+            updateData.website_url = place.website;
+          }
         }
 
         if (place.opening_hours?.weekday_text) {
@@ -210,6 +225,7 @@ Deno.serve(async (req) => {
         }
 
         if (Object.keys(updateData).length > 0) {
+          updateData.google_enriched_at = new Date().toISOString();
           const { error: updateError } = await supabase
             .from('restaurants')
             .update(updateData)
