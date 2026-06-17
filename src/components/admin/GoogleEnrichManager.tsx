@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Star, Loader2, Play, RefreshCw, Clock, Calculator } from 'lucide-react';
+import { Star, Loader2, Play, RefreshCw, Clock, Calculator, History } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -16,7 +18,7 @@ interface EnrichResult {
   reviews?: number;
 }
 
-type EnrichMode = 'full' | 'opening_hours_only' | 'never_enriched';
+type EnrichMode = 'full' | 'opening_hours_only' | 'never_enriched' | 'stale';
 
 export function GoogleEnrichManager() {
   const [running, setRunning] = useState(false);
@@ -24,6 +26,7 @@ export function GoogleEnrichManager() {
   const [stats, setStats] = useState({ enriched: 0, failed: 0, remaining: 0, total: 0 });
   const [batchesDone, setBatchesDone] = useState(0);
   const [activeMode, setActiveMode] = useState<EnrichMode>('full');
+  const [staleMonths, setStaleMonths] = useState(3);
   const [dryRunResult, setDryRunResult] = useState<{
     mode: EnrichMode;
     totalToProcess: number;
@@ -38,7 +41,7 @@ export function GoogleEnrichManager() {
     setDryRunResult(null);
     try {
       const { data, error } = await supabase.functions.invoke('enrich-restaurants', {
-        body: { batchSize: 25, offset: 0, mode, dryRun: true },
+        body: { batchSize: 25, offset: 0, mode, dryRun: true, staleMonths },
       });
       if (error) throw error;
       setDryRunResult({
@@ -62,7 +65,7 @@ export function GoogleEnrichManager() {
     setActiveMode(mode);
     try {
       const { data, error } = await supabase.functions.invoke('enrich-restaurants', {
-        body: { batchSize, offset: 0, mode },
+        body: { batchSize, offset: 0, mode, staleMonths },
       });
 
       if (error) throw error;
@@ -104,7 +107,7 @@ export function GoogleEnrichManager() {
     try {
       while (true) {
         const { data, error } = await supabase.functions.invoke('enrich-restaurants', {
-          body: { batchSize, offset: 0, mode },
+          body: { batchSize, offset: 0, mode, staleMonths },
         });
 
         if (error) throw error;
@@ -167,6 +170,9 @@ export function GoogleEnrichManager() {
             <Button onClick={() => runDryRun('opening_hours_only')} disabled={running} variant="outline" size="sm">
               Schat: Openingstijden
             </Button>
+            <Button onClick={() => runDryRun('stale')} disabled={running} variant="outline" size="sm">
+              Schat: Verouderd ({staleMonths}m)
+            </Button>
           </div>
           {dryRunResult && (
             <div className="mt-3 p-3 rounded-md bg-background border text-sm space-y-1">
@@ -222,6 +228,34 @@ export function GoogleEnrichManager() {
               <Button onClick={() => runAll('opening_hours_only')} disabled={running} variant="secondary" size="sm">
                 {running && activeMode === 'opening_hours_only' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Clock className="h-4 w-4 mr-2" />}
                 Alle openingstijden
+              </Button>
+            </div>
+          </div>
+          <div className="border-t pt-3">
+            <p className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1.5">
+              <History className="h-3.5 w-3.5" />
+              Verouderd — nooit verrijkt OF langer dan X maanden geleden
+            </p>
+            <div className="flex flex-wrap gap-2 items-end">
+              <div>
+                <Label htmlFor="stale-months" className="text-xs">Ouder dan (maanden)</Label>
+                <Input
+                  id="stale-months"
+                  type="number"
+                  min={1}
+                  max={36}
+                  value={staleMonths}
+                  onChange={e => setStaleMonths(Math.max(1, Math.min(36, Number(e.target.value) || 3)))}
+                  className="w-24"
+                />
+              </div>
+              <Button onClick={() => runBatch(25, 'stale')} disabled={running} variant="outline" size="sm">
+                {running && activeMode === 'stale' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Play className="h-4 w-4 mr-2" />}
+                1 Batch (25)
+              </Button>
+              <Button onClick={() => runAll('stale')} disabled={running} size="sm">
+                {running && activeMode === 'stale' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                Alle verouderde verrijken
               </Button>
             </div>
           </div>
