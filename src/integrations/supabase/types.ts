@@ -3166,6 +3166,69 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurants_import_stage_20260624: {
+        Row: {
+          ambience_clean: string | null
+          city_name: string | null
+          concept_clean: string | null
+          cuisine_primary: string | null
+          google_dine_in: boolean | null
+          google_primary_type: string | null
+          google_rating: number | null
+          google_review_count: number | null
+          google_status: string | null
+          id: string
+          is_active: boolean | null
+          meal_types_clean: string | null
+          name: string | null
+          needs_manual_review: boolean | null
+          price_level: number | null
+          review_reason: string | null
+          review_status: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          ambience_clean?: string | null
+          city_name?: string | null
+          concept_clean?: string | null
+          cuisine_primary?: string | null
+          google_dine_in?: boolean | null
+          google_primary_type?: string | null
+          google_rating?: number | null
+          google_review_count?: number | null
+          google_status?: string | null
+          id: string
+          is_active?: boolean | null
+          meal_types_clean?: string | null
+          name?: string | null
+          needs_manual_review?: boolean | null
+          price_level?: number | null
+          review_reason?: string | null
+          review_status?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          ambience_clean?: string | null
+          city_name?: string | null
+          concept_clean?: string | null
+          cuisine_primary?: string | null
+          google_dine_in?: boolean | null
+          google_primary_type?: string | null
+          google_rating?: number | null
+          google_review_count?: number | null
+          google_status?: string | null
+          id?: string
+          is_active?: boolean | null
+          meal_types_clean?: string | null
+          name?: string | null
+          needs_manual_review?: boolean | null
+          price_level?: number | null
+          review_reason?: string | null
+          review_status?: string | null
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           body: string | null
