@@ -361,7 +361,11 @@ export function useSearch() {
           const aliases = cuisineAliases[c.toLowerCase()];
           return aliases || [c, c.toLowerCase(), c.charAt(0).toUpperCase() + c.slice(1).toLowerCase()];
         });
-        q = q.overlaps('cuisines', [...new Set(expandedCuisines)]);
+        const uniqueCuisines = [...new Set(expandedCuisines)];
+        // Prefer the cleaned `cuisine_primary` column, but keep legacy `cuisines` array as fallback
+        const primaryList = uniqueCuisines.map((c) => `"${c.replace(/"/g, '\\"')}"`).join(',');
+        const overlapsList = `{${uniqueCuisines.map((c) => `"${c.replace(/"/g, '\\"')}"`).join(',')}}`;
+        q = q.or(`cuisine_primary.in.(${primaryList}),cuisines.ov.${overlapsList}`);
       }
       if (filters?.concepts && filters.concepts.length > 0) {
         q = q.overlaps('concepts', filters.concepts);
