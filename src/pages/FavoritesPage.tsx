@@ -32,7 +32,8 @@ export default function FavoritesPage() {
       const { data, error } = await supabase
         .from('restaurants')
         .select('*')
-        .in('id', favorites);
+        .in('id', favorites)
+        .eq('is_active', true);
 
       if (!error && data) {
         setRestaurants(data);
