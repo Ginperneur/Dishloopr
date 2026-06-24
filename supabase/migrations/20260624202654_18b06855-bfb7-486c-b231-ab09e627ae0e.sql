@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS public.restaurants_import_stage_20260624;
