@@ -77,7 +77,7 @@ export default function ListDetailPage() {
         .order('added_at', { ascending: false });
       const ids = (items || []).map((i) => i.restaurant_id);
       if (ids.length) {
-        const { data: rests } = await supabase.from('restaurants').select('*').in('id', ids);
+        const { data: rests } = await supabase.from('restaurants').select('*').in('id', ids).eq('is_active', true);
         if (!cancelled) {
           const orderMap = new Map(ids.map((rid, idx) => [rid, idx]));
           setRestaurants(
