@@ -368,6 +368,23 @@ export default function RestaurantPage() {
                         {AMBIENCE_TAG_I18N_KEYS[tag] ? t(AMBIENCE_TAG_I18N_KEYS[tag]) : tag}
                       </span>
                     ))}
+                    {(restaurant as any).ambience_clean && !restaurant.ambience_tags?.some(
+                      (t) => t?.toLowerCase() === String((restaurant as any).ambience_clean).toLowerCase()
+                    ) && (
+                      <span className="px-2 md:px-3 py-0.5 md:py-1 text-xs md:text-sm font-medium rounded-full bg-muted text-muted-foreground capitalize">
+                        {(restaurant as any).ambience_clean}
+                      </span>
+                    )}
+                    {(restaurant as any).concept_clean && (
+                      <Badge variant="secondary" className="capitalize text-xs md:text-sm">
+                        {(restaurant as any).concept_clean}
+                      </Badge>
+                    )}
+                    {(restaurant as any).meal_types_clean && (
+                      <Badge variant="outline" className="capitalize text-xs md:text-sm">
+                        {(restaurant as any).meal_types_clean}
+                      </Badge>
+                    )}
                     {restaurant.cuisines?.map((cuisine) => (
                       <Badge key={cuisine} variant="outline" className="capitalize text-xs md:text-sm">
                         {tTaxonomy(t, 'cuisine', cuisine)}
