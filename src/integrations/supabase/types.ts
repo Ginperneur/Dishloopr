@@ -2758,13 +2758,16 @@ export type Database = {
           accepts_routed_demand: boolean | null
           added_by_source: string
           address: string
+          ambience_clean: string | null
           ambience_tags: string[] | null
           chain_id: string | null
           city_id: string
           claim_status: Database["public"]["Enums"]["restaurant_claim_status"]
           claimed_by_owner_id: string | null
+          concept_clean: string | null
           concepts: string[] | null
           created_at: string
+          cuisine_primary: string | null
           cuisines: string[] | null
           current_busy_level: string | null
           dietary_options: string[] | null
@@ -2772,10 +2775,14 @@ export type Database = {
           featured_until: string | null
           geo_lat: number | null
           geo_lng: number | null
+          google_dine_in: boolean | null
           google_enriched_at: string | null
           google_place_id: string | null
+          google_primary_type: string | null
           google_rating: number | null
+          google_review_count: number | null
           google_reviews_count: number | null
+          google_status: string | null
           has_delivery: boolean
           has_takeaway: boolean
           has_terrace: boolean
@@ -2789,7 +2796,9 @@ export type Database = {
           is_fully_vegetarian: boolean
           is_top_listing: boolean
           meal_types: string[] | null
+          meal_types_clean: string | null
           name: string
+          needs_manual_review: boolean | null
           opening_hours: Json | null
           owner_tier: string
           phone: string | null
@@ -2800,12 +2809,14 @@ export type Database = {
           reservation_reminder_sent_at: string | null
           reservation_url: string | null
           review_count: number
+          review_status: string | null
           routed_demand_dishes: string[] | null
           slug: string
           sustainability_score: number | null
           tiktok_url: string | null
           top_until: string | null
           updated_at: string
+          verified_at: string | null
           website_checked_at: string | null
           website_status: string | null
           website_status_code: number | null
@@ -2817,13 +2828,16 @@ export type Database = {
           accepts_routed_demand?: boolean | null
           added_by_source?: string
           address: string
+          ambience_clean?: string | null
           ambience_tags?: string[] | null
           chain_id?: string | null
           city_id: string
           claim_status?: Database["public"]["Enums"]["restaurant_claim_status"]
           claimed_by_owner_id?: string | null
+          concept_clean?: string | null
           concepts?: string[] | null
           created_at?: string
+          cuisine_primary?: string | null
           cuisines?: string[] | null
           current_busy_level?: string | null
           dietary_options?: string[] | null
@@ -2831,10 +2845,14 @@ export type Database = {
           featured_until?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
+          google_dine_in?: boolean | null
           google_enriched_at?: string | null
           google_place_id?: string | null
+          google_primary_type?: string | null
           google_rating?: number | null
+          google_review_count?: number | null
           google_reviews_count?: number | null
+          google_status?: string | null
           has_delivery?: boolean
           has_takeaway?: boolean
           has_terrace?: boolean
@@ -2848,7 +2866,9 @@ export type Database = {
           is_fully_vegetarian?: boolean
           is_top_listing?: boolean
           meal_types?: string[] | null
+          meal_types_clean?: string | null
           name: string
+          needs_manual_review?: boolean | null
           opening_hours?: Json | null
           owner_tier?: string
           phone?: string | null
@@ -2859,12 +2879,14 @@ export type Database = {
           reservation_reminder_sent_at?: string | null
           reservation_url?: string | null
           review_count?: number
+          review_status?: string | null
           routed_demand_dishes?: string[] | null
           slug: string
           sustainability_score?: number | null
           tiktok_url?: string | null
           top_until?: string | null
           updated_at?: string
+          verified_at?: string | null
           website_checked_at?: string | null
           website_status?: string | null
           website_status_code?: number | null
@@ -2876,13 +2898,16 @@ export type Database = {
           accepts_routed_demand?: boolean | null
           added_by_source?: string
           address?: string
+          ambience_clean?: string | null
           ambience_tags?: string[] | null
           chain_id?: string | null
           city_id?: string
           claim_status?: Database["public"]["Enums"]["restaurant_claim_status"]
           claimed_by_owner_id?: string | null
+          concept_clean?: string | null
           concepts?: string[] | null
           created_at?: string
+          cuisine_primary?: string | null
           cuisines?: string[] | null
           current_busy_level?: string | null
           dietary_options?: string[] | null
@@ -2890,10 +2915,14 @@ export type Database = {
           featured_until?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
+          google_dine_in?: boolean | null
           google_enriched_at?: string | null
           google_place_id?: string | null
+          google_primary_type?: string | null
           google_rating?: number | null
+          google_review_count?: number | null
           google_reviews_count?: number | null
+          google_status?: string | null
           has_delivery?: boolean
           has_takeaway?: boolean
           has_terrace?: boolean
@@ -2907,7 +2936,9 @@ export type Database = {
           is_fully_vegetarian?: boolean
           is_top_listing?: boolean
           meal_types?: string[] | null
+          meal_types_clean?: string | null
           name?: string
+          needs_manual_review?: boolean | null
           opening_hours?: Json | null
           owner_tier?: string
           phone?: string | null
@@ -2918,12 +2949,14 @@ export type Database = {
           reservation_reminder_sent_at?: string | null
           reservation_url?: string | null
           review_count?: number
+          review_status?: string | null
           routed_demand_dishes?: string[] | null
           slug?: string
           sustainability_score?: number | null
           tiktok_url?: string | null
           top_until?: string | null
           updated_at?: string
+          verified_at?: string | null
           website_checked_at?: string | null
           website_status?: string | null
           website_status_code?: number | null
@@ -2946,6 +2979,192 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      restaurants_backup_20260624: {
+        Row: {
+          accepts_reservations: boolean | null
+          accepts_routed_demand: boolean | null
+          added_by_source: string | null
+          address: string | null
+          ambience_tags: string[] | null
+          chain_id: string | null
+          city_id: string | null
+          claim_status:
+            | Database["public"]["Enums"]["restaurant_claim_status"]
+            | null
+          claimed_by_owner_id: string | null
+          concepts: string[] | null
+          created_at: string | null
+          cuisines: string[] | null
+          current_busy_level: string | null
+          dietary_options: string[] | null
+          experiences: string[] | null
+          featured_until: string | null
+          geo_lat: number | null
+          geo_lng: number | null
+          google_enriched_at: string | null
+          google_place_id: string | null
+          google_rating: number | null
+          google_reviews_count: number | null
+          has_delivery: boolean | null
+          has_takeaway: boolean | null
+          has_terrace: boolean | null
+          id: string | null
+          images: string[] | null
+          instagram_url: string | null
+          is_active: boolean | null
+          is_featured: boolean | null
+          is_fully_halal: boolean | null
+          is_fully_vegan: boolean | null
+          is_fully_vegetarian: boolean | null
+          is_top_listing: boolean | null
+          meal_types: string[] | null
+          name: string | null
+          opening_hours: Json | null
+          owner_tier: string | null
+          phone: string | null
+          photos_fetched_at: string | null
+          postal_code: string | null
+          price_level: number | null
+          rating: number | null
+          reservation_reminder_sent_at: string | null
+          reservation_url: string | null
+          review_count: number | null
+          routed_demand_dishes: string[] | null
+          slug: string | null
+          sustainability_score: number | null
+          tiktok_url: string | null
+          top_until: string | null
+          updated_at: string | null
+          website_checked_at: string | null
+          website_status: string | null
+          website_status_code: number | null
+          website_url: string | null
+          zenchef_id: string | null
+        }
+        Insert: {
+          accepts_reservations?: boolean | null
+          accepts_routed_demand?: boolean | null
+          added_by_source?: string | null
+          address?: string | null
+          ambience_tags?: string[] | null
+          chain_id?: string | null
+          city_id?: string | null
+          claim_status?:
+            | Database["public"]["Enums"]["restaurant_claim_status"]
+            | null
+          claimed_by_owner_id?: string | null
+          concepts?: string[] | null
+          created_at?: string | null
+          cuisines?: string[] | null
+          current_busy_level?: string | null
+          dietary_options?: string[] | null
+          experiences?: string[] | null
+          featured_until?: string | null
+          geo_lat?: number | null
+          geo_lng?: number | null
+          google_enriched_at?: string | null
+          google_place_id?: string | null
+          google_rating?: number | null
+          google_reviews_count?: number | null
+          has_delivery?: boolean | null
+          has_takeaway?: boolean | null
+          has_terrace?: boolean | null
+          id?: string | null
+          images?: string[] | null
+          instagram_url?: string | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          is_fully_halal?: boolean | null
+          is_fully_vegan?: boolean | null
+          is_fully_vegetarian?: boolean | null
+          is_top_listing?: boolean | null
+          meal_types?: string[] | null
+          name?: string | null
+          opening_hours?: Json | null
+          owner_tier?: string | null
+          phone?: string | null
+          photos_fetched_at?: string | null
+          postal_code?: string | null
+          price_level?: number | null
+          rating?: number | null
+          reservation_reminder_sent_at?: string | null
+          reservation_url?: string | null
+          review_count?: number | null
+          routed_demand_dishes?: string[] | null
+          slug?: string | null
+          sustainability_score?: number | null
+          tiktok_url?: string | null
+          top_until?: string | null
+          updated_at?: string | null
+          website_checked_at?: string | null
+          website_status?: string | null
+          website_status_code?: number | null
+          website_url?: string | null
+          zenchef_id?: string | null
+        }
+        Update: {
+          accepts_reservations?: boolean | null
+          accepts_routed_demand?: boolean | null
+          added_by_source?: string | null
+          address?: string | null
+          ambience_tags?: string[] | null
+          chain_id?: string | null
+          city_id?: string | null
+          claim_status?:
+            | Database["public"]["Enums"]["restaurant_claim_status"]
+            | null
+          claimed_by_owner_id?: string | null
+          concepts?: string[] | null
+          created_at?: string | null
+          cuisines?: string[] | null
+          current_busy_level?: string | null
+          dietary_options?: string[] | null
+          experiences?: string[] | null
+          featured_until?: string | null
+          geo_lat?: number | null
+          geo_lng?: number | null
+          google_enriched_at?: string | null
+          google_place_id?: string | null
+          google_rating?: number | null
+          google_reviews_count?: number | null
+          has_delivery?: boolean | null
+          has_takeaway?: boolean | null
+          has_terrace?: boolean | null
+          id?: string | null
+          images?: string[] | null
+          instagram_url?: string | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          is_fully_halal?: boolean | null
+          is_fully_vegan?: boolean | null
+          is_fully_vegetarian?: boolean | null
+          is_top_listing?: boolean | null
+          meal_types?: string[] | null
+          name?: string | null
+          opening_hours?: Json | null
+          owner_tier?: string | null
+          phone?: string | null
+          photos_fetched_at?: string | null
+          postal_code?: string | null
+          price_level?: number | null
+          rating?: number | null
+          reservation_reminder_sent_at?: string | null
+          reservation_url?: string | null
+          review_count?: number | null
+          routed_demand_dishes?: string[] | null
+          slug?: string | null
+          sustainability_score?: number | null
+          tiktok_url?: string | null
+          top_until?: string | null
+          updated_at?: string | null
+          website_checked_at?: string | null
+          website_status?: string | null
+          website_status_code?: number | null
+          website_url?: string | null
+          zenchef_id?: string | null
+        }
+        Relationships: []
       }
       reviews: {
         Row: {
