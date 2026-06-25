@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS public.dish_canonical_stage_20260625;

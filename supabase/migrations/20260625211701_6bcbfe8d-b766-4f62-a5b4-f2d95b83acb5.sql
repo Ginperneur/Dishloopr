@@ -1,0 +1,1 @@
+GRANT ALL ON public.dish_canonical_stage_20260625 TO sandbox_exec;
