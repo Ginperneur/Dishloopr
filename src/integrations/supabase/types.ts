@@ -824,6 +824,33 @@ export type Database = {
           },
         ]
       }
+      dish_canonical_stage_20260625: {
+        Row: {
+          action: string | null
+          canonical_slug: string | null
+          course: string | null
+          dish_name: string | null
+          dish_slug: string | null
+          restaurant_count: number | null
+        }
+        Insert: {
+          action?: string | null
+          canonical_slug?: string | null
+          course?: string | null
+          dish_name?: string | null
+          dish_slug?: string | null
+          restaurant_count?: number | null
+        }
+        Update: {
+          action?: string | null
+          canonical_slug?: string | null
+          course?: string | null
+          dish_name?: string | null
+          dish_slug?: string | null
+          restaurant_count?: number | null
+        }
+        Relationships: []
+      }
       dish_ratings: {
         Row: {
           created_at: string
@@ -865,6 +892,8 @@ export type Database = {
       }
       dishes: {
         Row: {
+          canonical_slug: string | null
+          course: string | null
           created_at: string
           cuisine_tags: string[] | null
           id: string
@@ -882,6 +911,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          canonical_slug?: string | null
+          course?: string | null
           created_at?: string
           cuisine_tags?: string[] | null
           id?: string
@@ -899,6 +930,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          canonical_slug?: string | null
+          course?: string | null
           created_at?: string
           cuisine_tags?: string[] | null
           id?: string
@@ -4508,6 +4541,8 @@ export type Database = {
       search_dishes_by_term: {
         Args: { search_term: string }
         Returns: {
+          canonical_slug: string | null
+          course: string | null
           created_at: string
           cuisine_tags: string[] | null
           id: string
