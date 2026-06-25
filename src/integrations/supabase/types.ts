@@ -2358,6 +2358,10 @@ export type Database = {
           is_vegetarian: boolean
           rejected_reason: string | null
           restaurant_id: string
+          screen_canonical: string | null
+          screen_course: string | null
+          screen_reason: string | null
+          screen_score: number | null
           source: string | null
           status: string | null
           updated_at: string | null
@@ -2381,6 +2385,10 @@ export type Database = {
           is_vegetarian?: boolean
           rejected_reason?: string | null
           restaurant_id: string
+          screen_canonical?: string | null
+          screen_course?: string | null
+          screen_reason?: string | null
+          screen_score?: number | null
           source?: string | null
           status?: string | null
           updated_at?: string | null
@@ -2404,6 +2412,10 @@ export type Database = {
           is_vegetarian?: boolean
           rejected_reason?: string | null
           restaurant_id?: string
+          screen_canonical?: string | null
+          screen_course?: string | null
+          screen_reason?: string | null
+          screen_score?: number | null
           source?: string | null
           status?: string | null
           updated_at?: string | null
