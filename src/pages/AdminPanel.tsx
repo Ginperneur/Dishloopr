@@ -77,6 +77,7 @@ import { RateLimitMonitor } from '@/components/admin/RateLimitMonitor';
 import { LinkHealthChecker } from '@/components/admin/LinkHealthChecker';
 import { MissingWebsiteUrls } from '@/components/admin/MissingWebsiteUrls';
 import { ManualReviewQueue } from '@/components/admin/ManualReviewQueue';
+import { DishScreeningManager } from '@/components/admin/DishScreeningManager';
 
 import { openConfirm } from '@/components/ui/confirm-dialog';
 interface Stats {
@@ -145,6 +146,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'link-health': { title: "Link Health", description: "Controleer of restaurant-websites nog werken (HEAD-ping)" },
   'missing-website': { title: "Zonder website", description: "Restaurants zonder website-URL — automatisch aanvullen via Google Places" },
   'manual-review': { title: "Handmatig nakijken", description: "Restaurants gemarkeerd met needs_manual_review=true — controleer en bevestig" },
+  'dish-screening': { title: "Gerecht-screening", description: "Screen voorgestelde gerechten automatisch (approve/reject/review) met canonical-vocab" },
 };
 
 export default function AdminPanel() {
@@ -647,6 +649,7 @@ export default function AdminPanel() {
               {activeSection === 'link-health' && <LinkHealthChecker />}
               {activeSection === 'missing-website' && <MissingWebsiteUrls />}
               {activeSection === 'manual-review' && <ManualReviewQueue />}
+              {activeSection === 'dish-screening' && <DishScreeningManager />}
             </div>
           </main>
         </div>

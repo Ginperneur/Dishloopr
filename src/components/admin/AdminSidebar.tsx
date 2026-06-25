@@ -97,6 +97,7 @@ const navGroups = [
       { id: 'google-enrich', label: 'Google Verrijking', icon: Star },
       { id: 'missing-website', label: 'Zonder website', icon: Globe },
       { id: 'manual-review', label: 'Handmatig nakijken', icon: AlertCircle },
+      { id: 'dish-screening', label: 'Gerecht-screening', icon: Check },
       { id: 'reservation-detect', label: 'Reserveringslinks', icon: Calendar },
       { id: 'link-health', label: 'Link Health', icon: Globe },
       { id: 'photos', label: "Foto's", icon: Image },
