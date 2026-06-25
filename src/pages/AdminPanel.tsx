@@ -649,6 +649,7 @@ export default function AdminPanel() {
               {activeSection === 'link-health' && <LinkHealthChecker />}
               {activeSection === 'missing-website' && <MissingWebsiteUrls />}
               {activeSection === 'manual-review' && <ManualReviewQueue />}
+              {activeSection === 'dish-screening' && <DishScreeningManager />}
             </div>
           </main>
         </div>
