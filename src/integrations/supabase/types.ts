@@ -3596,27 +3596,6 @@ export type Database = {
           },
         ]
       }
-      suggested_decisions_stage_20260625: {
-        Row: {
-          canonical_slug: string | null
-          course: string | null
-          decision: string | null
-          dish_slug: string | null
-        }
-        Insert: {
-          canonical_slug?: string | null
-          course?: string | null
-          decision?: string | null
-          dish_slug?: string | null
-        }
-        Update: {
-          canonical_slug?: string | null
-          course?: string | null
-          decision?: string | null
-          dish_slug?: string | null
-        }
-        Relationships: []
-      }
       support_conversations: {
         Row: {
           created_at: string
