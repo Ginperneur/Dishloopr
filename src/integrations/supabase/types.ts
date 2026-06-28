@@ -3755,6 +3755,33 @@ export type Database = {
           },
         ]
       }
+      staging_screening_decisions: {
+        Row: {
+          canonical_slug: string | null
+          course: string | null
+          decision: string | null
+          dish_slug: string
+          reason: string | null
+          score: number | null
+        }
+        Insert: {
+          canonical_slug?: string | null
+          course?: string | null
+          decision?: string | null
+          dish_slug: string
+          reason?: string | null
+          score?: number | null
+        }
+        Update: {
+          canonical_slug?: string | null
+          course?: string | null
+          decision?: string | null
+          dish_slug?: string
+          reason?: string | null
+          score?: number | null
+        }
+        Relationships: []
+      }
       support_conversations: {
         Row: {
           created_at: string
