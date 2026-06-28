@@ -3452,36 +3452,6 @@ export type Database = {
           },
         ]
       }
-      scraped_dishes_stage_20260628: {
-        Row: {
-          city: string | null
-          dish_name: string | null
-          dish_slug: string | null
-          price: number | null
-          restaurant_id: string | null
-          restaurant_name: string | null
-          source: string | null
-        }
-        Insert: {
-          city?: string | null
-          dish_name?: string | null
-          dish_slug?: string | null
-          price?: number | null
-          restaurant_id?: string | null
-          restaurant_name?: string | null
-          source?: string | null
-        }
-        Update: {
-          city?: string | null
-          dish_name?: string | null
-          dish_slug?: string | null
-          price?: number | null
-          restaurant_id?: string | null
-          restaurant_name?: string | null
-          source?: string | null
-        }
-        Relationships: []
-      }
       seo_landing_pages: {
         Row: {
           canonical_url: string | null
