@@ -75,6 +75,7 @@ import { OwnerMenuUpload } from '@/components/owner/OwnerMenuUpload';
 import { LockedFeatureOverlay } from '@/components/claims/LockedFeatureOverlay';
 import { VerificationRequiredDialog } from '@/components/claims/VerificationRequiredDialog';
 import { DishConfirmation } from '@/components/owner/DishConfirmation';
+import { SignatureDishSelector } from '@/components/owner/SignatureDishSelector';
 import { TagManager } from '@/components/owner/TagManager';
 import { RestaurantImageUpload } from '@/components/admin/RestaurantImageUpload';
 import { ActionCards } from '@/components/owner/ActionCards';
@@ -984,7 +985,10 @@ export default function OwnerDashboard() {
                 )}
               </h3>
               {selectedRestaurant ? (
-                <DishConfirmation restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
+                <div className="space-y-4">
+                  <SignatureDishSelector restaurantId={selectedRestaurant.id} />
+                  <DishConfirmation restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
+                </div>
               ) : (
                 <Card><CardContent className="py-8 text-center"><p className="text-muted-foreground text-sm">Selecteer een restaurant</p></CardContent></Card>
               )}
