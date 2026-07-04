@@ -18,6 +18,7 @@ type RestaurantCardData = Restaurant & {
   chainLocationsCount?: number;
   matchedDishes?: string[];
   hasDishMatch?: boolean;
+  signatureDish?: { name: string; price: number | null } | null;
 };
 
 interface DatabaseRestaurantCardProps {
@@ -27,6 +28,10 @@ interface DatabaseRestaurantCardProps {
 }
 
 import { PRICE_LABELS, AMBIENCE_TAG_STYLES, AMBIENCE_TAG_I18N_KEYS } from '@/lib/constants';
+
+function formatEuroNL(value: number): string {
+  return `€${value.toFixed(2).replace('.', ',')}`;
+}
 
 function ImageWithFallback({ src, alt }: { src: string; alt: string }) {
   const [failed, setFailed] = useState(false);
@@ -236,6 +241,25 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
               ))}
             </div>
           )}
+
+          {/* "Bekend om" line — canonical/strict-matched approved dish with optional price */}
+          {(() => {
+            const sig = restaurant.signatureDish
+              ?? (restaurant.matchedDishes && restaurant.matchedDishes[0]
+                    ? { name: restaurant.matchedDishes[0], price: null as number | null }
+                    : null);
+            if (!sig) return null;
+            const priceNum = sig.price !== null && sig.price !== undefined && !isNaN(Number(sig.price))
+              ? Number(sig.price)
+              : null;
+            return (
+              <div className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3 line-clamp-1">
+                <span className="font-medium text-foreground">Bekend om:</span>{' '}
+                <span className="capitalize">{sig.name}</span>
+                {priceNum !== null && <> — {formatEuroNL(priceNum)}</>}
+              </div>
+            );
+          })()}
 
           {/* Ambience Tags */}
           {restaurant.ambience_tags && restaurant.ambience_tags.length > 0 && (
