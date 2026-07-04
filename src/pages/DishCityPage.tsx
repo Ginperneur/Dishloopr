@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { ChevronRight, MapPin, Search, Star } from 'lucide-react';
@@ -20,7 +20,11 @@ import NotFound from './NotFound';
 export default function DishCityPage() {
   const { slug } = useParams<{ slug: string }>();
   const { t } = useTranslation();
-  const { page, restaurants, loading, error } = useSeoLandingPage(slug);
+  const { page, restaurants, loading, error, redirectTo, canonicalDishName } = useSeoLandingPage(slug);
+
+  if (redirectTo) {
+    return <Navigate to={redirectTo} replace />;
+  }
 
   if (error === 'Page not found') {
     return <NotFound />;
