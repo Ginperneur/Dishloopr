@@ -57,7 +57,9 @@ export const CUISINE_I18N_KEYS: Record<string, string> = {
 export const COURSE_TYPE_I18N_KEYS: Record<string, string> = {
   hoofdgerecht: 'taxonomy.course.main',
   voorgerecht: 'taxonomy.course.starter',
-  dessert: 'taxonomy.course.dessert',
+  nagerecht: 'taxonomy.course.nagerecht',
+  dessert: 'taxonomy.course.nagerecht',
+  borrel: 'taxonomy.course.borrel',
   drank: 'taxonomy.course.drink',
   menu: 'taxonomy.course.menu',
   bijgerecht: 'taxonomy.course.side',
