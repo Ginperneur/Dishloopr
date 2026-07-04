@@ -1,18 +1,25 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export type CourseType = 'voorgerecht' | 'hoofdgerecht' | 'dessert' | 'bijgerecht' | 'drank' | 'menu';
+export type CourseType = 'borrel' | 'voorgerecht' | 'hoofdgerecht' | 'bijgerecht' | 'nagerecht' | 'drank';
 
-export const COURSE_TYPE_ORDER: CourseType[] = ['menu', 'voorgerecht', 'hoofdgerecht', 'bijgerecht', 'dessert', 'drank'];
+export const COURSE_TYPE_ORDER: CourseType[] = ['borrel', 'voorgerecht', 'hoofdgerecht', 'bijgerecht', 'nagerecht', 'drank'];
 
 export const COURSE_TYPE_LABELS: Record<CourseType, string> = {
-  menu: '📋 Menu\'s & Arrangementen',
+  borrel: '🍸 Borrel',
   voorgerecht: '🥗 Voorgerechten',
   hoofdgerecht: '🍽️ Hoofdgerechten',
   bijgerecht: '🥙 Bijgerechten',
-  dessert: '🍰 Desserts',
+  nagerecht: '🍰 Nagerechten',
   drank: '🥤 Dranken',
 };
+
+function normalizeCourse(raw: unknown): CourseType {
+  const v = typeof raw === 'string' ? raw.toLowerCase().trim() : '';
+  if (v === 'dessert') return 'nagerecht';
+  if ((COURSE_TYPE_ORDER as string[]).includes(v)) return v as CourseType;
+  return 'hoofdgerecht';
+}
 
 export interface MenuItem {
   id: string;
@@ -63,7 +70,8 @@ export function useMenuItems(restaurantId: string | undefined) {
             dish:dishes(
               id,
               name,
-              cuisine_tags
+              cuisine_tags,
+              course
             )
           `)
           .eq('restaurant_id', restaurantId)
@@ -74,9 +82,9 @@ export function useMenuItems(restaurantId: string | undefined) {
         const items: MenuItem[] = (restaurantDishes || [])
           .filter(rd => rd.dish)
           .map(rd => {
-            const dish = rd.dish as { id: string; name: string; cuisine_tags: string[] | null };
+            const dish = rd.dish as { id: string; name: string; cuisine_tags: string[] | null; course: string | null };
             const cuisineTags = dish.cuisine_tags || [];
-            const courseType = (rd as any).course_type as CourseType || 'hoofdgerecht';
+            const courseType = normalizeCourse(dish.course ?? (rd as any).course_type);
             
             return {
               id: rd.id,
