@@ -28,6 +28,7 @@ export interface SeoLandingPage {
     id: string;
     name: string;
     slug: string;
+    canonical_slug?: string | null;
   };
   city?: {
     id: string;
@@ -58,6 +59,8 @@ export function useSeoLandingPage(slug: string | undefined) {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [redirectTo, setRedirectTo] = useState<string | null>(null);
+  const [canonicalDishName, setCanonicalDishName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!slug) {
@@ -95,7 +98,7 @@ export function useSeoLandingPage(slug: string | undefined) {
         if (pageData.dish_id) {
           const { data: dishData } = await supabase
             .from('dishes')
-            .select('id, name, slug')
+            .select('id, name, slug, canonical_slug')
             .eq('id', pageData.dish_id)
             .single();
           dish = dishData;
@@ -122,29 +125,96 @@ export function useSeoLandingPage(slug: string | undefined) {
           city: city || undefined,
         });
 
-        // Fetch restaurants that serve this dish in this city
-        if (pageData.dish_id && pageData.city_id) {
-          const { data: restaurantDishes } = await supabase
-            .from('restaurant_dishes')
-            .select('restaurant_id')
-            .eq('dish_id', pageData.dish_id);
+        // Determine canonical slug for grouping (fall back to the dish's own slug)
+        const canonicalSlug = (dish?.canonical_slug && dish.canonical_slug.length > 0)
+          ? dish.canonical_slug
+          : dish?.slug || null;
 
-          if (restaurantDishes && restaurantDishes.length > 0) {
-            const restaurantIds = restaurantDishes.map(rd => rd.restaurant_id);
+        // 301-redirect: if the URL dish is a non-canonical variant, redirect to canonical
+        if (dish && city && dish.canonical_slug && dish.canonical_slug !== dish.slug) {
+          const { data: canonicalPage } = await supabase
+            .from('seo_landing_pages')
+            .select('slug')
+            .eq('city_id', city.id)
+            .eq('is_active', true)
+            .in('dish_id', (
+              await supabase
+                .from('dishes')
+                .select('id')
+                .eq('slug', dish.canonical_slug)
+            ).data?.map((d: { id: string }) => d.id) || [])
+            .maybeSingle();
+          if (canonicalPage?.slug && canonicalPage.slug !== slug) {
+            setRedirectTo(`/eten/${canonicalPage.slug}`);
+            setLoading(false);
+            return;
+          }
+        }
 
-            const { data: restaurantsData } = await supabase
-              .from('restaurants')
-              .select('*')
-              .in('id', restaurantIds)
-              .eq('city_id', pageData.city_id)
-              .eq('is_active', true)
-              .order('is_featured', { ascending: false })
-              .order('is_top_listing', { ascending: false })
-              .order('rating', { ascending: false });
+        // Look up the human-readable name for the canonical dish (fallback to page dish name)
+        if (canonicalSlug) {
+          const { data: canonDish } = await supabase
+            .from('dishes')
+            .select('name')
+            .eq('slug', canonicalSlug)
+            .maybeSingle();
+          setCanonicalDishName(canonDish?.name || dish?.name || null);
+        }
 
-            setRestaurants(restaurantsData || []);
+        // Fetch all restaurants in city with at least one approved dish sharing this canonical_slug
+        if (canonicalSlug && pageData.city_id) {
+          // Collect all dish IDs sharing this canonical_slug (paginated to bypass 1000-row limit)
+          const dishIds: string[] = [];
+          let from = 0;
+          const pageSize = 1000;
+          while (true) {
+            const { data: dishBatch } = await supabase
+              .from('dishes')
+              .select('id')
+              .eq('canonical_slug', canonicalSlug)
+              .range(from, from + pageSize - 1);
+            if (!dishBatch || dishBatch.length === 0) break;
+            dishIds.push(...dishBatch.map(d => d.id));
+            if (dishBatch.length < pageSize) break;
+            from += pageSize;
+          }
+
+          let restaurantIds: string[] = [];
+          if (dishIds.length > 0) {
+            // Chunk .in() to keep URL length safe
+            const chunkSize = 200;
+            for (let i = 0; i < dishIds.length; i += chunkSize) {
+              const chunk = dishIds.slice(i, i + chunkSize);
+              const { data: rdBatch } = await supabase
+                .from('restaurant_dishes')
+                .select('restaurant_id')
+                .eq('status', 'approved_by_admin')
+                .in('dish_id', chunk);
+              if (rdBatch) restaurantIds.push(...rdBatch.map(rd => rd.restaurant_id));
+            }
+            restaurantIds = Array.from(new Set(restaurantIds));
+          }
+
+          if (restaurantIds.length > 0) {
+            const results: Restaurant[] = [];
+            const chunkSize = 200;
+            for (let i = 0; i < restaurantIds.length; i += chunkSize) {
+              const chunk = restaurantIds.slice(i, i + chunkSize);
+              const { data: rBatch } = await supabase
+                .from('restaurants')
+                .select('*')
+                .in('id', chunk)
+                .eq('city_id', pageData.city_id)
+                .eq('is_active', true);
+              if (rBatch) results.push(...(rBatch as Restaurant[]));
+            }
+            results.sort((a, b) => {
+              if (a.is_featured !== b.is_featured) return a.is_featured ? -1 : 1;
+              if (a.is_top_listing !== b.is_top_listing) return a.is_top_listing ? -1 : 1;
+              return (b.rating || 0) - (a.rating || 0);
+            });
+            setRestaurants(results);
           } else {
-            // Fallback: get all restaurants in city
             const { data: cityRestaurants } = await supabase
               .from('restaurants')
               .select('*')
@@ -153,7 +223,6 @@ export function useSeoLandingPage(slug: string | undefined) {
               .order('is_featured', { ascending: false })
               .order('rating', { ascending: false })
               .limit(12);
-
             setRestaurants(cityRestaurants || []);
           }
         }
@@ -168,7 +237,7 @@ export function useSeoLandingPage(slug: string | undefined) {
     fetchPage();
   }, [slug]);
 
-  return { page, restaurants, loading, error };
+  return { page, restaurants, loading, error, redirectTo, canonicalDishName };
 }
 
 export function useSeoLandingPages() {
