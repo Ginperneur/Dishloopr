@@ -23,14 +23,21 @@ serve(async (req) => {
       supabase.from('restaurants').select('slug, updated_at').eq('is_active', true).order('updated_at', { ascending: false }),
       supabase.from('cities').select('slug, updated_at').eq('is_active', true),
       supabase.from('dishes').select('slug, updated_at').eq('is_active', true).order('search_count', { ascending: false }).limit(100),
-      supabase.from('seo_landing_pages').select('slug, updated_at').eq('is_active', true),
+      supabase.from('seo_landing_pages').select('slug, updated_at, dishes:dish_id(slug, canonical_slug)').eq('is_active', true),
       supabase.from('collections').select('slug, updated_at').eq('is_active', true).order('sort_order'),
     ]);
 
     const restaurants = restaurantsRes.data || [];
     const cities = citiesRes.data || [];
     const dishes = dishesRes.data || [];
-    const seoLandingPages = seoRes.data || [];
+    const seoLandingPagesRaw = seoRes.data || [];
+    // Only emit canonical dish×city URLs: dish must be its own canonical (or have no canonical set)
+    const seoLandingPages = seoLandingPagesRaw.filter((p: any) => {
+      const d = p.dishes;
+      if (!d) return true;
+      if (!d.canonical_slug) return true;
+      return d.canonical_slug === d.slug;
+    });
     const collections = collectionsRes.data || [];
 
     const now = new Date().toISOString().split('T')[0];
