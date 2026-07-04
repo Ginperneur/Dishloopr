@@ -51,7 +51,36 @@ export function useFeaturedRestaurants(defaultLimit = 3) {
       if (error) {
         console.error('Error fetching featured restaurants:', error);
       } else {
-        setRestaurants(data || []);
+        const rows = (data || []) as Restaurant[];
+        // Batch-fetch signature dish per restaurant (strict: approved_by_admin only)
+        const ids = rows.map(r => r.id);
+        if (ids.length > 0) {
+          const { data: rdBatch } = await supabase
+            .from('restaurant_dishes')
+            .select('restaurant_id, dish_id, price, is_signature, dish:dishes(name)')
+            .eq('status', 'approved_by_admin')
+            .in('restaurant_id', ids);
+          const map = new Map<string, { name: string; price: number | null; is_signature: boolean }>();
+          for (const rd of (rdBatch || []) as any[]) {
+            const name = rd.dish?.name;
+            if (!name) continue;
+            const priceRaw = rd.price;
+            const price = priceRaw !== null && priceRaw !== undefined && !isNaN(Number(priceRaw))
+              ? Number(priceRaw) : null;
+            const cand = { name, price, is_signature: !!rd.is_signature };
+            const cur = map.get(rd.restaurant_id);
+            if (!cur
+                || (!cur.is_signature && cand.is_signature)
+                || (cur.price === null && cand.price !== null && cur.is_signature === cand.is_signature)) {
+              map.set(rd.restaurant_id, cand);
+            }
+          }
+          for (const r of rows) {
+            const m = map.get(r.id);
+            if (m) (r as any).signatureDish = { name: m.name, price: m.price };
+          }
+        }
+        setRestaurants(rows);
       }
       
       setLoading(false);

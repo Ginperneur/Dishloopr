@@ -101,6 +101,7 @@ interface Restaurant {
   is_top_listing: boolean;
   geo_lat: number | null;
   geo_lng: number | null;
+  signatureDish?: { name: string; price: number | null } | null;
 }
 
 export function useSeoLandingPage(slug: string | undefined) {
@@ -236,17 +237,49 @@ export function useSeoLandingPage(slug: string | undefined) {
           }
 
           let restaurantIds: string[] = [];
+          // restaurantId -> best matched dish (prefer signature, then lowest price, then any)
+          const matchByRestaurant = new Map<string, { name: string; price: number | null; is_signature: boolean }>();
+          // Map dish_id -> dish name (for the current canonical set)
+          const dishNameById = new Map<string, string>();
           if (dishIds.length > 0) {
+            // Fetch names for canonical dishes (chunked)
+            const nameChunk = 200;
+            for (let i = 0; i < dishIds.length; i += nameChunk) {
+              const chunk = dishIds.slice(i, i + nameChunk);
+              const { data: nameBatch } = await supabase
+                .from('dishes')
+                .select('id, name')
+                .in('id', chunk);
+              if (nameBatch) for (const d of nameBatch) dishNameById.set(d.id, (d as any).name);
+            }
             // Chunk .in() to keep URL length safe
             const chunkSize = 200;
             for (let i = 0; i < dishIds.length; i += chunkSize) {
               const chunk = dishIds.slice(i, i + chunkSize);
               const { data: rdBatch } = await supabase
                 .from('restaurant_dishes')
-                .select('restaurant_id')
+                .select('restaurant_id, dish_id, price, is_signature')
                 .eq('status', 'approved_by_admin')
                 .in('dish_id', chunk);
-              if (rdBatch) restaurantIds.push(...rdBatch.map(rd => rd.restaurant_id));
+              if (rdBatch) {
+                for (const rd of rdBatch as any[]) {
+                  restaurantIds.push(rd.restaurant_id);
+                  const name = dishNameById.get(rd.dish_id);
+                  if (!name) continue;
+                  const priceRaw = rd.price;
+                  const price = priceRaw !== null && priceRaw !== undefined && !isNaN(Number(priceRaw))
+                    ? Number(priceRaw) : null;
+                  const candidate = { name, price, is_signature: !!rd.is_signature };
+                  const existing = matchByRestaurant.get(rd.restaurant_id);
+                  if (!existing) {
+                    matchByRestaurant.set(rd.restaurant_id, candidate);
+                  } else if (!existing.is_signature && candidate.is_signature) {
+                    matchByRestaurant.set(rd.restaurant_id, candidate);
+                  } else if (existing.price === null && candidate.price !== null && existing.is_signature === candidate.is_signature) {
+                    matchByRestaurant.set(rd.restaurant_id, candidate);
+                  }
+                }
+              }
             }
             restaurantIds = Array.from(new Set(restaurantIds));
           }
@@ -264,12 +297,18 @@ export function useSeoLandingPage(slug: string | undefined) {
                 .eq('is_active', true);
               if (rBatch) results.push(...(rBatch as Restaurant[]));
             }
+            // Attach signatureDish per restaurant from the canonical-strict match map
+            for (const r of results) {
+              const m = matchByRestaurant.get(r.id);
+              if (m) (r as any).signatureDish = { name: m.name, price: m.price };
+            }
             results.sort((a, b) => {
               if (a.is_featured !== b.is_featured) return a.is_featured ? -1 : 1;
               if (a.is_top_listing !== b.is_top_listing) return a.is_top_listing ? -1 : 1;
               return (b.rating || 0) - (a.rating || 0);
             });
-            setRestaurants(results);
+            // Strict: only restaurants that actually have a canonical-matched approved dish
+            setRestaurants(results.filter(r => (r as any).signatureDish));
           } else {
             const { data: cityRestaurants } = await supabase
               .from('restaurants')
