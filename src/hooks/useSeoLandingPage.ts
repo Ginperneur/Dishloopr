@@ -83,6 +83,13 @@ export function useSeoLandingPage(slug: string | undefined) {
 
         if (pageError) {
           if (pageError.code === 'PGRST116') {
+            // Try canonical redirect before giving up: parse slug into {dish}-{city}
+            const canonicalRedirect = await resolveCanonicalRedirect(slug);
+            if (canonicalRedirect) {
+              setRedirectTo(canonicalRedirect);
+              setLoading(false);
+              return;
+            }
             setError('Page not found');
           } else {
             throw pageError;
