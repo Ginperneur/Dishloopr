@@ -20,7 +20,7 @@ import NotFound from './NotFound';
 export default function DishCityPage() {
   const { slug } = useParams<{ slug: string }>();
   const { t } = useTranslation();
-  const { page, restaurants, loading, error, redirectTo, canonicalDishName } = useSeoLandingPage(slug);
+  const { page, restaurants, loading, error, redirectTo } = useSeoLandingPage(slug);
 
   if (redirectTo) {
     return <Navigate to={redirectTo} replace />;
