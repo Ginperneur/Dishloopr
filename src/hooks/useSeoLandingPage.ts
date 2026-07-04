@@ -37,6 +37,55 @@ export interface SeoLandingPage {
   };
 }
 
+async function resolveCanonicalRedirect(slug: string): Promise<string | null> {
+  // Find the longest matching city slug at the end of the URL slug
+  const parts = slug.split('-');
+  for (let i = 1; i < parts.length; i++) {
+    const citySlugCandidate = parts.slice(i).join('-');
+    const dishSlugCandidate = parts.slice(0, i).join('-');
+    if (!citySlugCandidate || !dishSlugCandidate) continue;
+
+    const { data: city } = await supabase
+      .from('cities')
+      .select('id, slug')
+      .eq('slug', citySlugCandidate)
+      .maybeSingle();
+    if (!city) continue;
+
+    // Look up the dish by slug and check its canonical_slug
+    const { data: dish } = await supabase
+      .from('dishes')
+      .select('slug, canonical_slug')
+      .eq('slug', dishSlugCandidate)
+      .maybeSingle();
+    if (!dish) continue;
+
+    const canonical = dish.canonical_slug && dish.canonical_slug.length > 0
+      ? dish.canonical_slug
+      : dish.slug;
+    if (canonical === dish.slug) return null;
+
+    // Find canonical dish IDs, then check if an SEO page exists for that city
+    const { data: canonDishes } = await supabase
+      .from('dishes')
+      .select('id')
+      .eq('slug', canonical);
+    const ids = (canonDishes || []).map((d: { id: string }) => d.id);
+    if (ids.length === 0) return null;
+
+    const { data: canonicalPage } = await supabase
+      .from('seo_landing_pages')
+      .select('slug')
+      .eq('city_id', city.id)
+      .eq('is_active', true)
+      .in('dish_id', ids)
+      .maybeSingle();
+    if (canonicalPage?.slug) return `/eten/${canonicalPage.slug}`;
+    return null;
+  }
+  return null;
+}
+
 interface Restaurant {
   id: string;
   name: string;
@@ -83,6 +132,13 @@ export function useSeoLandingPage(slug: string | undefined) {
 
         if (pageError) {
           if (pageError.code === 'PGRST116') {
+            // Try canonical redirect before giving up: parse slug into {dish}-{city}
+            const canonicalRedirect = await resolveCanonicalRedirect(slug);
+            if (canonicalRedirect) {
+              setRedirectTo(canonicalRedirect);
+              setLoading(false);
+              return;
+            }
             setError('Page not found');
           } else {
             throw pageError;
