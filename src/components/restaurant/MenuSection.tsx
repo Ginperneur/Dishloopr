@@ -11,11 +11,11 @@ import { formatDishName } from '@/lib/utils';
 import { tTaxonomy } from '@/lib/i18n/taxonomy';
 
 const COURSE_EMOJI_KEY: Record<CourseType, string> = {
-  menu: 'taxonomy.course.menuEmoji',
+  borrel: 'taxonomy.course.borrelEmoji',
   voorgerecht: 'taxonomy.course.starterEmoji',
   hoofdgerecht: 'taxonomy.course.mainEmoji',
   bijgerecht: 'taxonomy.course.sideEmoji',
-  dessert: 'taxonomy.course.dessertEmoji',
+  nagerecht: 'taxonomy.course.dessertEmoji',
   drank: 'taxonomy.course.drinkEmoji',
 };
 
