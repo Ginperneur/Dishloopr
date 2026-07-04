@@ -101,6 +101,7 @@ interface Restaurant {
   is_top_listing: boolean;
   geo_lat: number | null;
   geo_lng: number | null;
+  signatureDish?: { name: string; price: number | null } | null;
 }
 
 export function useSeoLandingPage(slug: string | undefined) {
