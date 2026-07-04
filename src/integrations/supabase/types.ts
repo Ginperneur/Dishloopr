@@ -4546,6 +4546,10 @@ export type Database = {
       cleanup_discovery_duplicates: { Args: { p_rules?: Json }; Returns: Json }
       cleanup_rate_limit_log: { Args: never; Returns: number }
       clear_expired_verification_codes: { Args: never; Returns: undefined }
+      clear_signature_dish: {
+        Args: { _restaurant_id: string }
+        Returns: undefined
+      }
       create_biweekly_newsletter_draft: { Args: never; Returns: string }
       deduplicate_dishes: { Args: never; Returns: Json }
       deduplicate_restaurant_dishes: { Args: never; Returns: Json }
@@ -4697,6 +4701,10 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      set_signature_dish: {
+        Args: { _rd_id: string; _restaurant_id: string }
+        Returns: undefined
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
