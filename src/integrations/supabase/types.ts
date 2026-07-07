@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      _import_richtags_stg: {
+        Row: {
+          ambiance: string | null
+          id: string
+          meal: string | null
+        }
+        Insert: {
+          ambiance?: string | null
+          id: string
+          meal?: string | null
+        }
+        Update: {
+          ambiance?: string | null
+          id?: string
+          meal?: string | null
+        }
+        Relationships: []
+      }
       admin_activity_logs: {
         Row: {
           action_type: string
