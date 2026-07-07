@@ -2970,6 +2970,7 @@ export type Database = {
           photos_fetched_at: string | null
           postal_code: string | null
           price_level: number
+          price_source: string | null
           rating: number
           reservation_reminder_sent_at: string | null
           reservation_url: string | null
@@ -2978,6 +2979,7 @@ export type Database = {
           routed_demand_dishes: string[] | null
           slug: string
           sustainability_score: number | null
+          tag_source: string | null
           tiktok_url: string | null
           top_until: string | null
           updated_at: string
@@ -3040,6 +3042,7 @@ export type Database = {
           photos_fetched_at?: string | null
           postal_code?: string | null
           price_level?: number
+          price_source?: string | null
           rating?: number
           reservation_reminder_sent_at?: string | null
           reservation_url?: string | null
@@ -3048,6 +3051,7 @@ export type Database = {
           routed_demand_dishes?: string[] | null
           slug: string
           sustainability_score?: number | null
+          tag_source?: string | null
           tiktok_url?: string | null
           top_until?: string | null
           updated_at?: string
@@ -3110,6 +3114,7 @@ export type Database = {
           photos_fetched_at?: string | null
           postal_code?: string | null
           price_level?: number
+          price_source?: string | null
           rating?: number
           reservation_reminder_sent_at?: string | null
           reservation_url?: string | null
@@ -3118,6 +3123,7 @@ export type Database = {
           routed_demand_dishes?: string[] | null
           slug?: string
           sustainability_score?: number | null
+          tag_source?: string | null
           tiktok_url?: string | null
           top_until?: string | null
           updated_at?: string
@@ -3343,6 +3349,27 @@ export type Database = {
           website_status_code?: number | null
           website_url?: string | null
           zenchef_id?: string | null
+        }
+        Relationships: []
+      }
+      restaurants_backup_fase4: {
+        Row: {
+          ambience_tags: string[] | null
+          id: string | null
+          meal_types: string[] | null
+          price_level: number | null
+        }
+        Insert: {
+          ambience_tags?: string[] | null
+          id?: string | null
+          meal_types?: string[] | null
+          price_level?: number | null
+        }
+        Update: {
+          ambience_tags?: string[] | null
+          id?: string | null
+          meal_types?: string[] | null
+          price_level?: number | null
         }
         Relationships: []
       }

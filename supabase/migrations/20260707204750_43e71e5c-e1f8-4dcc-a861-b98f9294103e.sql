@@ -1,0 +1,8 @@
+
+CREATE TABLE public._import_price_stg2 (id uuid PRIMARY KEY, price_level int);
+GRANT ALL ON public._import_price_stg2 TO service_role;
+ALTER TABLE public._import_price_stg2 ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE public._import_tags_stg2 (id uuid PRIMARY KEY, ambience_tags text[], meal_types text[]);
+GRANT ALL ON public._import_tags_stg2 TO service_role;
+ALTER TABLE public._import_tags_stg2 ENABLE ROW LEVEL SECURITY;

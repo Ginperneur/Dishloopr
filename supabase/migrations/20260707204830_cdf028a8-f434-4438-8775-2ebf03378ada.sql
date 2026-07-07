@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS public._import_price_stg2; DROP TABLE IF EXISTS public._import_tags_stg2;
