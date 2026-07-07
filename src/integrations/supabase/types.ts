@@ -3145,6 +3145,21 @@ export type Database = {
           },
         ]
       }
+      restaurants_ambience_backup_f4: {
+        Row: {
+          ambience_tags: string[] | null
+          id: string | null
+        }
+        Insert: {
+          ambience_tags?: string[] | null
+          id?: string | null
+        }
+        Update: {
+          ambience_tags?: string[] | null
+          id?: string | null
+        }
+        Relationships: []
+      }
       restaurants_backup_20260624: {
         Row: {
           accepts_reservations: boolean | null
