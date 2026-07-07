@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      _import_price_stg: {
+        Row: {
+          id: string
+          price_level: number | null
+        }
+        Insert: {
+          id: string
+          price_level?: number | null
+        }
+        Update: {
+          id?: string
+          price_level?: number | null
+        }
+        Relationships: []
+      }
+      _import_tags_stg: {
+        Row: {
+          ambience_tags: string[] | null
+          id: string
+          meal_types: string[] | null
+        }
+        Insert: {
+          ambience_tags?: string[] | null
+          id: string
+          meal_types?: string[] | null
+        }
+        Update: {
+          ambience_tags?: string[] | null
+          id?: string
+          meal_types?: string[] | null
+        }
+        Relationships: []
+      }
       admin_activity_logs: {
         Row: {
           action_type: string
