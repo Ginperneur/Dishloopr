@@ -12979,12 +12979,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dishloopr.com/eten/sushi-amsterdam/casual</loc>
-    <lastmod>2026-01-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://dishloopr.com/eten/sushi-amsterdam/gezellig</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
@@ -12992,6 +12986,12 @@
   </url>
   <url>
     <loc>https://dishloopr.com/eten/sushi-amsterdam/trendy</loc>
+    <lastmod>2026-01-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://dishloopr.com/eten/sushi-amsterdam/casual</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -13021,13 +13021,13 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dishloopr.com/eten/ramen-amsterdam/casual</loc>
+    <loc>https://dishloopr.com/eten/ramen-amsterdam/trendy</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dishloopr.com/eten/ramen-amsterdam/trendy</loc>
+    <loc>https://dishloopr.com/eten/ramen-amsterdam/casual</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -13063,12 +13063,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dishloopr.com/eten/pizza-amsterdam/casual</loc>
-    <lastmod>2026-01-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://dishloopr.com/eten/pizza-amsterdam/gezellig</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
@@ -13081,7 +13075,13 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dishloopr.com/eten/pizza-amsterdam/goedkoop</loc>
+    <loc>https://dishloopr.com/eten/pizza-amsterdam/casual</loc>
+    <lastmod>2026-01-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://dishloopr.com/eten/pizza-amsterdam/budget</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -13100,6 +13100,12 @@
   </url>
   <url>
     <loc>https://dishloopr.com/eten/pasta-amsterdam/romantisch</loc>
+    <lastmod>2026-01-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://dishloopr.com/eten/pasta-amsterdam/trendy</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -13135,12 +13141,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dishloopr.com/eten/biefstuk-amsterdam/casual</loc>
-    <lastmod>2026-01-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://dishloopr.com/eten/biefstuk-amsterdam/gezellig</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
@@ -13153,13 +13153,13 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dishloopr.com/eten/biefstuk-amsterdam/zakelijk</loc>
+    <loc>https://dishloopr.com/eten/biefstuk-amsterdam/casual</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dishloopr.com/eten/biefstuk-amsterdam/modern</loc>
+    <loc>https://dishloopr.com/eten/biefstuk-amsterdam/zakelijk</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -13201,12 +13201,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dishloopr.com/eten/curry-amsterdam/casual</loc>
-    <lastmod>2026-01-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://dishloopr.com/eten/curry-amsterdam/gezellig</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
@@ -13219,19 +13213,13 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dishloopr.com/eten/curry-amsterdam/modern</loc>
+    <loc>https://dishloopr.com/eten/curry-amsterdam/casual</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dishloopr.com/eten/curry-amsterdam/traditioneel</loc>
-    <lastmod>2026-01-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://dishloopr.com/eten/curry-amsterdam/goedkoop</loc>
+    <loc>https://dishloopr.com/eten/curry-amsterdam/budget</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -13261,13 +13249,13 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dishloopr.com/eten/risotto-amsterdam/casual</loc>
+    <loc>https://dishloopr.com/eten/risotto-amsterdam/trendy</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dishloopr.com/eten/risotto-amsterdam/trendy</loc>
+    <loc>https://dishloopr.com/eten/risotto-amsterdam/casual</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -13291,19 +13279,13 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dishloopr.com/eten/sushi-rotterdam/casual</loc>
-    <lastmod>2026-01-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://dishloopr.com/eten/sushi-rotterdam/trendy</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dishloopr.com/eten/sushi-rotterdam/modern</loc>
+    <loc>https://dishloopr.com/eten/sushi-rotterdam/casual</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -13327,6 +13309,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://dishloopr.com/eten/ramen-rotterdam/trendy</loc>
+    <lastmod>2026-01-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://dishloopr.com/eten/pizza-rotterdam/lunch</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
@@ -13339,37 +13327,25 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dishloopr.com/eten/pizza-rotterdam/casual</loc>
-    <lastmod>2026-01-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://dishloopr.com/eten/pizza-rotterdam/gezellig</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dishloopr.com/eten/pizza-rotterdam/modern</loc>
+    <loc>https://dishloopr.com/eten/pizza-rotterdam/trendy</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dishloopr.com/eten/pizza-rotterdam/industrieel</loc>
+    <loc>https://dishloopr.com/eten/pizza-rotterdam/casual</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dishloopr.com/eten/pizza-rotterdam/traditioneel</loc>
-    <lastmod>2026-01-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://dishloopr.com/eten/pizza-rotterdam/goedkoop</loc>
+    <loc>https://dishloopr.com/eten/pizza-rotterdam/budget</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -13399,12 +13375,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dishloopr.com/eten/biefstuk-rotterdam/casual</loc>
-    <lastmod>2026-01-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://dishloopr.com/eten/biefstuk-rotterdam/gezellig</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
@@ -13417,7 +13387,7 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dishloopr.com/eten/biefstuk-rotterdam/modern</loc>
+    <loc>https://dishloopr.com/eten/biefstuk-rotterdam/casual</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -13435,19 +13405,19 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://dishloopr.com/eten/curry-rotterdam/gezellig</loc>
+    <lastmod>2026-01-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://dishloopr.com/eten/curry-rotterdam/casual</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://dishloopr.com/eten/curry-rotterdam/traditioneel</loc>
-    <lastmod>2026-01-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://dishloopr.com/eten/curry-rotterdam/goedkoop</loc>
+    <loc>https://dishloopr.com/eten/curry-rotterdam/budget</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -13460,6 +13430,12 @@
   </url>
   <url>
     <loc>https://dishloopr.com/eten/seafood-rotterdam/diner</loc>
+    <lastmod>2026-01-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://dishloopr.com/eten/seafood-rotterdam/gezellig</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -13478,6 +13454,12 @@
   </url>
   <url>
     <loc>https://dishloopr.com/eten/risotto-rotterdam/gezellig</loc>
+    <lastmod>2026-01-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://dishloopr.com/eten/risotto-rotterdam/trendy</loc>
     <lastmod>2026-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
