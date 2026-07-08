@@ -33,16 +33,13 @@ interface FilterPopoverProps {
 }
 
 const AMBIENCE_OPTIONS = [
-  { value: 'romantic', key: 'filters.romantic' },
-  { value: 'family-friendly', key: 'filters.familyFriendly' },
-  { value: 'high-end', key: 'filters.highEnd' },
-  { value: 'cozy', key: 'filters.cozy' },
-  { value: 'business', key: 'filters.business' },
+  { value: 'romantisch', key: 'filters.romantic' },
+  { value: 'gezellig', key: 'filters.cozy' },
   { value: 'trendy', key: 'filters.trendy' },
   { value: 'casual', key: 'filters.casual' },
-  { value: 'lively', key: 'filters.lively' },
-  { value: 'intimate', key: 'filters.intimate' },
-  { value: 'relaxed', key: 'filters.relaxed' },
+  { value: 'luxe', key: 'filters.luxury' },
+  { value: 'zakelijk', key: 'filters.business' },
+  { value: 'kindvriendelijk', key: 'filters.familyFriendly' },
 ];
 
 const CONCEPT_OPTIONS = [
