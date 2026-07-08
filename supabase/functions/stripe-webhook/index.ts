@@ -53,17 +53,25 @@ serve(async (req) => {
       logStep("Checkout session completed", { sessionId: session.id });
 
       const metadata = session.metadata || {};
-      const { restaurantId, listingType, userId, productId, durationDays, type } = metadata;
+      const {
+        type,
+        restaurant_id: restaurantId,
+        user_id: userId,
+        listing_type: listingType,
+        product_id: productId,
+        duration_days: durationDays,
+      } = metadata as Record<string, string | undefined>;
 
       // Handle micro-payment verification
-      if (type === "micro_payment_verification" && metadata.claimId && metadata.restaurantId) {
-        logStep("Processing micro-payment verification", { claimId: metadata.claimId, restaurantId: metadata.restaurantId });
+      if (type === "micro_payment_verification" && metadata.claim_id && restaurantId) {
+        const claimId = metadata.claim_id;
+        logStep("Processing micro-payment verification", { claimId, restaurantId });
 
         // Get the restaurant name for name matching
         const { data: restaurant } = await supabaseAdmin
           .from("restaurants")
           .select("name")
-          .eq("id", metadata.restaurantId)
+          .eq("id", restaurantId)
           .single();
 
         const restaurantName = restaurant?.name?.toLowerCase().trim() || "";
@@ -103,7 +111,7 @@ serve(async (req) => {
               verification_proof: { method: "micro_payment", stripe_session_id: session.id, payment_intent: session.payment_intent, name_match: true, payer_name: payerName },
               is_primary: true,
             })
-            .eq("id", metadata.claimId);
+            .eq("id", claimId);
 
           if (claimError) {
             logStep("Claim update error", { error: claimError.message });
@@ -112,26 +120,26 @@ serve(async (req) => {
             await supabaseAdmin
               .from("verification_credits")
               .insert({
-                user_id: metadata.userId,
-                restaurant_id: metadata.restaurantId,
-                claim_id: metadata.claimId,
+                user_id: userId,
+                restaurant_id: restaurantId,
+                claim_id: claimId,
                 amount: 1.00,
                 stripe_payment_intent: session.payment_intent as string,
               });
-            logStep("Verification credit stored for user", { userId: metadata.userId });
+            logStep("Verification credit stored for user", { userId });
 
             // Update restaurant status
             await supabaseAdmin
               .from("restaurants")
               .update({ claim_status: "verified_owner" })
-              .eq("id", metadata.restaurantId);
+              .eq("id", restaurantId);
 
             // Add user as primary owner
             await supabaseAdmin
               .from("restaurant_managers")
               .upsert({
-                restaurant_id: metadata.restaurantId,
-                user_id: metadata.userId,
+                restaurant_id: restaurantId,
+                user_id: userId,
                 role: "primary_owner",
                 accepted_at: new Date().toISOString(),
               }, { onConflict: "restaurant_id,user_id" });
@@ -140,22 +148,22 @@ serve(async (req) => {
             const { data: existingRole } = await supabaseAdmin
               .from("user_roles")
               .select("id")
-              .eq("user_id", metadata.userId)
+              .eq("user_id", userId)
               .eq("role", "owner")
               .maybeSingle();
 
             if (!existingRole) {
               await supabaseAdmin
                 .from("user_roles")
-                .insert({ user_id: metadata.userId, role: "owner" });
+                .insert({ user_id: userId, role: "owner" });
             }
 
             // Supersede other claims
             await supabaseAdmin
               .from("restaurant_claims")
               .update({ status: "superseded" })
-              .eq("restaurant_id", metadata.restaurantId)
-              .neq("id", metadata.claimId);
+              .eq("restaurant_id", restaurantId)
+              .neq("id", claimId);
 
             logStep("Micro-payment verification completed successfully (name matched)");
           }
@@ -172,7 +180,7 @@ serve(async (req) => {
               verification_proof: { method: "micro_payment", stripe_session_id: session.id, payment_intent: session.payment_intent, name_match: false, payer_name: payerName, restaurant_name: restaurantName },
               admin_notes: `Automatische naam-controle mislukt. Betaler: "${payerName}", Restaurant: "${restaurantName}". Handmatige review nodig.`,
             })
-            .eq("id", metadata.claimId);
+            .eq("id", claimId);
 
           if (claimError) {
             logStep("Claim update error", { error: claimError.message });
@@ -180,6 +188,36 @@ serve(async (req) => {
             logStep("Claim set to pending_admin_review due to name mismatch");
           }
         }
+      }
+      // Handle extra_tag subscription purchase
+      else if (type === "extra_tag" && restaurantId && userId && metadata.tag_category && metadata.tag_value) {
+        logStep("Processing extra_tag subscription", {
+          restaurantId,
+          userId,
+          tag_category: metadata.tag_category,
+          tag_value: metadata.tag_value,
+        });
+
+        const { error: tagError } = await supabaseAdmin
+          .from("restaurant_tag_subscriptions")
+          .upsert(
+            {
+              restaurant_id: restaurantId,
+              user_id: userId,
+              tag_category: metadata.tag_category,
+              tag_value: metadata.tag_value,
+              payment_type: "subscription",
+              stripe_subscription_id: (session.subscription as string) || null,
+              is_active: true,
+            },
+            { onConflict: "stripe_subscription_id" }
+          );
+
+        if (tagError) {
+          logStep("Extra tag subscription insert error", { error: tagError.message });
+          return new Response(JSON.stringify({ error: tagError.message }), { status: 500 });
+        }
+        logStep("Extra tag subscription activated");
       }
       // Handle featured subscription purchase
       else if (type === "featured_subscription" && metadata.slot_id && restaurantId) {
@@ -279,7 +317,7 @@ serve(async (req) => {
         logStep("Sponsored purchase created successfully", { productId, restaurantId, duration });
       }
       // Handle featured/top listing purchase (legacy)
-      else if (restaurantId && listingType) {
+      else if (type === "listing" && restaurantId && listingType) {
         // Calculate expiration date (30 days from now)
         const expirationDate = new Date();
         expirationDate.setDate(expirationDate.getDate() + 30);
@@ -308,7 +346,7 @@ serve(async (req) => {
         }
 
         // Mark verification credit as redeemed if used
-        const verificationCreditId = metadata.verificationCreditId;
+        const verificationCreditId = metadata.verification_credit_id;
         if (verificationCreditId) {
           await supabaseAdmin
             .from("verification_credits")
@@ -324,8 +362,8 @@ serve(async (req) => {
         logStep("Restaurant updated successfully", { restaurantId, listingType });
     }
       // Handle newsletter placement payment
-      else if (type === "newsletter_placement" && metadata.placementId) {
-        logStep("Processing newsletter placement payment", { placementId: metadata.placementId });
+      else if (type === "newsletter_placement" && metadata.placement_id) {
+        logStep("Processing newsletter placement payment", { placementId: metadata.placement_id });
 
         const { error: updateError } = await supabaseAdmin
           .from("newsletter_placements")
@@ -333,14 +371,14 @@ serve(async (req) => {
             status: "paid",
             stripe_payment_id: session.payment_intent as string,
           })
-          .eq("id", metadata.placementId);
+          .eq("id", metadata.placement_id);
 
         if (updateError) {
           logStep("Newsletter placement update error", { error: updateError.message });
           return new Response(JSON.stringify({ error: updateError.message }), { status: 500 });
         }
 
-        logStep("Newsletter placement paid successfully", { placementId: metadata.placementId });
+        logStep("Newsletter placement paid successfully", { placementId: metadata.placement_id });
       }
       // Handle Owner Pro subscription checkout
       else if (type === "owner_pro" && metadata.user_id) {

@@ -154,12 +154,12 @@ serve(async (req) => {
       cancel_url: `${origin}/owner-dashboard?newsletter=cancelled`,
       metadata: {
         type: "newsletter_placement",
-        placementId: placement.id,
-        restaurantId,
-        userId: user.id,
+        placement_id: placement.id,
+        restaurant_id: restaurantId,
+        user_id: user.id,
         scope: finalScope,
-        targetCityId: targetCityId || "",
-        targetProvince: targetProvince || "",
+        target_city_id: targetCityId || "",
+        target_province: targetProvince || "",
       },
     });
 

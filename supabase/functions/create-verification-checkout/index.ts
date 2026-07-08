@@ -63,16 +63,16 @@ serve(async (req) => {
       cancel_url: `${origin}/owner-dashboard?verification=cancelled`,
       metadata: {
         type: "micro_payment_verification",
-        claimId,
-        restaurantId,
-        userId: user.id,
+        claim_id: claimId,
+        restaurant_id: restaurantId,
+        user_id: user.id,
       },
       payment_intent_data: {
         metadata: {
           type: "micro_payment_verification",
-          claimId,
-          restaurantId,
-          userId: user.id,
+          claim_id: claimId,
+          restaurant_id: restaurantId,
+          user_id: user.id,
         },
       },
     });

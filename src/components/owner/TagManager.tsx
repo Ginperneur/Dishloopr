@@ -45,7 +45,6 @@ const TAG_CATEGORIES = [
 
 const FREE_LIMIT = 1;
 const MAX_EXTRA = 3;
-const PER_TAG_PRICE_ID = 'price_1TLHa63EXkDnjHC3o6lXKE9p';
 const OWNER_PRO_PRICE_ID = 'price_1TKlaF3EXkDnjHC3GBXJCecX';
 
 interface TagManagerProps {
@@ -83,13 +82,13 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
     setCheckoutLoading(true);
 
     try {
-      // Create checkout for per-tag subscription
+      // Create checkout for per-tag subscription. Price is enforced server-side
+      // (STRIPE_TAG_PRICE_ID) — do NOT pass a price from the client.
       const { data, error } = await supabase.functions.invoke('create-tag-checkout', {
         body: {
           restaurant_id: restaurant.id,
           tag_category: categoryKey,
           tag_value: tagValue,
-          price_id: PER_TAG_PRICE_ID,
         },
       });
 
