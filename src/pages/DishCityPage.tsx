@@ -50,8 +50,10 @@ export default function DishCityPage() {
   }, [restaurants]);
 
   const hasQueryParams = location.search && location.search.length > 1;
-  // Empty facet results OR non-whitelisted query params → noindex, canonical to base.
-  const noindex = unknownFacet || (isFacetRoute && visibleRestaurants.length === 0) || (isFacetRoute && hasQueryParams);
+  // Facet pages need >=3 matching restaurants to be indexable.
+  // Below threshold OR any querystring → noindex + canonical to base slug.
+  const belowIndexThreshold = isFacetRoute && visibleRestaurants.length < 3;
+  const noindex = unknownFacet || belowIndexThreshold || (isFacetRoute && hasQueryParams);
 
   if (redirectTo) {
     return <Navigate to={redirectTo} replace />;
@@ -123,9 +125,11 @@ export default function DishCityPage() {
   const facetMetaDescription = activeFacet && page.dish && page.city
     ? `Ontdek restaurants voor ${page.dish.name.toLowerCase()} ${activeFacet.titleModifier} in ${page.city.name}. Vergelijk, filter en vind jouw favoriet.`
     : page.meta_description;
+  // Self-canonical only when the facet page qualifies for indexing.
+  // Otherwise canonical points at the bare /eten/{dish}-{stad} page.
   const canonical = activeFacet && !noindex
     ? `${baseUrl}/${activeFacet.slug}`
-    : (page.canonical_url || baseUrl);
+    : baseUrl;
 
   return (
     <Layout>
