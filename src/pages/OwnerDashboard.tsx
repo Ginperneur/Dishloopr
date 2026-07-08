@@ -1323,11 +1323,6 @@ export default function OwnerDashboard() {
             />
             {selectedRestaurant && (
               <>
-                <ActivePromotionsCounter
-                  restaurantId={selectedRestaurant.id}
-                  restaurant={selectedRestaurant as any}
-                />
-
                 <VisibilityProgress
                   steps={[
                     {
@@ -1343,20 +1338,6 @@ export default function OwnerDashboard() {
                       hint: 'Inzichten + Markt + onbeperkte tags',
                       done: isPro,
                       onClick: () => setActiveTab('insights'),
-                    },
-                    {
-                      id: 'featured',
-                      label: 'Premium zoekplek',
-                      hint: 'Vast bovenaan in jouw stad/keuken',
-                      done: !!(selectedRestaurant as any).is_featured,
-                      scrollTo: 'promo-featured',
-                    },
-                    {
-                      id: 'listing',
-                      label: 'Listing boost geactiveerd',
-                      hint: 'Eenmalige 30-dagen zichtbaarheid',
-                      done: !!(selectedRestaurant as any).is_top_listing || !!(selectedRestaurant as any).is_featured,
-                      scrollTo: 'promo-listings',
                     },
                     {
                       id: 'sponsored',
@@ -1375,47 +1356,7 @@ export default function OwnerDashboard() {
                   ] as VisibilityStep[]}
                 />
 
-                <VisibilityPricingOverview
-                  onNavigatePro={() => setActiveTab('insights')}
-                  signals={{
-                    isPro,
-                    totalViews: analytics?.totalViews ?? 0,
-                    totalClicks: analytics?.totalClicks ?? 0,
-                    reviewCount: reviews.length,
-                    dishCount: restaurantDishes.length,
-                    isFeatured: !!(selectedRestaurant as any).is_featured,
-                    isTopListing: !!(selectedRestaurant as any).is_top_listing,
-                    hasActiveFeatured: !!(selectedRestaurant as any).is_featured,
-                  }}
-                />
-
-                <div id="promo-featured">
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                    <Sparkles className="h-5 w-5 text-primary" />
-                    Premium Zichtbaarheid (Featured + Ambiance)
-                  </h3>
-                  <FeaturedMarketplace
-                    restaurantId={selectedRestaurant.id}
-                    restaurantName={selectedRestaurant.name}
-                    restaurantCuisines={selectedRestaurant.cuisines || []}
-                    cityId={selectedRestaurant.city_id}
-                    cityName={cityName || 'Stad'}
-                  />
-                </div>
-
-                <div id="promo-listings" className="border-t pt-8">
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                    <Crown className="h-5 w-5 text-primary" />
-                    Listing Boosts (eenmalig 30 dagen)
-                  </h3>
-                  <PromotionsSection
-                    restaurant={selectedRestaurant}
-                    onRefresh={() => window.location.reload()}
-                    canPurchase={isVerified}
-                  />
-                </div>
-
-                <div id="promo-sponsored" className="border-t pt-8">
+                <div id="promo-sponsored">
                   <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
                     <Megaphone className="h-5 w-5 text-primary" />
                     Gerecht-specifieke Sponsoring
@@ -1575,9 +1516,6 @@ export default function OwnerDashboard() {
                   <PromotionROI promotions={promotionROI} />
                 </div>
 
-                <div className="border-t pt-8">
-                  <PremiumReachChart restaurantId={selectedRestaurant?.id} />
-                </div>
               </div>
             ) : (
               <LockedFeatureOverlay 
