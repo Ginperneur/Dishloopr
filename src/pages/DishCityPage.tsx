@@ -16,7 +16,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { useSeoLandingPage } from '@/hooks/useSeoLandingPage';
-import { FACET_GROUPS, getFacet, matchesFacet } from '@/lib/dishCityFacets';
+import { FACET_GROUPS, getFacet, matchesFacet, buildFacetFAQ } from '@/lib/dishCityFacets';
 import NotFound from './NotFound';
 
 export default function DishCityPage() {
@@ -106,10 +106,20 @@ export default function DishCityPage() {
     }))
   ) : null;
 
+  // Facet-specific FAQ (shown on the page and, when indexable, in JSON-LD).
+  const facetFAQ = (activeFacet && page.dish && page.city)
+    ? buildFacetFAQ(page.dish.name, page.city.name, activeFacet, visibleRestaurants.length)
+    : [];
+
   const structuredData = [
     createBreadcrumbSchema(breadcrumbs),
     ...((!activeFacet && page.faq_content.length > 0)
       ? [createFAQSchema(page.faq_content.map(faq => ({ question: faq.question, answer: faq.answer })))]
+      : []
+    ),
+    // Only emit FAQ schema on indexable facet pages
+    ...((activeFacet && !noindex && facetFAQ.length > 0)
+      ? [createFAQSchema(facetFAQ)]
       : []
     ),
     ...(restaurantItemList ? [restaurantItemList] : []),
@@ -351,6 +361,28 @@ export default function DishCityPage() {
           <Accordion type="single" collapsible className="max-w-3xl">
             {page.faq_content.map((faq, index) => (
               <AccordionItem key={index} value={`faq-${index}`}>
+                <AccordionTrigger className="text-left">
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </section>
+      )}
+
+      {/* Facet FAQ Section — always visible on facet pages, JSON-LD only when indexable */}
+      {activeFacet && facetFAQ.length > 0 && (
+        <section className="container px-4 md:px-6 py-8 md:py-12">
+          <h2 className="text-2xl font-bold mb-6">
+            Veelgestelde vragen over {page.dish?.name?.toLowerCase()} {activeFacet.titleModifier} in {page.city?.name}
+          </h2>
+
+          <Accordion type="single" collapsible className="max-w-3xl">
+            {facetFAQ.map((faq, index) => (
+              <AccordionItem key={index} value={`facet-faq-${index}`}>
                 <AccordionTrigger className="text-left">
                   {faq.question}
                 </AccordionTrigger>
