@@ -96,3 +96,57 @@ export const FACET_GROUPS: { kind: FacetKind; heading: string; facets: FacetDef[
   { kind: 'ambience', heading: 'Sfeer', facets: AMBIENCE_FACETS },
   { kind: 'price', heading: 'Prijs', facets: PRICE_FACETS },
 ];
+
+/**
+ * Generates a small, deterministic FAQ tailored to a dish×city×facet page.
+ * Uses the on-page count to keep answers accurate (never invents numbers).
+ */
+export function buildFacetFAQ(
+  dishName: string,
+  cityName: string,
+  facet: FacetDef,
+  matchCount: number,
+): { question: string; answer: string }[] {
+  const dish = dishName;
+  const city = cityName;
+  const mod = facet.titleModifier;
+  const countLabel = matchCount === 1 ? '1 restaurant' : `${matchCount} restaurants`;
+
+  const common = [
+    {
+      question: `Hoeveel restaurants serveren ${dish.toLowerCase()} ${mod} in ${city}?`,
+      answer: `Op Dishloopr staan momenteel ${countLabel} in ${city} die ${dish.toLowerCase()} ${mod} aanbieden. De lijst wordt bijgewerkt zodra nieuwe menu's worden goedgekeurd.`,
+    },
+    {
+      question: `Waarop is deze selectie gebaseerd?`,
+      answer: `We tonen alleen restaurants in ${city} met een door de admin goedgekeurd gerecht dat overeenkomt met ${dish.toLowerCase()}. Vervolgens filteren we op ${facet.label.toLowerCase()} op basis van de eigenschappen die het restaurant zelf of onze redactie heeft opgegeven.`,
+    },
+  ];
+
+  if (facet.kind === 'meal') {
+    return [
+      ...common,
+      {
+        question: `Kan ik reserveren voor ${dish.toLowerCase()} ${mod} in ${city}?`,
+        answer: `Ja. Klik op een restaurant om openingstijden en reserveringsopties te bekijken. Sommige restaurants hebben directe reserveringslinks; anders bel je het restaurant via het opgegeven telefoonnummer.`,
+      },
+    ];
+  }
+  if (facet.kind === 'ambience') {
+    return [
+      ...common,
+      {
+        question: `Wat betekent "${facet.label.toLowerCase()}" bij deze selectie?`,
+        answer: `Restaurants worden als "${facet.label.toLowerCase()}" getagd op basis van openbare beoordelingen, reviews en informatie van het restaurant zelf. Zo herken je snel de sfeer die bij jouw gelegenheid past.`,
+      },
+    ];
+  }
+  return [
+    ...common,
+    {
+      question: `Wat betekent de prijscategorie "${facet.label}"?`,
+      answer: `Prijscategorieën volgen de standaard € tot €€€€ notatie: € is budget-vriendelijk, €€ is middenklasse en €€€ of hoger is upscale. De categorie is gebaseerd op de gemiddelde hoofdgerechtprijs van het restaurant.`,
+    },
+  ];
+}
+
