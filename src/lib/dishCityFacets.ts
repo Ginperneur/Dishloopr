@@ -17,10 +17,9 @@ export interface FacetDef {
 
 // Meal types — restaurants.meal_types (text[])
 const MEAL_FACETS: FacetDef[] = [
+  { slug: 'ontbijt', kind: 'meal', label: 'Ontbijt', titleModifier: 'voor het ontbijt', dbValues: ['breakfast'] },
   { slug: 'lunch',   kind: 'meal', label: 'Lunch',   titleModifier: 'voor de lunch',   dbValues: ['lunch'] },
   { slug: 'diner',   kind: 'meal', label: 'Diner',   titleModifier: 'voor het diner',  dbValues: ['dinner'] },
-  { slug: 'ontbijt', kind: 'meal', label: 'Ontbijt', titleModifier: 'voor het ontbijt', dbValues: ['breakfast'] },
-  { slug: 'brunch',  kind: 'meal', label: 'Brunch',  titleModifier: 'voor de brunch',  dbValues: ['brunch'] },
 ];
 
 // Ambience — restaurants.ambience_tags (text[]) — DB values are capitalized NL
@@ -46,10 +45,11 @@ const AMBIENCE_FACETS: FacetDef[] = [
 ];
 
 // Price — restaurants.price_level (int, 1-4). Slugs disjoint from ambience.
+// Only two indexable tiers: goedkoop (€) and chic (€€€/€€€€). Middenklasse
+// is intentionally omitted from the facet whitelist.
 const PRICE_FACETS: FacetDef[] = [
-  { slug: 'budget',       kind: 'price', label: 'Budget (€)',        titleModifier: 'voor een budget-vriendelijke prijs', dbValues: ['1'] },
-  { slug: 'middenklasse', kind: 'price', label: 'Middenklasse (€€)', titleModifier: 'in de middenklasse',                 dbValues: ['2'] },
-  { slug: 'luxueus',      kind: 'price', label: 'Luxueus (€€€+)',    titleModifier: 'luxueus',                            dbValues: ['3', '4'] },
+  { slug: 'goedkoop', kind: 'price', label: 'Goedkoop (€)',    titleModifier: 'voor een goedkope prijs', dbValues: ['1'] },
+  { slug: 'chic',     kind: 'price', label: 'Chic (€€€+)',     titleModifier: 'chic',                    dbValues: ['3', '4'] },
 ];
 
 export const ALL_FACETS: FacetDef[] = [
