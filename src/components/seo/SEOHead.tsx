@@ -69,7 +69,7 @@ export function SEOHead({
     
     // Robots
     if (noindex) {
-      updateMeta('robots', 'noindex, nofollow', true);
+      updateMeta('robots', 'noindex, follow', true);
     } else {
       updateMeta('robots', 'index, follow, max-image-preview:large', true);
     }
