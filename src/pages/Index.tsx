@@ -18,7 +18,6 @@ import { FeaturedCollections } from '@/components/collections/CollectionsGrid';
 import { SEOHead, createWebsiteSchema } from '@/components/seo/SEOHead';
 import { Button } from '@/components/ui/button';
 import { SkeletonCard } from '@/components/ui/skeleton-card';
-import { useFeaturedRestaurants } from '@/hooks/useFeaturedRestaurants';
 import { useTrendingDishes } from '@/hooks/useTrendingDishes';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useSavedSearches } from '@/hooks/useSavedSearches';
@@ -42,7 +41,6 @@ const Index = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { dishes: trendingDishes, loading: dishesLoading } = useTrendingDishes();
-  const { restaurants: featuredRestaurants, loading: featuredLoading } = useFeaturedRestaurants(3);
   const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, clearLocation } = useGeolocation();
   const { saved: savedSearches, remove: removeSavedSearch, setAlerts: setSavedAlerts } = useSavedSearches();
   const [showHowItWorks, setShowHowItWorks] = useState(false);
@@ -335,85 +333,6 @@ const Index = () => {
       {/* How it works — only for first-time visitors */}
       {showHowItWorks && <HowItWorks />}
 
-      {/* Featured Restaurants */}
-      <section
-        id="featured"
-        className="relative py-6 md:py-10 lg:py-14 bg-muted/30 scroll-mt-24"
-        aria-labelledby="featured-heading"
-      >
-        <div className="container px-4 md:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="flex items-center justify-between mb-4 md:mb-8"
-          >
-            <h2 id="featured-heading" className="text-lg sm:text-xl md:text-3xl font-bold">
-              {t('home.featuredRestaurants')}
-            </h2>
-            <Button variant="ghost" size="sm" asChild className="text-xs sm:text-sm">
-              <Link to="/search?featured=true" className="flex items-center gap-1 md:gap-2">
-                {t('home.viewAll')}
-                <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              </Link>
-            </Button>
-          </motion.div>
-
-          {/* Mobile: horizontal scroll. Tablet+: grid */}
-          <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-            {featuredLoading ? (
-              <>
-                <SkeletonCard />
-                <SkeletonCard />
-                <SkeletonCard className="hidden lg:block" />
-              </>
-            ) : featuredRestaurants.length === 0 ? (
-              <div className="col-span-full text-center py-8 text-muted-foreground">
-                <p>Binnenkort verschijnen hier uitgelichte restaurants.</p>
-              </div>
-            ) : (
-              featuredRestaurants.map((restaurant, index) => (
-                <DatabaseRestaurantCard
-                  key={restaurant.id}
-                  restaurant={restaurant}
-                  index={index}
-                />
-              ))
-            )}
-          </div>
-          
-          {/* Mobile: horizontal scrollable cards */}
-          <div className="sm:hidden -mx-4 px-4">
-            <div
-              role="region"
-              aria-roledescription="carousel"
-              aria-label="Uitgelichte restaurants"
-              className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide"
-            >
-              {featuredLoading ? (
-                <>
-                  <div className="min-w-[280px] snap-start"><SkeletonCard /></div>
-                  <div className="min-w-[280px] snap-start"><SkeletonCard /></div>
-                </>
-              ) : featuredRestaurants.length === 0 ? (
-                <div className="min-w-full text-center py-6 text-muted-foreground text-sm">
-                  Binnenkort verschijnen hier uitgelichte restaurants.
-                </div>
-              ) : (
-                featuredRestaurants.map((restaurant, index) => (
-                  <div key={restaurant.id} className="min-w-[280px] max-w-[300px] snap-start">
-                    <DatabaseRestaurantCard
-                      restaurant={restaurant}
-                      index={index}
-                    />
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-      
       {/* Personalized Recommendations for logged-in users */}
       <PersonalizedRecommendations />
 
