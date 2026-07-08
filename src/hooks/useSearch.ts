@@ -304,23 +304,15 @@ export function useSearch() {
         q = q.in('price_level', filters.priceLevel);
       }
       if (filters?.ambienceTags && filters.ambienceTags.length > 0) {
-        // Map English filter values to all known DB variants (Dutch + English + casing)
+        // 7 gegroepeerde sfeer-chips → set ruwe DB-waarden.
         const ambienceAliases: Record<string, string[]> = {
-          'romantic': ['romantic', 'romantisch', 'Romantisch'],
-          'cozy': ['cozy', 'gezellig', 'Gezellig'],
-          'modern': ['modern', 'Modern', 'strak', 'Strak'],
-          'trendy': ['trendy', 'Trendy', 'hip', 'Hip'],
-          'classic': ['classic', 'klassiek', 'Klassiek'],
-          'casual': ['casual', 'Casual', 'informeel', 'Informeel'],
-          'fine-dining': ['fine-dining', 'fine dining', 'Fine Dining', 'high-end', 'High-end', 'luxe', 'Luxe'],
-          'high-end': ['high-end', 'High-end', 'fine-dining', 'fine dining', 'Fine Dining', 'luxe', 'Luxe'],
-          'family-friendly': ['family-friendly', 'Family-friendly', 'kindvriendelijk', 'Kindvriendelijk'],
-          'business': ['business', 'Business', 'zakelijk', 'Zakelijk'],
-          'lively': ['lively', 'Lively', 'levendig', 'Levendig', 'bruisend', 'Bruisend'],
-          'intimate': ['intimate', 'Intimate', 'intiem', 'Intiem'],
-          'terrace': ['terrace', 'Terrace', 'terras', 'Terras'],
-          'industrial': ['industrial', 'Industrial', 'industrieel', 'Industrieel'],
-          'traditional': ['traditional', 'Traditional', 'traditioneel', 'Traditioneel'],
+          'romantisch':      ['Romantisch', 'Intiem'],
+          'gezellig':        ['Gezellig', 'Warm', 'Traditioneel', 'Klassiek'],
+          'trendy':          ['Trendy', 'Modern', 'Industrieel', 'Minimalistisch', 'Bohemian', 'Levendig', 'Bruisend'],
+          'casual':          ['Casual'],
+          'luxe':            ['Luxe', 'Fine Dining', 'High-end'],
+          'zakelijk':        ['Zakelijk'],
+          'kindvriendelijk': ['Kindvriendelijk', 'Gezinsvriendelijk'],
         };
         const expandedTags = filters.ambienceTags.flatMap(tag => {
           const aliases = ambienceAliases[tag.toLowerCase()];
