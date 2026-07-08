@@ -1,11 +1,10 @@
-// Regenerates public/sitemap.xml with base URLs + facet URLs (>=3 matches).
+// Regenerates public/sitemap.xml with base URLs only (no facet URLs, no /eten/gerecht/*).
 // Reads from Supabase using the anon key (all queried tables are public-read).
 import { createClient } from '@supabase/supabase-js';
 import { writeFileSync } from 'fs';
 import { resolve } from 'path';
 
 const SITE_URL = 'https://dishloopr.com';
-const FACET_THRESHOLD = 3;
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -14,43 +13,6 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   process.exit(1);
 }
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// Whitelisted facet definitions — must stay in sync with src/lib/dishCityFacets.ts.
-const FACETS = [
-  // meal
-  { slug: 'ontbijt', kind: 'meal', dbValues: ['breakfast'] },
-  { slug: 'lunch',   kind: 'meal', dbValues: ['lunch'] },
-  { slug: 'diner',   kind: 'meal', dbValues: ['dinner'] },
-  // ambience
-  { slug: 'romantisch',      kind: 'ambience', dbValues: ['Romantisch'] },
-  { slug: 'casual',          kind: 'ambience', dbValues: ['Casual'] },
-  { slug: 'gezellig',        kind: 'ambience', dbValues: ['Gezellig'] },
-  { slug: 'trendy',          kind: 'ambience', dbValues: ['Trendy'] },
-  { slug: 'zakelijk',        kind: 'ambience', dbValues: ['Zakelijk'] },
-  { slug: 'luxe',            kind: 'ambience', dbValues: ['Luxe', 'High-end'] },
-  { slug: 'modern',          kind: 'ambience', dbValues: ['Modern'] },
-  { slug: 'industrieel',     kind: 'ambience', dbValues: ['Industrieel'] },
-  { slug: 'klassiek',        kind: 'ambience', dbValues: ['Klassiek'] },
-  { slug: 'traditioneel',    kind: 'ambience', dbValues: ['Traditioneel'] },
-  { slug: 'levendig',        kind: 'ambience', dbValues: ['Levendig'] },
-  { slug: 'kindvriendelijk', kind: 'ambience', dbValues: ['Kindvriendelijk', 'Gezinsvriendelijk'] },
-  { slug: 'warm',            kind: 'ambience', dbValues: ['Warm'] },
-  { slug: 'fine-dining',     kind: 'ambience', dbValues: ['Fine Dining'] },
-  { slug: 'intiem',          kind: 'ambience', dbValues: ['Intiem'] },
-  { slug: 'minimalistisch',  kind: 'ambience', dbValues: ['Minimalistisch'] },
-  { slug: 'bruisend',        kind: 'ambience', dbValues: ['Bruisend'] },
-  { slug: 'bohemian',        kind: 'ambience', dbValues: ['Bohemian'] },
-  // price
-  { slug: 'goedkoop', kind: 'price', dbValues: ['1'] },
-  { slug: 'chic',     kind: 'price', dbValues: ['3', '4'] },
-];
-
-function matchesFacet(r, f) {
-  if (f.kind === 'meal') return (r.meal_types || []).some(v => f.dbValues.includes(v));
-  if (f.kind === 'ambience') return (r.ambience_tags || []).some(v => f.dbValues.includes(v));
-  if (r.price_level === null || r.price_level === undefined) return false;
-  return f.dbValues.includes(String(r.price_level));
-}
 
 async function fetchAll(build) {
   const out = [];
@@ -70,10 +32,9 @@ async function fetchAll(build) {
 async function main() {
   const now = new Date().toISOString().split('T')[0];
 
-  const [restaurants, cities, dishesTop, seoRaw, collections] = await Promise.all([
+  const [restaurants, cities, seoRaw, collections] = await Promise.all([
     fetchAll((f, t) => supabase.from('restaurants').select('slug, updated_at').eq('is_active', true).order('updated_at', { ascending: false }).range(f, t)),
     fetchAll((f, t) => supabase.from('cities').select('slug, updated_at').eq('is_active', true).range(f, t)),
-    (async () => (await supabase.from('dishes').select('slug, updated_at').eq('is_active', true).order('search_count', { ascending: false }).limit(100)).data || [])(),
     fetchAll((f, t) => supabase.from('seo_landing_pages').select('slug, updated_at, city_id, dish_id, dishes:dish_id(slug, canonical_slug)').eq('is_active', true).range(f, t)),
     fetchAll((f, t) => supabase.from('collections').select('slug, updated_at').eq('is_active', true).order('sort_order').range(f, t)),
   ]);
@@ -86,67 +47,7 @@ async function main() {
     return d.canonical_slug === d.slug;
   });
 
-  console.log(`Fetched: ${restaurants.length} restaurants, ${cities.length} cities, ${dishesTop.length} dishes, ${seoRaw.length} SEO pages (${seoCanonical.length} canonical), ${collections.length} collections`);
-
-  // ---- Facet URL computation ----
-  const allDishes = await fetchAll((f, t) => supabase.from('dishes').select('id, slug, canonical_slug').range(f, t));
-  const dishIdsByCanonical = new Map();
-  for (const d of allDishes) {
-    const c = d.canonical_slug || d.slug;
-    if (!c) continue;
-    const arr = dishIdsByCanonical.get(c) || [];
-    arr.push(d.id);
-    dishIdsByCanonical.set(c, arr);
-  }
-
-  const rdRows = await fetchAll((f, t) => supabase.from('restaurant_dishes').select('restaurant_id, dish_id').eq('status', 'approved_by_admin').range(f, t));
-  const restaurantIdsByDish = new Map();
-  for (const rd of rdRows) {
-    const arr = restaurantIdsByDish.get(rd.dish_id) || [];
-    arr.push(rd.restaurant_id);
-    restaurantIdsByDish.set(rd.dish_id, arr);
-  }
-
-  const allRestaurants = await fetchAll((f, t) => supabase.from('restaurants').select('id, city_id, meal_types, ambience_tags, price_level, is_active').eq('is_active', true).range(f, t));
-  const restaurantById = new Map(allRestaurants.map(r => [r.id, r]));
-
-  console.log(`Facet inputs: ${allDishes.length} dishes, ${rdRows.length} approved restaurant_dishes, ${allRestaurants.length} active restaurants`);
-
-  const facetEntries = [];
-  const facetCountsSummary = { total: 0, sampleUrls: [] };
-
-  for (const page of seoCanonical) {
-    const d = page.dishes;
-    const canonicalSlug = d?.canonical_slug || d?.slug;
-    if (!canonicalSlug || !page.city_id) continue;
-    const dishIds = dishIdsByCanonical.get(canonicalSlug) || [];
-    if (dishIds.length === 0) continue;
-    const restIds = new Set();
-    for (const did of dishIds) {
-      const rids = restaurantIdsByDish.get(did) || [];
-      for (const rid of rids) restIds.add(rid);
-    }
-    const cityRestaurants = [];
-    for (const rid of restIds) {
-      const r = restaurantById.get(rid);
-      if (r && r.city_id === page.city_id) cityRestaurants.push(r);
-    }
-    if (cityRestaurants.length < FACET_THRESHOLD) continue;
-    for (const f of FACETS) {
-      let count = 0;
-      for (const r of cityRestaurants) if (matchesFacet(r, f)) count++;
-      if (count >= FACET_THRESHOLD) {
-        facetEntries.push({
-          loc: `${SITE_URL}/eten/${page.slug}/${f.slug}`,
-          lastmod: (page.updated_at || '').split('T')[0] || now,
-          changefreq: 'weekly',
-          priority: '0.7',
-        });
-        facetCountsSummary.total++;
-        if (facetCountsSummary.sampleUrls.length < 10) facetCountsSummary.sampleUrls.push(`${page.slug}/${f.slug} (${count})`);
-      }
-    }
-  }
+  console.log(`Fetched: ${restaurants.length} restaurants, ${cities.length} cities, ${seoRaw.length} SEO pages (${seoCanonical.length} canonical), ${collections.length} collections`);
 
   // ---- Emit sitemap ----
   const urls = [];
@@ -169,9 +70,7 @@ async function main() {
   for (const p of seoCanonical) add(`${SITE_URL}/eten/${p.slug}`, (p.updated_at || '').split('T')[0] || now, 'weekly', '0.9');
   for (const c of collections) add(`${SITE_URL}/collection/${c.slug}`, (c.updated_at || '').split('T')[0] || now, 'weekly', '0.8');
   for (const c of cities) add(`${SITE_URL}/steden/${c.slug}`, (c.updated_at || '').split('T')[0] || now, 'weekly', '0.8');
-  for (const d of dishesTop) add(`${SITE_URL}/eten/gerecht/${d.slug}`, (d.updated_at || '').split('T')[0] || now, 'weekly', '0.8');
   for (const r of restaurants) add(`${SITE_URL}/restaurant/${r.slug}`, (r.updated_at || '').split('T')[0] || now, 'weekly', '0.8');
-  for (const e of facetEntries) add(e.loc, e.lastmod, e.changefreq, e.priority);
 
   // Deduplicate by <loc>
   const seen = new Set();
@@ -188,9 +87,6 @@ async function main() {
   writeFileSync(resolve('public/sitemap.xml'), sitemap);
 
   console.log(`Wrote public/sitemap.xml — ${unique.length} unique <loc> (${urls.length - unique.length} duplicates removed)`);
-  console.log(`Facet URLs emitted: ${facetCountsSummary.total}`);
-  console.log(`Sample facet URLs:`);
-  for (const s of facetCountsSummary.sampleUrls) console.log(`  /eten/${s}`);
 }
 
 main().catch(err => { console.error(err); process.exit(1); });
