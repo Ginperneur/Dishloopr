@@ -148,11 +148,11 @@ serve(async (req) => {
       success_url: `${origin}/owner-dashboard?sponsored=success&product=${productId}&restaurant=${restaurantId}&duration=${duration}`,
       cancel_url: `${origin}/owner-dashboard?sponsored=cancelled`,
       metadata: {
-        productId,
-        restaurantId,
-        durationDays: duration.toString(),
-        userId: user.id,
-        type: 'sponsored_dish',
+        type: "sponsored_dish",
+        product_id: productId,
+        restaurant_id: restaurantId,
+        duration_days: duration.toString(),
+        user_id: user.id,
       },
     });
 
