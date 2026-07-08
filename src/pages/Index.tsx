@@ -18,7 +18,6 @@ import { FeaturedCollections } from '@/components/collections/CollectionsGrid';
 import { SEOHead, createWebsiteSchema } from '@/components/seo/SEOHead';
 import { Button } from '@/components/ui/button';
 import { SkeletonCard } from '@/components/ui/skeleton-card';
-import { useFeaturedRestaurants } from '@/hooks/useFeaturedRestaurants';
 import { useTrendingDishes } from '@/hooks/useTrendingDishes';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useSavedSearches } from '@/hooks/useSavedSearches';
@@ -42,7 +41,6 @@ const Index = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { dishes: trendingDishes, loading: dishesLoading } = useTrendingDishes();
-  const { restaurants: featuredRestaurants, loading: featuredLoading } = useFeaturedRestaurants(3);
   const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, clearLocation } = useGeolocation();
   const { saved: savedSearches, remove: removeSavedSearch, setAlerts: setSavedAlerts } = useSavedSearches();
   const [showHowItWorks, setShowHowItWorks] = useState(false);
