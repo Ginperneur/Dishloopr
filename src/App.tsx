@@ -133,6 +133,7 @@ const App = () => (
                   <Route path="/eten" element={<DishCityIndexPage />} />
                   <Route path="/eten/gerecht/:dishSlug" element={<DishPillarPage />} />
                   <Route path="/eten/:slug" element={<DishCityPage />} />
+                  <Route path="/eten/:slug/:facet" element={<DishCityPage />} />
                   <Route path="/steden" element={<CityIndexPage />} />
                   <Route path="/steden/:citySlug" element={<CityDetailPage />} />
                   {/* Legacy /stad/* URLs → 301-style redirect to canonical /steden/* */}
