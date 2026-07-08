@@ -17,16 +17,17 @@ interface FacetDef { slug: string; kind: FacetKind; dbValues: string[]; }
 
 const FACETS: FacetDef[] = [
   // meal_types
+  { slug: 'ontbijt', kind: 'meal', dbValues: ['breakfast'] },
   { slug: 'lunch',   kind: 'meal', dbValues: ['lunch'] },
   { slug: 'diner',   kind: 'meal', dbValues: ['dinner'] },
-  { slug: 'ontbijt', kind: 'meal', dbValues: ['breakfast'] },
-  { slug: 'brunch',  kind: 'meal', dbValues: ['brunch'] },
   // ambience_tags
   { slug: 'romantisch',      kind: 'ambience', dbValues: ['Romantisch'] },
+  { slug: 'casual',          kind: 'ambience', dbValues: ['Casual'] },
   { slug: 'gezellig',        kind: 'ambience', dbValues: ['Gezellig'] },
   { slug: 'trendy',          kind: 'ambience', dbValues: ['Trendy'] },
+  { slug: 'zakelijk',        kind: 'ambience', dbValues: ['Zakelijk'] },
+  { slug: 'luxe',            kind: 'ambience', dbValues: ['Luxe', 'High-end'] },
   { slug: 'modern',          kind: 'ambience', dbValues: ['Modern'] },
-  { slug: 'casual',          kind: 'ambience', dbValues: ['Casual'] },
   { slug: 'industrieel',     kind: 'ambience', dbValues: ['Industrieel'] },
   { slug: 'klassiek',        kind: 'ambience', dbValues: ['Klassiek'] },
   { slug: 'traditioneel',    kind: 'ambience', dbValues: ['Traditioneel'] },
@@ -36,14 +37,11 @@ const FACETS: FacetDef[] = [
   { slug: 'fine-dining',     kind: 'ambience', dbValues: ['Fine Dining'] },
   { slug: 'intiem',          kind: 'ambience', dbValues: ['Intiem'] },
   { slug: 'minimalistisch',  kind: 'ambience', dbValues: ['Minimalistisch'] },
-  { slug: 'zakelijk',        kind: 'ambience', dbValues: ['Zakelijk'] },
   { slug: 'bruisend',        kind: 'ambience', dbValues: ['Bruisend'] },
   { slug: 'bohemian',        kind: 'ambience', dbValues: ['Bohemian'] },
-  { slug: 'luxe',            kind: 'ambience', dbValues: ['Luxe', 'High-end'] },
   // price_level
-  { slug: 'budget',       kind: 'price', dbValues: ['1'] },
-  { slug: 'middenklasse', kind: 'price', dbValues: ['2'] },
-  { slug: 'luxueus',      kind: 'price', dbValues: ['3', '4'] },
+  { slug: 'goedkoop', kind: 'price', dbValues: ['1'] },
+  { slug: 'chic',     kind: 'price', dbValues: ['3', '4'] },
 ];
 
 interface RestFacetFields {
