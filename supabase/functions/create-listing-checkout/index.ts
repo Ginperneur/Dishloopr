@@ -144,10 +144,11 @@ serve(async (req) => {
       success_url: `${origin}/owner-dashboard?payment=success&type=${listingType}&restaurant=${restaurantId}`,
       cancel_url: `${origin}/owner-dashboard?payment=cancelled`,
       metadata: {
-        restaurantId,
-        listingType,
-        userId: user.id,
-        verificationCreditId: credit?.id || "",
+        type: "listing",
+        restaurant_id: restaurantId,
+        listing_type: listingType,
+        user_id: user.id,
+        verification_credit_id: credit?.id || "",
       },
     });
 
