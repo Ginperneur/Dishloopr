@@ -1,4 +1,5 @@
-import { useParams, Link, Navigate } from 'react-router-dom';
+import { useMemo } from 'react';
+import { useParams, Link, Navigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { ChevronRight, MapPin, Search, Star } from 'lucide-react';
@@ -15,18 +16,52 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { useSeoLandingPage } from '@/hooks/useSeoLandingPage';
+import { FACET_GROUPS, getFacet, matchesFacet } from '@/lib/dishCityFacets';
 import NotFound from './NotFound';
 
 export default function DishCityPage() {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug, facet: facetSlug } = useParams<{ slug: string; facet?: string }>();
+  const location = useLocation();
   const { t } = useTranslation();
   const { page, restaurants, loading, error, redirectTo } = useSeoLandingPage(slug);
+
+  const activeFacet = getFacet(facetSlug);
+  const isFacetRoute = !!facetSlug;
+  // Unknown facet on the /:facet route → 404.
+  const unknownFacet = isFacetRoute && !activeFacet;
+
+  // Client-side filter of the strict canonical-matched restaurants.
+  const visibleRestaurants = useMemo(() => {
+    if (!activeFacet) return restaurants;
+    return restaurants.filter(r => matchesFacet(r as any, activeFacet));
+  }, [restaurants, activeFacet]);
+
+  // Count per facet (across meal + ambience + price) for chip rendering.
+  const facetCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const group of FACET_GROUPS) {
+      for (const f of group.facets) {
+        let n = 0;
+        for (const r of restaurants) if (matchesFacet(r as any, f)) n++;
+        counts[f.slug] = n;
+      }
+    }
+    return counts;
+  }, [restaurants]);
+
+  const hasQueryParams = location.search && location.search.length > 1;
+  // Empty facet results OR non-whitelisted query params → noindex, canonical to base.
+  const noindex = unknownFacet || (isFacetRoute && visibleRestaurants.length === 0) || (isFacetRoute && hasQueryParams);
 
   if (redirectTo) {
     return <Navigate to={redirectTo} replace />;
   }
 
   if (error === 'Page not found') {
+    return <NotFound />;
+  }
+
+  if (unknownFacet && !loading) {
     return <NotFound />;
   }
 
@@ -58,10 +93,11 @@ export default function DishCityPage() {
     { name: 'Eten', url: 'https://dishloopr.com/eten' },
     ...(page.city ? [{ name: page.city.name, url: `https://dishloopr.com/search?city=${page.city.id}` }] : []),
     { name: page.h1_title, url: `https://dishloopr.com/eten/${page.slug}` },
+    ...(activeFacet ? [{ name: activeFacet.label, url: `https://dishloopr.com/eten/${page.slug}/${activeFacet.slug}` }] : []),
   ];
 
-  const restaurantItemList = restaurants.length > 0 ? createItemListSchema(
-    restaurants.map((r, i) => ({
+  const restaurantItemList = visibleRestaurants.length > 0 ? createItemListSchema(
+    visibleRestaurants.map((r, i) => ({
       name: r.name,
       url: `https://dishloopr.com/restaurant/${r.slug}`,
       position: i + 1,
@@ -70,20 +106,35 @@ export default function DishCityPage() {
 
   const structuredData = [
     createBreadcrumbSchema(breadcrumbs),
-    ...(page.faq_content.length > 0 
+    ...((!activeFacet && page.faq_content.length > 0)
       ? [createFAQSchema(page.faq_content.map(faq => ({ question: faq.question, answer: faq.answer })))]
       : []
     ),
     ...(restaurantItemList ? [restaurantItemList] : []),
   ];
 
+  const baseUrl = `https://dishloopr.com/eten/${page.slug}`;
+  const facetTitle = activeFacet && page.dish && page.city
+    ? `${page.dish.name} ${activeFacet.titleModifier} in ${page.city.name}`
+    : page.h1_title;
+  const facetMetaTitle = activeFacet && page.dish && page.city
+    ? `${page.dish.name} ${activeFacet.titleModifier} in ${page.city.name} | Dishloopr`
+    : page.meta_title;
+  const facetMetaDescription = activeFacet && page.dish && page.city
+    ? `Ontdek restaurants voor ${page.dish.name.toLowerCase()} ${activeFacet.titleModifier} in ${page.city.name}. Vergelijk, filter en vind jouw favoriet.`
+    : page.meta_description;
+  const canonical = activeFacet && !noindex
+    ? `${baseUrl}/${activeFacet.slug}`
+    : (page.canonical_url || baseUrl);
+
   return (
     <Layout>
       <SEOHead
-        title={page.meta_title}
-        description={page.meta_description}
+        title={facetMetaTitle}
+        description={facetMetaDescription}
         keywords={page.keywords || undefined}
-        canonical={page.canonical_url || `https://dishloopr.com/eten/${page.slug}`}
+        canonical={canonical}
+        noindex={noindex}
         structuredData={structuredData}
       />
 
@@ -109,9 +160,24 @@ export default function DishCityPage() {
             </>
           )}
           <ChevronRight className="h-4 w-4 flex-shrink-0" />
-          <span className="text-foreground font-medium truncate">
-            {page.dish?.name}
-          </span>
+          {activeFacet ? (
+            <>
+              <Link
+                to={`/eten/${page.slug}`}
+                className="hover:text-foreground transition-colors"
+              >
+                {page.dish?.name}
+              </Link>
+              <ChevronRight className="h-4 w-4 flex-shrink-0" />
+              <span className="text-foreground font-medium truncate">
+                {activeFacet.label}
+              </span>
+            </>
+          ) : (
+            <span className="text-foreground font-medium truncate">
+              {page.dish?.name}
+            </span>
+          )}
         </nav>
       </div>
 
@@ -137,16 +203,16 @@ export default function DishCityPage() {
           </div>
 
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
-            {page.h1_title}
+            {facetTitle}
           </h1>
 
-          {page.intro_text && (
+          {!activeFacet && page.intro_text && (
             <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-6">
               {page.intro_text}
             </p>
           )}
 
-          {page.extended_description && (
+          {!activeFacet && page.extended_description && (
             <p className="text-muted-foreground leading-relaxed mb-8">
               {page.extended_description}
             </p>
@@ -171,16 +237,57 @@ export default function DishCityPage() {
         </motion.div>
       </section>
 
+      {/* Facet filter chips — indexable filter URLs (programmatic SEO) */}
+      <section className="container px-4 md:px-6 pb-2">
+        {FACET_GROUPS.map(group => {
+          const items = group.facets.filter(f => (facetCounts[f.slug] || 0) > 0 || activeFacet?.slug === f.slug);
+          if (items.length === 0) return null;
+          return (
+            <div key={group.kind} className="mb-3">
+              <p className="text-sm text-muted-foreground mb-2">{group.heading}</p>
+              <div className="flex flex-wrap gap-2">
+                {activeFacet?.kind === group.kind && (
+                  <Link
+                    to={`/eten/${page.slug}`}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-full border border-border hover:bg-primary/10 transition-colors"
+                  >
+                    Alle
+                  </Link>
+                )}
+                {items.map(f => {
+                  const isActive = activeFacet?.slug === f.slug;
+                  return (
+                    <Link
+                      key={f.slug}
+                      to={`/eten/${page.slug}/${f.slug}`}
+                      aria-current={isActive ? 'page' : undefined}
+                      className={`inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                        isActive
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'border-border hover:bg-primary/10'
+                      }`}
+                    >
+                      {f.label}
+                      <span className="text-xs opacity-70">({facetCounts[f.slug] || 0})</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </section>
+
       {/* Restaurant Results */}
       <section className="container px-4 md:px-6 py-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">
-            {restaurants.length > 0 
-              ? `${restaurants.length} restaurants gevonden`
+            {visibleRestaurants.length > 0
+              ? `${visibleRestaurants.length} restaurants gevonden`
               : 'Aanbevolen restaurants'
             }
           </h2>
-          {restaurants.length > 0 && (
+          {visibleRestaurants.length > 0 && (
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
               <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
               Gesorteerd op rating
@@ -188,13 +295,13 @@ export default function DishCityPage() {
           )}
         </div>
 
-        {restaurants.length > 0 ? (
+        {visibleRestaurants.length > 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
           >
-            {restaurants.map((restaurant, index) => (
+            {visibleRestaurants.map((restaurant, index) => (
               <motion.div
                 key={restaurant.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -208,19 +315,30 @@ export default function DishCityPage() {
         ) : (
           <div className="text-center py-12 bg-muted/30 rounded-xl">
             <p className="text-muted-foreground mb-4">
-              Nog geen restaurants gevonden voor deze combinatie.
+              {activeFacet
+                ? `Nog geen restaurants gevonden voor ${page.dish?.name} ${activeFacet.titleModifier} in ${page.city?.name || 'Nederland'}.`
+                : 'Nog geen restaurants gevonden voor deze combinatie.'}
             </p>
-            <Button asChild>
-              <Link to={`/search?city=${page.city?.id || ''}`}>
-                Bekijk alle restaurants in {page.city?.name || 'Nederland'}
-              </Link>
-            </Button>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {activeFacet && (
+                <Button asChild variant="outline">
+                  <Link to={`/eten/${page.slug}`}>
+                    Terug naar {page.dish?.name} in {page.city?.name}
+                  </Link>
+                </Button>
+              )}
+              <Button asChild>
+                <Link to={`/search?city=${page.city?.id || ''}`}>
+                  Bekijk alle restaurants in {page.city?.name || 'Nederland'}
+                </Link>
+              </Button>
+            </div>
           </div>
         )}
       </section>
 
       {/* FAQ Section */}
-      {page.faq_content.length > 0 && (
+      {!activeFacet && page.faq_content.length > 0 && (
         <section className="container px-4 md:px-6 py-8 md:py-12">
           <h2 className="text-2xl font-bold mb-6">
             Veelgestelde vragen over {page.dish?.name?.toLowerCase()} in {page.city?.name}
