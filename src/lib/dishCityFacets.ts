@@ -23,32 +23,22 @@ const MEAL_FACETS: FacetDef[] = [
 ];
 
 // Ambience — restaurants.ambience_tags (text[]) — DB values are capitalized NL
+// 7 gegroepeerde chips: elke chip matcht op een set ruwe DB-waarden.
 const AMBIENCE_FACETS: FacetDef[] = [
-  { slug: 'romantisch',      kind: 'ambience', label: 'Romantisch',      titleModifier: 'romantisch',      dbValues: ['Romantisch'] },
-  { slug: 'gezellig',        kind: 'ambience', label: 'Gezellig',        titleModifier: 'gezellig',        dbValues: ['Gezellig'] },
-  { slug: 'trendy',          kind: 'ambience', label: 'Trendy',          titleModifier: 'trendy',          dbValues: ['Trendy'] },
-  { slug: 'modern',          kind: 'ambience', label: 'Modern',          titleModifier: 'modern',          dbValues: ['Modern'] },
+  { slug: 'romantisch',      kind: 'ambience', label: 'Romantisch',      titleModifier: 'romantisch',      dbValues: ['Romantisch', 'Intiem'] },
+  { slug: 'gezellig',        kind: 'ambience', label: 'Gezellig',        titleModifier: 'gezellig',        dbValues: ['Gezellig', 'Warm', 'Traditioneel', 'Klassiek'] },
+  { slug: 'trendy',          kind: 'ambience', label: 'Trendy',          titleModifier: 'trendy',          dbValues: ['Trendy', 'Modern', 'Industrieel', 'Minimalistisch', 'Bohemian', 'Levendig', 'Bruisend'] },
   { slug: 'casual',          kind: 'ambience', label: 'Casual',          titleModifier: 'casual',          dbValues: ['Casual'] },
-  { slug: 'industrieel',     kind: 'ambience', label: 'Industrieel',     titleModifier: 'industrieel',     dbValues: ['Industrieel'] },
-  { slug: 'klassiek',        kind: 'ambience', label: 'Klassiek',        titleModifier: 'klassiek',        dbValues: ['Klassiek'] },
-  { slug: 'traditioneel',    kind: 'ambience', label: 'Traditioneel',    titleModifier: 'traditioneel',    dbValues: ['Traditioneel'] },
-  { slug: 'levendig',        kind: 'ambience', label: 'Levendig',        titleModifier: 'levendig',        dbValues: ['Levendig'] },
-  { slug: 'kindvriendelijk', kind: 'ambience', label: 'Kindvriendelijk', titleModifier: 'kindvriendelijk', dbValues: ['Kindvriendelijk', 'Gezinsvriendelijk'] },
-  { slug: 'warm',            kind: 'ambience', label: 'Warm',            titleModifier: 'warm',            dbValues: ['Warm'] },
-  { slug: 'fine-dining',     kind: 'ambience', label: 'Fine Dining',     titleModifier: 'fine dining',     dbValues: ['Fine Dining'] },
-  { slug: 'intiem',          kind: 'ambience', label: 'Intiem',          titleModifier: 'intiem',          dbValues: ['Intiem'] },
-  { slug: 'minimalistisch',  kind: 'ambience', label: 'Minimalistisch',  titleModifier: 'minimalistisch',  dbValues: ['Minimalistisch'] },
+  { slug: 'luxe',            kind: 'ambience', label: 'Luxe',            titleModifier: 'luxe',            dbValues: ['Luxe', 'Fine Dining', 'High-end'] },
   { slug: 'zakelijk',        kind: 'ambience', label: 'Zakelijk',        titleModifier: 'zakelijk',        dbValues: ['Zakelijk'] },
-  { slug: 'bruisend',        kind: 'ambience', label: 'Bruisend',        titleModifier: 'bruisend',        dbValues: ['Bruisend'] },
-  { slug: 'bohemian',        kind: 'ambience', label: 'Bohemian',        titleModifier: 'bohemian',        dbValues: ['Bohemian'] },
-  { slug: 'luxe',            kind: 'ambience', label: 'Luxe',            titleModifier: 'luxe',            dbValues: ['Luxe', 'High-end'] },
+  { slug: 'kindvriendelijk', kind: 'ambience', label: 'Kindvriendelijk', titleModifier: 'kindvriendelijk', dbValues: ['Kindvriendelijk', 'Gezinsvriendelijk'] },
 ];
 
 // Price — restaurants.price_level (int, 1-4). Slugs disjoint from ambience.
 // Only two indexable tiers: goedkoop (€) and chic (€€€/€€€€). Middenklasse
 // is intentionally omitted from the facet whitelist.
 const PRICE_FACETS: FacetDef[] = [
-  { slug: 'goedkoop', kind: 'price', label: 'Goedkoop (€)',    titleModifier: 'voor een goedkope prijs', dbValues: ['1'] },
+  { slug: 'budget',   kind: 'price', label: 'Budget (€)',      titleModifier: 'voor een budgetvriendelijke prijs', dbValues: ['1'] },
   { slug: 'chic',     kind: 'price', label: 'Chic (€€€+)',     titleModifier: 'chic',                    dbValues: ['3', '4'] },
 ];
 
