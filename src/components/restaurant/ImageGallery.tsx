@@ -267,12 +267,15 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
 
         {/* Thumbnail Dots */}
         {images.length > 1 && images.length <= 6 && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5" role="tablist" aria-label="Afbeeldingen">
             {images.map((_, index) => (
               <button
                 key={index}
                 onClick={() => handleThumbnailClick(index)}
-                className={`h-2 w-2 rounded-full transition-all ${
+                aria-label={`Ga naar afbeelding ${index + 1}`}
+                aria-selected={index === currentIndex}
+                role="tab"
+                className={`relative h-2 w-2 rounded-full transition-all touch-manipulation before:content-[''] before:absolute before:inset-0 before:-m-4 before:min-w-[44px] before:min-h-[44px] before:left-1/2 before:top-1/2 before:-translate-x-1/2 before:-translate-y-1/2 ${
                   index === currentIndex 
                     ? 'bg-primary w-4' 
                     : 'bg-primary/40 hover:bg-primary/60'

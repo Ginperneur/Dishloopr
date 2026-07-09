@@ -339,12 +339,74 @@
     .mobile-clear-bottom-nav {
       bottom: calc(4rem + env(safe-area-inset-bottom, 0px)) !important;
     }
+
+    /* ============================================================
+     * TAP TARGETS — WCAG 2.5.5 (>=44x44px on mobile)
+     * Uses a transparent ::after pseudo hitbox so we grow the click
+     * area WITHOUT changing the visual design.
+     * Opt out per element with `data-no-hitbox` when needed.
+     * ============================================================ */
+    button:not([data-no-hitbox]),
+    a[role="button"]:not([data-no-hitbox]),
+    [role="tab"]:not([data-no-hitbox]),
+    [role="switch"]:not([data-no-hitbox]),
+    [role="checkbox"]:not([data-no-hitbox]),
+    [role="menuitem"]:not([data-no-hitbox]) {
+      position: relative;
+    }
+
+    /* Icon-only / tiny controls: opt-in 44x44 hit area via ::after. */
+    .tap-target::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 44px);
+      height: max(100%, 44px);
+      transform: translate(-50%, -50%);
+    }
+
+    /* Footer & breadcrumb inline links get a comfortable vertical padding */
+    footer a, nav[aria-label*="ruimwijzer" i] a, nav[aria-label*="readcrumb" i] a {
+      padding-block: 6px;
+      display: inline-block;
+      min-height: 32px;
+    }
   }
 
   /* Ensure scroll-anchored content (with id) is not hidden under sticky headers */
   :target {
     scroll-margin-top: 5rem;
   }
+}
+
+/* ============================================================
+ * GLOBAL LAYOUT SAFETY & PERF
+ * - Horizontal overflow clip on the app root (safety net)
+ * - content-visibility for long list sections marked with .cv-auto
+ * - Ensure images without explicit dimensions never break layout
+ * ============================================================ */
+html, body, #root {
+  overflow-x: clip;
+}
+
+@supports not (overflow-x: clip) {
+  html, body, #root {
+    overflow-x: hidden;
+  }
+}
+
+/* Opt-in class to virtualize long, off-screen sections during scroll */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 600px;
+}
+
+/* Images without explicit width/height default to a safe aspect box.
+   Consumers may override with their own aspect classes. */
+img:not([width]):not([height]):not(.no-aspect-fallback) {
+  max-width: 100%;
+  height: auto;
 }
 
 /* Owner Dashboard shell: the in-flow sidebar spacer should not exceed the
