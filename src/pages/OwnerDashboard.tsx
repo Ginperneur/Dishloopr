@@ -118,6 +118,7 @@ import { VisibilityProgress, type VisibilityStep } from '@/components/owner/Visi
 import { useOwnerTier } from '@/hooks/useOwnerTier';
 import { OpeningHoursExceptions } from '@/components/owner/OpeningHoursExceptions';
 import { MultiLanguageProfile } from '@/components/owner/MultiLanguageProfile';
+import { BasicInfoEditor } from '@/components/owner/BasicInfoEditor';
 import { CrossPromotionManager } from '@/components/owner/CrossPromotionManager';
 import { AudienceDemographics } from '@/components/owner/AudienceDemographics';
 import { BestTimeToPost } from '@/components/owner/BestTimeToPost';
@@ -806,6 +807,33 @@ export default function OwnerDashboard() {
               title="Content & Profiel"
               description="Beheer gerechten, foto's, instellingen en je publieke profiel."
             />
+            {/* Basisgegevens (naam, beschrijving, openingstijden) — via goedkeuring */}
+            {selectedRestaurant && isVerified && (
+              <div>
+                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                  <Store className="h-5 w-5 text-primary" />
+                  Basisgegevens
+                </h3>
+                <BasicInfoEditor
+                  restaurantId={selectedRestaurant.id}
+                  currentName={selectedRestaurant.name}
+                  currentOpeningHours={(selectedRestaurant as any).opening_hours}
+                />
+              </div>
+            )}
+            {selectedRestaurant && !isVerified && (
+              <div>
+                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                  <Store className="h-5 w-5 text-primary" />
+                  Basisgegevens
+                </h3>
+                <LockedFeatureOverlay
+                  featureName="Basisgegevens bewerken"
+                  description="Verifieer je eigendom om naam, beschrijving en openingstijden te kunnen bewerken (ter goedkeuring)."
+                  onRequestVerification={() => setVerificationDialogOpen(true)}
+                />
+              </div>
+            )}
             {/* Restaurant Quick Settings */}
             {selectedRestaurant && (
               <div>
