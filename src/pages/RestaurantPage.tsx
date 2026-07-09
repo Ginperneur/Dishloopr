@@ -296,26 +296,28 @@ export default function RestaurantPage() {
                   )}
 
                   <div className="flex flex-wrap items-center gap-2 md:gap-4 text-sm md:text-base text-muted-foreground mb-3">
-                    {restaurant.review_count > 0 ? (
+                    {restaurant.review_count > 0 && Number(restaurant.rating) > 0 ? (
                       <div className="flex items-center gap-1">
                         <Star className="h-4 w-4 md:h-5 md:w-5 fill-rating text-rating" />
                         <span className="font-semibold text-foreground">{Number(restaurant.rating).toFixed(1)}</span>
                         <span>({restaurant.review_count} {t('restaurant.reviews')})</span>
                       </div>
-                    ) : (restaurant as any).google_rating ? (
+                    ) : (restaurant as any).google_rating && Number((restaurant as any).google_rating) > 0 ? (
                       <div className="flex items-center gap-1">
                         <Star className="h-3.5 w-3.5 md:h-4 md:w-4 fill-muted-foreground/50 text-muted-foreground/50" />
                         <span className="font-semibold text-foreground">{Number((restaurant as any).google_rating).toFixed(1)}</span>
-                        <span className="text-xs text-muted-foreground">Google ({(restaurant as any).google_reviews_count || 0})</span>
+                        <span className="text-xs text-muted-foreground">
+                          Google-rating{(restaurant as any).google_reviews_count > 0 ? ` (${(restaurant as any).google_reviews_count})` : ''}
+                        </span>
                       </div>
                     ) : (
                       <span className="text-muted-foreground text-sm">{t('restaurant.noReviewsYet', 'Nog geen beoordelingen')}</span>
                     )}
                     {/* Show Google rating alongside when we have own reviews too */}
-                    {restaurant.review_count > 0 && (restaurant as any).google_rating && (
+                    {restaurant.review_count > 0 && (restaurant as any).google_rating && Number((restaurant as any).google_rating) > 0 && (
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Star className="h-3 w-3 fill-muted-foreground/50 text-muted-foreground/50" />
-                        <span>{Number((restaurant as any).google_rating).toFixed(1)}</span>
+                        <span>Google-rating {Number((restaurant as any).google_rating).toFixed(1)}</span>
                       </div>
                     )}
                     <span className="hidden md:inline">{PRICE_LABELS_FULL[restaurant.price_level]}</span>
