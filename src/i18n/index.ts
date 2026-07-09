@@ -34,4 +34,15 @@ i18n
     },
   });
 
+// Keep <html lang="..."> in sync with the active UI locale so screen readers,
+// browsers, and translation tools pick up the right language.
+const syncHtmlLang = (lng: string) => {
+  if (typeof document !== 'undefined' && lng) {
+    const base = lng.split('-')[0];
+    document.documentElement.lang = base;
+  }
+};
+syncHtmlLang(i18n.language || i18n.resolvedLanguage || 'nl');
+i18n.on('languageChanged', syncHtmlLang);
+
 export default i18n;
