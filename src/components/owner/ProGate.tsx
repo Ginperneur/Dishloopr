@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ProBadge } from './ProBadge';
 import { useOwnerTier } from '@/hooks/useOwnerTier';
 import { useOwnerProCheckout } from '@/hooks/useOwnerProCheckout';
+import { CHECKOUT_ENABLED, COMING_SOON_LABEL } from '@/lib/checkoutFlags';
 
 interface ProGateProps {
   restaurantId: string | undefined;
@@ -44,13 +45,18 @@ export function ProGate({ restaurantId, enforced = false, showBadge = true, chil
           <p className="text-sm text-muted-foreground mb-4">
             Upgrade naar Pro (€29/maand of €290/jaar) om deze tools te ontgrendelen.
           </p>
-          <Button size="sm" onClick={() => startCheckout('monthly')} disabled={loading !== null}>
+          <Button
+            size="sm"
+            onClick={() => startCheckout('monthly')}
+            disabled={loading !== null || !CHECKOUT_ENABLED.pro}
+            title={!CHECKOUT_ENABLED.pro ? COMING_SOON_LABEL : undefined}
+          >
             {loading ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
               <Crown className="h-4 w-4 mr-2" />
             )}
-            Upgrade naar Pro
+            {CHECKOUT_ENABLED.pro ? 'Upgrade naar Pro' : COMING_SOON_LABEL}
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
         </div>
