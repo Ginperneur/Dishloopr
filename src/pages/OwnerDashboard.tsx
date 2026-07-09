@@ -315,6 +315,11 @@ export default function OwnerDashboard() {
   if (restaurants.length === 0) {
     return (
       <Layout>
+        <SEOHead
+          title="Owner dashboard | Dishloopr"
+          description="Beheer je restaurantprofiel, foto's, gerechten en reviews in het Dishloopr Owner dashboard."
+          noindex
+        />
         <div className="container py-16 text-center">
           <Store className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
           <h1 className="text-2xl font-bold mb-2">Geen restaurants gevonden</h1>
@@ -375,6 +380,11 @@ export default function OwnerDashboard() {
 
   return (
     <Layout showFooter={false}>
+      <SEOHead
+        title="Owner dashboard | Dishloopr"
+        description="Beheer je restaurantprofiel, foto's, gerechten en reviews in het Dishloopr Owner dashboard."
+        noindex
+      />
       <SidebarProvider defaultOpen={true}>
         <div className="owner-shell flex w-full min-h-[calc(100svh-4rem)] animate-in fade-in duration-300">
           <a href="#owner-main" className="skip-link">
