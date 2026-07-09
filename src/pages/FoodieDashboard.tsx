@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Utensils, Camera } from 'lucide-react';
+import { Utensils, Settings } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,9 +12,8 @@ import { SEOHead } from '@/components/seo/SEOHead';
 import { WelcomeHero } from '@/components/foodie/WelcomeHero';
 import { StatsGrid } from '@/components/foodie/StatsGrid';
 import { GettingStarted } from '@/components/foodie/GettingStarted';
-import { QuickActions } from '@/components/foodie/QuickActions';
-import { RecentReviews } from '@/components/foodie/RecentReviews';
-import { BadgesPreview } from '@/components/foodie/BadgesPreview';
+import { MyListsSection } from '@/components/foodie/MyListsSection';
+import { FavoritesPreview } from '@/components/foodie/FavoritesPreview';
 import { GroupDecisionTool } from '@/components/group/GroupDecisionTool';
 
 interface ProfileData {
@@ -36,17 +35,18 @@ export default function FoodieDashboard() {
   const { badges, stats } = useGamification();
   const { favorites } = useFavorites();
   const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [recentReviews, setRecentReviews] = useState<any[]>([]);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
     const fetchData = async () => {
-      const [profileRes, reviewsRes] = await Promise.all([
-        supabase.from('profiles').select('name, avatar_url, total_reviews, reviewer_level').eq('id', user.id).single(),
-        supabase.from('reviews').select('id, rating, title, created_at, restaurant_id, restaurants(name, slug)').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
-      ]);
+      const profileRes = await supabase
+        .from('profiles')
+        .select('name, avatar_url, total_reviews, reviewer_level')
+        .eq('id', user.id)
+        .single();
       if (profileRes.data) setProfile(profileRes.data);
-      if (reviewsRes.data) setRecentReviews(reviewsRes.data);
+      setProfileLoading(false);
     };
     fetchData();
   }, [user]);
@@ -95,18 +95,22 @@ export default function FoodieDashboard() {
         >
           {/* Welcome Hero */}
           <motion.div variants={fadeUp}>
-            <WelcomeHero
-              name={profile?.name || null}
-              avatarUrl={profile?.avatar_url || null}
-              email={user?.email}
-              level={level}
-              levelLabel={levelInfo.label}
-              levelColor={levelInfo.color}
-              nextLevelLabel={levelConfig[levelInfo.next]?.label || ''}
-              reviewCount={reviewCount}
-              nextLevelThreshold={levelInfo.threshold}
-              hasNextLevel={!!levelInfo.next}
-            />
+            {profileLoading ? (
+              <div className="h-28 sm:h-32 rounded-2xl bg-muted animate-pulse" />
+            ) : (
+              <WelcomeHero
+                name={profile?.name || null}
+                avatarUrl={profile?.avatar_url || null}
+                email={user?.email}
+                level={level}
+                levelLabel={levelInfo.label}
+                levelColor={levelInfo.color}
+                nextLevelLabel={levelConfig[levelInfo.next]?.label || ''}
+                reviewCount={reviewCount}
+                nextLevelThreshold={levelInfo.threshold}
+                hasNextLevel={!!levelInfo.next}
+              />
+            )}
           </motion.div>
 
           {/* Stats */}
@@ -119,7 +123,17 @@ export default function FoodieDashboard() {
             />
           </motion.div>
 
-          {/* Getting Started (only for new users) */}
+          {/* Mijn lijstjes — prominente hoofdsectie */}
+          <motion.div variants={fadeUp}>
+            <MyListsSection />
+          </motion.div>
+
+          {/* Favorieten preview */}
+          <motion.div variants={fadeUp}>
+            <FavoritesPreview />
+          </motion.div>
+
+          {/* Getting Started — hides itself when all steps complete */}
           <motion.div variants={fadeUp}>
             <GettingStarted
               hasProfile={!!profile?.name}
@@ -128,32 +142,17 @@ export default function FoodieDashboard() {
             />
           </motion.div>
 
-          {/* Quick Actions */}
-          <motion.div variants={fadeUp}>
-            <QuickActions />
-          </motion.div>
-
-          {/* Recent Reviews */}
-          <motion.div variants={fadeUp}>
-            <RecentReviews reviews={recentReviews} />
-          </motion.div>
-
-          {/* Badges */}
-          <motion.div variants={fadeUp}>
-            <BadgesPreview badges={badges} />
-          </motion.div>
-
           {/* Group Decision Tool */}
           <motion.div variants={fadeUp}>
             <GroupDecisionTool />
           </motion.div>
 
-          {/* Profile link (mobile) */}
+          {/* Profielinstellingen (mobiel) */}
           <motion.div variants={fadeUp} className="sm:hidden">
-            <Button variant="outline" asChild className="w-full">
+            <Button variant="outline" asChild className="w-full min-h-[44px]">
               <Link to="/profile">
-                <Camera className="h-4 w-4 mr-2" />
-                Profiel bewerken
+                <Settings className="h-4 w-4 mr-2" />
+                Profielinstellingen
               </Link>
             </Button>
           </motion.div>
