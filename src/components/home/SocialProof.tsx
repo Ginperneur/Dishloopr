@@ -80,12 +80,13 @@ export function SocialProof() {
   // Only show "+" suffix once a stat reaches a meaningful threshold,
   // and hide stats that are still empty so we never render "0+".
   const plus = (n: number) => (n >= 10 ? '+' : '');
+  const REVIEWS_MIN = 10;
   const items = [
-    { icon: Store, value: stats.restaurants, label: t('stats.restaurants', 'Restaurants'), suffix: plus(stats.restaurants) },
-    { icon: Star, value: stats.reviews, label: t('stats.reviews', 'Reviews'), suffix: plus(stats.reviews) },
-    { icon: MapPin, value: stats.cities, label: t('stats.cities', 'Steden'), suffix: '' },
-    { icon: Utensils, value: stats.dishes, label: t('stats.dishes', 'Gerechten'), suffix: plus(stats.dishes) },
-  ].filter((item) => item.value > 0);
+    { icon: Store, value: stats.restaurants, label: t('stats.restaurants', 'Restaurants'), suffix: plus(stats.restaurants), show: stats.restaurants > 0 },
+    { icon: Star, value: stats.reviews, label: t('stats.reviews', 'Reviews'), suffix: plus(stats.reviews), show: stats.reviews >= REVIEWS_MIN },
+    { icon: MapPin, value: stats.cities, label: t('stats.cities', 'Steden'), suffix: '', show: stats.cities > 0 },
+    { icon: Utensils, value: stats.dishes, label: t('stats.dishes', 'Gerechten'), suffix: plus(stats.dishes), show: stats.dishes > 0 },
+  ].filter((item) => item.show);
 
   return (
     <section

@@ -21,6 +21,7 @@ import { SkeletonCard } from '@/components/ui/skeleton-card';
 import { useTrendingDishes } from '@/hooks/useTrendingDishes';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useSavedSearches } from '@/hooks/useSavedSearches';
+import { useContentAvailability } from '@/hooks/useContentAvailability';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -43,6 +44,7 @@ const Index = () => {
   const { dishes: trendingDishes, loading: dishesLoading } = useTrendingDishes();
   const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, clearLocation } = useGeolocation();
   const { saved: savedSearches, remove: removeSavedSearch, setAlerts: setSavedAlerts } = useSavedSearches();
+  const { hasCollections, hasEvents } = useContentAvailability();
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [nearbyRequested, setNearbyRequested] = useState(false);
   const [feedTab, setFeedTab] = useState<'foryou' | 'nearby'>('foryou');
@@ -302,13 +304,13 @@ const Index = () => {
       >
         <div className="-mx-0 px-4">
           <div className="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory py-2">
-            {[
-              { label: 'Uitgelicht', href: '#featured' },
-              { label: 'Trending', href: '#trending' },
-              { label: 'Collecties', href: '#collections' },
-              { label: 'Steden', href: '#cities' },
-              { label: 'Events', href: '#events' },
-            ].map((item) => (
+            {([
+              { label: 'Uitgelicht', href: '#featured', show: true },
+              { label: 'Trending', href: '#trending', show: true },
+              { label: 'Collecties', href: '#collections', show: hasCollections },
+              { label: 'Steden', href: '#cities', show: true },
+              { label: 'Events', href: '#events', show: hasEvents },
+            ].filter((i) => i.show)).map((item) => (
               <a
                 key={item.href}
                 href={item.href}
@@ -336,31 +338,33 @@ const Index = () => {
       {/* Personalized Recommendations for logged-in users */}
       <PersonalizedRecommendations />
 
-      {/* Samengestelde Collecties */}
-      <section
-        id="collections"
-        className="py-8 md:py-16 scroll-mt-24"
-        aria-labelledby="collections-heading"
-      >
-        <div className="container px-4 md:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="flex items-center justify-between mb-4 md:mb-6"
-          >
-            <h2 id="collections-heading" className="text-xl sm:text-2xl md:text-3xl font-bold">{t('home.ourCollections')}</h2>
-            <Button variant="ghost" size="sm" asChild className="text-sm">
-              <Link to="/collections" className="flex items-center gap-1 md:gap-2">
-                {t('home.viewAll')}
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-          </motion.div>
-          
-          <FeaturedCollections />
-        </div>
-      </section>
+      {/* Samengestelde Collecties — hidden until there is content */}
+      {hasCollections && (
+        <section
+          id="collections"
+          className="py-8 md:py-16 scroll-mt-24"
+          aria-labelledby="collections-heading"
+        >
+          <div className="container px-4 md:px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="flex items-center justify-between mb-4 md:mb-6"
+            >
+              <h2 id="collections-heading" className="text-xl sm:text-2xl md:text-3xl font-bold">{t('home.ourCollections')}</h2>
+              <Button variant="ghost" size="sm" asChild className="text-sm">
+                <Link to="/collections" className="flex items-center gap-1 md:gap-2">
+                  {t('home.viewAll')}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </motion.div>
+
+            <FeaturedCollections />
+          </div>
+        </section>
+      )}
 
       {/* Upcoming Events */}
       <div id="events" className="scroll-mt-24">
