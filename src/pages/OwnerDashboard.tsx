@@ -177,6 +177,10 @@ export default function OwnerDashboard() {
   const activeClaimId = activeClaim?.id;
   const isPendingAdminReview = activeClaim?.status === 'pending_admin_review';
 
+  useEffect(() => {
+    document.title = 'Owner dashboard | Dishloopr';
+  }, []);
+
   // Handle verification redirect from Stripe
   useEffect(() => {
     const verification = searchParams.get('verification');
