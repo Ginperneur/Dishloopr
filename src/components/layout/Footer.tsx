@@ -8,12 +8,14 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import logo from '@/assets/dishloopr-logo.png';
+import { useContentAvailability } from '@/hooks/useContentAvailability';
 
 export function Footer() {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [seoLinks, setSeoLinks] = useState<{ slug: string; label: string }[]>([]);
+  const { hasCollections, hasEvents } = useContentAvailability();
 
   useEffect(() => {
     async function fetchTopPages() {
@@ -130,8 +132,12 @@ export function Footer() {
             <h4 className="font-semibold mb-3 md:mb-4 text-sm md:text-base">{t('footer.brand', 'Dishloopr')}</h4>
             <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
               <li><Link to="/search" className="hover:text-foreground transition-colors">{t('nav.discover')}</Link></li>
-              <li><Link to="/collections" className="hover:text-foreground transition-colors">{t('footer.collections', 'Collecties')}</Link></li>
-              <li><Link to="/events" className="hover:text-foreground transition-colors">{t('nav.events', 'Events')}</Link></li>
+              {hasCollections && (
+                <li><Link to="/collections" className="hover:text-foreground transition-colors">{t('footer.collections', 'Collecties')}</Link></li>
+              )}
+              {hasEvents && (
+                <li><Link to="/events" className="hover:text-foreground transition-colors">{t('nav.events', 'Events')}</Link></li>
+              )}
               <li><Link to="/about" className="hover:text-foreground transition-colors">{t('footer.about')}</Link></li>
               <li><Link to="/contact" className="hover:text-foreground transition-colors">{t('footer.contact')}</Link></li>
               <li><Link to="/suggest-restaurant" className="hover:text-foreground transition-colors">Stel een restaurant voor</Link></li>
