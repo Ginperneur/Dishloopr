@@ -179,7 +179,7 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
               {restaurant.name}
             </h3>
             <div className="flex items-center gap-1 shrink-0">
-              {restaurant.review_count > 0 ? (
+              {restaurant.review_count > 0 && Number(restaurant.rating) > 0 ? (
                 <>
                   <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-rating text-rating" />
                   <span className="font-semibold text-sm sm:text-base">{Number(restaurant.rating).toFixed(1)}</span>
@@ -187,11 +187,15 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
                     ({restaurant.review_count})
                   </span>
                 </>
-              ) : (restaurant as any).google_rating ? (
+              ) : (restaurant as any).google_rating && Number((restaurant as any).google_rating) > 0 ? (
                 <>
                   <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-muted-foreground/50 text-muted-foreground/50" />
                   <span className="font-semibold text-sm sm:text-base">{Number((restaurant as any).google_rating).toFixed(1)}</span>
-                  <span className="text-muted-foreground text-xs">G</span>
+                  {(restaurant as any).google_reviews_count > 0 && (
+                    <span className="text-muted-foreground text-xs sm:text-sm">
+                      ({(restaurant as any).google_reviews_count})
+                    </span>
+                  )}
                 </>
               ) : (
                 <span className="text-muted-foreground text-xs">Nieuw</span>
