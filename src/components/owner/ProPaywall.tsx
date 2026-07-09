@@ -2,6 +2,7 @@ import { Crown, Check, Loader2, ArrowRight, Sparkles, BarChart3, TrendingUp, Eye
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useOwnerProCheckout } from '@/hooks/useOwnerProCheckout';
+import { CHECKOUT_ENABLED, COMING_SOON_LABEL } from '@/lib/checkoutFlags';
 
 interface ProPaywallProps {
   /** What feature the user is trying to access (e.g. "Inzichten & Analytics"). */
@@ -91,7 +92,8 @@ export function ProPaywall({ featureName, description, benefits, previewVariant 
             <button
               type="button"
               onClick={() => startCheckout('monthly')}
-              disabled={loading !== null}
+              disabled={loading !== null || !CHECKOUT_ENABLED.pro}
+              title={!CHECKOUT_ENABLED.pro ? COMING_SOON_LABEL : undefined}
               className="group relative rounded-xl border-2 border-primary bg-primary text-primary-foreground p-4 text-left transition hover:shadow-lg hover:shadow-primary/20 disabled:opacity-60"
             >
               <div className="flex items-center justify-between mb-1">
@@ -116,7 +118,8 @@ export function ProPaywall({ featureName, description, benefits, previewVariant 
             <button
               type="button"
               onClick={() => startCheckout('yearly')}
-              disabled={loading !== null}
+              disabled={loading !== null || !CHECKOUT_ENABLED.pro}
+              title={!CHECKOUT_ENABLED.pro ? COMING_SOON_LABEL : undefined}
               className="group relative rounded-xl border-2 border-border bg-card p-4 text-left transition hover:border-primary/50 disabled:opacity-60"
             >
               <div className="flex items-center justify-between mb-1">
@@ -138,7 +141,9 @@ export function ProPaywall({ featureName, description, benefits, previewVariant 
           </div>
 
           <p className="text-xs text-muted-foreground mt-4 text-center">
-            Direct toegang na betaling • Maandelijks opzegbaar • Veilig betalen via Stripe
+            {CHECKOUT_ENABLED.pro
+              ? 'Direct toegang na betaling • Maandelijks opzegbaar • Veilig betalen via Stripe'
+              : `Indicatieve prijzen — ${COMING_SOON_LABEL}. Stripe wordt binnenkort geactiveerd.`}
           </p>
         </div>
       </CardContent>
