@@ -17,6 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import logo from '@/assets/dishloopr-logo.png';
 import { LANGUAGES } from '@/lib/constants';
+import { useContentAvailability } from '@/hooks/useContentAvailability';
 
 export function Header() {
   const { t, i18n } = useTranslation();
@@ -26,6 +27,7 @@ export function Header() {
   const [isOwner, setIsOwner] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
+  const { hasCollections, hasEvents } = useContentAvailability();
 
   // Scroll-shrink behavior on mobile
   useEffect(() => {
@@ -114,16 +116,20 @@ export function Header() {
           <Link to="/search" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
             {t('nav.discover')}
           </Link>
-          <Link to="/collections" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
-            {t('nav.collections')}
-          </Link>
+          {hasCollections && (
+            <Link to="/collections" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
+              {t('nav.collections')}
+            </Link>
+          )}
           <Link to="/search?featured=true" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
             {t('nav.featured')}
           </Link>
-          <Link to="/events" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1.5">
-            <PartyPopper className="h-4 w-4" />
-            {t('nav.events', 'Events & Acties')}
-          </Link>
+          {hasEvents && (
+            <Link to="/events" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1.5">
+              <PartyPopper className="h-4 w-4" />
+              {t('nav.events', 'Events & Acties')}
+            </Link>
+          )}
           {user && (
             <Link to="/favorites" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1.5">
               <Heart className="h-4 w-4" />
@@ -269,14 +275,18 @@ export function Header() {
                 <Search className="h-5 w-5 text-muted-foreground" />
                 <span className="font-medium">{t('nav.discover')}</span>
               </Link>
-              <Link to="/collections" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                <BookOpen className="h-5 w-5 text-muted-foreground" />
-                <span className="font-medium">{t('nav.collections')}</span>
-              </Link>
-              <Link to="/events" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                <PartyPopper className="h-5 w-5 text-muted-foreground" />
-                <span className="font-medium">{t('nav.events', 'Events & Acties')}</span>
-              </Link>
+              {hasCollections && (
+                <Link to="/collections" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                  <BookOpen className="h-5 w-5 text-muted-foreground" />
+                  <span className="font-medium">{t('nav.collections')}</span>
+                </Link>
+              )}
+              {hasEvents && (
+                <Link to="/events" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                  <PartyPopper className="h-5 w-5 text-muted-foreground" />
+                  <span className="font-medium">{t('nav.events', 'Events & Acties')}</span>
+                </Link>
+              )}
 
               {user && (
                 <>
