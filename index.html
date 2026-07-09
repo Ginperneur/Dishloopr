@@ -60,7 +60,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Bricolage+Grotesque:wght@700;800&display=swap" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Bricolage+Grotesque:wght@700;800&display=swap" media="print" onload="this.media='all'" />
+    <!-- Preload critical font files (LCP-text) with correct crossorigin. Google Fonts serves woff2 from fonts.gstatic.com. -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/dmsans/v15/rP2Hp2ywxg089UriCZOIHTWEBlwu8Q.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/dmsans/v15/rP2Hp2ywxg089UriCZaIHTWEBlwu8Q.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/bricolagegrotesque/v7/3y9U6as8bTXq_nANBjzKo3IeZx8z6up5BeSl5jBNz_19PxaXzQ.woff2" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Bricolage+Grotesque:wght@700;800&display=swap" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Bricolage+Grotesque:wght@700;800&display=swap" /></noscript>
     <link rel="preconnect" href="https://uktafmxojymsojqewzuy.supabase.co" />
     <link rel="preconnect" href="https://www.googletagmanager.com" />
     
