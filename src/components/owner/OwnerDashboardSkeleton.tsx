@@ -1,9 +1,15 @@
 import { Layout } from '@/components/layout/Layout';
+import { SEOHead } from '@/components/seo/SEOHead';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function OwnerDashboardSkeleton() {
   return (
     <Layout showFooter={false}>
+      <SEOHead
+        title="Owner dashboard | Dishloopr"
+        description="Beheer je restaurantprofiel, foto's, gerechten en reviews in het Dishloopr Owner dashboard."
+        noindex
+      />
       <div className="flex w-full min-h-[calc(100svh-4rem)]">
         {/* Sidebar skeleton */}
         <aside className="hidden md:flex flex-col gap-2 w-[16rem] border-r p-3">
