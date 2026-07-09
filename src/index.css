@@ -377,27 +377,37 @@
      * Shared mobile 44px tap-target enforcement
      * Applies to widely-used interactive patterns without altering
      * the visible design (grows padding / min-size only where needed).
+     * Uses !important so Tailwind utilities cannot override them.
      * ------------------------------------------------------------ */
 
-    /* Chip / pill controls (filter facets, cuisine/city chips, tag pills).
-       Grow the vertical hit area via padding; visual size only expands a
-       few pixels because chips are already horizontally roomy.
-       Excludes:
-         - icon-only buttons (handled by the next rule),
-         - buttons with a fixed height utility (avatar triggers, sized
-           icon buttons) so we don't distort circular controls. */
+    /* Chip / pill controls (filter facets, cuisine/city chips, tag pills,
+       related-content links). Grows the vertical hit area; visual size
+       only expands a few pixels because chips are already roomy.
+       Excludes icon-only buttons and fixed-height avatar triggers. */
     button.rounded-full:not([data-no-hitbox]):not(:has(> svg:only-child)):not(.h-6):not(.h-7):not(.h-8):not(.h-9):not(.h-10):not(.h-11):not(.h-12):not(.h-14):not(.h-16),
     a.rounded-full:not([data-no-hitbox]):not(:has(> svg:only-child)):not(.h-6):not(.h-7):not(.h-8):not(.h-9):not(.h-10):not(.h-11):not(.h-12):not(.h-14):not(.h-16) {
-      min-height: 44px;
-      padding-top: 0.625rem;
-      padding-bottom: 0.625rem;
+      min-height: 44px !important;
+      padding-top: 0.625rem !important;
+      padding-bottom: 0.625rem !important;
+    }
+
+    /* Related-content links that use a border but are not captured by
+       the rounded-full rule above (e.g. because of :has() support gaps). */
+    a.inline-flex.rounded-full.border,
+    button.inline-flex.rounded-full.border {
+      min-height: 44px !important;
+    }
+
+    /* Small ghost/outline buttons used as links (e.g. "Alle restaurants",
+       "Bekijk collectie", "Ontdekken"). They ship with h-9 (36 px). */
+    a.h-9:not([data-no-hitbox]),
+    button.h-9:not([data-no-hitbox]) {
+      min-height: 44px !important;
     }
 
     /* Icon-only buttons and anchors (bookmark, favorite heart, share,
-       card overlay buttons, hamburger, close, etc.). Detected as an
-       element whose only rendered child is an <svg>, optionally paired
-       with an sr-only label. Grows the click box to 44x44 without
-       affecting the visible icon. */
+       card overlay buttons, hamburger, close, etc.). Grows the click
+       box to 44x44 without affecting the visible icon. */
     button:not([data-no-hitbox]):is(
       :has(> svg:only-child),
       :has(> svg + span.sr-only:last-child),
@@ -407,8 +417,8 @@
       :has(> svg:only-child),
       :has(> svg + span.sr-only:last-child)
     ) {
-      min-width: 44px;
-      min-height: 44px;
+      min-width: 44px !important;
+      min-height: 44px !important;
     }
 
     /* Breadcrumb links — comfortable vertical hit area (~44px).
@@ -416,10 +426,10 @@
     nav[aria-label="breadcrumb" i] a,
     nav[aria-label*="readcrumb" i] a,
     [data-slot="breadcrumb-link"] {
-      display: inline-flex;
-      align-items: center;
-      min-height: 44px;
-      padding-block: 12px;
+      display: inline-flex !important;
+      align-items: center !important;
+      min-height: 44px !important;
+      padding-block: 12px !important;
     }
   }
 
