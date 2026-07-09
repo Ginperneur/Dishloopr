@@ -16,6 +16,7 @@ import { useRestaurantClaims } from '@/hooks/useRestaurantClaims';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { SEOHead } from '@/components/seo/SEOHead';
 
 interface GooglePlaceResult {
   place_id: string;
@@ -455,6 +456,11 @@ export default function ClaimPage() {
 
   return (
     <Layout>
+      <SEOHead
+        title="Claim je restaurant | Dishloopr"
+        description="Neem de controle over je Dishloopr-profiel: claim je restaurant, beheer info en foto's en bereik meer gasten."
+        noindex
+      />
       <div className="container py-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
