@@ -119,11 +119,17 @@ export function RestaurantCard({ restaurant, index = 0, variant = 'default' }: R
               {restaurant.name}
             </h3>
             <div className="flex items-center gap-1 shrink-0">
-              <Star className="h-3.5 w-3.5 md:h-4 md:w-4 fill-rating text-rating" />
-              <span className="font-semibold text-sm md:text-base">{restaurant.rating.toFixed(1)}</span>
-              <span className="text-muted-foreground text-xs md:text-sm">
-                ({restaurant.reviewCount})
-              </span>
+              {restaurant.rating > 0 && restaurant.reviewCount > 0 ? (
+                <>
+                  <Star className="h-3.5 w-3.5 md:h-4 md:w-4 fill-rating text-rating" />
+                  <span className="font-semibold text-sm md:text-base">{restaurant.rating.toFixed(1)}</span>
+                  <span className="text-muted-foreground text-xs md:text-sm">
+                    ({restaurant.reviewCount})
+                  </span>
+                </>
+              ) : (
+                <span className="text-muted-foreground text-xs">Nieuw</span>
+              )}
             </div>
           </div>
 
