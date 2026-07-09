@@ -118,6 +118,7 @@ import { VisibilityProgress, type VisibilityStep } from '@/components/owner/Visi
 import { useOwnerTier } from '@/hooks/useOwnerTier';
 import { OpeningHoursExceptions } from '@/components/owner/OpeningHoursExceptions';
 import { MultiLanguageProfile } from '@/components/owner/MultiLanguageProfile';
+import { BasicInfoEditor } from '@/components/owner/BasicInfoEditor';
 import { CrossPromotionManager } from '@/components/owner/CrossPromotionManager';
 import { AudienceDemographics } from '@/components/owner/AudienceDemographics';
 import { BestTimeToPost } from '@/components/owner/BestTimeToPost';
