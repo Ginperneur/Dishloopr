@@ -134,12 +134,16 @@ export function AlternativeRestaurants({
                       <h4 className="font-semibold text-sm truncate">
                         {restaurant.name}
                       </h4>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <Star className="h-3.5 w-3.5 fill-rating text-rating" />
-                        <span className="text-sm font-medium">
-                          {Number(restaurant.rating).toFixed(1)}
-                        </span>
-                      </div>
+                      {Number(restaurant.rating) > 0 ? (
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Star className="h-3.5 w-3.5 fill-rating text-rating" />
+                          <span className="text-sm font-medium">
+                            {Number(restaurant.rating).toFixed(1)}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground shrink-0">Nieuw</span>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
