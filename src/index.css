@@ -372,6 +372,51 @@
       display: inline-block;
       min-height: 32px;
     }
+
+    /* ------------------------------------------------------------
+     * Shared mobile 44px tap-target enforcement
+     * Applies to widely-used interactive patterns without altering
+     * the visible design (grows padding / min-size only where needed).
+     * ------------------------------------------------------------ */
+
+    /* Chip / pill controls (filter facets, cuisine/city chips, tag pills).
+       Grow the vertical hit area via padding; visual size only expands a
+       few pixels because chips are already horizontally roomy. */
+    button.rounded-full:not([data-no-hitbox]),
+    a.rounded-full:not([data-no-hitbox]) {
+      min-height: 44px;
+      padding-top: max(0.625rem, 0.375rem);
+      padding-bottom: max(0.625rem, 0.375rem);
+    }
+
+    /* Icon-only buttons and anchors (bookmark, favorite heart, share,
+       card overlay buttons, hamburger, close, etc.). Detected as an
+       element whose only rendered child is an <svg>, optionally paired
+       with an sr-only label. Grows the click box to 44x44 without
+       affecting the visible icon. */
+    button:not([data-no-hitbox]):is(
+      :has(> svg:only-child),
+      :has(> svg + span.sr-only:last-child),
+      :has(> span.sr-only:first-child + svg:last-child)
+    ),
+    a:not([data-no-hitbox]):is(
+      :has(> svg:only-child),
+      :has(> svg + span.sr-only:last-child)
+    ) {
+      min-width: 44px;
+      min-height: 44px;
+    }
+
+    /* Breadcrumb links — comfortable vertical hit area (~44px).
+       We keep the visual text size the same; only the touch region grows. */
+    nav[aria-label="breadcrumb" i] a,
+    nav[aria-label*="readcrumb" i] a,
+    [data-slot="breadcrumb-link"] {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      padding-block: 12px;
+    }
   }
 
   /* Ensure scroll-anchored content (with id) is not hidden under sticky headers */
