@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { ProBillingInterval } from '@/lib/proPricing';
+import { CHECKOUT_ENABLED, COMING_SOON_TOAST } from '@/lib/checkoutFlags';
 
 export function useOwnerProCheckout() {
   const [loading, setLoading] = useState<ProBillingInterval | null>(null);
@@ -10,6 +11,10 @@ export function useOwnerProCheckout() {
   const queryClient = useQueryClient();
 
   const startCheckout = async (interval: ProBillingInterval = 'monthly') => {
+    if (!CHECKOUT_ENABLED.pro) {
+      toast.info(COMING_SOON_TOAST);
+      return;
+    }
     try {
       setLoading(interval);
       const { data, error } = await supabase.functions.invoke('create-owner-pro-checkout', {

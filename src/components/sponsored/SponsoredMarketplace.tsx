@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useSponsoredProducts, useSponsoredPurchases } from '@/hooks/useSponsoredProducts';
 import { toast } from 'sonner';
+import { CHECKOUT_ENABLED, COMING_SOON_LABEL } from '@/lib/checkoutFlags';
 
 interface SponsoredMarketplaceProps {
   restaurantId: string;
@@ -291,7 +292,8 @@ export function SponsoredMarketplace({ restaurantId, restaurantName }: Sponsored
 
               <Button 
                 onClick={handlePurchase} 
-                disabled={purchasing || loadingPrice}
+                disabled={purchasing || loadingPrice || !CHECKOUT_ENABLED.sponsored}
+                title={!CHECKOUT_ENABLED.sponsored ? COMING_SOON_LABEL : undefined}
                 className="w-full"
               >
                 {purchasing ? (
@@ -299,10 +301,17 @@ export function SponsoredMarketplace({ restaurantId, restaurantName }: Sponsored
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     Laden...
                   </>
+                ) : !CHECKOUT_ENABLED.sponsored ? (
+                  COMING_SOON_LABEL
                 ) : (
                   `Koop voor €${priceInfo?.price?.toFixed(2) || '...'}`
                 )}
               </Button>
+              {!CHECKOUT_ENABLED.sponsored && (
+                <p className="text-xs text-muted-foreground text-center italic mt-1">
+                  Indicatieve prijzen — Stripe wordt binnenkort geactiveerd.
+                </p>
+              )}
             </div>
           )}
         </DialogContent>

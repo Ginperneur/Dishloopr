@@ -22,7 +22,10 @@ import {
   Eye,
   BarChart3,
   Sparkles,
-  Store
+  Store,
+  Crown,
+  Tag as TagIcon,
+  Rocket
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -205,6 +208,135 @@ export default function ForRestaurantsPage() {
                   </CardContent>
                 </Card>
               </div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Pricing Section */}
+        <section id="pricing" className="py-16 md:py-24 bg-muted/30 border-y">
+          <div className="container mx-auto px-4">
+            <motion.div
+              className="max-w-5xl mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="text-center mb-10">
+                <Badge variant="secondary" className="mb-3">Prijzen</Badge>
+                <h2 className="text-3xl md:text-4xl font-bold mb-3">Kies wat bij je past</h2>
+                <p className="text-muted-foreground max-w-2xl mx-auto">
+                  Claim je restaurant gratis. Upgrade wanneer je meer inzicht of zichtbaarheid wilt.
+                  Alle prijzen hieronder zijn <strong>indicatief</strong> en worden definitief bij de lancering van betalingen.
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-6">
+                {/* Free tier */}
+                <Card className="flex flex-col">
+                  <CardContent className="p-6 flex flex-col flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Store className="h-5 w-5 text-primary" />
+                      <h3 className="font-semibold text-lg">Gratis</h3>
+                    </div>
+                    <p className="text-3xl font-bold mb-1">€0</p>
+                    <p className="text-xs text-muted-foreground mb-5">Altijd gratis</p>
+                    <ul className="space-y-2.5 text-sm mb-6 flex-1">
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> Restaurant claimen &amp; verifiëren</li>
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> Basisprofiel, openingstijden &amp; foto's beheren</li>
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> "Bekend om"-gerecht kiezen</li>
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> Gerechten &amp; menu bevestigen</li>
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> 1 gratis profiel-tag per categorie</li>
+                    </ul>
+                    <Button asChild variant="outline" className="w-full">
+                      <Link to="/claim">Claim je restaurant</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Pro tier */}
+                <Card className="flex flex-col border-primary/40 relative shadow-lg">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <Badge className="bg-primary text-primary-foreground">Populair</Badge>
+                  </div>
+                  <CardContent className="p-6 flex flex-col flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Crown className="h-5 w-5 text-primary" />
+                      <h3 className="font-semibold text-lg">Owner Pro</h3>
+                    </div>
+                    <div className="flex items-baseline gap-1 mb-1">
+                      <p className="text-3xl font-bold">€29</p>
+                      <span className="text-sm text-muted-foreground">/mnd*</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-5">Indicatieve prijs</p>
+                    <ul className="space-y-2.5 text-sm mb-6 flex-1">
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> Alles uit Gratis</li>
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> Analytics &amp; inzichten (funnel, zoektermen, benchmarks)</li>
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> Reageren op reviews met AI-assistent</li>
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> Meertalig profiel (5 talen)</li>
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> Onbeperkte profiel-tags &amp; team-beheer</li>
+                    </ul>
+                    <Button className="w-full" disabled title="Binnenkort beschikbaar">
+                      Binnenkort beschikbaar
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Sponsored tier */}
+                <Card className="flex flex-col">
+                  <CardContent className="p-6 flex flex-col flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Rocket className="h-5 w-5 text-primary" />
+                      <h3 className="font-semibold text-lg">Uitgelicht / Sponsored</h3>
+                    </div>
+                    <div className="flex items-baseline gap-1 mb-1">
+                      <p className="text-3xl font-bold">vanaf €49</p>
+                      <span className="text-sm text-muted-foreground">/mnd*</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-5">Indicatieve prijs · schaarste-gedreven</p>
+                    <ul className="space-y-2.5 text-sm mb-6 flex-1">
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> Uitgelichte plek per gerecht × stad</li>
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> "Uitgelicht" label bij zoekresultaten</li>
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> Exclusieve slots (max plaatsen per combi)</li>
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> Prijs varieert met vraag &amp; concurrentie</li>
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> Beïnvloedt nooit reviews of ratings</li>
+                    </ul>
+                    <Button variant="outline" className="w-full" disabled title="Binnenkort beschikbaar">
+                      Binnenkort beschikbaar
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Add-on */}
+              <Card className="mt-6 bg-background/60 border-dashed">
+                <CardContent className="p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <TagIcon className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">Extra profiel-tag</p>
+                      <p className="text-xs text-muted-foreground">
+                        Los te kopen bovenop je gratis tag per categorie (max 3 extra) — geen Owner Pro nodig.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <p className="text-2xl font-bold leading-none">€19<span className="text-sm text-muted-foreground">/mnd*</span></p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">per tag · indicatief</p>
+                    </div>
+                    <Button variant="outline" size="sm" disabled title="Binnenkort beschikbaar">
+                      Binnenkort
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <p className="text-xs text-muted-foreground text-center mt-6 italic">
+                * Alle prijzen op deze pagina zijn indicatief en kunnen wijzigen tot Stripe-betalingen live gaan. BTW nog niet inbegrepen.
+              </p>
             </motion.div>
           </div>
         </section>

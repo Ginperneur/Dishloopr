@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { CHECKOUT_ENABLED, COMING_SOON_TOAST } from '@/lib/checkoutFlags';
 import type { Database } from '@/integrations/supabase/types';
 
 type SponsoredProduct = Database['public']['Tables']['sponsored_products']['Row'] & {
@@ -85,6 +87,10 @@ export function useSponsoredProducts() {
   };
 
   const purchaseSlot = async (productId: string, restaurantId: string, durationDays: number = 30): Promise<string | null> => {
+    if (!CHECKOUT_ENABLED.sponsored) {
+      toast.info(COMING_SOON_TOAST);
+      return null;
+    }
     try {
       const { data, error } = await supabase.functions.invoke('create-sponsored-checkout', {
         body: { productId, restaurantId, durationDays }

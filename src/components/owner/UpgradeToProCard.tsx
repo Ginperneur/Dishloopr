@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useOwnerTier } from '@/hooks/useOwnerTier';
 import { useOwnerProCheckout } from '@/hooks/useOwnerProCheckout';
 import { OWNER_PRO_PRICES } from '@/lib/proPricing';
+import { CHECKOUT_ENABLED, COMING_SOON_LABEL } from '@/lib/checkoutFlags';
 
 const PRO_BENEFITS = [
   'Conversie-funnel & zoektermen-heatmap',
@@ -51,27 +52,34 @@ export function UpgradeToProCard({ restaurantId }: { restaurantId: string }) {
               <Button
                 className="flex-1 sm:flex-none"
                 onClick={() => startCheckout('monthly')}
-                disabled={loading !== null}
+                disabled={loading !== null || !CHECKOUT_ENABLED.pro}
+                title={!CHECKOUT_ENABLED.pro ? COMING_SOON_LABEL : undefined}
               >
                 {loading === 'monthly' ? (
                   <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                 ) : (
                   <Crown className="h-4 w-4 mr-1" />
                 )}
-                Maandelijks · €29
+                {CHECKOUT_ENABLED.pro ? 'Maandelijks · €29' : `Maandelijks · ${COMING_SOON_LABEL}`}
               </Button>
               <Button
                 variant="outline"
                 className="flex-1 sm:flex-none"
                 onClick={() => startCheckout('yearly')}
-                disabled={loading !== null}
+                disabled={loading !== null || !CHECKOUT_ENABLED.pro}
+                title={!CHECKOUT_ENABLED.pro ? COMING_SOON_LABEL : undefined}
               >
                 {loading === 'yearly' ? (
                   <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                 ) : null}
-                Jaarlijks · €290
+                {CHECKOUT_ENABLED.pro ? 'Jaarlijks · €290' : `Jaarlijks · ${COMING_SOON_LABEL}`}
               </Button>
             </div>
+            {!CHECKOUT_ENABLED.pro && (
+              <p className="text-xs text-muted-foreground mt-2 italic">
+                Indicatieve prijzen — Stripe wordt binnenkort geactiveerd.
+              </p>
+            )}
           </div>
         </div>
       </CardContent>

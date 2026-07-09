@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { CHECKOUT_ENABLED, COMING_SOON_LABEL, COMING_SOON_TOAST } from '@/lib/checkoutFlags';
 
 const VALID_CUISINES = [
   "Italiaans", "Japans", "Chinees", "Indiaas", "Mexicaans", "Thais", "Grieks",
@@ -79,6 +80,10 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
 
   const handleAddPaidTag = async (categoryKey: string, dbField: string, tagValue: string) => {
     if (!user) return;
+    if (!CHECKOUT_ENABLED.tag) {
+      toast.info(COMING_SOON_TOAST);
+      return;
+    }
     setCheckoutLoading(true);
 
     try {
@@ -188,15 +193,16 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
                         size="sm"
                         variant="default"
                         className="h-8 text-xs"
-                        disabled={!addingTag.value || checkoutLoading}
+                        disabled={!addingTag.value || checkoutLoading || !CHECKOUT_ENABLED.tag}
                         onClick={() => handleAddPaidTag(key, dbField, addingTag.value)}
+                        title={!CHECKOUT_ENABLED.tag ? COMING_SOON_LABEL : undefined}
                       >
                         {checkoutLoading ? (
                           <Loader2 className="h-3 w-3 animate-spin mr-1" />
                         ) : (
                           <ShoppingCart className="h-3 w-3 mr-1" />
                         )}
-                        €5/mnd
+                        {CHECKOUT_ENABLED.tag ? '€5/mnd' : COMING_SOON_LABEL}
                       </Button>
                       <Button
                         size="sm"
