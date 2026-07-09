@@ -355,21 +355,15 @@
       position: relative;
     }
 
-    /* Icon-only / tiny controls: guarantee a 44x44 hit area via ::after.
-       Applied to elements that render smaller than 44x44 by convention
-       (icon buttons, chips with h-8, breadcrumb links, footer links). */
-    .tap-target::after,
-    a.tap-target::after {
+    /* Icon-only / tiny controls: opt-in 44x44 hit area via ::after. */
+    .tap-target::after {
       content: "";
       position: absolute;
-      inset: 50% 50% auto auto;
-      transform: translate(50%, -50%);
       top: 50%;
       left: 50%;
-      min-width: 44px;
-      min-height: 44px;
-      width: 100%;
-      height: 100%;
+      width: max(100%, 44px);
+      height: max(100%, 44px);
+      transform: translate(-50%, -50%);
     }
 
     /* Footer & breadcrumb inline links get a comfortable vertical padding */
