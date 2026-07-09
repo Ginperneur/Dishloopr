@@ -381,12 +381,16 @@
 
     /* Chip / pill controls (filter facets, cuisine/city chips, tag pills).
        Grow the vertical hit area via padding; visual size only expands a
-       few pixels because chips are already horizontally roomy. */
-    button.rounded-full:not([data-no-hitbox]),
-    a.rounded-full:not([data-no-hitbox]) {
+       few pixels because chips are already horizontally roomy.
+       Excludes:
+         - icon-only buttons (handled by the next rule),
+         - buttons with a fixed height utility (avatar triggers, sized
+           icon buttons) so we don't distort circular controls. */
+    button.rounded-full:not([data-no-hitbox]):not(:has(> svg:only-child)):not(.h-6):not(.h-7):not(.h-8):not(.h-9):not(.h-10):not(.h-11):not(.h-12):not(.h-14):not(.h-16),
+    a.rounded-full:not([data-no-hitbox]):not(:has(> svg:only-child)):not(.h-6):not(.h-7):not(.h-8):not(.h-9):not(.h-10):not(.h-11):not(.h-12):not(.h-14):not(.h-16) {
       min-height: 44px;
-      padding-top: max(0.625rem, 0.375rem);
-      padding-bottom: max(0.625rem, 0.375rem);
+      padding-top: 0.625rem;
+      padding-bottom: 0.625rem;
     }
 
     /* Icon-only buttons and anchors (bookmark, favorite heart, share,
