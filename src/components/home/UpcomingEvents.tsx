@@ -40,7 +40,7 @@ export function UpcomingEvents() {
   }
 
   return (
-    <section className="py-8 md:py-12 bg-muted/30">
+    <section className="py-8 md:py-8 bg-muted/30">
       <div className="container px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
