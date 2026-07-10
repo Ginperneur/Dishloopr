@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useSearch } from '@/hooks/useSearch';
+import { isOpenNow } from '@/lib/openingHours';
 import { useGeolocation, calculateDistance } from '@/hooks/useGeolocation';
 import { toast } from 'sonner';
 import { useSavedSearches } from '@/hooks/useSavedSearches';
