@@ -470,6 +470,22 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
                                 className="scale-75"
                               />
                             </div>
+                            <div className="flex items-center gap-1" title={isNL ? 'Veganistisch' : 'Vegan'}>
+                              <span className="text-xs">🌱</span>
+                              <Switch
+                                checked={((item as any).dietary_tags || []).includes('vegan')}
+                                onCheckedChange={() => toggleDietaryTag(item.id, 'vegan', (item as any).dietary_tags)}
+                                className="scale-75"
+                              />
+                            </div>
+                            <div className="flex items-center gap-1" title={isNL ? 'Lactosevrij' : 'Lactose-free'}>
+                              <span className="text-xs">🥛</span>
+                              <Switch
+                                checked={((item as any).dietary_tags || []).includes('lactose-free')}
+                                onCheckedChange={() => toggleDietaryTag(item.id, 'lactose-free', (item as any).dietary_tags)}
+                                className="scale-75"
+                              />
+                            </div>
                             <button
                               onClick={() => deleteDish(item.id)}
                               className="hover:text-destructive transition-colors ml-1"
