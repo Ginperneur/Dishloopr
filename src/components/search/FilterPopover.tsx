@@ -12,7 +12,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from '@/components/ui/slider';
-import { useDietaryCounts } from '@/hooks/useDietaryCounts';
+// Diet chips are always shown regardless of match counts — dietary needs
+// are considered essential information, not a "hide when empty" facet.
 
 interface Filters {
   priceLevel: number[];
@@ -76,6 +77,7 @@ const EXPERIENCE_OPTIONS = [
 
 const DIETARY_OPTIONS = [
   { value: 'vegan', key: 'filters.vegan', emoji: '🌱' },
+  { value: 'vegetarian', key: 'filters.vegetarian', emoji: '🥗' },
   { value: 'gluten-free', key: 'filters.glutenFree', emoji: '🌾' },
   { value: 'halal', key: 'filters.halal', emoji: '✓' },
   { value: 'lactose-free', key: 'filters.lactoseFree', emoji: '🥛' },
@@ -126,7 +128,6 @@ const PRICE_OPTIONS = [
 export function FilterPopover({ filters, onFiltersChange, availableCuisines }: FilterPopoverProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const { counts: dietaryCounts, loading: dietaryLoading } = useDietaryCounts();
 
   const activeFilterCount = 
     filters.priceLevel.length + 
@@ -212,13 +213,7 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
               <span>☀️</span>
               <span>{t('filters.terrace', 'Terras')}</span>
             </button>
-            {DIETARY_OPTIONS.filter((option) => {
-              // Keep chip visible while counts are loading or if the user has
-              // already selected it; otherwise hide when zero matches.
-              if (dietaryLoading) return true;
-              if (filters.dietaryOptions.includes(option.value)) return true;
-              return (dietaryCounts[option.value] ?? 0) > 0;
-            }).map((option) => {
+            {DIETARY_OPTIONS.map((option) => {
               const isActive = filters.dietaryOptions.includes(option.value);
               return (
                 <button
