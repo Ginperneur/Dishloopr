@@ -19,14 +19,18 @@ async function loadStats(): Promise<Stats> {
   if (cachedStats) return cachedStats;
   if (inflight) return inflight;
   inflight = (async () => {
-    const [restaurantsRes, reviewsRes, citiesRes, dishesRes] = await Promise.all([
+    const { getEmptyRestaurantIds } = await import('@/lib/listableRestaurants');
+    const [restaurantsRes, reviewsRes, citiesRes, dishesRes, emptyIds] = await Promise.all([
       supabase.from('restaurants').select('id', { count: 'exact', head: true }).eq('is_active', true),
       supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('status', 'published'),
       supabase.from('cities').select('id', { count: 'exact', head: true }).eq('is_active', true),
       supabase.from('restaurant_dishes').select('id', { count: 'exact', head: true }).in('status', ['approved_by_admin', 'verified_by_owner']),
+      getEmptyRestaurantIds(),
     ]);
+    // Show only listable (dish-first) restaurants in the public counter.
+    const listableRestaurants = Math.max(0, (restaurantsRes.count || 0) - emptyIds.size);
     const result: Stats = {
-      restaurants: restaurantsRes.count || 0,
+      restaurants: listableRestaurants,
       reviews: reviewsRes.count || 0,
       cities: citiesRes.count || 0,
       dishes: dishesRes.count || 0,

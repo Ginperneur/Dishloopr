@@ -92,9 +92,15 @@ export function EmptyDishesManager({ onNavigateToTab }: Props) {
         city_name: r.city_id ? cityMap.get(r.city_id) || null : null,
       }));
 
-      // 3. Alle restaurant_dishes — pagineren met stabiele order voor consistente results.
+      // 3. Restaurants met een GOEDGEKEURD gerecht — alleen die tellen als
+      //    "heeft gerechten" op een dish-first platform. Restaurants met
+      //    alleen 'suggested'/'rejected' rijen gelden als leeg.
       const dishRows = await fetchAll<{ restaurant_id: string }>(
-        () => supabase.from('restaurant_dishes').select('restaurant_id').order('restaurant_id')
+        () => supabase
+          .from('restaurant_dishes')
+          .select('restaurant_id')
+          .eq('status', 'approved_by_admin')
+          .order('restaurant_id')
       );
       const dishIds = new Set<string>();
       dishRows.forEach(d => dishIds.add(d.restaurant_id));

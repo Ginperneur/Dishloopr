@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { DatabaseRestaurantCard } from '@/components/restaurant/DatabaseRestaurantCard';
 import { SkeletonCard } from '@/components/ui/skeleton-card';
 import { supabase } from '@/integrations/supabase/client';
+import { getEmptyRestaurantIds } from '@/lib/listableRestaurants';
 import NotFound from './NotFound';
 
 interface DishInCity {
@@ -52,10 +53,14 @@ export default function CityDetailPage() {
 
       setCity(cityData);
 
-      // Fetch top restaurants
-      const { data: restData, count } = await supabase
+      // Dish-first: exclude restaurants without approved dishes.
+      const emptyIds = await getEmptyRestaurantIds();
+
+      // Fetch top restaurants (over-fetch so we can drop empties client-side
+      // and still land on 6 cards).
+      const { data: restData } = await supabase
         .from('restaurants')
-        .select('*', { count: 'exact' })
+        .select('*')
         .eq('city_id', cityData.id)
         .eq('is_active', true)
         .ilike('address', `%${cityData.name}%`)
@@ -63,10 +68,19 @@ export default function CityDetailPage() {
         .not('images', 'eq', '{}')
         .order('is_featured', { ascending: false })
         .order('rating', { ascending: false })
-        .limit(6);
+        .limit(30);
 
-      setTopRestaurants(restData || []);
-      setTotalRestaurants(count || 0);
+      const filteredRest = (restData || []).filter((r: any) => !emptyIds.has(r.id));
+      setTopRestaurants(filteredRest.slice(0, 6));
+
+      // Total listable count for this city — fetch all IDs, subtract empties.
+      const { data: allIds } = await supabase
+        .from('restaurants')
+        .select('id')
+        .eq('city_id', cityData.id)
+        .eq('is_active', true);
+      const total = (allIds || []).filter((r: any) => !emptyIds.has(r.id)).length;
+      setTotalRestaurants(total);
 
       // Fetch popular dishes in this city
       const { data: rdData } = await supabase
