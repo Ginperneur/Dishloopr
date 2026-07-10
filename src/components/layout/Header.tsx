@@ -103,7 +103,7 @@ export function Header() {
           <img
             src={logo}
             alt="Dishloopr"
-            className={`w-auto transition-[height] duration-200 ${
+            className={`w-auto no-aspect-fallback transition-[height] duration-200 ${
               scrolled ? 'h-7 md:h-8' : 'h-8 md:h-10'
             }`}
             loading="eager"
