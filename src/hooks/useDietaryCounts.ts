@@ -14,13 +14,13 @@ export function useDietaryCounts() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const base = () =>
-        supabase.from('restaurants').select('id', { count: 'exact', head: true }).eq('is_active', true);
-      const [vegan, gf, halal] = await Promise.all([
-        base().eq('is_vegan', true),
-        base().eq('is_gluten_free', true),
-        base().eq('is_halal', true),
-      ]);
+      const q = (col: 'is_vegan' | 'is_gluten_free' | 'is_halal') =>
+        supabase
+          .from('restaurants')
+          .select('id', { count: 'exact', head: true })
+          .eq('is_active', true)
+          .eq(col, true);
+      const [vegan, gf, halal] = await Promise.all([q('is_vegan'), q('is_gluten_free'), q('is_halal')]);
       if (cancelled) return;
       setCounts({
         vegan: vegan.count ?? 0,
