@@ -104,7 +104,7 @@ const Index = () => {
         canonical="https://dishloopr.com"
       />
       {/* Hero Section */}
-      <section className="relative py-6 sm:py-8 md:py-14 lg:py-18 pb-6 sm:pb-8 md:pb-10 lg:pb-14 z-10">
+      <section className="relative py-6 sm:py-8 md:py-10 lg:py-12 pb-6 sm:pb-8 md:pb-6 lg:pb-8 z-10">
         {/* Background gradient */}
         <div 
           className="absolute inset-0 -z-10"
@@ -342,7 +342,7 @@ const Index = () => {
       {hasCollections && (
         <section
           id="collections"
-          className="py-8 md:py-16 scroll-mt-24"
+          className="py-8 md:py-10 scroll-mt-24"
           aria-labelledby="collections-heading"
         >
           <div className="container px-4 md:px-6">

@@ -367,10 +367,12 @@
     }
 
     /* Footer & breadcrumb inline links get a comfortable vertical padding */
-    footer a, nav[aria-label*="ruimwijzer" i] a, nav[aria-label*="readcrumb" i] a {
+    footer a, nav[aria-label*="ruimwijzer" i] a, nav[aria-label*="readcrumb" i] a,
+    nav[aria-label*="crumb" i] a, nav[aria-label*="crumb" i] button {
       padding-block: 6px;
-      display: inline-block;
-      min-height: 32px;
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
     }
 
     /* ------------------------------------------------------------

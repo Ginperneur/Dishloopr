@@ -10,13 +10,13 @@ export function HowItWorks() {
     { icon: Utensils, title: t('howItWorks.step3Title'), description: t('howItWorks.step3Desc') },
   ];
   return (
-    <section className="py-8 md:py-14">
+    <section className="py-8 md:py-10">
       <div className="container px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-6 md:mb-10"
+          className="text-center mb-4 md:mb-6"
         >
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold font-display">
             {t('howItWorks.title', 'Hoe Dishloopr werkt')}

@@ -18,13 +18,13 @@ export function TrendingDishes({ dishes, cityName }: TrendingDishesProps) {
   if (dishes.length === 0) return null;
 
   return (
-    <section className="py-10 md:py-16">
+    <section className="py-10 md:py-10">
       <div className="container px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="flex items-center justify-between mb-6 md:mb-10"
+          className="flex items-center justify-between mb-4 md:mb-6"
         >
           <div className="text-center flex-1">
             <div className="inline-flex items-center gap-2 px-3 md:px-4 py-1 md:py-1.5 rounded-full bg-accent text-accent-foreground text-xs md:text-sm font-medium mb-3 md:mb-4">
