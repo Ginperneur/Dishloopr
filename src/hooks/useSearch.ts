@@ -184,11 +184,14 @@ export function useSearch() {
     // ── Step 2b: Dietary filter — get restaurant IDs via restaurant_dishes ──
     let dietaryRestaurantIds: Set<string> | null = null;
     if (filters?.dietaryOptions && filters.dietaryOptions.length > 0) {
+      // Boolean columns on restaurant_dishes (legacy source of truth).
+      // 'vegetarian' and 'lactose-free' don't have a boolean column and
+      // rely purely on the dietary_tags array below.
       const dietaryMap: Record<string, string> = {
         'vegan': 'is_vegan',
+        'vegetarian': 'is_vegetarian',
         'gluten-free': 'is_gluten_free',
         'halal': 'is_halal',
-        'lactose-free': 'is_gluten_free', // no lactose column, approximate
       };
 
       // Also map to restaurant-level columns
@@ -203,7 +206,7 @@ export function useSearch() {
         .filter(Boolean)
         .map(col => `${col}.eq.true`);
 
-      // Get IDs from dish-level dietary flags
+      // Get IDs from dish-level dietary flags (boolean columns)
       const dishLevelIds = new Set<string>();
       if (orConditions.length > 0) {
         const { data: dietaryLinks } = await supabase
@@ -212,6 +215,19 @@ export function useSearch() {
           .neq('status', 'rejected')
           .or(orConditions.join(','));
         (dietaryLinks || []).forEach((l: any) => dishLevelIds.add(l.restaurant_id));
+      }
+
+      // Also match via the dietary_tags text[] array — this is what
+      // owners populate for tags without a dedicated boolean column
+      // ('vegetarian', 'lactose-free') and is used for any option they
+      // explicitly tag on a dish.
+      {
+        const { data: taggedLinks } = await supabase
+          .from('restaurant_dishes')
+          .select('restaurant_id')
+          .neq('status', 'rejected')
+          .overlaps('dietary_tags', filters.dietaryOptions);
+        (taggedLinks || []).forEach((l: any) => dishLevelIds.add(l.restaurant_id));
       }
 
       // Also get IDs from restaurant-level flags (is_fully_halal, is_fully_vegan, etc.)
