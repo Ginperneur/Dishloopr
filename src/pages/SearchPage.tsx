@@ -701,7 +701,9 @@ export default function SearchPage() {
             </div>
             <h3 className="text-xl font-semibold mb-2">{t('search.noResultsTitle', 'Geen resultaten gevonden')}</h3>
             <p className="text-muted-foreground max-w-md mx-auto mb-6">
-              {dishQuery 
+              {filters.dietaryOptions.length > 0
+                ? t('search.noResultsDietary', 'Nog geen restaurants met dit filter — dit groeit zodra restaurants hun gerechten taggen.')
+                : dishQuery 
                 ? t('search.noResultsDish', { dish: dishQuery, cityPart: selectedCityName ? t('search.inCityPart', { city: selectedCityName, defaultValue: ` in ${selectedCityName}` }) : '', defaultValue: `We konden geen restaurants vinden voor "${dishQuery}". Probeer een ander gerecht of verwijder je filters.` })
                 : t('search.noResultsGeneric', 'Probeer een ander zoekwoord of pas je filters aan.')}
             </p>
