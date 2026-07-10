@@ -102,7 +102,7 @@ export default function DishCityIndexPage() {
 
       {/* Breadcrumb */}
       <div className="container px-4 md:px-6 pt-4">
-        <nav className="flex items-center gap-1 text-sm text-muted-foreground">
+        <nav aria-label="breadcrumb" className="flex items-center gap-1 text-sm text-muted-foreground">
           <Link to="/" className="hover:text-foreground transition-colors">
             Home
           </Link>
