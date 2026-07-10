@@ -68,15 +68,16 @@ export function GeographicCoverage() {
 
       let allRestaurants: any[] = [];
       let from = 0;
+      const PAGE = 1000;
       while (true) {
         const { data: batch } = await supabase
           .from('restaurants')
           .select('id, city_id, is_active, claimed_by_owner_id, geo_lat, geo_lng')
-          .range(from, from + 299);
+          .range(from, from + PAGE - 1);
         if (!batch || batch.length === 0) break;
         allRestaurants = allRestaurants.concat(batch);
-        if (batch.length < 300) break;
-        from += 1000;
+        if (batch.length < PAGE) break;
+        from += PAGE;
       }
 
       setTotalRestaurants(allRestaurants.length);
@@ -122,17 +123,18 @@ export function GeographicCoverage() {
     try {
       let all: any[] = [];
       let from = 0;
+      const PAGE = 1000;
       while (true) {
         const { data } = await supabase
           .from('restaurants')
           .select('id, name, slug, is_active, claimed_by_owner_id, address, cuisines')
           .eq('city_id', city.id)
           .order('name')
-          .range(from, from + 299);
+          .range(from, from + PAGE - 1);
         if (!data || data.length === 0) break;
         all = all.concat(data);
-        if (data.length < 1000) break;
-        from += 1000;
+        if (data.length < PAGE) break;
+        from += PAGE;
       }
       setCityRestaurants(all);
       setSelected(new Set());

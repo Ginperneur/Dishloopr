@@ -12,6 +12,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from '@/components/ui/slider';
+import { useDietaryCounts } from '@/hooks/useDietaryCounts';
 
 interface Filters {
   priceLevel: number[];
@@ -125,6 +126,7 @@ const PRICE_OPTIONS = [
 export function FilterPopover({ filters, onFiltersChange, availableCuisines }: FilterPopoverProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const { counts: dietaryCounts, loading: dietaryLoading } = useDietaryCounts();
 
   const activeFilterCount = 
     filters.priceLevel.length + 
@@ -210,7 +212,13 @@ export function FilterPopover({ filters, onFiltersChange, availableCuisines }: F
               <span>☀️</span>
               <span>{t('filters.terrace', 'Terras')}</span>
             </button>
-            {DIETARY_OPTIONS.map((option) => {
+            {DIETARY_OPTIONS.filter((option) => {
+              // Keep chip visible while counts are loading or if the user has
+              // already selected it; otherwise hide when zero matches.
+              if (dietaryLoading) return true;
+              if (filters.dietaryOptions.includes(option.value)) return true;
+              return (dietaryCounts[option.value] ?? 0) > 0;
+            }).map((option) => {
               const isActive = filters.dietaryOptions.includes(option.value);
               return (
                 <button
