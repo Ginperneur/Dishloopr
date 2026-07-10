@@ -206,6 +206,31 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
     refetch();
   };
 
+  // Tag-based dietary flags (dietary_tags text[]).
+  // Used for options that don't have a dedicated boolean column
+  // (currently: 'vegan', 'lactose-free'). Owners toggle these to
+  // add/remove a tag on the restaurant_dishes row.
+  const toggleDietaryTag = async (
+    dishId: string,
+    tag: string,
+    currentTags: string[] | null | undefined,
+  ) => {
+    const has = (currentTags || []).includes(tag);
+    const next = has
+      ? (currentTags || []).filter((t) => t !== tag)
+      : [...(currentTags || []), tag];
+    const { error } = await supabase
+      .from('restaurant_dishes')
+      .update({ dietary_tags: next })
+      .eq('id', dishId);
+    if (error) {
+      toast.error(isNL ? 'Kon niet bijwerken' : 'Could not update');
+      return;
+    }
+    toast.success(isNL ? 'Bijgewerkt' : 'Updated');
+    refetch();
+  };
+
   const toggleSignature = async (dishId: string, currentValue: boolean) => {
     if (!currentValue && signatureCount >= SIGNATURE_MAX) {
       toast.error(isNL
