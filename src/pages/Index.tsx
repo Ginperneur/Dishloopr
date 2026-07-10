@@ -342,7 +342,7 @@ const Index = () => {
       {hasCollections && (
         <section
           id="collections"
-          className="py-8 md:py-16 scroll-mt-24"
+          className="py-8 md:py-10 scroll-mt-24"
           aria-labelledby="collections-heading"
         >
           <div className="container px-4 md:px-6">
