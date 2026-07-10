@@ -206,6 +206,31 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
     refetch();
   };
 
+  // Tag-based dietary flags (dietary_tags text[]).
+  // Used for options that don't have a dedicated boolean column
+  // (currently: 'vegan', 'lactose-free'). Owners toggle these to
+  // add/remove a tag on the restaurant_dishes row.
+  const toggleDietaryTag = async (
+    dishId: string,
+    tag: string,
+    currentTags: string[] | null | undefined,
+  ) => {
+    const has = (currentTags || []).includes(tag);
+    const next = has
+      ? (currentTags || []).filter((t) => t !== tag)
+      : [...(currentTags || []), tag];
+    const { error } = await supabase
+      .from('restaurant_dishes')
+      .update({ dietary_tags: next })
+      .eq('id', dishId);
+    if (error) {
+      toast.error(isNL ? 'Kon niet bijwerken' : 'Could not update');
+      return;
+    }
+    toast.success(isNL ? 'Bijgewerkt' : 'Updated');
+    refetch();
+  };
+
   const toggleSignature = async (dishId: string, currentValue: boolean) => {
     if (!currentValue && signatureCount >= SIGNATURE_MAX) {
       toast.error(isNL
@@ -442,6 +467,22 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
                               <Switch
                                 checked={(item as any).is_halal || false}
                                 onCheckedChange={() => toggleDietaryOption(item.id, 'is_halal', (item as any).is_halal || false)}
+                                className="scale-75"
+                              />
+                            </div>
+                            <div className="flex items-center gap-1" title={isNL ? 'Veganistisch' : 'Vegan'}>
+                              <span className="text-xs">🌱</span>
+                              <Switch
+                                checked={((item as any).dietary_tags || []).includes('vegan')}
+                                onCheckedChange={() => toggleDietaryTag(item.id, 'vegan', (item as any).dietary_tags)}
+                                className="scale-75"
+                              />
+                            </div>
+                            <div className="flex items-center gap-1" title={isNL ? 'Lactosevrij' : 'Lactose-free'}>
+                              <span className="text-xs">🥛</span>
+                              <Switch
+                                checked={((item as any).dietary_tags || []).includes('lactose-free')}
+                                onCheckedChange={() => toggleDietaryTag(item.id, 'lactose-free', (item as any).dietary_tags)}
                                 className="scale-75"
                               />
                             </div>
