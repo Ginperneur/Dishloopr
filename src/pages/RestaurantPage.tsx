@@ -492,7 +492,7 @@ export default function RestaurantPage() {
             <Separator />
 
             {/* Alternative Restaurants - shown when restaurant is closed/busy */}
-            {!isCurrentlyOpen && (
+            {isCurrentlyOpen === false && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
