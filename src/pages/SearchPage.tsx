@@ -166,20 +166,7 @@ export default function SearchPage() {
   // Filter by "Open nu" client-side
   const openNowFiltered = useMemo(() => {
     if (!filters.openNow) return results;
-    const now = new Date();
-    const dayKey = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][now.getDay()];
-    return results.filter(r => {
-      const hours = (r.opening_hours as any)?.[dayKey] || (r.opening_hours as any)?.weekday_text;
-      if (!hours) return true; // If no data, include
-      const h = typeof hours === 'string' ? hours : '';
-      if (h === 'closed') return false;
-      const match = h.match(/(\d{1,2}):?(\d{2})?\s*[-–]\s*(\d{1,2}):?(\d{2})?/);
-      if (!match) return true;
-      const cur = now.getHours() * 60 + now.getMinutes();
-      const open = parseInt(match[1]) * 60 + parseInt(match[2] || '0');
-      const close = parseInt(match[3]) * 60 + parseInt(match[4] || '0');
-      return cur >= open && cur < close;
-    });
+    return results.filter(r => isOpenNow((r as any).opening_hours) === true);
   }, [results, filters.openNow]);
 
   // Apply sorting (including distance-based)
