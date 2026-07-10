@@ -4,8 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 export type DietaryCounts = Record<string, number>;
 
 /**
- * Returns a match count for each dietary filter option based on active restaurants.
- * Used to hide chips whose count is 0.
+ * Returns a match count for each dietary filter option using the SAME sources
+ * the actual search filter uses (dish-level flags on restaurant_dishes +
+ * restaurant-level "is_fully_*" flags). Used to hide chips whose count is 0.
  */
 export function useDietaryCounts() {
   const [counts, setCounts] = useState<DietaryCounts>({});
@@ -14,23 +15,35 @@ export function useDietaryCounts() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const q = (col: string) =>
+      // Dish-level: count matching restaurant_dishes rows (status != rejected).
+      const dishQ = (col: string) =>
+        (supabase as any)
+          .from('restaurant_dishes')
+          .select('restaurant_id', { count: 'exact', head: true })
+          .neq('status', 'rejected')
+          .eq(col, true);
+      // Restaurant-level: matches on is_fully_* fallbacks (vegan/halal only).
+      const restQ = (col: string) =>
         (supabase as any)
           .from('restaurants')
           .select('id', { count: 'exact', head: true })
           .eq('is_active', true)
           .eq(col, true);
-      const [vegan, gf, halal] = await Promise.all([
-        q('is_vegan'),
-        q('is_gluten_free'),
-        q('is_halal'),
-      ]);
+
+      const [veganDish, gfDish, halalDish, veganRest, halalRest] =
+        await Promise.all([
+          dishQ('is_vegan'),
+          dishQ('is_gluten_free'),
+          dishQ('is_halal'),
+          restQ('is_fully_vegan'),
+          restQ('is_fully_halal'),
+        ]);
       if (cancelled) return;
       setCounts({
-        vegan: vegan.count ?? 0,
-        'gluten-free': gf.count ?? 0,
-        halal: halal.count ?? 0,
-        // No dedicated lactose-free column — treat as 0 (chip hidden)
+        vegan: (veganDish.count ?? 0) + (veganRest.count ?? 0),
+        'gluten-free': gfDish.count ?? 0,
+        halal: (halalDish.count ?? 0) + (halalRest.count ?? 0),
+        // No dedicated lactose-free source — hide chip.
         'lactose-free': 0,
       });
       setLoading(false);
