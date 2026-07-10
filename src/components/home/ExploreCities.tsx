@@ -73,13 +73,13 @@ export function ExploreCities() {
   if (!loading && cities.length === 0) return null;
 
   return (
-    <section className="py-6 md:py-12">
+    <section className="py-6 md:py-8">
       <div className="container px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="flex items-center justify-between mb-4 md:mb-6"
+          className="flex items-center justify-between mb-3 md:mb-4"
         >
           <h2 className="text-lg sm:text-xl md:text-3xl font-bold">
             {t('home.discoverByCity', 'Ontdek per stad')}
