@@ -85,7 +85,7 @@ export default function RestaurantPage() {
   // Determine if restaurant is unavailable (for alternatives)
   const getUnavailabilityReason = useMemo((): RoutingReason | null => {
     if (!restaurant) return null;
-    if (!isCurrentlyOpen) return 'closed';
+    if (isCurrentlyOpen === false) return 'closed';
     if (restaurant.current_busy_level === 'very_busy') return 'busy';
     return null;
   }, [restaurant, isCurrentlyOpen]);
