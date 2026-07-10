@@ -2409,6 +2409,7 @@ export type Database = {
           course_type: string | null
           created_at: string
           created_by: string | null
+          dietary_tags: string[]
           dish_id: string
           id: string
           is_gluten_free: boolean
@@ -2437,6 +2438,7 @@ export type Database = {
           course_type?: string | null
           created_at?: string
           created_by?: string | null
+          dietary_tags?: string[]
           dish_id: string
           id?: string
           is_gluten_free?: boolean
@@ -2465,6 +2467,7 @@ export type Database = {
           course_type?: string | null
           created_at?: string
           created_by?: string | null
+          dietary_tags?: string[]
           dish_id?: string
           id?: string
           is_gluten_free?: boolean
