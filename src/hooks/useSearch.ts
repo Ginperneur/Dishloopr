@@ -10,6 +10,7 @@ import {
   type DishMatchInfo,
 } from '@/lib/ranking';
 import { calculateDistance } from '@/hooks/useGeolocation';
+import { getEmptyRestaurantIds } from '@/lib/listableRestaurants';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type Dish = Database['public']['Tables']['dishes']['Row'];
@@ -253,6 +254,11 @@ export function useSearch() {
     // For browse/text-only, apply a reasonable limit.
     const hasDishMatches = matchingDishes.length > 0;
 
+    // Dish-first listing eligibility: exclude active restaurants that have 0
+    // approved dishes from search results and browse. Reversible: as soon as
+    // a restaurant gets ≥1 approved_by_admin dish it shows up again.
+    const emptyRestaurantIds = await getEmptyRestaurantIds();
+
     // Distance-based expansion: when a city is selected AND user requested a radius,
     // we drop the strict city_id filter and post-filter by Haversine distance from the
     // city centroid (avg geo of all restaurants in that city).
@@ -386,7 +392,10 @@ export function useSearch() {
       }
       // Dietary is already handled via restaurant_dishes pre-filter above
       if (filters?.hasTerrace) {
-        q = q.eq('has_terrace', true);
+        // Terras info lives both on the boolean column AND in the concepts
+        // array ('Terras restaurant'). Match either so the filter reflects
+        // the real terrace inventory.
+        q = q.or('has_terrace.eq.true,concepts.cs.{"Terras restaurant"}');
       }
 
       return q;
@@ -403,11 +412,13 @@ export function useSearch() {
       return;
     }
 
+    // Exclude restaurants without approved dishes (dish-first platform).
+    let filteredRestaurants = restaurants.filter((r) => !emptyRestaurantIds.has(r.id));
+
     // Apply radius post-filter (Haversine) when expansion is active.
-    let filteredRestaurants = restaurants;
     if (wantsRadius && cityCenter) {
       const maxKm = filters!.radiusKm!;
-      filteredRestaurants = restaurants.filter((r) => {
+      filteredRestaurants = filteredRestaurants.filter((r) => {
         if (r.geo_lat == null || r.geo_lng == null) return false;
         const d = calculateDistance(cityCenter!.lat, cityCenter!.lng, Number(r.geo_lat), Number(r.geo_lng));
         return d <= maxKm;
