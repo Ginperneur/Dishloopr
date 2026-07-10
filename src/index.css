@@ -464,8 +464,9 @@ html, body, #root {
 }
 
 /* Images without explicit width/height default to a safe aspect box.
-   Consumers may override with their own aspect classes. */
-img:not([width]):not([height]):not(.no-aspect-fallback) {
+   Wrapped in :where() so specificity is 0 and Tailwind size utilities
+   (h-8, w-10, etc.) always win. */
+img:where(:not([width]):not([height]):not(.no-aspect-fallback)) {
   max-width: 100%;
   height: auto;
 }
