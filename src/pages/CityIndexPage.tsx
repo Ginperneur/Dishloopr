@@ -7,6 +7,7 @@ import { Layout } from '@/components/layout/Layout';
 import { SEOHead, createBreadcrumbSchema, createItemListSchema } from '@/components/seo/SEOHead';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import { getEmptyRestaurantIds } from '@/lib/listableRestaurants';
 
 interface CityOverview {
   id: string;
@@ -34,21 +35,31 @@ export default function CityIndexPage() {
         return;
       }
 
-      // Run an exact count per city in parallel (HEAD requests, no row payload).
-      // This avoids the PostgREST 1000-row cap that breaks naive client-side counting.
-      const countResults = await Promise.all(
-        citiesData.map((c) =>
-          supabase
-            .from('restaurants')
-            .select('id', { count: 'exact', head: true })
-            .eq('is_active', true)
-            .eq('city_id', c.id)
-        )
-      );
+      // Dish-first: only count active restaurants with ≥1 approved dish.
+      // Fetch all active restaurants + city_id (paginated), then subtract the
+      // empty set per city.
+      const emptyIds = await getEmptyRestaurantIds();
+      const perCity = new Map<string, number>();
+      const pageSize = 1000;
+      let from = 0;
+      while (true) {
+        const { data } = await supabase
+          .from('restaurants')
+          .select('id, city_id')
+          .eq('is_active', true)
+          .range(from, from + pageSize - 1);
+        if (!data || data.length === 0) break;
+        for (const r of data as any[]) {
+          if (!r.city_id || emptyIds.has(r.id)) continue;
+          perCity.set(r.city_id, (perCity.get(r.city_id) || 0) + 1);
+        }
+        if (data.length < pageSize) break;
+        from += pageSize;
+      }
 
-      const cityOverviews: CityOverview[] = citiesData.map((c, i) => ({
+      const cityOverviews: CityOverview[] = citiesData.map((c) => ({
         ...c,
-        restaurantCount: countResults[i].count ?? 0,
+        restaurantCount: perCity.get(c.id) ?? 0,
       }));
 
       setCities(cityOverviews.sort((a, b) => b.restaurantCount - a.restaurantCount));
