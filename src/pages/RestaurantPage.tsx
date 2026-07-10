@@ -42,6 +42,7 @@ import { useReviews } from '@/hooks/useReviews';
 import { useRestaurant } from '@/hooks/useRestaurant';
 import { useAIRecommendations } from '@/hooks/useAIRecommendations';
 import { useAlternativeRestaurants, type RoutingReason } from '@/hooks/useAlternativeRestaurants';
+import { isOpenNow } from '@/lib/openingHours';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { PRICE_LABELS_FULL, AMBIENCE_TAG_STYLES, AMBIENCE_TAG_I18N_KEYS, WEEK_DAYS } from '@/lib/constants';
