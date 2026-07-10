@@ -75,31 +75,10 @@ export default function RestaurantPage() {
     }
   }, [restaurant?.id]);
 
-  // Determine if restaurant is currently open
-  const isCurrentlyOpen = useMemo((): boolean => {
-    if (!restaurant) return false;
-    
-    const openingHours = (restaurant.opening_hours || {}) as { [key: string]: string };
-    const now = new Date();
-    const day = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][now.getDay()];
-    const hours = openingHours[day];
-    
-    if (!hours || hours === 'closed') return false;
-    
-    // Try to parse hours like "12:00 - 22:00" or "12:00-22:00"
-    const match = hours.match(/(\d{1,2}):?(\d{2})?\s*[-–]\s*(\d{1,2}):?(\d{2})?/);
-    if (!match) return true; // If can't parse, assume open
-    
-    const openHour = parseInt(match[1]);
-    const openMin = parseInt(match[2] || '0');
-    const closeHour = parseInt(match[3]);
-    const closeMin = parseInt(match[4] || '0');
-    
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
-    const openMinutes = openHour * 60 + openMin;
-    const closeMinutes = closeHour * 60 + closeMin;
-    
-    return currentMinutes >= openMinutes && currentMinutes < closeMinutes;
+  // Determine if restaurant is currently open. null = unknown (no opening hours data).
+  const isCurrentlyOpen = useMemo((): boolean | null => {
+    if (!restaurant) return null;
+    return isOpenNow((restaurant as any).opening_hours);
   }, [restaurant]);
 
   // Determine if restaurant is unavailable (for alternatives)
@@ -338,18 +317,20 @@ export default function RestaurantPage() {
 
                   {/* Open Status & Busy Level */}
                   <div className="flex flex-wrap items-center gap-3 mb-3">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      {isCurrentlyOpen ? (
-                        <Badge variant="secondary" className="bg-tag-family/10 text-tag-family text-xs">
-                          {t('restaurant.openNow')}
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="bg-destructive/10 text-destructive text-xs">
-                          {t('restaurant.closed')}
-                        </Badge>
-                      )}
-                    </div>
+                    {isCurrentlyOpen !== null && (
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        {isCurrentlyOpen ? (
+                          <Badge variant="secondary" className="bg-tag-family/10 text-tag-family text-xs">
+                            {t('restaurant.openNow')}
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="bg-destructive/10 text-destructive text-xs">
+                            {t('restaurant.closed')}
+                          </Badge>
+                        )}
+                      </div>
+                    )}
                     {restaurant.current_busy_level && (
                       <BusyIndicator busyLevel={restaurant.current_busy_level} />
                     )}
