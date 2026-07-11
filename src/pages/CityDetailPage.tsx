@@ -82,35 +82,104 @@ export default function CityDetailPage() {
       const total = (allIds || []).filter((r: any) => !emptyIds.has(r.id)).length;
       setTotalRestaurants(total);
 
-      // Fetch popular dishes in this city
-      const { data: rdData } = await supabase
-        .from('restaurant_dishes')
-        .select('dish_id, dishes!inner(id, name, slug), restaurants!inner(city_id, is_active)')
-        .eq('restaurants.city_id', cityData.id)
-        .eq('restaurants.is_active', true)
-        .in('status', ['approved_by_admin', 'verified_by_owner']);
+      // Fetch popular dishes in this city, grouped by canonical_slug so
+      // synonyms (e.g. "ossenhaas") aggregate under their canonical dish
+      // ("biefstuk"). This mirrors what /eten/{gerecht}-{stad} shows.
+      //
+      // Paginated to bypass PostgREST's 1000-row default cap, and we count
+      // DISTINCT restaurants per canonical (not raw dish-links).
+      const pageSize = 1000;
+      const rdLinks: { restaurant_id: string; dish_id: string }[] = [];
+      let offset = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from('restaurant_dishes')
+          .select('restaurant_id, dish_id, restaurants!inner(city_id, is_active)')
+          .eq('restaurants.city_id', cityData.id)
+          .eq('restaurants.is_active', true)
+          .eq('status', 'approved_by_admin')
+          .range(offset, offset + pageSize - 1);
+        if (error || !data || data.length === 0) break;
+        for (const row of data as any[]) {
+          rdLinks.push({ restaurant_id: row.restaurant_id, dish_id: row.dish_id });
+        }
+        if (data.length < pageSize) break;
+        offset += pageSize;
+      }
 
-      const dishMap = new Map<string, DishInCity>();
-      if (rdData) {
-        for (const rd of rdData as any[]) {
-          const d = rd.dishes;
-          if (!d) continue;
-          const existing = dishMap.get(d.id);
-          if (existing) {
-            existing.count++;
-          } else {
-            dishMap.set(d.id, {
-              dishId: d.id,
-              dishName: d.name,
-              dishSlug: d.slug,
-              count: 1,
-              seoSlug: null,
-            });
-          }
+      // Load dish metadata (id → name, slug, canonical_slug) for the dishes we saw.
+      const uniqueDishIds = [...new Set(rdLinks.map((l) => l.dish_id))];
+      const dishMeta = new Map<string, { id: string; name: string; slug: string; canonical_slug: string | null }>();
+      for (let i = 0; i < uniqueDishIds.length; i += 500) {
+        const chunk = uniqueDishIds.slice(i, i + 500);
+        const { data: dishRows } = await supabase
+          .from('dishes')
+          .select('id, name, slug, canonical_slug')
+          .in('id', chunk);
+        (dishRows || []).forEach((d: any) => dishMeta.set(d.id, d));
+      }
+
+      // Group by canonical_slug (fallback to slug when canonical is empty),
+      // and count distinct restaurants per group.
+      type Group = { key: string; restaurantIds: Set<string>; repDishId: string; repName: string; repSlug: string; hasCanonical: boolean };
+      const groups = new Map<string, Group>();
+      for (const link of rdLinks) {
+        const meta = dishMeta.get(link.dish_id);
+        if (!meta) continue;
+        const key = (meta.canonical_slug && meta.canonical_slug.length > 0) ? meta.canonical_slug : meta.slug;
+        let g = groups.get(key);
+        if (!g) {
+          g = {
+            key,
+            restaurantIds: new Set<string>(),
+            repDishId: meta.id,
+            repName: meta.name,
+            repSlug: meta.slug,
+            hasCanonical: meta.slug === key,
+          };
+          groups.set(key, g);
+        }
+        g.restaurantIds.add(link.restaurant_id);
+        // Prefer the canonical dish as representative (its slug === canonical key)
+        if (!g.hasCanonical && meta.slug === key) {
+          g.repDishId = meta.id;
+          g.repName = meta.name;
+          g.repSlug = meta.slug;
+          g.hasCanonical = true;
         }
       }
 
-      // Check SEO landing pages
+      // If a group's representative isn't the true canonical dish, look it up
+      // by slug so the display name and dish_id match the canonical.
+      const missingCanonicalKeys = [...groups.values()].filter((g) => !g.hasCanonical).map((g) => g.key);
+      if (missingCanonicalKeys.length > 0) {
+        const { data: canonicals } = await supabase
+          .from('dishes')
+          .select('id, name, slug')
+          .in('slug', missingCanonicalKeys);
+        (canonicals || []).forEach((c: any) => {
+          const g = groups.get(c.slug);
+          if (g) {
+            g.repDishId = c.id;
+            g.repName = c.name;
+            g.repSlug = c.slug;
+            g.hasCanonical = true;
+          }
+        });
+      }
+
+      const dishMap = new Map<string, DishInCity>();
+      for (const g of groups.values()) {
+        dishMap.set(g.repDishId, {
+          dishId: g.repDishId,
+          dishName: g.repName,
+          dishSlug: g.repSlug,
+          count: g.restaurantIds.size,
+          seoSlug: null,
+        });
+      }
+
+      // Check SEO landing pages (keyed by the canonical dish_id).
       const { data: seoPages } = await supabase
         .from('seo_landing_pages')
         .select('slug, dish_id')
