@@ -373,6 +373,11 @@ const Index = () => {
       {/* How it works — only for first-time visitors */}
       {showHowItWorks && <HowItWorks />}
 
+      {/* Trending Dishes — shown before personalized picks */}
+      <div id="trending" className="scroll-mt-24">
+        <TrendingDishes dishes={trendingDishes} />
+      </div>
+
       {/* Personalized Recommendations for logged-in users */}
       <PersonalizedRecommendations />
 
@@ -383,11 +388,6 @@ const Index = () => {
 
       {/* Seasonal Suggestions */}
       <SeasonalSuggestions />
-
-      {/* Trending Dishes */}
-      <div id="trending" className="scroll-mt-24">
-        <TrendingDishes dishes={trendingDishes} />
-      </div>
     </Layout>
   );
 };
