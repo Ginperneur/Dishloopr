@@ -17,7 +17,7 @@ async function load() {
     const [colRes, evRes] = await Promise.all([
       supabase
         .from('collections')
-        .select('id, collection_restaurants(count)')
+        .select('id', { count: 'exact', head: true })
         .eq('is_active', true),
       supabase
         .from('restaurant_events')
@@ -25,13 +25,8 @@ async function load() {
         .eq('is_active', true)
         .gte('event_date', new Date().toISOString()),
     ]);
-    const visibleCollections = (colRes.data || []).filter((c: any) => {
-      const cr = c.collection_restaurants;
-      const count = Array.isArray(cr) ? (cr[0]?.count ?? 0) : (cr?.count ?? 0);
-      return count > 0;
-    });
     const result = {
-      hasCollections: visibleCollections.length > 0,
+      hasCollections: (colRes.count || 0) > 0,
       hasEvents: (evRes.count || 0) > 0,
     };
     cached = result;

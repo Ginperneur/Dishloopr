@@ -72,13 +72,7 @@ export function useCollections() {
     if (error) {
       console.error('Error fetching collections:', error);
     } else {
-      // Hide collections with zero restaurants so bezoekers nooit op een lege pagina landen
-      const nonEmpty = (data || []).filter((c: any) => {
-        const cr = c.collection_restaurants;
-        const count = Array.isArray(cr) ? (cr[0]?.count ?? 0) : (cr?.count ?? 0);
-        return count > 0;
-      });
-      setCollections(nonEmpty as unknown as Collection[]);
+      setCollections((data || []) as unknown as Collection[]);
     }
     setLoading(false);
   };
