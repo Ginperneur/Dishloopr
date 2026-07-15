@@ -5,6 +5,7 @@ import { ArrowRight, Navigation, Loader2, BookmarkCheck, X, Bell, BellOff } from
 import { SearchBar } from '@/components/search/SearchBar';
 import { Layout } from '@/components/layout/Layout';
 import { TrendingDishes } from '@/components/home/TrendingDishes';
+import { FeaturedRestaurants } from '@/components/home/FeaturedRestaurants';
 import { UpcomingEvents } from '@/components/home/UpcomingEvents';
 import { SocialProof } from '@/components/home/SocialProof';
 import { RecentlyViewed } from '@/components/home/RecentlyViewed';
