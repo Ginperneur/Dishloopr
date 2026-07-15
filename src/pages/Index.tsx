@@ -5,6 +5,7 @@ import { ArrowRight, Navigation, Loader2, BookmarkCheck, X, Bell, BellOff } from
 import { SearchBar } from '@/components/search/SearchBar';
 import { Layout } from '@/components/layout/Layout';
 import { TrendingDishes } from '@/components/home/TrendingDishes';
+import { FeaturedRestaurants } from '@/components/home/FeaturedRestaurants';
 import { UpcomingEvents } from '@/components/home/UpcomingEvents';
 import { SocialProof } from '@/components/home/SocialProof';
 import { RecentlyViewed } from '@/components/home/RecentlyViewed';
@@ -265,6 +266,43 @@ const Index = () => {
       {/* Recently Viewed */}
       <RecentlyViewed />
 
+      {/* Featured Restaurants — prominent paid-placement slot (revenue driver) */}
+      <FeaturedRestaurants />
+
+      {/* Featured Collections — prominent editorial/paid slot */}
+      {hasCollections && (
+        <section
+          id="collections"
+          className="py-6 md:py-8 scroll-mt-24"
+          aria-labelledby="featured-collections-heading"
+        >
+          <div className="container px-4 md:px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="flex items-end justify-between mb-4 md:mb-6 gap-3"
+            >
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-2">
+                  ✨ {t('home.curatedLabel', 'Samengesteld')}
+                </div>
+                <h2 id="featured-collections-heading" className="text-xl sm:text-2xl md:text-3xl font-bold">
+                  {t('home.ourCollections')}
+                </h2>
+              </div>
+              <Button variant="ghost" size="sm" asChild className="text-sm shrink-0">
+                <Link to="/collections" className="flex items-center gap-1 md:gap-2">
+                  {t('home.viewAll')}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </motion.div>
+            <FeaturedCollections />
+          </div>
+        </section>
+      )}
+
       {/* Feed tab switcher: For You vs Nearby (P2 hierarchy) */}
       <section
         aria-label={t('home.discoverContent', 'Aanbevolen content')}
@@ -337,34 +375,6 @@ const Index = () => {
 
       {/* Personalized Recommendations for logged-in users */}
       <PersonalizedRecommendations />
-
-      {/* Samengestelde Collecties — hidden until there is content */}
-      {hasCollections && (
-        <section
-          id="collections"
-          className="py-8 md:py-10 scroll-mt-24"
-          aria-labelledby="collections-heading"
-        >
-          <div className="container px-4 md:px-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="flex items-center justify-between mb-4 md:mb-6"
-            >
-              <h2 id="collections-heading" className="text-xl sm:text-2xl md:text-3xl font-bold">{t('home.ourCollections')}</h2>
-              <Button variant="ghost" size="sm" asChild className="text-sm">
-                <Link to="/collections" className="flex items-center gap-1 md:gap-2">
-                  {t('home.viewAll')}
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </motion.div>
-
-            <FeaturedCollections />
-          </div>
-        </section>
-      )}
 
       {/* Upcoming Events */}
       <div id="events" className="scroll-mt-24">
