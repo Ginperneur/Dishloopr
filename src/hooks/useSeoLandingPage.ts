@@ -159,6 +159,7 @@ export function useSeoLandingPage(slug: string | undefined) {
           // its own canonical AND has ≥1 approved_by_admin dish in that city.
           const parts = slug.split('-');
           let synth: any = null;
+          let synthDish: any = null;
           for (let i = 1; i < parts.length; i++) {
             const citySlugCandidate = parts.slice(i).join('-');
             const dishSlugCandidate = parts.slice(0, i).join('-');
@@ -171,21 +172,45 @@ export function useSeoLandingPage(slug: string | undefined) {
               .maybeSingle();
             if (!cityRow) continue;
 
-            const { data: dishRow } = await supabase
+            let { data: dishRow } = await supabase
               .from('dishes')
               .select('id, name, slug, canonical_slug, dish_group')
               .eq('slug', dishSlugCandidate)
               .maybeSingle();
-            if (!dishRow) continue;
+            // If no dish has this exact slug, treat dishSlugCandidate as a
+            // canonical_slug (e.g. "ossenhaas", "entrecote") and pick a
+            // representative dish row that shares it. This lets every
+            // canonical family member get its own /eten/{canonical}-{stad}
+            // page even when no dish row literally has that slug.
+            let isVirtualCanonical = false;
+            if (!dishRow) {
+              const { data: rep } = await supabase
+                .from('dishes')
+                .select('id, name, slug, canonical_slug, dish_group')
+                .eq('canonical_slug', dishSlugCandidate)
+                .limit(1)
+                .maybeSingle();
+              if (!rep) continue;
+              const humanized = dishSlugCandidate
+                .split('-')
+                .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+                .join(' ');
+              dishRow = {
+                id: rep.id,
+                name: humanized,
+                slug: dishSlugCandidate,
+                canonical_slug: dishSlugCandidate,
+                dish_group: rep.dish_group ?? null,
+              } as any;
+              isVirtualCanonical = true;
+            } else {
+              const dCanon = (dishRow.canonical_slug && dishRow.canonical_slug.length > 0)
+                ? dishRow.canonical_slug : dishRow.slug;
+              // Non-canonical variant with no curated redirect target: skip.
+              if (dCanon !== dishRow.slug) continue;
+            }
 
-            const dCanon = (dishRow.canonical_slug && dishRow.canonical_slug.length > 0)
-              ? dishRow.canonical_slug : dishRow.slug;
-            // Non-canonical variants: resolveCanonicalRedirect above should have
-            // handled it. If it didn't (no curated canonical page), fall through
-            // to synthesize on the canonical slug URL instead.
-            if (dCanon !== dishRow.slug) continue;
-
-            const dishName = dishRow.name;
+            const dishName = dishRow!.name;
             const cityName = cityRow.name;
             synth = {
               id: `synth-${dishRow.id}-${cityRow.id}`,
@@ -205,6 +230,7 @@ export function useSeoLandingPage(slug: string | undefined) {
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             };
+            if (isVirtualCanonical) synthDish = dishRow;
             break;
           }
 
@@ -215,13 +241,19 @@ export function useSeoLandingPage(slug: string | undefined) {
           }
           effectivePageData = synth;
           isSynthesized = true;
+          // If we synthesized against a virtual canonical (no dish row with
+          // that exact slug), stash the constructed dish for later so we
+          // don't over-write slug/canonical_slug via the id-based lookup.
+          if (synthDish) (effectivePageData as any).__synthDish = synthDish;
         }
 
         // Fetch dish and city details
         let dish = null;
         let city = null;
 
-        if (effectivePageData.dish_id) {
+        if ((effectivePageData as any).__synthDish) {
+          dish = (effectivePageData as any).__synthDish;
+        } else if (effectivePageData.dish_id) {
           const { data: dishData } = await supabase
             .from('dishes')
             .select('id, name, slug, canonical_slug, dish_group')
