@@ -23,7 +23,7 @@ export default function DishCityPage() {
   const { slug, facet: facetSlug } = useParams<{ slug: string; facet?: string }>();
   const location = useLocation();
   const { t } = useTranslation();
-  const { page, restaurants, loading, error, redirectTo, isHub, groupMembers, parentHub } = useSeoLandingPage(slug);
+  const { page, restaurants, loading, error, redirectTo, isHub, groupMembers, parentHub, synthesized } = useSeoLandingPage(slug);
 
   const activeFacet = getFacet(facetSlug);
   const isFacetRoute = !!facetSlug;
@@ -53,7 +53,9 @@ export default function DishCityPage() {
   // Facet pages need >=3 matching restaurants to be indexable.
   // Below threshold OR any querystring → noindex + canonical to base slug.
   const belowIndexThreshold = isFacetRoute && visibleRestaurants.length < 3;
-  const noindex = unknownFacet || belowIndexThreshold || (isFacetRoute && hasQueryParams);
+  // Synthesized (on-the-fly) base pages inherit the same ≥3 rule.
+  const synthesizedBelowThreshold = !isFacetRoute && synthesized && restaurants.length < 3;
+  const noindex = unknownFacet || belowIndexThreshold || synthesizedBelowThreshold || (isFacetRoute && hasQueryParams);
 
   if (redirectTo) {
     return <Navigate to={redirectTo} replace />;
