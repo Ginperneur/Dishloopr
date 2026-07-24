@@ -115,6 +115,7 @@ export function useSeoLandingPage(slug: string | undefined) {
   const [isHub, setIsHub] = useState(false);
   const [groupMembers, setGroupMembers] = useState<Array<{ slug: string; name: string; count: number; seoSlug: string | null }>>([]);
   const [parentHub, setParentHub] = useState<{ slug: string | null; name: string; dishSlug: string } | null>(null);
+  const [synthesized, setSynthesized] = useState(false);
 
   useEffect(() => {
     if (!slug) {
@@ -508,7 +509,7 @@ export function useSeoLandingPage(slug: string | undefined) {
     fetchPage();
   }, [slug]);
 
-  return { page, restaurants, loading, error, redirectTo, canonicalDishName, isHub, groupMembers, parentHub };
+  return { page, restaurants, loading, error, redirectTo, canonicalDishName, isHub, groupMembers, parentHub, synthesized };
 }
 
 export function useSeoLandingPages() {
