@@ -23,7 +23,7 @@ export default function DishCityPage() {
   const { slug, facet: facetSlug } = useParams<{ slug: string; facet?: string }>();
   const location = useLocation();
   const { t } = useTranslation();
-  const { page, restaurants, loading, error, redirectTo } = useSeoLandingPage(slug);
+  const { page, restaurants, loading, error, redirectTo, isHub, groupMembers, parentHub } = useSeoLandingPage(slug);
 
   const activeFacet = getFacet(facetSlug);
   const isFacetRoute = !!facetSlug;
@@ -126,15 +126,26 @@ export default function DishCityPage() {
   ];
 
   const baseUrl = `https://dishloopr.com/eten/${page.slug}`;
-  const facetTitle = activeFacet && page.dish && page.city
-    ? `${page.dish.name} ${activeFacet.titleModifier} in ${page.city.name}`
+  // Hub dishes render as a family (e.g. Biefstuk & Steak).
+  const hubDisplayName = isHub && page.dish?.slug === 'biefstuk' ? 'Biefstuk en Steak' : page.dish?.name;
+  const baseH1 = isHub && page.city && hubDisplayName
+    ? `Beste ${hubDisplayName} in ${page.city.name}`
     : page.h1_title;
-  const facetMetaTitle = activeFacet && page.dish && page.city
-    ? `${page.dish.name} ${activeFacet.titleModifier} in ${page.city.name} | Dishloopr`
+  const baseMetaTitle = isHub && page.city && hubDisplayName
+    ? `Beste ${hubDisplayName} in ${page.city.name} | Dishloopr`
     : page.meta_title;
-  const facetMetaDescription = activeFacet && page.dish && page.city
-    ? `Ontdek restaurants voor ${page.dish.name.toLowerCase()} ${activeFacet.titleModifier} in ${page.city.name}. Vergelijk, filter en vind jouw favoriet.`
+  const baseMetaDescription = isHub && page.city && hubDisplayName
+    ? `Ontdek de beste restaurants voor ${hubDisplayName.toLowerCase()} in ${page.city.name}. Van klassieke cuts tot moderne bereidingen.`
     : page.meta_description;
+  const facetTitle = activeFacet && page.dish && page.city
+    ? `${hubDisplayName || page.dish.name} ${activeFacet.titleModifier} in ${page.city.name}`
+    : baseH1;
+  const facetMetaTitle = activeFacet && page.dish && page.city
+    ? `${hubDisplayName || page.dish.name} ${activeFacet.titleModifier} in ${page.city.name} | Dishloopr`
+    : baseMetaTitle;
+  const facetMetaDescription = activeFacet && page.dish && page.city
+    ? `Ontdek restaurants voor ${(hubDisplayName || page.dish.name).toLowerCase()} ${activeFacet.titleModifier} in ${page.city.name}. Vergelijk, filter en vind jouw favoriet.`
+    : baseMetaDescription;
   // Self-canonical only when the facet page qualifies for indexing.
   // Otherwise canonical points at the bare /eten/{dish}-{stad} page.
   const canonical = activeFacet && !noindex
@@ -211,7 +222,7 @@ export default function DishCityPage() {
             )}
             {page.dish && (
               <Badge variant="secondary">
-                {page.dish.name}
+                {hubDisplayName || page.dish.name}
               </Badge>
             )}
           </div>
@@ -250,6 +261,46 @@ export default function DishCityPage() {
           </div>
         </motion.div>
       </section>
+
+      {/* Parent hub link (member pages inside a dish_group) */}
+      {!activeFacet && parentHub && parentHub.slug && (
+        <section className="container px-4 md:px-6 pb-2">
+          <Link
+            to={`/eten/${parentHub.slug}`}
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Onderdeel van:{' '}
+            <span className="font-medium text-foreground">
+              {parentHub.dishSlug === 'biefstuk' ? 'Biefstuk en Steak' : parentHub.name}
+            </span>
+            {page.city && <> in {page.city.name}</>}
+          </Link>
+        </section>
+      )}
+
+      {/* Hub-only: "Specifieke cuts" — crawlable chips to member canonical pages in this city */}
+      {!activeFacet && isHub && groupMembers.length > 0 && (
+        <section className="container px-4 md:px-6 pb-2">
+          <p className="text-sm text-muted-foreground mb-2">Specifieke cuts</p>
+          <div className="flex flex-wrap gap-2">
+            {groupMembers.map(m => {
+              const href = m.seoSlug
+                ? `/eten/${m.seoSlug}`
+                : `/search?dish=${encodeURIComponent(m.name)}${page.city ? `&city=${page.city.id}` : ''}`;
+              return (
+                <Link
+                  key={m.slug}
+                  to={href}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-full border border-border hover:bg-primary/10 transition-colors"
+                >
+                  {m.name}
+                  <span className="text-xs opacity-70">({m.count})</span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Facet filter chips — indexable filter URLs (programmatic SEO) */}
       <section className="container px-4 md:px-6 pb-2">
