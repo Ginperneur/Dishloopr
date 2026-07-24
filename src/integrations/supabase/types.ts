@@ -869,6 +869,7 @@ export type Database = {
           course: string | null
           created_at: string
           cuisine_tags: string[] | null
+          dish_group: string | null
           id: string
           is_active: boolean
           is_gluten_free: boolean
@@ -888,6 +889,7 @@ export type Database = {
           course?: string | null
           created_at?: string
           cuisine_tags?: string[] | null
+          dish_group?: string | null
           id?: string
           is_active?: boolean
           is_gluten_free?: boolean
@@ -907,6 +909,7 @@ export type Database = {
           course?: string | null
           created_at?: string
           cuisine_tags?: string[] | null
+          dish_group?: string | null
           id?: string
           is_active?: boolean
           is_gluten_free?: boolean
@@ -4726,6 +4729,7 @@ export type Database = {
           course: string | null
           created_at: string
           cuisine_tags: string[] | null
+          dish_group: string | null
           id: string
           is_active: boolean
           is_gluten_free: boolean
