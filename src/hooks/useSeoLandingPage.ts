@@ -133,10 +133,19 @@ export function useSeoLandingPage(slug: string | undefined) {
           .select('*')
           .eq('slug', slug)
           .eq('is_active', true)
-          .single();
+          .maybeSingle();
 
-        if (pageError) {
-          if (pageError.code === 'PGRST116') {
+        // If no curated SEO row exists, try to synthesize one on-the-fly for any
+        // canonical dish that has ≥1 approved dish in the parsed city. This
+        // makes /eten/{dish}-{stad} work for every valid canonical, not just
+        // curated ones. Non-canonical variants still hit the redirect path.
+        let effectivePageData: any = pageData;
+        let isSynthesized = false;
+
+        if (!effectivePageData) {
+          if (pageError && pageError.code !== 'PGRST116') {
+            throw pageError;
+          }
             // Try canonical redirect before giving up: parse slug into {dish}-{city}
             const canonicalRedirect = await resolveCanonicalRedirect(slug);
             if (canonicalRedirect) {
@@ -144,47 +153,103 @@ export function useSeoLandingPage(slug: string | undefined) {
               setLoading(false);
               return;
             }
-            setError('Page not found');
-          } else {
-            throw pageError;
+
+          // Parse slug into dish + city and synthesize a page if the dish is
+          // its own canonical AND has ≥1 approved_by_admin dish in that city.
+          const parts = slug.split('-');
+          let synth: any = null;
+          for (let i = 1; i < parts.length; i++) {
+            const citySlugCandidate = parts.slice(i).join('-');
+            const dishSlugCandidate = parts.slice(0, i).join('-');
+            if (!citySlugCandidate || !dishSlugCandidate) continue;
+
+            const { data: cityRow } = await supabase
+              .from('cities')
+              .select('id, name, slug')
+              .eq('slug', citySlugCandidate)
+              .maybeSingle();
+            if (!cityRow) continue;
+
+            const { data: dishRow } = await supabase
+              .from('dishes')
+              .select('id, name, slug, canonical_slug, dish_group')
+              .eq('slug', dishSlugCandidate)
+              .maybeSingle();
+            if (!dishRow) continue;
+
+            const dCanon = (dishRow.canonical_slug && dishRow.canonical_slug.length > 0)
+              ? dishRow.canonical_slug : dishRow.slug;
+            // Non-canonical variants: resolveCanonicalRedirect above should have
+            // handled it. If it didn't (no curated canonical page), fall through
+            // to synthesize on the canonical slug URL instead.
+            if (dCanon !== dishRow.slug) continue;
+
+            const dishName = dishRow.name;
+            const cityName = cityRow.name;
+            synth = {
+              id: `synth-${dishRow.id}-${cityRow.id}`,
+              slug,
+              dish_id: dishRow.id,
+              city_id: cityRow.id,
+              meta_title: `Beste ${dishName} in ${cityName} | Dishloopr`,
+              meta_description: `Ontdek de beste restaurants voor ${dishName.toLowerCase()} in ${cityName}. Vergelijk, filter en vind jouw favoriet.`,
+              h1_title: `Beste ${dishName} in ${cityName}`,
+              intro_text: null,
+              extended_description: null,
+              faq_content: [],
+              keywords: null,
+              canonical_url: null,
+              is_active: true,
+              is_auto_generated: true,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            };
+            break;
           }
-          setLoading(false);
-          return;
+
+          if (!synth) {
+            setError('Page not found');
+            setLoading(false);
+            return;
+          }
+          effectivePageData = synth;
+          isSynthesized = true;
         }
 
         // Fetch dish and city details
         let dish = null;
         let city = null;
 
-        if (pageData.dish_id) {
+        if (effectivePageData.dish_id) {
           const { data: dishData } = await supabase
             .from('dishes')
             .select('id, name, slug, canonical_slug, dish_group')
-            .eq('id', pageData.dish_id)
+            .eq('id', effectivePageData.dish_id)
             .single();
           dish = dishData;
         }
 
-        if (pageData.city_id) {
+        if (effectivePageData.city_id) {
           const { data: cityData } = await supabase
             .from('cities')
             .select('id, name, slug')
-            .eq('id', pageData.city_id)
+            .eq('id', effectivePageData.city_id)
             .single();
           city = cityData;
         }
 
         // Parse FAQ content safely
-        const faqContent = Array.isArray(pageData.faq_content) 
-          ? (pageData.faq_content as unknown as FAQ[])
+        const faqContent = Array.isArray(effectivePageData.faq_content)
+          ? (effectivePageData.faq_content as unknown as FAQ[])
           : [];
 
         setPage({
-          ...pageData,
+          ...effectivePageData,
           faq_content: faqContent,
           dish: dish || undefined,
           city: city || undefined,
         });
+        setSynthesized(isSynthesized);
 
         // Determine canonical slug for grouping (fall back to the dish's own slug)
         const canonicalSlug = (dish?.canonical_slug && dish.canonical_slug.length > 0)
@@ -231,7 +296,7 @@ export function useSeoLandingPage(slug: string | undefined) {
         // Fetch all restaurants in city with at least one qualifying approved dish.
         // - Member pages: dishes sharing this canonical_slug (unchanged).
         // - Hub pages: dishes sharing this dish_group (the whole family).
-        if (canonicalSlug && pageData.city_id) {
+        if (canonicalSlug && effectivePageData.city_id) {
           // Collect all dish IDs to include (paginated to bypass 1000-row limit)
           const dishRows: Array<{ id: string; name: string; slug: string; canonical_slug: string | null }> = [];
           let from = 0;
@@ -309,7 +374,7 @@ export function useSeoLandingPage(slug: string | undefined) {
                 .from('restaurants')
                 .select('*')
                 .in('id', chunk)
-                .eq('city_id', pageData.city_id)
+                .eq('city_id', effectivePageData.city_id)
                 .eq('is_active', true);
               if (rBatch) results.push(...(rBatch as Restaurant[]));
             }
@@ -369,7 +434,7 @@ export function useSeoLandingPage(slug: string | undefined) {
                   const { data: seoRows } = await supabase
                     .from('seo_landing_pages')
                     .select('slug, dish_id')
-                    .eq('city_id', pageData.city_id)
+                    .eq('city_id', effectivePageData.city_id)
                     .eq('is_active', true)
                     .in('dish_id', memberDishIds);
                   const seoByDishId = new Map<string, string>();
@@ -395,7 +460,7 @@ export function useSeoLandingPage(slug: string | undefined) {
             const { data: cityRestaurants } = await supabase
               .from('restaurants')
               .select('*')
-              .eq('city_id', pageData.city_id)
+              .eq('city_id', effectivePageData.city_id)
               .eq('is_active', true)
               .order('is_featured', { ascending: false })
               .order('rating', { ascending: false })
@@ -416,7 +481,7 @@ export function useSeoLandingPage(slug: string | undefined) {
               const { data: hubSeo } = await supabase
                 .from('seo_landing_pages')
                 .select('slug')
-                .eq('city_id', pageData.city_id)
+                .eq('city_id', effectivePageData.city_id)
                 .eq('is_active', true)
                 .eq('dish_id', hubDish.id)
                 .maybeSingle();
