@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/accordion';
 import { useSeoLandingPage } from '@/hooks/useSeoLandingPage';
 import { FACET_GROUPS, getFacet, matchesFacet, buildFacetFAQ } from '@/lib/dishCityFacets';
+import { getHubDisplayName, getHubChipHeading, HUB_CHIP_CAP } from '@/lib/dishGroups';
 import NotFound from './NotFound';
 
 export default function DishCityPage() {
@@ -128,8 +129,10 @@ export default function DishCityPage() {
   ];
 
   const baseUrl = `https://dishloopr.com/eten/${page.slug}`;
-  // Hub dishes render as a family (e.g. Biefstuk & Steak).
-  const hubDisplayName = isHub && page.dish?.slug === 'biefstuk' ? 'Biefstuk en Steak' : page.dish?.name;
+  // Hub dishes render as a family (e.g. Biefstuk & Steak, Burgers).
+  const hubDisplayName = isHub
+    ? getHubDisplayName(page.dish?.slug, page.dish?.name)
+    : page.dish?.name;
   const baseH1 = isHub && page.city && hubDisplayName
     ? `Beste ${hubDisplayName} in ${page.city.name}`
     : page.h1_title;
@@ -273,19 +276,21 @@ export default function DishCityPage() {
           >
             Onderdeel van:{' '}
             <span className="font-medium text-foreground">
-              {parentHub.dishSlug === 'biefstuk' ? 'Biefstuk en Steak' : parentHub.name}
+              {getHubDisplayName(parentHub.dishSlug, parentHub.name)}
             </span>
             {page.city && <> in {page.city.name}</>}
           </Link>
         </section>
       )}
 
-      {/* Hub-only: "Specifieke cuts" — crawlable chips to member canonical pages in this city */}
+      {/* Hub-only: variant chips — crawlable links to member canonical pages in this city (capped) */}
       {!activeFacet && isHub && groupMembers.length > 0 && (
         <section className="container px-4 md:px-6 pb-2">
-          <p className="text-sm text-muted-foreground mb-2">Specifieke cuts</p>
+          <p className="text-sm text-muted-foreground mb-2">
+            {getHubChipHeading(page.dish?.slug)}
+          </p>
           <div className="flex flex-wrap gap-2">
-            {groupMembers.map(m => {
+            {groupMembers.slice(0, HUB_CHIP_CAP).map(m => {
               const href = m.seoSlug
                 ? `/eten/${m.seoSlug}`
                 : `/search?dish=${encodeURIComponent(m.name)}${page.city ? `&city=${page.city.id}` : ''}`;
