@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -983,6 +983,90 @@ export type Database = {
           slug?: string | null
           synonyms?: string[] | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      dishes_backup_20260826: {
+        Row: {
+          canonical_slug: string | null
+          course: string | null
+          created_at: string | null
+          cuisine_tags: string[] | null
+          dish_group: string | null
+          id: string | null
+          is_active: boolean | null
+          is_gluten_free: boolean | null
+          is_halal: boolean | null
+          is_vegan: boolean | null
+          is_vegetarian: boolean | null
+          name: string | null
+          name_en: string | null
+          search_count: number | null
+          seasonal_tags: string[] | null
+          slug: string | null
+          synonyms: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          canonical_slug?: string | null
+          course?: string | null
+          created_at?: string | null
+          cuisine_tags?: string[] | null
+          dish_group?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          is_gluten_free?: boolean | null
+          is_halal?: boolean | null
+          is_vegan?: boolean | null
+          is_vegetarian?: boolean | null
+          name?: string | null
+          name_en?: string | null
+          search_count?: number | null
+          seasonal_tags?: string[] | null
+          slug?: string | null
+          synonyms?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          canonical_slug?: string | null
+          course?: string | null
+          created_at?: string | null
+          cuisine_tags?: string[] | null
+          dish_group?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          is_gluten_free?: boolean | null
+          is_halal?: boolean | null
+          is_vegan?: boolean | null
+          is_vegetarian?: boolean | null
+          name?: string | null
+          name_en?: string | null
+          search_count?: number | null
+          seasonal_tags?: string[] | null
+          slug?: string | null
+          synonyms?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      dishes_course_backup_20260725: {
+        Row: {
+          canonical_slug: string | null
+          course: string | null
+          id: string | null
+          name: string | null
+        }
+        Insert: {
+          canonical_slug?: string | null
+          course?: string | null
+          id?: string | null
+          name?: string | null
+        }
+        Update: {
+          canonical_slug?: string | null
+          course?: string | null
+          id?: string | null
+          name?: string | null
         }
         Relationships: []
       }
@@ -2412,6 +2496,7 @@ export type Database = {
           course_type: string | null
           created_at: string
           created_by: string | null
+          description: string | null
           dietary_tags: string[]
           dish_id: string
           id: string
@@ -2420,6 +2505,7 @@ export type Database = {
           is_signature: boolean
           is_vegan: boolean
           is_vegetarian: boolean
+          menu_section: string | null
           price: number | null
           rejected_reason: string | null
           restaurant_id: string
@@ -2427,8 +2513,10 @@ export type Database = {
           screen_course: string | null
           screen_reason: string | null
           screen_score: number | null
+          sort_order: number | null
           source: string | null
           status: string | null
+          tier: string | null
           updated_at: string | null
           verified_at: string | null
           verified_by: string | null
@@ -2441,6 +2529,7 @@ export type Database = {
           course_type?: string | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           dietary_tags?: string[]
           dish_id: string
           id?: string
@@ -2449,6 +2538,7 @@ export type Database = {
           is_signature?: boolean
           is_vegan?: boolean
           is_vegetarian?: boolean
+          menu_section?: string | null
           price?: number | null
           rejected_reason?: string | null
           restaurant_id: string
@@ -2456,8 +2546,10 @@ export type Database = {
           screen_course?: string | null
           screen_reason?: string | null
           screen_score?: number | null
+          sort_order?: number | null
           source?: string | null
           status?: string | null
+          tier?: string | null
           updated_at?: string | null
           verified_at?: string | null
           verified_by?: string | null
@@ -2470,6 +2562,7 @@ export type Database = {
           course_type?: string | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           dietary_tags?: string[]
           dish_id?: string
           id?: string
@@ -2478,6 +2571,7 @@ export type Database = {
           is_signature?: boolean
           is_vegan?: boolean
           is_vegetarian?: boolean
+          menu_section?: string | null
           price?: number | null
           rejected_reason?: string | null
           restaurant_id?: string
@@ -2485,8 +2579,10 @@ export type Database = {
           screen_course?: string | null
           screen_reason?: string | null
           screen_score?: number | null
+          sort_order?: number | null
           source?: string | null
           status?: string | null
+          tier?: string | null
           updated_at?: string | null
           verified_at?: string | null
           verified_by?: string | null
@@ -2586,6 +2682,198 @@ export type Database = {
           screen_score?: number | null
           source?: string | null
           status?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
+      restaurant_dishes_backup_20260725: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          clicks: number | null
+          confidence_score: number | null
+          course_type: string | null
+          created_at: string | null
+          created_by: string | null
+          dietary_tags: string[] | null
+          dish_id: string | null
+          id: string | null
+          is_gluten_free: boolean | null
+          is_halal: boolean | null
+          is_signature: boolean | null
+          is_vegan: boolean | null
+          is_vegetarian: boolean | null
+          price: number | null
+          rejected_reason: string | null
+          restaurant_id: string | null
+          screen_canonical: string | null
+          screen_course: string | null
+          screen_reason: string | null
+          screen_score: number | null
+          source: string | null
+          status: string | null
+          updated_at: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          clicks?: number | null
+          confidence_score?: number | null
+          course_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          dietary_tags?: string[] | null
+          dish_id?: string | null
+          id?: string | null
+          is_gluten_free?: boolean | null
+          is_halal?: boolean | null
+          is_signature?: boolean | null
+          is_vegan?: boolean | null
+          is_vegetarian?: boolean | null
+          price?: number | null
+          rejected_reason?: string | null
+          restaurant_id?: string | null
+          screen_canonical?: string | null
+          screen_course?: string | null
+          screen_reason?: string | null
+          screen_score?: number | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          clicks?: number | null
+          confidence_score?: number | null
+          course_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          dietary_tags?: string[] | null
+          dish_id?: string | null
+          id?: string | null
+          is_gluten_free?: boolean | null
+          is_halal?: boolean | null
+          is_signature?: boolean | null
+          is_vegan?: boolean | null
+          is_vegetarian?: boolean | null
+          price?: number | null
+          rejected_reason?: string | null
+          restaurant_id?: string | null
+          screen_canonical?: string | null
+          screen_course?: string | null
+          screen_reason?: string | null
+          screen_score?: number | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
+      restaurant_dishes_backup_20260826: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          clicks: number | null
+          confidence_score: number | null
+          course_type: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          dietary_tags: string[] | null
+          dish_id: string | null
+          id: string | null
+          is_gluten_free: boolean | null
+          is_halal: boolean | null
+          is_signature: boolean | null
+          is_vegan: boolean | null
+          is_vegetarian: boolean | null
+          menu_section: string | null
+          price: number | null
+          rejected_reason: string | null
+          restaurant_id: string | null
+          screen_canonical: string | null
+          screen_course: string | null
+          screen_reason: string | null
+          screen_score: number | null
+          sort_order: number | null
+          source: string | null
+          status: string | null
+          tier: string | null
+          updated_at: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          clicks?: number | null
+          confidence_score?: number | null
+          course_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          dietary_tags?: string[] | null
+          dish_id?: string | null
+          id?: string | null
+          is_gluten_free?: boolean | null
+          is_halal?: boolean | null
+          is_signature?: boolean | null
+          is_vegan?: boolean | null
+          is_vegetarian?: boolean | null
+          menu_section?: string | null
+          price?: number | null
+          rejected_reason?: string | null
+          restaurant_id?: string | null
+          screen_canonical?: string | null
+          screen_course?: string | null
+          screen_reason?: string | null
+          screen_score?: number | null
+          sort_order?: number | null
+          source?: string | null
+          status?: string | null
+          tier?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          clicks?: number | null
+          confidence_score?: number | null
+          course_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          dietary_tags?: string[] | null
+          dish_id?: string | null
+          id?: string | null
+          is_gluten_free?: boolean | null
+          is_halal?: boolean | null
+          is_signature?: boolean | null
+          is_vegan?: boolean | null
+          is_vegetarian?: boolean | null
+          menu_section?: string | null
+          price?: number | null
+          rejected_reason?: string | null
+          restaurant_id?: string | null
+          screen_canonical?: string | null
+          screen_course?: string | null
+          screen_reason?: string | null
+          screen_score?: number | null
+          sort_order?: number | null
+          source?: string | null
+          status?: string | null
+          tier?: string | null
           updated_at?: string | null
           verified_at?: string | null
           verified_by?: string | null
@@ -2942,6 +3230,7 @@ export type Database = {
           cuisines: string[] | null
           current_busy_level: string | null
           dietary_options: string[] | null
+          drinks_source: string | null
           experiences: string[] | null
           featured_until: string | null
           geo_lat: number | null
@@ -2983,9 +3272,15 @@ export type Database = {
           review_count: number
           review_status: string | null
           routed_demand_dishes: string[] | null
+          serves_beer: boolean | null
+          serves_cocktails: boolean | null
+          serves_coffee: boolean | null
+          serves_wine: boolean | null
           slug: string
           sustainability_score: number | null
           tag_source: string | null
+          terrace_checked_at: string | null
+          terrace_source: string | null
           tiktok_url: string | null
           top_until: string | null
           updated_at: string
@@ -3014,6 +3309,7 @@ export type Database = {
           cuisines?: string[] | null
           current_busy_level?: string | null
           dietary_options?: string[] | null
+          drinks_source?: string | null
           experiences?: string[] | null
           featured_until?: string | null
           geo_lat?: number | null
@@ -3055,9 +3351,15 @@ export type Database = {
           review_count?: number
           review_status?: string | null
           routed_demand_dishes?: string[] | null
+          serves_beer?: boolean | null
+          serves_cocktails?: boolean | null
+          serves_coffee?: boolean | null
+          serves_wine?: boolean | null
           slug: string
           sustainability_score?: number | null
           tag_source?: string | null
+          terrace_checked_at?: string | null
+          terrace_source?: string | null
           tiktok_url?: string | null
           top_until?: string | null
           updated_at?: string
@@ -3086,6 +3388,7 @@ export type Database = {
           cuisines?: string[] | null
           current_busy_level?: string | null
           dietary_options?: string[] | null
+          drinks_source?: string | null
           experiences?: string[] | null
           featured_until?: string | null
           geo_lat?: number | null
@@ -3127,9 +3430,15 @@ export type Database = {
           review_count?: number
           review_status?: string | null
           routed_demand_dishes?: string[] | null
+          serves_beer?: boolean | null
+          serves_cocktails?: boolean | null
+          serves_coffee?: boolean | null
+          serves_wine?: boolean | null
           slug?: string
           sustainability_score?: number | null
           tag_source?: string | null
+          terrace_checked_at?: string | null
+          terrace_source?: string | null
           tiktok_url?: string | null
           top_until?: string | null
           updated_at?: string
@@ -3376,6 +3685,27 @@ export type Database = {
           id?: string | null
           meal_types?: string[] | null
           price_level?: number | null
+        }
+        Relationships: []
+      }
+      restaurants_terrace_backup_20260725: {
+        Row: {
+          has_terrace: boolean | null
+          id: string | null
+          meal_types: string[] | null
+          tag_source: string | null
+        }
+        Insert: {
+          has_terrace?: boolean | null
+          id?: string | null
+          meal_types?: string[] | null
+          tag_source?: string | null
+        }
+        Update: {
+          has_terrace?: boolean | null
+          id?: string | null
+          meal_types?: string[] | null
+          tag_source?: string | null
         }
         Relationships: []
       }
@@ -3802,6 +4132,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      stage_import_v5: {
+        Row: {
+          canonical_slug: string | null
+          city: string | null
+          course: string | null
+          description: string | null
+          dish_name: string | null
+          dish_slug: string | null
+          menu_section: string | null
+          price: string | null
+          restaurant_id: string | null
+          restaurant_name: string | null
+          sort_order: string | null
+          source: string | null
+          tier: string | null
+        }
+        Insert: {
+          canonical_slug?: string | null
+          city?: string | null
+          course?: string | null
+          description?: string | null
+          dish_name?: string | null
+          dish_slug?: string | null
+          menu_section?: string | null
+          price?: string | null
+          restaurant_id?: string | null
+          restaurant_name?: string | null
+          sort_order?: string | null
+          source?: string | null
+          tier?: string | null
+        }
+        Update: {
+          canonical_slug?: string | null
+          city?: string | null
+          course?: string | null
+          description?: string | null
+          dish_name?: string | null
+          dish_slug?: string | null
+          menu_section?: string | null
+          price?: string | null
+          restaurant_id?: string | null
+          restaurant_name?: string | null
+          sort_order?: string | null
+          source?: string | null
+          tier?: string | null
+        }
+        Relationships: []
       }
       support_conversations: {
         Row: {
@@ -4812,12 +5190,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4841,11 +5219,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4866,11 +5244,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4891,11 +5269,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4908,11 +5286,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
