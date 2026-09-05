@@ -117,11 +117,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "analytics_events_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["city_id"]
+          },
+          {
             foreignKeyName: "analytics_events_dish_id_fkey"
             columns: ["dish_id"]
             isOneToOne: false
             referencedRelation: "dishes"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analytics_events_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["dish_id"]
           },
           {
             foreignKeyName: "analytics_events_restaurant_id_fkey"
@@ -467,11 +481,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "collections_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["city_id"]
+          },
+          {
             foreignKeyName: "collections_dish_id_fkey"
             columns: ["dish_id"]
             isOneToOne: false
             referencedRelation: "dishes"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collections_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["dish_id"]
           },
         ]
       }
@@ -599,6 +627,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "demand_routing_events_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["dish_id"]
+          },
+          {
             foreignKeyName: "demand_routing_events_source_restaurant_id_fkey"
             columns: ["source_restaurant_id"]
             isOneToOne: false
@@ -664,6 +699,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cities"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discovery_grid_points_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["city_id"]
           },
         ]
       }
@@ -749,6 +791,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "discovery_results_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["city_id"]
+          },
+          {
             foreignKeyName: "discovery_results_matched_restaurant_id_fkey"
             columns: ["matched_restaurant_id"]
             isOneToOne: false
@@ -816,6 +865,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "discovery_runs_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["city_id"]
+          },
+          {
             foreignKeyName: "discovery_runs_grid_point_id_fkey"
             columns: ["grid_point_id"]
             isOneToOne: false
@@ -853,6 +909,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "dishes"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dish_ratings_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["dish_id"]
           },
           {
             foreignKeyName: "dish_ratings_review_id_fkey"
@@ -1277,6 +1340,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cities"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "featured_slots_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["city_id"]
           },
         ]
       }
@@ -2596,6 +2666,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "restaurant_dishes_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["dish_id"]
+          },
+          {
             foreignKeyName: "restaurant_dishes_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
@@ -3464,6 +3541,13 @@ export type Database = {
             referencedRelation: "cities"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "restaurants_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["city_id"]
+          },
         ]
       }
       restaurants_ambience_backup_f4: {
@@ -3897,13 +3981,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "seo_landing_pages_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["city_id"]
+          },
+          {
             foreignKeyName: "seo_landing_pages_dish_id_fkey"
             columns: ["dish_id"]
             isOneToOne: false
             referencedRelation: "dishes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "seo_landing_pages_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["dish_id"]
+          },
         ]
+      }
+      seo_slug_blocklist: {
+        Row: {
+          reden: string
+          slug: string
+        }
+        Insert: {
+          reden?: string
+          slug: string
+        }
+        Update: {
+          reden?: string
+          slug?: string
+        }
+        Relationships: []
       }
       shared_list_restaurants: {
         Row: {
@@ -4062,11 +4175,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "sponsored_products_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["city_id"]
+          },
+          {
             foreignKeyName: "sponsored_products_dish_id_fkey"
             columns: ["dish_id"]
             isOneToOne: false
             referencedRelation: "dishes"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_products_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["dish_id"]
           },
         ]
       }
@@ -4866,6 +4993,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "restaurant_dishes_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["dish_id"]
+          },
+          {
             foreignKeyName: "restaurant_dishes_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
@@ -4893,6 +5027,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      seo_page_kandidaten: {
+        Row: {
+          city_id: string | null
+          dish_id: string | null
+          gerecht: string | null
+          gerecht_naam: string | null
+          n: number | null
+          stad_naam: string | null
+          stad_slug: string | null
+        }
+        Relationships: []
       }
       sponsored_purchases_public: {
         Row: {
