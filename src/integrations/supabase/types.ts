@@ -5160,6 +5160,16 @@ export type Database = {
         }
         Returns: Json
       }
+      city_dish_overview: {
+        Args: { p_city_id: string; p_limit?: number }
+        Returns: {
+          canon: string
+          dish_id: string
+          dish_name: string
+          dish_slug: string
+          restaurant_count: number
+        }[]
+      }
       cleanup_discovery_duplicates: { Args: { p_rules?: Json }; Returns: Json }
       cleanup_rate_limit_log: { Args: never; Returns: number }
       clear_expired_verification_codes: { Args: never; Returns: undefined }

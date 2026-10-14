@@ -178,9 +178,11 @@ export default function SearchPage() {
 
   // Perform search when query, city, filters, or featured mode change
   useEffect(() => {
+    // Wait until the city from the URL is synced (avoids a stale nationwide run after a URL rewrite)
+    if (selectedCityId !== resolvedCityId) return;
     search(dishQuery, selectedCityId, filters, featuredOnly);
     setDisplayCount(12); // Reset pagination on new search
-  }, [dishQuery, selectedCityId, filters, featuredOnly]);
+  }, [dishQuery, selectedCityId, resolvedCityId, filters, featuredOnly]);
 
   // Handle city change for featured page
   const handleCityChange = (newCityId: string) => {

@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+
+type ParsedTerm = { term: string | null; city_id: string | null; city_name: string | null };
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import {
@@ -74,6 +76,8 @@ export function useSearch() {
   const [didYouMean, setDidYouMean] = useState<string | null>(null);
   const [isFuzzyMatch, setIsFuzzyMatch] = useState(false);
   const [parsedQuery, setParsedQuery] = useState('');
+  const parseCacheRef = useRef(new Map<string, ParsedTerm>());
+  const lastSearchRef = useRef<{ key: string; running: boolean; doneAt: number } | null>(null);
 
   useEffect(() => {
     fetchCities();
@@ -96,12 +100,18 @@ export function useSearch() {
     const rawTerms = queryLower.split(',').map(t => t.trim()).filter(t => t.length > 0);
     const parsed = await Promise.all(
       rawTerms.map(async (term) => {
+        const cached = parseCacheRef.current.get(term);
+        if (cached) return cached;
         const { data, error } = await supabase.rpc('parse_search_query' as any, { p_query: term });
         if (error) console.error('parse_search_query error:', error);
-        const row = (Array.isArray(data) ? data[0] : data) as
-          | { term: string | null; city_id: string | null; city_name: string | null }
-          | undefined;
-        return row ?? { term, city_id: null, city_name: null };
+        const row = ((Array.isArray(data) ? data[0] : data) as ParsedTerm | undefined) ?? { term, city_id: null, city_name: null };
+        parseCacheRef.current.set(term, row);
+        // The stripped term contains no city anymore → cache it so a URL rewrite doesn't re-parse.
+        const stripped = (row.term ?? '').toLowerCase().trim();
+        if (stripped && !parseCacheRef.current.has(stripped)) {
+          parseCacheRef.current.set(stripped, { term: stripped, city_id: null, city_name: null });
+        }
+        return row;
       })
     );
     let detected: { id: string; name: string } | null = null;
@@ -121,6 +131,19 @@ export function useSearch() {
     setParsedQuery(queryTerms.join(', '));
 
     const ctx: ScoringContext = { queryLower: queryTerms[0] || '', now };
+
+    // Dedup: skip if the same (terms, city, filters) is running or just finished.
+    const searchKey = JSON.stringify([queryTerms, cityId && cityId !== 'all' ? cityId : null, filters ?? null, !!featuredOnly]);
+    const last = lastSearchRef.current;
+    if (last && last.key === searchKey && (last.running || Date.now() - last.doneAt < 5000)) {
+      if (!last.running) setLoading(false);
+      return;
+    }
+    const thisRun = { key: searchKey, running: true, doneAt: 0 };
+    lastSearchRef.current = thisRun;
+    const finish = () => { thisRun.running = false; thisRun.doneAt = Date.now(); };
+    // Start loading the listable-filter in parallel with search_restaurants.
+    const emptyIdsPromise = getEmptyRestaurantIds();
 
     let citiesToUse = cities;
     if (citiesToUse.length === 0) {
@@ -182,7 +205,7 @@ export function useSearch() {
     // A search term without matches → 0 results. Never fall back to all restaurants.
     if (queryTerms.length > 0 && dishLinkedRestaurantIds.size === 0) {
       setResults([]);
-      setLoading(false);
+      finish(); setLoading(false);
       return;
     }
 
@@ -259,7 +282,7 @@ export function useSearch() {
     // Dish-first listing eligibility: exclude active restaurants that have 0
     // approved dishes from search results and browse. Reversible: as soon as
     // a restaurant gets ≥1 approved_by_admin dish it shows up again.
-    const emptyRestaurantIds = await getEmptyRestaurantIds();
+    const emptyRestaurantIds = await emptyIdsPromise;
 
     // Distance-based expansion: when a city is selected AND user requested a radius,
     // we drop the strict city_id filter and post-filter by Haversine distance from the
@@ -408,7 +431,7 @@ export function useSearch() {
 
     if (!restaurants) {
       setResults([]);
-      setLoading(false);
+      finish(); setLoading(false);
       return;
     }
 
@@ -456,7 +479,7 @@ export function useSearch() {
       
       const sorted = sortResults(scoredResults);
       setResults(sorted);
-      setLoading(false);
+      finish(); setLoading(false);
       return;
     }
 
@@ -542,7 +565,7 @@ export function useSearch() {
     const rebalanced = rebalanceSponsoredResults(sorted);
 
     setResults(rebalanced);
-    setLoading(false);
+    finish(); setLoading(false);
   }, [cities]);
 
   return { search, results, loading, dishes, cities, detectedCity, didYouMean, isFuzzyMatch, parsedQuery };

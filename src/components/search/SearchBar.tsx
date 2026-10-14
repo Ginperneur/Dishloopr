@@ -138,9 +138,21 @@ export function SearchBar({
         r => r.name.toLowerCase().includes(queryLower)
       );
       setRestaurantSuggestions(filteredRestaurants.slice(0, 3));
-      setCuisineSuggestions([]);
+      // Cuisine suggestions: client-side from the known cuisine list of loaded restaurants
+      const cuisineSet = new Map<string, string>();
+      allRestaurants.forEach((r: any) => {
+        [r.cuisine_primary, ...(r.cuisines || [])].forEach((c: string | null) => {
+          if (!c) return;
+          const key = c.toLowerCase().trim();
+          if (key.includes(queryLower) && !cuisineSet.has(key)) {
+            cuisineSet.set(key, c.charAt(0).toUpperCase() + c.slice(1));
+          }
+        });
+      });
+      const filteredCuisines = [...cuisineSet.values()].slice(0, 3);
+      setCuisineSuggestions(filteredCuisines);
 
-      setShowSuggestions(!suppressSuggestionsRef.current && (filteredDishes.length > 0 || filteredRestaurants.length > 0));
+      setShowSuggestions(!suppressSuggestionsRef.current && (filteredDishes.length > 0 || filteredCuisines.length > 0 || filteredRestaurants.length > 0));
     }, 200);
 
     return () => clearTimeout(timer);
