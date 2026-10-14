@@ -289,7 +289,7 @@ export function SearchBar({
         transition={{ delay: 0.3, duration: 0.5 }}
         className={`flex items-center gap-1 md:gap-2 search-card rounded-2xl ${
           isHero ? 'p-1.5 md:p-3' : 'p-1.5'
-        } ${showSuggestions ? 'relative z-[10001]' : ''}`}
+        }`}
       >
         {/* Search Input with chips */}
         <div className="flex-1 relative flex items-center flex-wrap gap-1">
@@ -418,7 +418,8 @@ export function SearchBar({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className="fixed inset-0 z-[9998] md:bg-transparent bg-black/40"
+              className="fixed left-0 right-0 bottom-0 z-[9998] md:bg-transparent bg-black/40"
+              style={{ top: dropdownPosition.top }}
               onClick={() => setShowSuggestions(false)}
             />
             
@@ -734,7 +735,8 @@ export function SearchBar({
       {/* Desktop backdrop for closing dropdowns */}
       {(showCityDropdown || showSuggestions) && (
         <div 
-          className="fixed inset-0 z-[9997] hidden md:block" 
+          className="fixed left-0 right-0 bottom-0 z-[9997] hidden md:block" 
+          style={{ top: showCityDropdown ? cityDropdownPosition.top : dropdownPosition.top }}
           onClick={() => {
             setShowCityDropdown(false);
             setShowSuggestions(false);
