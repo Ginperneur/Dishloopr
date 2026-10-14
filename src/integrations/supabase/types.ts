@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
@@ -1956,6 +1956,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      opruiming_20261010: {
+        Row: {
+          doel: string
+          doel_id: string
+          gedaan_op: string
+          id: number
+          oude_waarde: string | null
+          soort: string
+        }
+        Insert: {
+          doel: string
+          doel_id: string
+          gedaan_op?: string
+          id?: number
+          oude_waarde?: string | null
+          soort: string
+        }
+        Update: {
+          doel?: string
+          doel_id?: string
+          gedaan_op?: string
+          id?: number
+          oude_waarde?: string | null
+          soort?: string
+        }
+        Relationships: []
       }
       owner_anomaly_alerts_log: {
         Row: {

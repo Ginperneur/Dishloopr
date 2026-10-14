@@ -418,7 +418,8 @@ export function SearchBar({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className="fixed inset-0 z-[9998] md:bg-transparent bg-black/40"
+              className="fixed left-0 right-0 bottom-0 z-[9998] md:bg-transparent bg-black/40"
+              style={{ top: dropdownPosition.top }}
               onClick={() => setShowSuggestions(false)}
             />
             
@@ -734,7 +735,8 @@ export function SearchBar({
       {/* Desktop backdrop for closing dropdowns */}
       {(showCityDropdown || showSuggestions) && (
         <div 
-          className="fixed inset-0 z-[9997] hidden md:block" 
+          className="fixed left-0 right-0 bottom-0 z-[9997] hidden md:block" 
+          style={{ top: showCityDropdown ? cityDropdownPosition.top : dropdownPosition.top }}
           onClick={() => {
             setShowCityDropdown(false);
             setShowSuggestions(false);
