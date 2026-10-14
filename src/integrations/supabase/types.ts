@@ -3941,6 +3941,24 @@ export type Database = {
           },
         ]
       }
+      search_synonyms: {
+        Row: {
+          created_at: string | null
+          target: string
+          term: string
+        }
+        Insert: {
+          created_at?: string | null
+          target: string
+          term: string
+        }
+        Update: {
+          created_at?: string | null
+          target?: string
+          term?: string
+        }
+        Relationships: []
+      }
       seo_landing_pages: {
         Row: {
           canonical_url: string | null
@@ -5152,6 +5170,7 @@ export type Database = {
       create_biweekly_newsletter_draft: { Args: never; Returns: string }
       deduplicate_dishes: { Args: never; Returns: Json }
       deduplicate_restaurant_dishes: { Args: never; Returns: Json }
+      dl_norm: { Args: { t: string }; Returns: string }
       generate_amsterdam_grid: { Args: never; Returns: number }
       generate_city_grid: {
         Args: {
@@ -5167,6 +5186,7 @@ export type Database = {
         Returns: number
       }
       get_available_slots: { Args: { p_product_id: string }; Returns: number }
+      get_empty_restaurant_ids: { Args: never; Returns: string[] }
       get_featured_active_count: {
         Args: { p_slot_id: string }
         Returns: number
@@ -5272,6 +5292,14 @@ export type Database = {
         Args: { _restaurant_id: string; _user_id: string }
         Returns: boolean
       }
+      parse_search_query: {
+        Args: { p_query: string }
+        Returns: {
+          city_id: string
+          city_name: string
+          term: string
+        }[]
+      }
       rescan_discovery_duplicates: { Args: { p_rules?: Json }; Returns: Json }
       search_dishes_by_term: {
         Args: { search_term: string }
@@ -5301,6 +5329,27 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      search_restaurants: {
+        Args: { p_city_id?: string; p_limit?: number; p_term: string }
+        Returns: {
+          approved_dish_count: number
+          did_you_mean: string
+          match_score: number
+          match_type: string
+          matched_dishes: string[]
+          resolved_term: string
+          restaurant_id: string
+        }[]
+      }
+      search_suggest: {
+        Args: { p_city_id?: string; p_limit?: number; p_query: string }
+        Returns: {
+          canon: string
+          display_name: string
+          match_type: string
+          restaurant_count: number
+        }[]
       }
       set_signature_dish: {
         Args: { _rd_id: string; _restaurant_id: string }
