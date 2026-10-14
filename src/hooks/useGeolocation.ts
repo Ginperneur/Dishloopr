@@ -32,40 +32,42 @@ export function useGeolocation(): UseGeolocationReturn {
 
     setState(prev => ({ ...prev, loading: true, error: null }));
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setState({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          error: null,
-          loading: false,
-        });
-      },
-      (error) => {
-        let errorMessage = 'Unable to get your location';
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = 'Location permission denied';
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Location information unavailable';
-            break;
-          case error.TIMEOUT:
-            errorMessage = 'Location request timed out';
-            break;
-        }
-        setState({
-          latitude: null,
-          longitude: null,
-          error: errorMessage,
-          loading: false,
-        });
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 300000, // 5 minutes cache
+    const onSuccess = (position: GeolocationPosition) => {
+      setState({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        error: null,
+        loading: false,
+      });
+    };
+    const onFinalError = (error: GeolocationPositionError) => {
+      let errorMessage = 'Kon je locatie niet bepalen';
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          errorMessage = 'Locatietoegang geweigerd. Sta locatie toe in je browserinstellingen.';
+          break;
+        case error.POSITION_UNAVAILABLE:
+          errorMessage = 'Locatie niet beschikbaar';
+          break;
+        case error.TIMEOUT:
+          errorMessage = 'Locatie ophalen duurde te lang, probeer opnieuw';
+          break;
       }
+      setState({ latitude: null, longitude: null, error: errorMessage, loading: false });
+    };
+
+    // Fast, low-accuracy attempt first (works on desktop/wifi); fall back to GPS.
+    navigator.geolocation.getCurrentPosition(
+      onSuccess,
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) return onFinalError(err);
+        navigator.geolocation.getCurrentPosition(onSuccess, onFinalError, {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 300000,
+        });
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
     );
   }, []);
 

@@ -110,8 +110,27 @@ export default function SearchPage() {
   };
   
   // Geolocation for "near me" feature
-  const { latitude, longitude, loading: locationLoading, requestLocation } = useGeolocation();
-  const userLocation = latitude && longitude ? { lat: latitude, lng: longitude } : null;
+  const { latitude, longitude, loading: locationLoading, error: locationError, requestLocation } = useGeolocation();
+  // Location passed from the homepage "Bij mij in de buurt" button (?near=lat,lng)
+  const nearParam = searchParams.get('near');
+  const nearLocation = useMemo(() => {
+    if (!nearParam) return null;
+    const [la, ln] = nearParam.split(',').map(Number);
+    return Number.isFinite(la) && Number.isFinite(ln) ? { lat: la, lng: ln } : null;
+  }, [nearParam]);
+  const userLocation = latitude && longitude ? { lat: latitude, lng: longitude } : nearLocation;
+
+  // Arriving with ?near → sort by distance automatically
+  useEffect(() => {
+    if (nearLocation) setSortBy('nearest');
+  }, [nearLocation]);
+
+  useEffect(() => {
+    if (locationError) {
+      toast.error(locationError);
+      setPendingNearMe(false);
+    }
+  }, [locationError]);
 
   // Sync selectedCityId with resolved city ID
   useEffect(() => {
