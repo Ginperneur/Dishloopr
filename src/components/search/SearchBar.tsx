@@ -289,7 +289,7 @@ export function SearchBar({
         transition={{ delay: 0.3, duration: 0.5 }}
         className={`flex items-center gap-1 md:gap-2 search-card rounded-2xl ${
           isHero ? 'p-1.5 md:p-3' : 'p-1.5'
-        }`}
+        } ${showSuggestions ? 'relative z-[10001]' : ''}`}
       >
         {/* Search Input with chips */}
         <div className="flex-1 relative flex items-center flex-wrap gap-1">
