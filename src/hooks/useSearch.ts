@@ -73,6 +73,7 @@ export function useSearch() {
   const [detectedCity, setDetectedCity] = useState<{ id: string; name: string } | null>(null);
   const [didYouMean, setDidYouMean] = useState<string | null>(null);
   const [isFuzzyMatch, setIsFuzzyMatch] = useState(false);
+  const [parsedQuery, setParsedQuery] = useState('');
 
   useEffect(() => {
     fetchCities();
@@ -117,6 +118,7 @@ export function useSearch() {
       .map(p => (p.term ?? '').toLowerCase().trim())
       .filter(t => t.length > 0);
     const isMultiDish = queryTerms.length > 1;
+    setParsedQuery(queryTerms.join(', '));
 
     const ctx: ScoringContext = { queryLower: queryTerms[0] || '', now };
 
@@ -543,5 +545,5 @@ export function useSearch() {
     setLoading(false);
   }, [cities]);
 
-  return { search, results, loading, dishes, cities, detectedCity, didYouMean, isFuzzyMatch };
+  return { search, results, loading, dishes, cities, detectedCity, didYouMean, isFuzzyMatch, parsedQuery };
 }

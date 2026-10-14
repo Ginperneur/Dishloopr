@@ -50,7 +50,7 @@ export default function SearchPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { search, results, loading, cities, dishes } = useSearch();
+  const { search, results, loading, cities, dishes, detectedCity, didYouMean, isFuzzyMatch, parsedQuery } = useSearch();
   const { isSaved, toggle: toggleSavedSearch } = useSavedSearches();
   
   // Accept both `?dish=` (internal) and `?q=` (external/SEO/shared links)
@@ -72,6 +72,17 @@ export default function SearchPage() {
     );
     return match?.id || 'all';
   }, [cityParam, cities]);
+
+  // City detected in the query ("pizza in rotterdam") → move it into the URL.
+  useEffect(() => {
+    if (!detectedCity || searchParams.get('city')) return;
+    const params = new URLSearchParams(searchParams);
+    const slug = cities.find(c => c.id === detectedCity.id)?.slug;
+    params.set('city', slug || detectedCity.id);
+    params.delete('q');
+    if (parsedQuery) params.set('dish', parsedQuery); else params.delete('dish');
+    setSearchParams(params, { replace: true });
+  }, [detectedCity, parsedQuery]);
   
   const [selectedCityId, setSelectedCityId] = useState(resolvedCityId);
   
@@ -670,6 +681,11 @@ export default function SearchPage() {
           </div>
         ) : sortedResults.length > 0 ? (
           <>
+            {isFuzzyMatch && didYouMean && (
+              <p className="mb-4 text-sm text-muted-foreground">
+                Resultaten voor <span className="font-semibold text-foreground">{didYouMean.charAt(0).toUpperCase() + didYouMean.slice(1)}</span>
+              </p>
+            )}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -718,7 +734,23 @@ export default function SearchPage() {
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-muted mb-6">
               <UtensilsCrossed className="h-10 w-10 text-muted-foreground" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">{t('search.noResultsTitle', 'Geen resultaten gevonden')}</h3>
+            <h3 className="text-xl font-semibold mb-2">
+              {dishQuery ? `Geen restaurants gevonden voor ${dishQuery}` : t('search.noResultsTitle', 'Geen resultaten gevonden')}
+            </h3>
+            {dishQuery && didYouMean && (
+              <Button
+                className="mb-4"
+                onClick={() => {
+                  const params = new URLSearchParams();
+                  params.set('dish', didYouMean);
+                  const c = searchParams.get('city');
+                  if (c) params.set('city', c);
+                  navigate(`/search?${params.toString()}`);
+                }}
+              >
+                Bedoelde je {didYouMean}?
+              </Button>
+            )}
             <p className="text-muted-foreground max-w-md mx-auto mb-6">
               {filters.dietaryOptions.length > 0
                 ? t('search.noResultsDietary', 'Nog geen restaurants met dit filter — dit groeit zodra restaurants hun gerechten taggen.')
