@@ -17,46 +17,18 @@ const TTL_MS = 5 * 60 * 1000;
 let cache: { empty: Set<string>; ts: number } | null = null;
 let inflight: Promise<Set<string>> | null = null;
 
-async function fetchAllIds(
-  builder: () => any,
-  extract: (row: any) => string
-): Promise<Set<string>> {
-  const ids = new Set<string>();
-  const pageSize = 1000;
-  let from = 0;
-  while (true) {
-    const { data, error } = await builder().range(from, from + pageSize - 1);
-    if (error || !data) break;
-    data.forEach((r: any) => ids.add(extract(r)));
-    if (data.length < pageSize) break;
-    from += pageSize;
-  }
-  return ids;
-}
-
 export async function getEmptyRestaurantIds(force = false): Promise<Set<string>> {
   if (!force && cache && Date.now() - cache.ts < TTL_MS) return cache.empty;
   if (!force && inflight) return inflight;
 
   inflight = (async () => {
-    const [activeIds, approvedIds] = await Promise.all([
-      fetchAllIds(
-        () => supabase.from('restaurants').select('id').eq('is_active', true),
-        (r) => r.id
-      ),
-      fetchAllIds(
-        () =>
-          supabase
-            .from('restaurant_dishes')
-            .select('restaurant_id')
-            .eq('status', 'approved_by_admin'),
-        (r) => r.restaurant_id
-      ),
-    ]);
-    const empty = new Set<string>();
-    activeIds.forEach((id) => {
-      if (!approvedIds.has(id)) empty.add(id);
-    });
+    const { data, error } = await supabase.rpc('get_empty_restaurant_ids' as any);
+    if (error) console.error('get_empty_restaurant_ids error:', error);
+    const empty = new Set<string>(
+      ((data as any[]) || []).map((v: any) =>
+        typeof v === 'string' ? v : v?.get_empty_restaurant_ids ?? v?.id
+      ).filter(Boolean)
+    );
     cache = { empty, ts: Date.now() };
     inflight = null;
     return empty;

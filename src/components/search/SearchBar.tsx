@@ -30,6 +30,13 @@ function chipsToQuery(chips: string[]): string {
   return chips.join(', ');
 }
 
+interface DishSuggestion {
+  canon: string;
+  display_name: string;
+  restaurant_count: number;
+  match_type: string | null;
+}
+
 export function SearchBar({ 
   onSearch, 
   variant = 'hero',
@@ -48,7 +55,7 @@ export function SearchBar({
     return chips.length > 0 ? '' : initialQuery;
   });
   const [cityId, setCityId] = useState(initialCity);
-  const [suggestions, setSuggestions] = useState<Dish[]>([]);
+  const [suggestions, setSuggestions] = useState<DishSuggestion[]>([]);
   const [restaurantSuggestions, setRestaurantSuggestions] = useState<Restaurant[]>([]);
   const [cuisineSuggestions, setCuisineSuggestions] = useState<string[]>([]);
   const [cities, setCities] = useState<City[]>([]);
@@ -117,10 +124,12 @@ export function SearchBar({
       const queryLower = query.toLowerCase();
       const selectedLower = selectedDishes.map(d => d.toLowerCase());
 
-      // Server-side dish search via RPC (no 1000-row cap)
-      const { data: dishResults } = await supabase.rpc('search_dishes_by_term', { search_term: queryLower });
-      const filteredDishes = (dishResults || []).filter(
-        (d: Dish) => !selectedLower.includes(d.name.toLowerCase())
+      const { data: suggestRows } = await supabase.rpc('search_suggest' as any, {
+        p_query: query,
+        p_city_id: cityId && cityId !== 'all' ? cityId : null,
+      });
+      const filteredDishes = ((suggestRows as DishSuggestion[]) || []).filter(
+        (d) => !selectedLower.includes((d.display_name || '').toLowerCase())
       );
       setSuggestions(filteredDishes.slice(0, 8));
 
@@ -129,19 +138,13 @@ export function SearchBar({
         r => r.name.toLowerCase().includes(queryLower)
       );
       setRestaurantSuggestions(filteredRestaurants.slice(0, 3));
+      setCuisineSuggestions([]);
 
-      // Filter cuisines from dish results
-      const dishCuisines = [...new Set(filteredDishes.flatMap((d: Dish) => d.cuisine_tags || []))];
-      const filteredCuisines = dishCuisines.filter(c =>
-        c.toLowerCase().includes(queryLower)
-      );
-      setCuisineSuggestions(filteredCuisines.slice(0, 3));
-
-      setShowSuggestions(!suppressSuggestionsRef.current && (filteredDishes.length > 0 || filteredCuisines.length > 0 || filteredRestaurants.length > 0));
+      setShowSuggestions(!suppressSuggestionsRef.current && (filteredDishes.length > 0 || filteredRestaurants.length > 0));
     }, 200);
 
     return () => clearTimeout(timer);
-  }, [query, allRestaurants, selectedDishes]);
+  }, [query, allRestaurants, selectedDishes, cityId]);
 
   // Close dropdowns on escape
   useEffect(() => {
@@ -465,22 +468,18 @@ export function SearchBar({
                     <div className="px-4 py-2.5 text-xs font-bold text-muted-foreground bg-muted/30 border-b border-border/50">
                       Gerechten
                     </div>
-                    {suggestions.map((dish) => (
+                    {suggestions.map((s) => (
                       <button
-                        key={dish.id}
-                        onClick={() => handleSuggestionClick(dish.name)}
+                        key={s.canon}
+                        onClick={() => handleSuggestionClick(s.display_name)}
                         className="w-full px-4 py-4 text-left hover:bg-muted active:bg-muted transition-colors flex items-center gap-3 border-b border-border/30"
                       >
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                           <Search className="h-5 w-5 text-primary" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <span className="font-medium text-base block">{toTitleCase(dish.name)}</span>
-                          {dish.synonyms && dish.synonyms.length > 0 && (
-                            <span className="text-sm text-muted-foreground">
-                              {dish.synonyms.slice(0, 2).map(s => toTitleCase(s)).join(', ')}
-                            </span>
-                          )}
+                          <span className="font-medium text-base">{s.display_name}</span>
+                          <span className="text-sm text-muted-foreground ml-1">· {s.restaurant_count} restaurants</span>
                         </div>
                       </button>
                     ))}
@@ -568,20 +567,16 @@ export function SearchBar({
                     <div className="px-4 py-2 text-xs font-bold text-muted-foreground bg-muted/50">
                       Gerechten
                     </div>
-                    {suggestions.map((dish) => (
+                    {suggestions.map((s) => (
                       <button
-                        key={dish.id}
-                        onClick={() => handleSuggestionClick(dish.name)}
+                        key={s.canon}
+                        onClick={() => handleSuggestionClick(s.display_name)}
                         className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3"
                       >
                         <Search className="h-4 w-4 text-muted-foreground" />
                         <div>
-                          <span className="font-medium">{toTitleCase(dish.name)}</span>
-                          {dish.synonyms && dish.synonyms.length > 0 && (
-                            <span className="text-sm text-muted-foreground ml-2">
-                              ({dish.synonyms.slice(0, 2).map(s => toTitleCase(s)).join(', ')})
-                            </span>
-                          )}
+                          <span className="font-medium">{s.display_name}</span>
+                          <span className="text-sm text-muted-foreground ml-1">· {s.restaurant_count} restaurants</span>
                         </div>
                       </button>
                     ))}

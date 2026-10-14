@@ -70,6 +70,10 @@ export function useSearch() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [cities, setCities] = useState<City[]>([]);
+  const [detectedCity, setDetectedCity] = useState<{ id: string; name: string } | null>(null);
+  const [didYouMean, setDidYouMean] = useState<string | null>(null);
+  const [isFuzzyMatch, setIsFuzzyMatch] = useState(false);
+  const [parsedQuery, setParsedQuery] = useState('');
 
   useEffect(() => {
     fetchCities();
@@ -80,106 +84,106 @@ export function useSearch() {
     if (data) setCities(data);
   };
 
-  /**
-   * Search for matching dishes server-side using the search_dishes_by_term RPC.
-   */
-  const findMatchingDishes = async (term: string): Promise<Dish[]> => {
-    const { data, error } = await supabase.rpc('search_dishes_by_term', { search_term: term });
-    if (error) {
-      console.error('Dish search error:', error);
-      return [];
-    }
-    return (data as Dish[]) || [];
-  };
-
-  const search = useCallback(async (query: string, cityId?: string, filters?: SearchFilters, featuredOnly?: boolean) => {
+  const search = useCallback(async (query: string, cityIdInput?: string, filters?: SearchFilters, featuredOnly?: boolean) => {
     setLoading(true);
-    
+    let cityId = cityIdInput;
+    const noCityChosen = !cityId || cityId === 'all';
+
     const queryLower = query.toLowerCase().trim();
     const now = new Date();
-    
-    // Support multi-dish search: split by comma
-    const queryTerms = queryLower
-      .split(',')
-      .map(t => t.trim())
+
+    // Support multi-dish search: split by comma, then parse each term (city detection)
+    const rawTerms = queryLower.split(',').map(t => t.trim()).filter(t => t.length > 0);
+    const parsed = await Promise.all(
+      rawTerms.map(async (term) => {
+        const { data, error } = await supabase.rpc('parse_search_query' as any, { p_query: term });
+        if (error) console.error('parse_search_query error:', error);
+        const row = (Array.isArray(data) ? data[0] : data) as
+          | { term: string | null; city_id: string | null; city_name: string | null }
+          | undefined;
+        return row ?? { term, city_id: null, city_name: null };
+      })
+    );
+    let detected: { id: string; name: string } | null = null;
+    if (noCityChosen) {
+      const hit = parsed.find(p => p.city_id);
+      if (hit?.city_id) {
+        detected = { id: hit.city_id, name: hit.city_name || '' };
+        cityId = hit.city_id;
+      }
+    }
+    setDetectedCity(detected);
+
+    const queryTerms = parsed
+      .map(p => (p.term ?? '').toLowerCase().trim())
       .filter(t => t.length > 0);
     const isMultiDish = queryTerms.length > 1;
-    
+    setParsedQuery(queryTerms.join(', '));
+
     const ctx: ScoringContext = { queryLower: queryTerms[0] || '', now };
-    
+
     let citiesToUse = cities;
     if (citiesToUse.length === 0) {
       const { data } = await supabase.from('cities').select('*').eq('is_active', true).order('name');
       citiesToUse = data || [];
       if (citiesToUse.length > 0) setCities(citiesToUse);
     }
-    
-    // ── Step 1: Find matching dishes SERVER-SIDE ──
-    const matchingDishesByTerm = new Map<string, Dish[]>();
-    const allMatchingDishes: Dish[] = [];
-    const seen = new Set<string>();
-    
-    if (queryTerms.length > 0) {
-      const termResults = await Promise.all(queryTerms.map(term => findMatchingDishes(term)));
-      
-      queryTerms.forEach((term, i) => {
-        const termMatches = termResults[i];
-        if (termMatches.length > 0) {
-          matchingDishesByTerm.set(term, termMatches);
-          termMatches.forEach(d => {
-            if (!seen.has(d.id)) {
-              seen.add(d.id);
-              allMatchingDishes.push(d);
-            }
-          });
-        }
-      });
-    }
-    const matchingDishes = allMatchingDishes;
-    
-    // Update dishes state for autocomplete/UI
-    if (matchingDishes.length > 0) {
-      setDishes(prev => {
-        const existing = new Set(prev.map(d => d.id));
-        const newDishes = matchingDishes.filter(d => !existing.has(d.id));
-        return newDishes.length > 0 ? [...prev, ...newDishes] : prev;
-      });
-    }
 
-    // ── Step 2: Get ALL restaurant-dish links (paginated, no 1000-row cap) ──
-    let restaurantDishMap = new Map<string, DishMatchInfo[]>();
+    // ── Step 1: search_restaurants RPC per term ──
+    const restaurantDishMap = new Map<string, DishMatchInfo[]>();
     const dishLinkedRestaurantIds = new Set<string>();
+    const termRestaurantIds = new Map<string, Set<string>>();
+    const restaurantDishCount = new Map<string, number>();
+    let firstDidYouMean: string | null = null;
+    let fuzzy = false;
 
-    if (matchingDishes.length > 0) {
-      const dishIds = matchingDishes.map(d => d.id);
-
-      const links = await fetchAllRows<{
-        restaurant_id: string;
-        dish_id: string;
-        is_signature: boolean;
-        confidence_score: number;
-      }>((from, to) =>
-        supabase
-          .from('restaurant_dishes')
-          .select('restaurant_id, dish_id, is_signature, confidence_score')
-          .in('dish_id', dishIds)
-          .neq('status', 'rejected')
-          .range(from, to)
+    if (queryTerms.length > 0) {
+      const termResults = await Promise.all(
+        queryTerms.map(async (term) => {
+          const { data, error } = await supabase.rpc('search_restaurants' as any, {
+            p_term: term,
+            p_city_id: cityId && cityId !== 'all' ? cityId : null,
+            p_limit: 1000,
+          });
+          if (error) console.error('search_restaurants error:', error);
+          return ((data as any[]) || []) as Array<{
+            restaurant_id: string;
+            match_score: number;
+            match_type: string | null;
+            matched_dishes: string[] | null;
+            approved_dish_count: number | null;
+            resolved_term: string | null;
+            did_you_mean: string | null;
+          }>;
+        })
       );
 
-      links.forEach(link => {
-        dishLinkedRestaurantIds.add(link.restaurant_id);
-        const dishName = matchingDishes.find(d => d.id === link.dish_id)?.name;
-        if (dishName) {
-          const existing = restaurantDishMap.get(link.restaurant_id) || [];
-          existing.push({
-            name: dishName,
-            isSignature: link.is_signature || false,
-            confidenceScore: Number(link.confidence_score) || 0.5,
+      queryTerms.forEach((term, i) => {
+        const rows = termResults[i];
+        if (!firstDidYouMean && rows[0]?.did_you_mean) firstDidYouMean = rows[0].did_you_mean;
+        if (rows.some(r => r.match_type === 'lijkt op')) fuzzy = true;
+        const ids = new Set<string>();
+        rows.forEach(r => {
+          ids.add(r.restaurant_id);
+          dishLinkedRestaurantIds.add(r.restaurant_id);
+          restaurantDishCount.set(r.restaurant_id, Number(r.approved_dish_count) || 0);
+          const existing = restaurantDishMap.get(r.restaurant_id) || [];
+          (r.matched_dishes || []).forEach(name => {
+            existing.push({ name, isSignature: false, confidenceScore: Number(r.match_score) || 0 });
           });
-          restaurantDishMap.set(link.restaurant_id, existing);
-        }
+          restaurantDishMap.set(r.restaurant_id, existing);
+        });
+        termRestaurantIds.set(term, ids);
       });
+    }
+    setDidYouMean(firstDidYouMean);
+    setIsFuzzyMatch(fuzzy);
+
+    // A search term without matches → 0 results. Never fall back to all restaurants.
+    if (queryTerms.length > 0 && dishLinkedRestaurantIds.size === 0) {
+      setResults([]);
+      setLoading(false);
+      return;
     }
 
     // ── Step 2b: Dietary filter — get restaurant IDs via restaurant_dishes ──
@@ -250,9 +254,7 @@ export function useSearch() {
     }
 
     // ── Step 3: Fetch restaurants ──
-    // When we have dish matches, fetch ONLY those restaurants (precise, no limit).
-    // For browse/text-only, apply a reasonable limit.
-    const hasDishMatches = matchingDishes.length > 0;
+    const hasDishMatches = dishLinkedRestaurantIds.size > 0;
 
     // Dish-first listing eligibility: exclude active restaurants that have 0
     // approved dishes from search results and browse. Reversible: as soon as
@@ -283,32 +285,13 @@ export function useSearch() {
       }
     }
 
-    const buildRestaurantQuery = () => {
+    const buildRestaurantQuery = (idChunk?: string[]) => {
       let q = supabase.from('restaurants').select('*').eq('is_active', true);
       // Hide restaurants without photos from public listings
       q = q.not('images', 'is', null).not('images', 'eq', '{}');
 
-      if (hasDishMatches) {
-        // Fetch only restaurants that have matching dishes
-        let targetIds = [...dishLinkedRestaurantIds];
-        // If dietary filter is active, intersect with dietary results
-        if (dietaryRestaurantIds) {
-          targetIds = targetIds.filter(id => dietaryRestaurantIds!.has(id));
-        }
-        if (targetIds.length === 0) {
-          // No matches possible
-          q = q.eq('id', '00000000-0000-0000-0000-000000000000');
-        } else {
-          q = q.in('id', targetIds);
-        }
-      } else if (dietaryRestaurantIds) {
-        // No dish search, but dietary filter active
-        const ids = [...dietaryRestaurantIds];
-        if (ids.length === 0) {
-          q = q.eq('id', '00000000-0000-0000-0000-000000000000');
-        } else {
-          q = q.in('id', ids);
-        }
+      if (idChunk) {
+        q = q.in('id', idChunk);
       } else {
         q = q.limit(BROWSE_LIMIT);
       }
@@ -401,10 +384,27 @@ export function useSearch() {
       return q;
     };
 
-    // Paginate to bypass PostgREST's 1000-row cap so the full result set is loaded.
-    const restaurants = await fetchAllRows<Restaurant>((from, to) =>
-      buildRestaurantQuery().range(from, to)
-    );
+    // Dish matches: fetch by id in parallel blocks of 150. Otherwise paginate.
+    let restaurants: Restaurant[];
+    if (hasDishMatches || dietaryRestaurantIds) {
+      let targetIds = hasDishMatches ? [...dishLinkedRestaurantIds] : [...dietaryRestaurantIds!];
+      if (hasDishMatches && dietaryRestaurantIds) {
+        targetIds = targetIds.filter(id => dietaryRestaurantIds!.has(id));
+      }
+      const chunks: string[][] = [];
+      for (let i = 0; i < targetIds.length; i += 150) chunks.push(targetIds.slice(i, i + 150));
+      const parts = await Promise.all(
+        chunks.map(async (chunk) => {
+          const { data } = await buildRestaurantQuery(chunk);
+          return (data as Restaurant[]) || [];
+        })
+      );
+      restaurants = parts.flat();
+    } else {
+      restaurants = await fetchAllRows<Restaurant>((from, to) =>
+        buildRestaurantQuery().range(from, to)
+      );
+    }
 
     if (!restaurants) {
       setResults([]);
@@ -462,16 +462,20 @@ export function useSearch() {
 
     // ── Step 6: Sponsored check ──
     const sponsoredRestaurants = new Set<string>();
-    if (matchingDishes.length > 0 && cityId && cityId !== 'all') {
-      const dishIds = matchingDishes.map(d => d.id);
-      const { data: sponsoredData } = await supabase
+    if (hasDishMatches && cityId && cityId !== 'all') {
+      const names = [...new Set([...restaurantDishMap.values()].flat().map(d => d.name))].slice(0, 300);
+      const { data: dishRows } = names.length
+        ? await supabase.from('dishes').select('id').in('name', names)
+        : { data: [] as any[] };
+      const dishIds = (dishRows || []).map((d: any) => d.id);
+      const { data: sponsoredData } = dishIds.length ? await supabase
         .from('sponsored_purchases_public' as any)
         .select('restaurant_id, sponsored_products!inner(dish_id, city_id)')
         .eq('is_active', true)
-        .gt('expires_at', now.toISOString());
+        .gt('expires_at', now.toISOString()) : { data: null };
 
       if (sponsoredData) {
-        sponsoredData.forEach((sp: any) => {
+        (sponsoredData as any[]).forEach((sp: any) => {
           const product = sp.sponsored_products;
           if (dishIds.includes(product.dish_id) && product.city_id === cityId) {
             sponsoredRestaurants.add(sp.restaurant_id);
@@ -482,36 +486,10 @@ export function useSearch() {
 
     // ── Step 7: Multi-dish coverage ──
     const restaurantTermCoverage = new Map<string, number>();
-    if (isMultiDish && matchingDishesByTerm.size > 0) {
-      for (const [_term, termDishes] of matchingDishesByTerm) {
-        const termDishIds = new Set(termDishes.map(d => d.id));
-        for (const [restaurantId, rDishes] of restaurantDishMap) {
-          const matchesTerm = rDishes.some(d => {
-            const dish = matchingDishes.find(md => md.name === d.name);
-            return dish && termDishIds.has(dish.id);
-          });
-          if (matchesTerm) {
-            restaurantTermCoverage.set(restaurantId, (restaurantTermCoverage.get(restaurantId) || 0) + 1);
-          }
-        }
+    if (isMultiDish) {
+      for (const ids of termRestaurantIds.values()) {
+        ids.forEach(id => restaurantTermCoverage.set(id, (restaurantTermCoverage.get(id) || 0) + 1));
       }
-    }
-
-    // ── Step 7b: Total dish count per restaurant (for thin-menu penalty) ──
-    const restaurantDishCount = new Map<string, number>();
-    if (filteredRestaurants.length > 0) {
-      const ids = filteredRestaurants.map(r => r.id);
-      const allLinks = await fetchAllRows<{ restaurant_id: string }>((from, to) =>
-        supabase
-          .from('restaurant_dishes')
-          .select('restaurant_id')
-          .in('restaurant_id', ids)
-          .neq('status', 'rejected')
-          .range(from, to)
-      );
-      allLinks.forEach(l => {
-        restaurantDishCount.set(l.restaurant_id, (restaurantDishCount.get(l.restaurant_id) || 0) + 1);
-      });
     }
 
     // ── Step 8: Score & rank ──
@@ -521,7 +499,6 @@ export function useSearch() {
     for (const restaurant of filteredRestaurants) {
       const linkedDishes = restaurantDishMap.get(restaurant.id) || null;
       
-      // If the search matched known dishes, skip restaurants without that dish
       if (hasDishMatches && (!linkedDishes || linkedDishes.length === 0)) {
         continue;
       }
@@ -561,7 +538,6 @@ export function useSearch() {
       }
     }
 
-    // Sort → rebalance sponsored → enforce chain diversity
     const sorted = sortResults(scoredResults);
     const rebalanced = rebalanceSponsoredResults(sorted);
 
@@ -569,5 +545,5 @@ export function useSearch() {
     setLoading(false);
   }, [cities]);
 
-  return { search, results, loading, dishes, cities };
+  return { search, results, loading, dishes, cities, detectedCity, didYouMean, isFuzzyMatch, parsedQuery };
 }
