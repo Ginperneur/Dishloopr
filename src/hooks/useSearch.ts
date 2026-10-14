@@ -250,9 +250,7 @@ export function useSearch() {
     }
 
     // ── Step 3: Fetch restaurants ──
-    // When we have dish matches, fetch ONLY those restaurants (precise, no limit).
-    // For browse/text-only, apply a reasonable limit.
-    const hasDishMatches = matchingDishes.length > 0;
+    const hasDishMatches = dishLinkedRestaurantIds.size > 0;
 
     // Dish-first listing eligibility: exclude active restaurants that have 0
     // approved dishes from search results and browse. Reversible: as soon as
@@ -283,32 +281,13 @@ export function useSearch() {
       }
     }
 
-    const buildRestaurantQuery = () => {
+    const buildRestaurantQuery = (idChunk?: string[]) => {
       let q = supabase.from('restaurants').select('*').eq('is_active', true);
       // Hide restaurants without photos from public listings
       q = q.not('images', 'is', null).not('images', 'eq', '{}');
 
-      if (hasDishMatches) {
-        // Fetch only restaurants that have matching dishes
-        let targetIds = [...dishLinkedRestaurantIds];
-        // If dietary filter is active, intersect with dietary results
-        if (dietaryRestaurantIds) {
-          targetIds = targetIds.filter(id => dietaryRestaurantIds!.has(id));
-        }
-        if (targetIds.length === 0) {
-          // No matches possible
-          q = q.eq('id', '00000000-0000-0000-0000-000000000000');
-        } else {
-          q = q.in('id', targetIds);
-        }
-      } else if (dietaryRestaurantIds) {
-        // No dish search, but dietary filter active
-        const ids = [...dietaryRestaurantIds];
-        if (ids.length === 0) {
-          q = q.eq('id', '00000000-0000-0000-0000-000000000000');
-        } else {
-          q = q.in('id', ids);
-        }
+      if (idChunk) {
+        q = q.in('id', idChunk);
       } else {
         q = q.limit(BROWSE_LIMIT);
       }
@@ -401,10 +380,27 @@ export function useSearch() {
       return q;
     };
 
-    // Paginate to bypass PostgREST's 1000-row cap so the full result set is loaded.
-    const restaurants = await fetchAllRows<Restaurant>((from, to) =>
-      buildRestaurantQuery().range(from, to)
-    );
+    // Dish matches: fetch by id in parallel blocks of 150. Otherwise paginate.
+    let restaurants: Restaurant[];
+    if (hasDishMatches || dietaryRestaurantIds) {
+      let targetIds = hasDishMatches ? [...dishLinkedRestaurantIds] : [...dietaryRestaurantIds!];
+      if (hasDishMatches && dietaryRestaurantIds) {
+        targetIds = targetIds.filter(id => dietaryRestaurantIds!.has(id));
+      }
+      const chunks: string[][] = [];
+      for (let i = 0; i < targetIds.length; i += 150) chunks.push(targetIds.slice(i, i + 150));
+      const parts = await Promise.all(
+        chunks.map(async (chunk) => {
+          const { data } = await buildRestaurantQuery(chunk);
+          return (data as Restaurant[]) || [];
+        })
+      );
+      restaurants = parts.flat();
+    } else {
+      restaurants = await fetchAllRows<Restaurant>((from, to) =>
+        buildRestaurantQuery().range(from, to)
+      );
+    }
 
     if (!restaurants) {
       setResults([]);
