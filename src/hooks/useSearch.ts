@@ -462,16 +462,20 @@ export function useSearch() {
 
     // ── Step 6: Sponsored check ──
     const sponsoredRestaurants = new Set<string>();
-    if (matchingDishes.length > 0 && cityId && cityId !== 'all') {
-      const dishIds = matchingDishes.map(d => d.id);
-      const { data: sponsoredData } = await supabase
+    if (hasDishMatches && cityId && cityId !== 'all') {
+      const names = [...new Set([...restaurantDishMap.values()].flat().map(d => d.name))].slice(0, 300);
+      const { data: dishRows } = names.length
+        ? await supabase.from('dishes').select('id').in('name', names)
+        : { data: [] as any[] };
+      const dishIds = (dishRows || []).map((d: any) => d.id);
+      const { data: sponsoredData } = dishIds.length ? await supabase
         .from('sponsored_purchases_public' as any)
         .select('restaurant_id, sponsored_products!inner(dish_id, city_id)')
         .eq('is_active', true)
-        .gt('expires_at', now.toISOString());
+        .gt('expires_at', now.toISOString()) : { data: null };
 
       if (sponsoredData) {
-        sponsoredData.forEach((sp: any) => {
+        (sponsoredData as any[]).forEach((sp: any) => {
           const product = sp.sponsored_products;
           if (dishIds.includes(product.dish_id) && product.city_id === cityId) {
             sponsoredRestaurants.add(sp.restaurant_id);
@@ -482,36 +486,10 @@ export function useSearch() {
 
     // ── Step 7: Multi-dish coverage ──
     const restaurantTermCoverage = new Map<string, number>();
-    if (isMultiDish && matchingDishesByTerm.size > 0) {
-      for (const [_term, termDishes] of matchingDishesByTerm) {
-        const termDishIds = new Set(termDishes.map(d => d.id));
-        for (const [restaurantId, rDishes] of restaurantDishMap) {
-          const matchesTerm = rDishes.some(d => {
-            const dish = matchingDishes.find(md => md.name === d.name);
-            return dish && termDishIds.has(dish.id);
-          });
-          if (matchesTerm) {
-            restaurantTermCoverage.set(restaurantId, (restaurantTermCoverage.get(restaurantId) || 0) + 1);
-          }
-        }
+    if (isMultiDish) {
+      for (const ids of termRestaurantIds.values()) {
+        ids.forEach(id => restaurantTermCoverage.set(id, (restaurantTermCoverage.get(id) || 0) + 1));
       }
-    }
-
-    // ── Step 7b: Total dish count per restaurant (for thin-menu penalty) ──
-    const restaurantDishCount = new Map<string, number>();
-    if (filteredRestaurants.length > 0) {
-      const ids = filteredRestaurants.map(r => r.id);
-      const allLinks = await fetchAllRows<{ restaurant_id: string }>((from, to) =>
-        supabase
-          .from('restaurant_dishes')
-          .select('restaurant_id')
-          .in('restaurant_id', ids)
-          .neq('status', 'rejected')
-          .range(from, to)
-      );
-      allLinks.forEach(l => {
-        restaurantDishCount.set(l.restaurant_id, (restaurantDishCount.get(l.restaurant_id) || 0) + 1);
-      });
     }
 
     // ── Step 8: Score & rank ──
@@ -521,7 +499,6 @@ export function useSearch() {
     for (const restaurant of filteredRestaurants) {
       const linkedDishes = restaurantDishMap.get(restaurant.id) || null;
       
-      // If the search matched known dishes, skip restaurants without that dish
       if (hasDishMatches && (!linkedDishes || linkedDishes.length === 0)) {
         continue;
       }
@@ -561,7 +538,6 @@ export function useSearch() {
       }
     }
 
-    // Sort → rebalance sponsored → enforce chain diversity
     const sorted = sortResults(scoredResults);
     const rebalanced = rebalanceSponsoredResults(sorted);
 
@@ -569,5 +545,5 @@ export function useSearch() {
     setLoading(false);
   }, [cities]);
 
-  return { search, results, loading, dishes, cities };
+  return { search, results, loading, dishes, cities, detectedCity, didYouMean, isFuzzyMatch };
 }
