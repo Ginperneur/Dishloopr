@@ -100,22 +100,25 @@ export default function SearchPage() {
     searchParams.get('view') === 'map' ? 'map' : 'grid'
   );
   // Restore list length + scroll position when returning via browser back.
-  const scrollKey = `search-scroll:${window.location.search}`;
-  const restoreRef = useRef<{ y: number; count: number } | null>(() => null as any);
-  if (typeof restoreRef.current === 'function') {
+  const scrollKey = `search-scroll:${searchParams.toString()}`;
+  const restoreRef = useRef<{ y: number; count: number } | null | undefined>(undefined);
+  if (restoreRef.current === undefined) {
     try { restoreRef.current = JSON.parse(sessionStorage.getItem(scrollKey) || 'null'); } catch { restoreRef.current = null; }
   }
   const [displayCount, setDisplayCount] = useState(() => restoreRef.current?.count ?? 12);
   const displayCountRef = useRef(displayCount);
   displayCountRef.current = displayCount;
+  const scrollKeyRef = useRef(scrollKey);
+  scrollKeyRef.current = scrollKey;
   useEffect(() => {
-    return () => {
-      try {
-        sessionStorage.setItem(`search-scroll:${window.location.search}` === scrollKey ? scrollKey : scrollKey,
-          JSON.stringify({ y: window.scrollY, count: displayCountRef.current }));
-      } catch { /* ignore */ }
+    let tId: number | undefined;
+    const save = () => {
+      try { sessionStorage.setItem(scrollKeyRef.current, JSON.stringify({ y: window.scrollY, count: displayCountRef.current })); } catch { /* ignore */ }
     };
-  }, [scrollKey]);
+    const onScroll = () => { window.clearTimeout(tId); tId = window.setTimeout(save, 150); };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => { window.removeEventListener('scroll', onScroll); window.clearTimeout(tId); };
+  }, []);
   const [showScrollTop, setShowScrollTop] = useState(false);
   // Tracks an in-flight "Bij mij" click so we can switch to the map view
   // as soon as the browser returns the user's coordinates.
@@ -243,6 +246,14 @@ export default function SearchPage() {
         return 0; // Keep original order (best match from search)
     }
   });
+
+  // Scroll back to where the user was once restored results are on screen.
+  useEffect(() => {
+    const r = restoreRef.current;
+    if (!r || loading || results.length === 0) return;
+    restoreRef.current = null;
+    requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(0, r.y)));
+  }, [loading, results.length]);
 
   // Paginated results
   const displayedResults = useMemo(() => 
