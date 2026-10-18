@@ -6,7 +6,7 @@ export type CourseType = 'borrel' | 'voorgerecht' | 'hoofdgerecht' | 'bijgerecht
 export const COURSE_TYPE_ORDER: CourseType[] = ['borrel', 'voorgerecht', 'hoofdgerecht', 'bijgerecht', 'nagerecht', 'drank'];
 
 export const COURSE_TYPE_LABELS: Record<CourseType, string> = {
-  borrel: '🍸 Borrel',
+  borrel: '🍢 Bites',
   voorgerecht: '🥗 Voorgerechten',
   hoofdgerecht: '🍽️ Hoofdgerechten',
   bijgerecht: '🥙 Bijgerechten',

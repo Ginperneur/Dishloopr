@@ -564,7 +564,7 @@
       "starter": "Voorgerecht",
       "dessert": "Dessert",
       "nagerecht": "Nagerecht",
-      "borrel": "Borrel",
+      "borrel": "Bites",
       "drink": "Drank",
       "menu": "Menu",
       "side": "Bijgerecht",
@@ -574,7 +574,7 @@
       "sideEmoji": "🥙",
       "dessertEmoji": "🍰",
       "drinkEmoji": "🥤",
-      "borrelEmoji": "🍸"
+      "borrelEmoji": "🍢"
     },
     "dietary": {
       "vegetarian": "Vegetarisch",

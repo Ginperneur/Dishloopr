@@ -418,7 +418,7 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
                             >
                               <SelectTrigger className="h-7 w-7 p-0 border-0 bg-transparent [&>svg]:hidden shrink-0">
                                 <span className="text-xs">
-                                  {courseType === 'voorgerecht' ? '🥗' : courseType === 'hoofdgerecht' ? '🍽️' : courseType === 'nagerecht' ? '🍰' : courseType === 'bijgerecht' ? '🥙' : courseType === 'borrel' ? '🍸' : '🥤'}
+                                  {courseType === 'voorgerecht' ? '🥗' : courseType === 'hoofdgerecht' ? '🍽️' : courseType === 'nagerecht' ? '🍰' : courseType === 'bijgerecht' ? '🥙' : courseType === 'borrel' ? '🍢' : '🥤'}
                                 </span>
                               </SelectTrigger>
                               <SelectContent>
