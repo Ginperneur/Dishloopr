@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense, useMemo } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -99,7 +99,26 @@ export default function SearchPage() {
   const [viewMode, setViewMode] = useState<ViewMode>(
     searchParams.get('view') === 'map' ? 'map' : 'grid'
   );
-  const [displayCount, setDisplayCount] = useState(12);
+  // Restore list length + scroll position when returning via browser back.
+  const scrollKey = `search-scroll:${searchParams.toString()}`;
+  const restoreRef = useRef<{ y: number; count: number } | null | undefined>(undefined);
+  if (restoreRef.current === undefined) {
+    try { restoreRef.current = JSON.parse(sessionStorage.getItem(scrollKey) || 'null'); } catch { restoreRef.current = null; }
+  }
+  const [displayCount, setDisplayCount] = useState(() => restoreRef.current?.count ?? 12);
+  const displayCountRef = useRef(displayCount);
+  displayCountRef.current = displayCount;
+  const scrollKeyRef = useRef(scrollKey);
+  scrollKeyRef.current = scrollKey;
+  useEffect(() => {
+    let tId: number | undefined;
+    const save = () => {
+      try { sessionStorage.setItem(scrollKeyRef.current, JSON.stringify({ y: window.scrollY, count: displayCountRef.current })); } catch { /* ignore */ }
+    };
+    const onScroll = () => { window.clearTimeout(tId); tId = window.setTimeout(save, 150); };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => { window.removeEventListener('scroll', onScroll); window.clearTimeout(tId); };
+  }, []);
   const [showScrollTop, setShowScrollTop] = useState(false);
   // Tracks an in-flight "Bij mij" click so we can switch to the map view
   // as soon as the browser returns the user's coordinates.
@@ -181,6 +200,7 @@ export default function SearchPage() {
     // Wait until the city from the URL is synced (avoids a stale nationwide run after a URL rewrite)
     if (selectedCityId !== resolvedCityId) return;
     search(dishQuery, selectedCityId, filters, featuredOnly);
+    if (restoreRef.current) return; // keep restored pagination when coming back
     setDisplayCount(12); // Reset pagination on new search
   }, [dishQuery, selectedCityId, resolvedCityId, filters, featuredOnly]);
 
@@ -226,6 +246,14 @@ export default function SearchPage() {
         return 0; // Keep original order (best match from search)
     }
   });
+
+  // Scroll back to where the user was once restored results are on screen.
+  useEffect(() => {
+    const r = restoreRef.current;
+    if (!r || loading || results.length === 0) return;
+    restoreRef.current = null;
+    requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(0, r.y)));
+  }, [loading, results.length]);
 
   // Paginated results
   const displayedResults = useMemo(() => 

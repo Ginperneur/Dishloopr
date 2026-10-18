@@ -67,15 +67,28 @@ async function fetchAllRows<T>(
   return allRows;
 }
 
+// Module-level cache so returning to /search (browser back) restores results instantly.
+type SearchSnapshot = {
+  results: SearchResult[];
+  detectedCity: { id: string; name: string } | null;
+  didYouMean: string | null;
+  isFuzzyMatch: boolean;
+  parsedQuery: string;
+  at: number;
+};
+const SEARCH_CACHE_TTL = 10 * 60 * 1000;
+const searchResultCache = new Map<string, SearchSnapshot>();
+let lastSnapshot: SearchSnapshot | null = null;
+
 export function useSearch() {
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const [results, setResultsState] = useState<SearchResult[]>(() => lastSnapshot?.results ?? []);
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [cities, setCities] = useState<City[]>([]);
-  const [detectedCity, setDetectedCity] = useState<{ id: string; name: string } | null>(null);
-  const [didYouMean, setDidYouMean] = useState<string | null>(null);
-  const [isFuzzyMatch, setIsFuzzyMatch] = useState(false);
-  const [parsedQuery, setParsedQuery] = useState('');
+  const [detectedCity, setDetectedCityState] = useState<{ id: string; name: string } | null>(() => lastSnapshot?.detectedCity ?? null);
+  const [didYouMean, setDidYouMeanState] = useState<string | null>(() => lastSnapshot?.didYouMean ?? null);
+  const [isFuzzyMatch, setIsFuzzyMatchState] = useState(() => lastSnapshot?.isFuzzyMatch ?? false);
+  const [parsedQuery, setParsedQueryState] = useState(() => lastSnapshot?.parsedQuery ?? '');
   const parseCacheRef = useRef(new Map<string, ParsedTerm>());
   const lastSearchRef = useRef<{ key: string; running: boolean; doneAt: number } | null>(null);
 
@@ -89,6 +102,29 @@ export function useSearch() {
   };
 
   const search = useCallback(async (query: string, cityIdInput?: string, filters?: SearchFilters, featuredOnly?: boolean) => {
+    const rawKey = JSON.stringify([query.toLowerCase().trim(), cityIdInput || 'all', filters ?? null, !!featuredOnly]);
+    const cached = searchResultCache.get(rawKey);
+    if (cached && Date.now() - cached.at < SEARCH_CACHE_TTL) {
+      lastSnapshot = cached;
+      setResultsState(cached.results);
+      setDetectedCityState(cached.detectedCity);
+      setDidYouMeanState(cached.didYouMean);
+      setIsFuzzyMatchState(cached.isFuzzyMatch);
+      setParsedQueryState(cached.parsedQuery);
+      setLoading(false);
+      return;
+    }
+    const snap: Omit<SearchSnapshot, 'results' | 'at'> = { detectedCity: null, didYouMean: null, isFuzzyMatch: false, parsedQuery: '' };
+    const setDetectedCity = (v: { id: string; name: string } | null) => { snap.detectedCity = v; setDetectedCityState(v); };
+    const setDidYouMean = (v: string | null) => { snap.didYouMean = v; setDidYouMeanState(v); };
+    const setIsFuzzyMatch = (v: boolean) => { snap.isFuzzyMatch = v; setIsFuzzyMatchState(v); };
+    const setParsedQuery = (v: string) => { snap.parsedQuery = v; setParsedQueryState(v); };
+    const setResults = (r: SearchResult[]) => {
+      const entry = { ...snap, results: r, at: Date.now() };
+      searchResultCache.set(rawKey, entry);
+      lastSnapshot = entry;
+      setResultsState(r);
+    };
     setLoading(true);
     let cityId = cityIdInput;
     const noCityChosen = !cityId || cityId === 'all';
@@ -561,7 +597,14 @@ export function useSearch() {
       }
     }
 
-    const sorted = sortResults(scoredResults);
+    let sorted = sortResults(scoredResults);
+    // Multi-dish: restaurants serving more of the searched dishes always rank first.
+    if (isMultiDish) {
+      sorted = sorted
+        .map((r, i) => ({ r, i, c: restaurantTermCoverage.get(r.id) || 0 }))
+        .sort((a, b) => b.c - a.c || a.i - b.i)
+        .map(x => x.r);
+    }
     const rebalanced = rebalanceSponsoredResults(sorted);
 
     setResults(rebalanced);

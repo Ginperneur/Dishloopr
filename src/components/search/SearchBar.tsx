@@ -120,6 +120,8 @@ export function SearchBar({
       return;
     }
 
+    const requestedQuery = query;
+    let cancelled = false;
     const timer = setTimeout(async () => {
       const queryLower = query.toLowerCase();
       const selectedLower = selectedDishes.map(d => d.toLowerCase());
@@ -128,6 +130,8 @@ export function SearchBar({
         p_query: query,
         p_city_id: cityId && cityId !== 'all' ? cityId : null,
       });
+      // Ignore stale responses (user already picked a suggestion or kept typing)
+      if (cancelled || suppressSuggestionsRef.current || inputRef.current?.value !== requestedQuery) return;
       const filteredDishes = ((suggestRows as DishSuggestion[]) || []).filter(
         (d) => !selectedLower.includes((d.display_name || '').toLowerCase())
       );
@@ -155,7 +159,7 @@ export function SearchBar({
       setShowSuggestions(!suppressSuggestionsRef.current && (filteredDishes.length > 0 || filteredCuisines.length > 0 || filteredRestaurants.length > 0));
     }, 200);
 
-    return () => clearTimeout(timer);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [query, allRestaurants, selectedDishes, cityId]);
 
   // Close dropdowns on escape
@@ -207,13 +211,14 @@ export function SearchBar({
     setQuery('');
     suppressSuggestionsRef.current = true;
     setShowSuggestions(false);
-    // Don't auto-search on chip add — let user add more dishes
-    // But if in compact mode (search page), auto-search
-    if (variant === 'compact') {
-      requestAnimationFrame(() => {
-        executeSearch(updatedDishes);
-      });
-    }
+    setSuggestions([]);
+    setRestaurantSuggestions([]);
+    setCuisineSuggestions([]);
+    inputRef.current?.blur();
+    // Picking a suggestion searches immediately; more dishes can be added on the results page.
+    requestAnimationFrame(() => {
+      executeSearch(updatedDishes);
+    });
   };
 
   const removeDish = (dish: string) => {
