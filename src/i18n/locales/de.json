@@ -570,7 +570,9 @@
       "mainEmoji": "🍽️",
       "sideEmoji": "🥙",
       "dessertEmoji": "🍰",
-      "drinkEmoji": "🥤"
+      "drinkEmoji": "🥤",
+      "borrel": "Bites",
+      "borrelEmoji": "🍢"
     },
     "dietary": {
       "vegetarian": "Vegetarisch",

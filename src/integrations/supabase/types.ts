@@ -1112,6 +1112,27 @@ export type Database = {
         }
         Relationships: []
       }
+      dishes_backup_course: {
+        Row: {
+          backup_at: string | null
+          course: string | null
+          id: string | null
+          slug: string | null
+        }
+        Insert: {
+          backup_at?: string | null
+          course?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Update: {
+          backup_at?: string | null
+          course?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
       dishes_course_backup_20260725: {
         Row: {
           canonical_slug: string | null
@@ -1550,6 +1571,24 @@ export type Database = {
           rating?: number
           resolved_at?: string | null
           restaurant_id?: string
+        }
+        Relationships: []
+      }
+      kaartlezer_nieuwe_dishes: {
+        Row: {
+          created_at: string | null
+          dish_id: string
+          slug: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dish_id: string
+          slug?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dish_id?: string
+          slug?: string | null
         }
         Relationships: []
       }
@@ -2984,6 +3023,450 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurant_dishes_backup_course: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          backup_at: string | null
+          clicks: number | null
+          confidence_score: number | null
+          course_type: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          dietary_tags: string[] | null
+          dish_id: string | null
+          id: string | null
+          is_gluten_free: boolean | null
+          is_halal: boolean | null
+          is_signature: boolean | null
+          is_vegan: boolean | null
+          is_vegetarian: boolean | null
+          menu_section: string | null
+          price: number | null
+          rejected_reason: string | null
+          restaurant_id: string | null
+          screen_canonical: string | null
+          screen_course: string | null
+          screen_reason: string | null
+          screen_score: number | null
+          sort_order: number | null
+          source: string | null
+          status: string | null
+          tier: string | null
+          updated_at: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          backup_at?: string | null
+          clicks?: number | null
+          confidence_score?: number | null
+          course_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          dietary_tags?: string[] | null
+          dish_id?: string | null
+          id?: string | null
+          is_gluten_free?: boolean | null
+          is_halal?: boolean | null
+          is_signature?: boolean | null
+          is_vegan?: boolean | null
+          is_vegetarian?: boolean | null
+          menu_section?: string | null
+          price?: number | null
+          rejected_reason?: string | null
+          restaurant_id?: string | null
+          screen_canonical?: string | null
+          screen_course?: string | null
+          screen_reason?: string | null
+          screen_score?: number | null
+          sort_order?: number | null
+          source?: string | null
+          status?: string | null
+          tier?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          backup_at?: string | null
+          clicks?: number | null
+          confidence_score?: number | null
+          course_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          dietary_tags?: string[] | null
+          dish_id?: string | null
+          id?: string | null
+          is_gluten_free?: boolean | null
+          is_halal?: boolean | null
+          is_signature?: boolean | null
+          is_vegan?: boolean | null
+          is_vegetarian?: boolean | null
+          menu_section?: string | null
+          price?: number | null
+          rejected_reason?: string | null
+          restaurant_id?: string | null
+          screen_canonical?: string | null
+          screen_course?: string | null
+          screen_reason?: string | null
+          screen_score?: number | null
+          sort_order?: number | null
+          source?: string | null
+          status?: string | null
+          tier?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
+      restaurant_dishes_backup_dedup: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          backup_at: string | null
+          clicks: number | null
+          confidence_score: number | null
+          course_type: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          dietary_tags: string[] | null
+          dish_id: string | null
+          id: string | null
+          is_gluten_free: boolean | null
+          is_halal: boolean | null
+          is_signature: boolean | null
+          is_vegan: boolean | null
+          is_vegetarian: boolean | null
+          menu_section: string | null
+          price: number | null
+          rejected_reason: string | null
+          restaurant_id: string | null
+          screen_canonical: string | null
+          screen_course: string | null
+          screen_reason: string | null
+          screen_score: number | null
+          sort_order: number | null
+          source: string | null
+          status: string | null
+          tier: string | null
+          updated_at: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          backup_at?: string | null
+          clicks?: number | null
+          confidence_score?: number | null
+          course_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          dietary_tags?: string[] | null
+          dish_id?: string | null
+          id?: string | null
+          is_gluten_free?: boolean | null
+          is_halal?: boolean | null
+          is_signature?: boolean | null
+          is_vegan?: boolean | null
+          is_vegetarian?: boolean | null
+          menu_section?: string | null
+          price?: number | null
+          rejected_reason?: string | null
+          restaurant_id?: string | null
+          screen_canonical?: string | null
+          screen_course?: string | null
+          screen_reason?: string | null
+          screen_score?: number | null
+          sort_order?: number | null
+          source?: string | null
+          status?: string | null
+          tier?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          backup_at?: string | null
+          clicks?: number | null
+          confidence_score?: number | null
+          course_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          dietary_tags?: string[] | null
+          dish_id?: string | null
+          id?: string | null
+          is_gluten_free?: boolean | null
+          is_halal?: boolean | null
+          is_signature?: boolean | null
+          is_vegan?: boolean | null
+          is_vegetarian?: boolean | null
+          menu_section?: string | null
+          price?: number | null
+          rejected_reason?: string | null
+          restaurant_id?: string | null
+          screen_canonical?: string | null
+          screen_course?: string | null
+          screen_reason?: string | null
+          screen_score?: number | null
+          sort_order?: number | null
+          source?: string | null
+          status?: string | null
+          tier?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
+      restaurant_dishes_backup_kaartlezer: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          backup_at: string | null
+          clicks: number | null
+          confidence_score: number | null
+          course_type: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          dietary_tags: string[] | null
+          dish_id: string | null
+          id: string | null
+          is_gluten_free: boolean | null
+          is_halal: boolean | null
+          is_signature: boolean | null
+          is_vegan: boolean | null
+          is_vegetarian: boolean | null
+          menu_section: string | null
+          price: number | null
+          rejected_reason: string | null
+          restaurant_id: string | null
+          screen_canonical: string | null
+          screen_course: string | null
+          screen_reason: string | null
+          screen_score: number | null
+          sort_order: number | null
+          source: string | null
+          status: string | null
+          tier: string | null
+          updated_at: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          backup_at?: string | null
+          clicks?: number | null
+          confidence_score?: number | null
+          course_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          dietary_tags?: string[] | null
+          dish_id?: string | null
+          id?: string | null
+          is_gluten_free?: boolean | null
+          is_halal?: boolean | null
+          is_signature?: boolean | null
+          is_vegan?: boolean | null
+          is_vegetarian?: boolean | null
+          menu_section?: string | null
+          price?: number | null
+          rejected_reason?: string | null
+          restaurant_id?: string | null
+          screen_canonical?: string | null
+          screen_course?: string | null
+          screen_reason?: string | null
+          screen_score?: number | null
+          sort_order?: number | null
+          source?: string | null
+          status?: string | null
+          tier?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          backup_at?: string | null
+          clicks?: number | null
+          confidence_score?: number | null
+          course_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          dietary_tags?: string[] | null
+          dish_id?: string | null
+          id?: string | null
+          is_gluten_free?: boolean | null
+          is_halal?: boolean | null
+          is_signature?: boolean | null
+          is_vegan?: boolean | null
+          is_vegetarian?: boolean | null
+          menu_section?: string | null
+          price?: number | null
+          rejected_reason?: string | null
+          restaurant_id?: string | null
+          screen_canonical?: string | null
+          screen_course?: string | null
+          screen_reason?: string | null
+          screen_score?: number | null
+          sort_order?: number | null
+          source?: string | null
+          status?: string | null
+          tier?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
+      restaurant_dishes_backup_kaartmotor_f1: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          backup_at: string | null
+          clicks: number | null
+          confidence_score: number | null
+          course_type: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          dietary_tags: string[] | null
+          dish_id: string | null
+          id: string | null
+          is_gluten_free: boolean | null
+          is_halal: boolean | null
+          is_signature: boolean | null
+          is_vegan: boolean | null
+          is_vegetarian: boolean | null
+          menu_section: string | null
+          price: number | null
+          rejected_reason: string | null
+          restaurant_id: string | null
+          screen_canonical: string | null
+          screen_course: string | null
+          screen_reason: string | null
+          screen_score: number | null
+          sort_order: number | null
+          source: string | null
+          status: string | null
+          tier: string | null
+          updated_at: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          backup_at?: string | null
+          clicks?: number | null
+          confidence_score?: number | null
+          course_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          dietary_tags?: string[] | null
+          dish_id?: string | null
+          id?: string | null
+          is_gluten_free?: boolean | null
+          is_halal?: boolean | null
+          is_signature?: boolean | null
+          is_vegan?: boolean | null
+          is_vegetarian?: boolean | null
+          menu_section?: string | null
+          price?: number | null
+          rejected_reason?: string | null
+          restaurant_id?: string | null
+          screen_canonical?: string | null
+          screen_course?: string | null
+          screen_reason?: string | null
+          screen_score?: number | null
+          sort_order?: number | null
+          source?: string | null
+          status?: string | null
+          tier?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          backup_at?: string | null
+          clicks?: number | null
+          confidence_score?: number | null
+          course_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          dietary_tags?: string[] | null
+          dish_id?: string | null
+          id?: string | null
+          is_gluten_free?: boolean | null
+          is_halal?: boolean | null
+          is_signature?: boolean | null
+          is_vegan?: boolean | null
+          is_vegetarian?: boolean | null
+          menu_section?: string | null
+          price?: number | null
+          rejected_reason?: string | null
+          restaurant_id?: string | null
+          screen_canonical?: string | null
+          screen_course?: string | null
+          screen_reason?: string | null
+          screen_score?: number | null
+          sort_order?: number | null
+          source?: string | null
+          status?: string | null
+          tier?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
+      restaurant_dishes_backup_prijs_f1b: {
+        Row: {
+          backup_at: string | null
+          id: string | null
+          price: number | null
+          restaurant_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          backup_at?: string | null
+          id?: string | null
+          price?: number | null
+          restaurant_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          backup_at?: string | null
+          id?: string | null
+          price?: number | null
+          restaurant_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       restaurant_events: {
         Row: {
           created_at: string
@@ -3083,6 +3566,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      restaurant_merges: {
+        Row: {
+          dupe_id: string
+          google_place_id: string | null
+          keeper_id: string
+          merged_at: string | null
+          reden: string | null
+        }
+        Insert: {
+          dupe_id: string
+          google_place_id?: string | null
+          keeper_id: string
+          merged_at?: string | null
+          reden?: string | null
+        }
+        Update: {
+          dupe_id?: string
+          google_place_id?: string | null
+          keeper_id?: string
+          merged_at?: string | null
+          reden?: string | null
+        }
+        Relationships: []
       }
       restaurant_pending_edits: {
         Row: {
@@ -3778,6 +4285,69 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurants_backup_dedup: {
+        Row: {
+          backup_at: string | null
+          google_place_id: string | null
+          id: string | null
+          is_active: boolean | null
+          keeper: string | null
+          rol: string | null
+          updated_at: string | null
+          website_url: string | null
+        }
+        Insert: {
+          backup_at?: string | null
+          google_place_id?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          keeper?: string | null
+          rol?: string | null
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          backup_at?: string | null
+          google_place_id?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          keeper?: string | null
+          rol?: string | null
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      restaurants_backup_excel: {
+        Row: {
+          backup_at: string | null
+          google_place_id: string | null
+          google_status: string | null
+          id: string | null
+          is_active: boolean | null
+          updated_at: string | null
+          website_url: string | null
+        }
+        Insert: {
+          backup_at?: string | null
+          google_place_id?: string | null
+          google_status?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          backup_at?: string | null
+          google_place_id?: string | null
+          google_status?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       restaurants_backup_fase4: {
         Row: {
           ambience_tags: string[] | null
@@ -3799,6 +4369,36 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurants_backup_urlherstel: {
+        Row: {
+          backup_at: string | null
+          google_place_id: string | null
+          google_status: string | null
+          id: string | null
+          is_active: boolean | null
+          updated_at: string | null
+          website_url: string | null
+        }
+        Insert: {
+          backup_at?: string | null
+          google_place_id?: string | null
+          google_status?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          backup_at?: string | null
+          google_place_id?: string | null
+          google_status?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       restaurants_terrace_backup_20260725: {
         Row: {
           has_terrace: boolean | null
@@ -3817,6 +4417,27 @@ export type Database = {
           id?: string | null
           meal_types?: string[] | null
           tag_source?: string | null
+        }
+        Relationships: []
+      }
+      restaurants_verborgen: {
+        Row: {
+          hidden_at: string | null
+          id: string
+          reden: string | null
+          was_active: boolean | null
+        }
+        Insert: {
+          hidden_at?: string | null
+          id: string
+          reden?: string | null
+          was_active?: boolean | null
+        }
+        Update: {
+          hidden_at?: string | null
+          id?: string
+          reden?: string | null
+          was_active?: boolean | null
         }
         Relationships: []
       }
@@ -4305,6 +4926,90 @@ export type Database = {
           },
         ]
       }
+      stage_batch2: {
+        Row: {
+          gedaan: boolean | null
+          restaurant_id: string | null
+        }
+        Insert: {
+          gedaan?: boolean | null
+          restaurant_id?: string | null
+        }
+        Update: {
+          gedaan?: boolean | null
+          restaurant_id?: string | null
+        }
+        Relationships: []
+      }
+      stage_course: {
+        Row: {
+          course: string | null
+          oud: string | null
+          slug: string | null
+          soort: string | null
+        }
+        Insert: {
+          course?: string | null
+          oud?: string | null
+          slug?: string | null
+          soort?: string | null
+        }
+        Update: {
+          course?: string | null
+          oud?: string | null
+          slug?: string | null
+          soort?: string | null
+        }
+        Relationships: []
+      }
+      stage_dedup: {
+        Row: {
+          keeper: string | null
+          name: string | null
+          new_url: string | null
+          pid: string | null
+          rid: string
+          rol: string | null
+        }
+        Insert: {
+          keeper?: string | null
+          name?: string | null
+          new_url?: string | null
+          pid?: string | null
+          rid: string
+          rol?: string | null
+        }
+        Update: {
+          keeper?: string | null
+          name?: string | null
+          new_url?: string | null
+          pid?: string | null
+          rid?: string
+          rol?: string | null
+        }
+        Relationships: []
+      }
+      stage_excel: {
+        Row: {
+          act: string | null
+          id: string | null
+          pid: string | null
+          val: string | null
+        }
+        Insert: {
+          act?: string | null
+          id?: string | null
+          pid?: string | null
+          val?: string | null
+        }
+        Update: {
+          act?: string | null
+          id?: string | null
+          pid?: string | null
+          val?: string | null
+        }
+        Relationships: []
+      }
       stage_import_v5: {
         Row: {
           canonical_slug: string | null
@@ -4350,6 +5055,102 @@ export type Database = {
           sort_order?: string | null
           source?: string | null
           tier?: string | null
+        }
+        Relationships: []
+      }
+      stage_kaartlezer: {
+        Row: {
+          canonical_slug: string | null
+          course: string | null
+          description: string | null
+          dish_name: string | null
+          dish_slug: string | null
+          menu_section: string | null
+          price: string | null
+          restaurant_id: string | null
+          sort_order: string | null
+          tier: string | null
+        }
+        Insert: {
+          canonical_slug?: string | null
+          course?: string | null
+          description?: string | null
+          dish_name?: string | null
+          dish_slug?: string | null
+          menu_section?: string | null
+          price?: string | null
+          restaurant_id?: string | null
+          sort_order?: string | null
+          tier?: string | null
+        }
+        Update: {
+          canonical_slug?: string | null
+          course?: string | null
+          description?: string | null
+          dish_name?: string | null
+          dish_slug?: string | null
+          menu_section?: string | null
+          price?: string | null
+          restaurant_id?: string | null
+          sort_order?: string | null
+          tier?: string | null
+        }
+        Relationships: []
+      }
+      stage_kaartmotor: {
+        Row: {
+          p: string
+          reason: string
+        }
+        Insert: {
+          p: string
+          reason: string
+        }
+        Update: {
+          p?: string
+          reason?: string
+        }
+        Relationships: []
+      }
+      stage_prijs: {
+        Row: {
+          p: string
+        }
+        Insert: {
+          p: string
+        }
+        Update: {
+          p?: string
+        }
+        Relationships: []
+      }
+      stage_urlherstel: {
+        Row: {
+          act: string | null
+          gst: string | null
+          id: string
+          new_url: string | null
+          old_url: string | null
+          pid: string | null
+          skip: string | null
+        }
+        Insert: {
+          act?: string | null
+          gst?: string | null
+          id: string
+          new_url?: string | null
+          old_url?: string | null
+          pid?: string | null
+          skip?: string | null
+        }
+        Update: {
+          act?: string | null
+          gst?: string | null
+          id?: string
+          new_url?: string | null
+          old_url?: string | null
+          pid?: string | null
+          skip?: string | null
         }
         Relationships: []
       }
