@@ -112,7 +112,7 @@ export function useAIRecommendations() {
         }
       }
 
-      const { data, error } = await supabase.functions.invoke('ai-recommendations', {
+      const { data, error } = await invokeAI({
         body: {
           type: 'surprise',
           mood: options?.mood,
@@ -126,6 +126,7 @@ export function useAIRecommendations() {
         },
       });
 
+      setState(prev => ({ ...prev, loading: false }));
       if (error) throw error;
 
       if (data?.recommendation) {
@@ -168,7 +169,7 @@ export function useAIRecommendations() {
         preferredCuisines = prefs?.map(p => p.tag) || [];
       }
 
-      const { data, error } = await supabase.functions.invoke('ai-recommendations', {
+      const { data, error } = await invokeAI({
         body: {
           type: 'personalized',
           favorites,
@@ -179,6 +180,7 @@ export function useAIRecommendations() {
         },
       });
 
+      setState(prev => ({ ...prev, loading: false }));
       if (error) throw error;
 
       if (data?.recommendation?.recommendations) {
@@ -200,13 +202,14 @@ export function useAIRecommendations() {
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      const { data, error } = await supabase.functions.invoke('ai-recommendations', {
+      const { data, error } = await invokeAI({
         body: {
           type: 'smart-suggestion',
           currentDish,
         },
       });
 
+      setState(prev => ({ ...prev, loading: false }));
       if (error) throw error;
 
       if (data?.recommendation?.suggestions) {
@@ -228,7 +231,7 @@ export function useAIRecommendations() {
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      const { data, error } = await supabase.functions.invoke('ai-recommendations', {
+      const { data, error } = await invokeAI({
         body: {
           type: 'dish-explorer',
           currentDish: dishName,
@@ -236,6 +239,7 @@ export function useAIRecommendations() {
         },
       });
 
+      setState(prev => ({ ...prev, loading: false }));
       if (error) throw error;
 
       if (data?.recommendation) {
@@ -272,4 +276,16 @@ export function useAIRecommendations() {
     getDishExploration,
     clearRecommendations,
   };
+}
+
+// The AI function requires a signed-in user; skip silently when signed out.
+async function invokeAI(options: { body: Record<string, unknown> }): Promise<{ data: any; error: any }> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return { data: null, error: null };
+  const res = await supabase.functions.invoke('ai-recommendations', options);
+  const status = (res.error as any)?.context?.status;
+  if (res.error && (status === 401 || /401|Unauthorized/i.test(String(res.error?.message)))) {
+    return { data: null, error: null };
+  }
+  return res;
 }
