@@ -88,7 +88,23 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
   }
 
   const toggleCategory = (category: string) => {
-    setExpandedCategory(prev => prev === category ? null : category);
+    const el = categoryRefs.current[category];
+    const topBefore = el ? el.getBoundingClientRect().top : null;
+
+    setExpandedCategory(prev => (prev === category ? null : category));
+
+    // After the collapse/expand animation settles, restore the clicked
+    // header to the same viewport position it had before the toggle.
+    if (topBefore !== null) {
+      window.setTimeout(() => {
+        const elAfter = categoryRefs.current[category];
+        if (!elAfter || !elAfter.isConnected) return;
+        const delta = elAfter.getBoundingClientRect().top - topBefore;
+        if (Math.abs(delta) > 2) {
+          window.scrollBy({ top: delta, behavior: 'auto' });
+        }
+      }, 320);
+    }
   };
 
   return (
