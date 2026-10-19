@@ -282,5 +282,10 @@ export function useAIRecommendations() {
 async function invokeAI(options: { body: Record<string, unknown> }): Promise<{ data: any; error: any }> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return { data: null, error: null };
-  return supabase.functions.invoke('ai-recommendations', options);
+  const res = await supabase.functions.invoke('ai-recommendations', options);
+  const status = (res.error as any)?.context?.status;
+  if (res.error && (status === 401 || /401|Unauthorized/i.test(String(res.error?.message)))) {
+    return { data: null, error: null };
+  }
+  return res;
 }
