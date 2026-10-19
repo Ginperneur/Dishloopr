@@ -126,6 +126,7 @@ export function useAIRecommendations() {
         },
       });
 
+      setState(prev => ({ ...prev, loading: false }));
       if (error) throw error;
 
       if (data?.recommendation) {
@@ -179,6 +180,7 @@ export function useAIRecommendations() {
         },
       });
 
+      setState(prev => ({ ...prev, loading: false }));
       if (error) throw error;
 
       if (data?.recommendation?.recommendations) {
@@ -207,6 +209,7 @@ export function useAIRecommendations() {
         },
       });
 
+      setState(prev => ({ ...prev, loading: false }));
       if (error) throw error;
 
       if (data?.recommendation?.suggestions) {
@@ -236,6 +239,7 @@ export function useAIRecommendations() {
         },
       });
 
+      setState(prev => ({ ...prev, loading: false }));
       if (error) throw error;
 
       if (data?.recommendation) {
