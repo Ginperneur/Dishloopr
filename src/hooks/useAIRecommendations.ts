@@ -112,7 +112,7 @@ export function useAIRecommendations() {
         }
       }
 
-      const { data, error } = await supabase.functions.invoke('ai-recommendations', {
+      const { data, error } = await invokeAI({
         body: {
           type: 'surprise',
           mood: options?.mood,
@@ -168,7 +168,7 @@ export function useAIRecommendations() {
         preferredCuisines = prefs?.map(p => p.tag) || [];
       }
 
-      const { data, error } = await supabase.functions.invoke('ai-recommendations', {
+      const { data, error } = await invokeAI({
         body: {
           type: 'personalized',
           favorites,
@@ -200,7 +200,7 @@ export function useAIRecommendations() {
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      const { data, error } = await supabase.functions.invoke('ai-recommendations', {
+      const { data, error } = await invokeAI({
         body: {
           type: 'smart-suggestion',
           currentDish,
@@ -228,7 +228,7 @@ export function useAIRecommendations() {
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      const { data, error } = await supabase.functions.invoke('ai-recommendations', {
+      const { data, error } = await invokeAI({
         body: {
           type: 'dish-explorer',
           currentDish: dishName,
@@ -272,4 +272,11 @@ export function useAIRecommendations() {
     getDishExploration,
     clearRecommendations,
   };
+}
+
+// The AI function requires a signed-in user; skip silently when signed out.
+async function invokeAI(options: { body: Record<string, unknown> }): Promise<{ data: any; error: any }> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return { data: null, error: null };
+  return supabase.functions.invoke('ai-recommendations', options);
 }
