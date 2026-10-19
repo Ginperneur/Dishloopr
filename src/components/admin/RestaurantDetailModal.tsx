@@ -33,6 +33,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { formatDishName } from '@/lib/utils';
+import { ParkingEditor } from '@/components/restaurant/ParkingEditor';
 
 interface RestaurantDetailModalProps {
   restaurant: any;
@@ -631,6 +632,10 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
             <Separator />
 
             {/* Dishes Management */}
+            <ParkingEditor restaurantId={restaurant.id} onSaved={onUpdate} />
+
+            <Separator />
+
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">

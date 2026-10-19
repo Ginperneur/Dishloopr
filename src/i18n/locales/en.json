@@ -1,4 +1,26 @@
 {
+  "parking": {
+    "title": "Parking",
+    "unknown": "Parking information not yet available.",
+    "own": "On-site parking",
+    "street": "Street parking",
+    "ownYes": "On-site parking available.",
+    "ownNo": "No on-site parking.",
+    "streetYes": "Street parking available.",
+    "streetNo": "Street parking unavailable.",
+    "garage": "Recommended parking garage",
+    "garageAddress": "Parking garage address",
+    "notes": "Additional parking information",
+    "viewGarage": "View parking garage",
+    "unspecified": "Unknown",
+    "yes": "Yes",
+    "no": "No",
+    "saved": "Parking information saved",
+    "saving": "Saving…",
+    "saveError": "Could not save parking information",
+    "loadError": "Could not load parking information",
+    "garageRequired": "Enter the parking garage name."
+  },
   "nav": {
     "discover": "Discover",
     "admin": "Admin Panel",

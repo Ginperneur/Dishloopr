@@ -1,4 +1,26 @@
 {
+  "parking": {
+    "title": "Parkeergelegenheid",
+    "unknown": "Parkeerinformatie nog niet bekend.",
+    "own": "Eigen parkeergelegenheid",
+    "street": "Parkeren op straat",
+    "ownYes": "Eigen parkeergelegenheid beschikbaar.",
+    "ownNo": "Geen eigen parkeergelegenheid.",
+    "streetYes": "Parkeren op straat mogelijk.",
+    "streetNo": "Parkeren op straat niet mogelijk.",
+    "garage": "Aanbevolen parkeergarage",
+    "garageAddress": "Adres parkeergarage",
+    "notes": "Aanvullende parkeerinformatie",
+    "viewGarage": "Bekijk parkeergarage",
+    "unspecified": "Niet bekend",
+    "yes": "Ja",
+    "no": "Nee",
+    "saved": "Parkeerinformatie opgeslagen",
+    "saving": "Opslaan…",
+    "saveError": "Parkeerinformatie opslaan mislukt",
+    "loadError": "Parkeerinformatie laden mislukt",
+    "garageRequired": "Vul de naam van de parkeergarage in."
+  },
   "nav": {
     "discover": "Ontdekken",
     "admin": "Admin Paneel",

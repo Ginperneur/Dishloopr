@@ -120,6 +120,7 @@ import { useOwnerTier } from '@/hooks/useOwnerTier';
 import { OpeningHoursExceptions } from '@/components/owner/OpeningHoursExceptions';
 import { MultiLanguageProfile } from '@/components/owner/MultiLanguageProfile';
 import { BasicInfoEditor } from '@/components/owner/BasicInfoEditor';
+import { ParkingEditor } from '@/components/restaurant/ParkingEditor';
 import { CrossPromotionManager } from '@/components/owner/CrossPromotionManager';
 import { AudienceDemographics } from '@/components/owner/AudienceDemographics';
 import { BestTimeToPost } from '@/components/owner/BestTimeToPost';
@@ -834,6 +835,9 @@ export default function OwnerDashboard() {
                   currentName={selectedRestaurant.name}
                   currentOpeningHours={(selectedRestaurant as any).opening_hours}
                 />
+                <div className="mt-6">
+                  <ParkingEditor restaurantId={selectedRestaurant.id} />
+                </div>
               </div>
             )}
             {selectedRestaurant && !isVerified && (
