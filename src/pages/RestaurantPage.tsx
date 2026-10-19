@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useEffect, useMemo, useCallback } from 'react';
@@ -54,6 +54,15 @@ import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 export default function RestaurantPage() {
   const { slug } = useParams<{ slug: string }>();
   const { t } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const from = (location.state as { from?: unknown } | null)?.from;
+  const searchReturnUrl = typeof from === 'string' && (from === '/search' || from.startsWith('/search?')) ? from : '/search';
+  const handleBackToSearch = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (searchReturnUrl === '/search' || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    navigate(-1);
+  };
   
   const { restaurant, loading: restaurantLoading, error } = useRestaurant(slug);
   const { reviews, loading: reviewsLoading, submitting, submitReview, refetch } = useReviews(restaurant?.id);
@@ -151,7 +160,7 @@ export default function RestaurantPage() {
         <div className="container py-16 text-center">
           <h1 className="text-2xl font-bold mb-4">{error || t('restaurant.notFound', 'Restaurant niet gevonden')}</h1>
           <Button asChild>
-            <Link to="/search">{t('restaurant.backToSearch', 'Terug naar zoeken')}</Link>
+            <Link to={searchReturnUrl} onClick={handleBackToSearch}>{t('restaurant.backToSearch', 'Terug naar zoeken')}</Link>
           </Button>
         </div>
       </Layout>
@@ -226,7 +235,8 @@ export default function RestaurantPage() {
         
         {/* Back Button */}
         <Link
-          to="/search"
+          to={searchReturnUrl}
+          onClick={handleBackToSearch}
           className="absolute top-4 left-4 z-10 p-2.5 rounded-full bg-background/90 backdrop-blur-sm shadow-lg hover:bg-background transition-colors border border-border/50"
           aria-label={t('common.back', 'Terug')}
         >

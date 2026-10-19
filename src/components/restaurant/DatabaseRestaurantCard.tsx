@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Star, MapPin, Heart, Sparkles, Trophy, ImageOff, UtensilsCrossed, Clock } from 'lucide-react';
@@ -60,6 +60,7 @@ function ImageWithFallback({ src, alt }: { src: string; alt: string }) {
 
 export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = false }: DatabaseRestaurantCardProps) {
   const { t } = useTranslation();
+  const location = useLocation();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { isRecentlyViewed } = useRecentlyViewed();
   const [isLikeAnimating, setIsLikeAnimating] = useState(false);
@@ -85,6 +86,7 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
     >
       <Link
         to={`/restaurant/${restaurant.slug}`}
+        state={location.pathname === '/search' ? { from: `${location.pathname}${location.search}${location.hash}` } : undefined}
         className={`block restaurant-card rounded-2xl overflow-hidden group ${
           isFeatured ? 'ring-2 ring-primary/20' : ''
         }`}
