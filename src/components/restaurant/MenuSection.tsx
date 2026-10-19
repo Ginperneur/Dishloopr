@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Leaf, Wheat, AlertCircle, Star, Filter } from 'lucide-react';
@@ -30,6 +30,9 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
   const { menuItems, courseTypes, loading, error } = useMenuItems(restaurantId);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<Set<FilterType>>(new Set());
+  // Keep the clicked category header visually stable when another (taller)
+  // category collapses above it — otherwise the page appears to jump.
+  const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const toggleFilter = (filter: FilterType) => {
     setActiveFilters(prev => {
@@ -85,7 +88,23 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
   }
 
   const toggleCategory = (category: string) => {
-    setExpandedCategory(prev => prev === category ? null : category);
+    const el = categoryRefs.current[category];
+    const topBefore = el ? el.getBoundingClientRect().top : null;
+
+    setExpandedCategory(prev => (prev === category ? null : category));
+
+    // After the collapse/expand animation settles, restore the clicked
+    // header to the same viewport position it had before the toggle.
+    if (topBefore !== null) {
+      window.setTimeout(() => {
+        const elAfter = categoryRefs.current[category];
+        if (!elAfter || !elAfter.isConnected) return;
+        const delta = elAfter.getBoundingClientRect().top - topBefore;
+        if (Math.abs(delta) > 2) {
+          window.scrollBy({ top: delta, behavior: 'auto' });
+        }
+      }, 320);
+    }
   };
 
   return (
@@ -180,6 +199,7 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
           return (
             <div
               key={courseType}
+              ref={el => { categoryRefs.current[courseType] = el; }}
               className="rounded-xl border border-border bg-card overflow-hidden"
             >
               <button
