@@ -1,4 +1,26 @@
 {
+  "parking": {
+    "title": "Parkmöglichkeiten",
+    "unknown": "Parkinformationen noch nicht bekannt.",
+    "own": "Eigene Parkplätze",
+    "street": "Parken an der Straße",
+    "ownYes": "Eigene Parkplätze vorhanden.",
+    "ownNo": "Keine eigenen Parkplätze.",
+    "streetYes": "Parken an der Straße möglich.",
+    "streetNo": "Parken an der Straße nicht möglich.",
+    "garage": "Empfohlenes Parkhaus",
+    "garageAddress": "Adresse des Parkhauses",
+    "notes": "Weitere Parkinformationen",
+    "viewGarage": "Parkhaus ansehen",
+    "unspecified": "Unbekannt",
+    "yes": "Ja",
+    "no": "Nein",
+    "saved": "Parkinformationen gespeichert",
+    "saving": "Speichern…",
+    "saveError": "Parkinformationen konnten nicht gespeichert werden",
+    "loadError": "Parkinformationen konnten nicht geladen werden",
+    "garageRequired": "Bitte den Namen des Parkhauses eingeben."
+  },
   "nav": {
     "discover": "Entdecken",
     "admin": "Admin-Panel",

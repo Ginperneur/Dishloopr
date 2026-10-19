@@ -1,4 +1,26 @@
 {
+  "parking": {
+    "title": "Aparcamiento",
+    "unknown": "Información de aparcamiento aún no disponible.",
+    "own": "Aparcamiento propio",
+    "street": "Aparcamiento en la calle",
+    "ownYes": "Aparcamiento propio disponible.",
+    "ownNo": "Sin aparcamiento propio.",
+    "streetYes": "Se puede aparcar en la calle.",
+    "streetNo": "No se puede aparcar en la calle.",
+    "garage": "Parking recomendado",
+    "garageAddress": "Dirección del parking",
+    "notes": "Información adicional de aparcamiento",
+    "viewGarage": "Ver parking",
+    "unspecified": "No se sabe",
+    "yes": "Sí",
+    "no": "No",
+    "saved": "Información de aparcamiento guardada",
+    "saving": "Guardando…",
+    "saveError": "No se pudo guardar la información de aparcamiento",
+    "loadError": "No se pudo cargar la información de aparcamiento",
+    "garageRequired": "Introduce el nombre del parking."
+  },
   "nav": {
     "discover": "Descubrir",
     "admin": "Panel Admin",

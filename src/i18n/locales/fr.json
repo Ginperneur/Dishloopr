@@ -1,4 +1,26 @@
 {
+  "parking": {
+    "title": "Stationnement",
+    "unknown": "Informations de stationnement pas encore disponibles.",
+    "own": "Parking privé",
+    "street": "Stationnement dans la rue",
+    "ownYes": "Parking privé disponible.",
+    "ownNo": "Pas de parking privé.",
+    "streetYes": "Stationnement dans la rue possible.",
+    "streetNo": "Stationnement dans la rue impossible.",
+    "garage": "Parking recommandé",
+    "garageAddress": "Adresse du parking",
+    "notes": "Informations supplémentaires sur le stationnement",
+    "viewGarage": "Voir le parking",
+    "unspecified": "Non renseigné",
+    "yes": "Oui",
+    "no": "Non",
+    "saved": "Informations de stationnement enregistrées",
+    "saving": "Enregistrement…",
+    "saveError": "Impossible d’enregistrer les informations de stationnement",
+    "loadError": "Impossible de charger les informations de stationnement",
+    "garageRequired": "Saisissez le nom du parking."
+  },
   "nav": {
     "discover": "Découvrir",
     "admin": "Panneau Admin",
