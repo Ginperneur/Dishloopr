@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Leaf, Wheat, AlertCircle, Star, Filter } from 'lucide-react';
@@ -30,6 +30,9 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
   const { menuItems, courseTypes, loading, error } = useMenuItems(restaurantId);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<Set<FilterType>>(new Set());
+  // Keep the clicked category header visually stable when another (taller)
+  // category collapses above it — otherwise the page appears to jump.
+  const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const toggleFilter = (filter: FilterType) => {
     setActiveFilters(prev => {
