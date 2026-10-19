@@ -199,6 +199,7 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
           return (
             <div
               key={courseType}
+              ref={el => { categoryRefs.current[courseType] = el; }}
               className="rounded-xl border border-border bg-card overflow-hidden"
             >
               <button
