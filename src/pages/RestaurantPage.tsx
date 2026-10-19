@@ -34,6 +34,7 @@ import { AlternativeRestaurants } from '@/components/routing/AlternativeRestaura
 import { SocialShare } from '@/components/social/SocialShare';
 import { OpeningHoursDisplay } from '@/components/restaurant/OpeningHoursDisplay';
 import { ImageGallery } from '@/components/restaurant/ImageGallery';
+import { ParkingSection } from '@/components/restaurant/ParkingSection';
 
 import { RelatedLinks } from '@/components/restaurant/RelatedLinks';
 import { SEOHead, createRestaurantSchema, createBreadcrumbSchema } from '@/components/seo/SEOHead';
@@ -497,6 +498,10 @@ export default function RestaurantPage() {
             <Separator />
 
             {/* Gerechten - unified section with filters */}
+            <ParkingSection value={restaurant.parking_info} cityName={restaurant.city?.name} />
+
+            <Separator />
+
             <MenuSection restaurantId={restaurant.id} />
 
             <Separator />
