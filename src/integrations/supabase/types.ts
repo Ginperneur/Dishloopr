@@ -3872,6 +3872,7 @@ export type Database = {
           needs_manual_review: boolean | null
           opening_hours: Json | null
           owner_tier: string
+          parking_info: Json | null
           phone: string | null
           photos_fetched_at: string | null
           postal_code: string | null
@@ -3951,6 +3952,7 @@ export type Database = {
           needs_manual_review?: boolean | null
           opening_hours?: Json | null
           owner_tier?: string
+          parking_info?: Json | null
           phone?: string | null
           photos_fetched_at?: string | null
           postal_code?: string | null
@@ -4030,6 +4032,7 @@ export type Database = {
           needs_manual_review?: boolean | null
           opening_hours?: Json | null
           owner_tier?: string
+          parking_info?: Json | null
           phone?: string | null
           photos_fetched_at?: string | null
           postal_code?: string | null
@@ -6112,6 +6115,17 @@ export type Database = {
         }[]
       }
       rescan_discovery_duplicates: { Args: { p_rules?: Json }; Returns: Json }
+      save_restaurant_parking: {
+        Args: {
+          p_garage_address: string
+          p_garage_name: string
+          p_notes: string
+          p_own_parking: boolean
+          p_restaurant_id: string
+          p_street_parking: boolean
+        }
+        Returns: undefined
+      }
       search_dishes_by_term: {
         Args: { search_term: string }
         Returns: {
