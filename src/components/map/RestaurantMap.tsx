@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -74,6 +74,8 @@ function createUserIcon() {
 
 export function RestaurantMap({ restaurants, userLocation, onClose, className = '' }: RestaurantMapProps) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchOrigin = location.pathname === '/search' ? `${location.pathname}${location.search}${location.hash}` : undefined;
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const layerRef = useRef<L.LayerGroup | null>(null);
@@ -215,7 +217,7 @@ export function RestaurantMap({ restaurants, userLocation, onClose, className = 
       btn.style.fontWeight = '600';
       btn.style.fontSize = '12px';
       btn.addEventListener('click', () => {
-        navigate(`/restaurant/${restaurant.slug}`);
+        navigate(`/restaurant/${restaurant.slug}`, { state: searchOrigin ? { from: searchOrigin } : undefined });
       });
       root.appendChild(btn);
 
@@ -237,7 +239,7 @@ export function RestaurantMap({ restaurants, userLocation, onClose, className = 
         didInitialFitRef.current = true;
       }
     }
-  }, [mappableRestaurants, navigate, userLocation]);
+  }, [mappableRestaurants, navigate, userLocation, searchOrigin]);
 
   // When the user's location arrives or changes, fly to it.
   useEffect(() => {
