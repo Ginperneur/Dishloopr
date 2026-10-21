@@ -58,16 +58,19 @@ interface LoggerArgs {
   ready: boolean;
   /** When given, a key is only logged after loading went true at least once for it. */
   loading?: boolean;
+  /** Part of the search that triggers a reload (default: whole key). Filter-only changes skip the loading check. */
+  loadKey?: string;
 }
 
 /** Logs a search once per new term/city/filter combo, 1.5s after results are loaded. Never throws. */
-export function useSearchLogger({ source, query, city, filters, resultsCount, ready, loading }: LoggerArgs) {
+export function useSearchLogger({ source, query, city, filters, resultsCount, ready, loading, loadKey }: LoggerArgs) {
   const key = searchKey(source, query, city, filters);
   const loggedKey = useRef<string | null>(readLast()?.key ?? null);
   const countRef = useRef(resultsCount);
   countRef.current = resultsCount;
-  const seen = useRef<{ key: string; loaded: boolean }>({ key, loaded: false });
-  if (seen.current.key !== key) seen.current = { key, loaded: false };
+  const lk = loadKey ?? key;
+  const seen = useRef<{ key: string; loaded: boolean }>({ key: lk, loaded: false });
+  if (seen.current.key !== lk) seen.current = { key: lk, loaded: false };
   if (loading) seen.current.loaded = true;
   const settled = loading === undefined || (seen.current.loaded && !loading);
 
