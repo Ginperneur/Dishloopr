@@ -13,10 +13,16 @@ import { getEmptyRestaurantIds } from '@/lib/listableRestaurants';
  * Prominent homepage slot for paid placements (is_featured / is_top_listing).
  * These listings drive Dishloopr revenue and therefore appear high on the page.
  */
+const FEATURED_HINT_KEY = 'dl_has_featured';
+
 export function FeaturedRestaurants() {
   const { t } = useTranslation();
   const [restaurants, setRestaurants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  // Only reserve skeleton space when the last visit actually had featured restaurants (avoids a collapsing block).
+  const [expectFeatured] = useState(() => {
+    try { return localStorage.getItem(FEATURED_HINT_KEY) === '1'; } catch { return false; }
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -35,6 +41,7 @@ export function FeaturedRestaurants() {
         if (cancelled) return;
         const filtered = (data ?? []).filter((r: any) => !empty.has(r.id)).slice(0, 6);
         setRestaurants(filtered);
+        try { localStorage.setItem(FEATURED_HINT_KEY, filtered.length > 0 ? '1' : '0'); } catch { /* ignore */ }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -44,6 +51,7 @@ export function FeaturedRestaurants() {
     };
   }, []);
 
+  if (loading && !expectFeatured) return null;
   if (!loading && restaurants.length === 0) return null;
 
   return (
