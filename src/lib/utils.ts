@@ -41,6 +41,14 @@ export function slugify(text: string): string {
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/^-+|-+$/g, '');
+}
+
+/**
+ * True when the active UI locale is Dutch — used to show Dutch dish
+ * translations (dishes.vertaling_nl) that must not appear in other locales.
+ */
+export function isDutchLocale(lang?: string | null): boolean {
+  return (lang || '').toLowerCase().startsWith('nl');
 }

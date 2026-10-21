@@ -75,6 +75,8 @@ export interface DishMatchInfo {
   confidenceScore: number;
   /** Signature flag verified by owner/admin/trusted moderator */
   verifiedSignature?: boolean;
+  /** Dutch translation (dishes.vertaling_nl) — display only, never ranked */
+  translation?: string;
 }
 
 export interface EngagementMetrics {
