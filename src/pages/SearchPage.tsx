@@ -247,6 +247,19 @@ export default function SearchPage() {
     }
   });
 
+  useSearchLogger({
+    source: 'search',
+    query: dishQuery,
+    city: cityParam !== 'all' ? (cities.find((c: any) => c.id === cityParam)?.name ?? cityParam) : null,
+    filters: {
+      prijs: filters.priceLevel, sfeer: filters.ambienceTags, maaltijdtype: filters.mealTypes,
+      open_nu: !!filters.openNow, dieet: filters.dietaryOptions, keuken: filters.cuisines,
+      concept: filters.concepts, ervaring: filters.experiences,
+    },
+    resultsCount: openNowFiltered.length,
+    ready: !loading && (!!dishQuery || cityParam !== 'all'),
+  });
+
   // Scroll back to where the user was once restored results are on screen.
   useEffect(() => {
     const r = restoreRef.current;
