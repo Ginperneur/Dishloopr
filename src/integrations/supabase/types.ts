@@ -2651,6 +2651,83 @@ export type Database = {
           },
         ]
       }
+      restaurant_contacts: {
+        Row: {
+          afgemeld_op: string | null
+          alle_emails: string[] | null
+          bron: string
+          created_at: string
+          email: string | null
+          email_bron: string | null
+          email_kwaliteit: string | null
+          email_op_domein: boolean | null
+          facebook: string | null
+          gedeeld_door: number | null
+          gevonden_op: string | null
+          instagram: string | null
+          kvk: string | null
+          laatst_gemaild_op: string | null
+          mail_golf: number | null
+          rechtsvorm: string | null
+          restaurant_id: string
+          status: string | null
+          telefoon_site: string | null
+          updated_at: string
+        }
+        Insert: {
+          afgemeld_op?: string | null
+          alle_emails?: string[] | null
+          bron?: string
+          created_at?: string
+          email?: string | null
+          email_bron?: string | null
+          email_kwaliteit?: string | null
+          email_op_domein?: boolean | null
+          facebook?: string | null
+          gedeeld_door?: number | null
+          gevonden_op?: string | null
+          instagram?: string | null
+          kvk?: string | null
+          laatst_gemaild_op?: string | null
+          mail_golf?: number | null
+          rechtsvorm?: string | null
+          restaurant_id: string
+          status?: string | null
+          telefoon_site?: string | null
+          updated_at?: string
+        }
+        Update: {
+          afgemeld_op?: string | null
+          alle_emails?: string[] | null
+          bron?: string
+          created_at?: string
+          email?: string | null
+          email_bron?: string | null
+          email_kwaliteit?: string | null
+          email_op_domein?: boolean | null
+          facebook?: string | null
+          gedeeld_door?: number | null
+          gevonden_op?: string | null
+          instagram?: string | null
+          kvk?: string | null
+          laatst_gemaild_op?: string | null
+          mail_golf?: number | null
+          rechtsvorm?: string | null
+          restaurant_id?: string
+          status?: string | null
+          telefoon_site?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_contacts_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_deals: {
         Row: {
           conditions: string | null
