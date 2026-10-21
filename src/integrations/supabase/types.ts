@@ -1115,6 +1115,27 @@ export type Database = {
         }
         Relationships: []
       }
+      dishes_backup_canon: {
+        Row: {
+          backup_at: string | null
+          canonical_slug: string | null
+          id: string | null
+          slug: string | null
+        }
+        Insert: {
+          backup_at?: string | null
+          canonical_slug?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Update: {
+          backup_at?: string | null
+          canonical_slug?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
       dishes_backup_course: {
         Row: {
           backup_at: string | null
@@ -4519,6 +4540,36 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurants_backup_featured: {
+        Row: {
+          backup_at: string | null
+          featured_until: string | null
+          id: string | null
+          is_featured: boolean | null
+          is_top_listing: boolean | null
+          name: string | null
+          top_until: string | null
+        }
+        Insert: {
+          backup_at?: string | null
+          featured_until?: string | null
+          id?: string | null
+          is_featured?: boolean | null
+          is_top_listing?: boolean | null
+          name?: string | null
+          top_until?: string | null
+        }
+        Update: {
+          backup_at?: string | null
+          featured_until?: string | null
+          id?: string | null
+          is_featured?: boolean | null
+          is_top_listing?: boolean | null
+          name?: string | null
+          top_until?: string | null
+        }
+        Relationships: []
+      }
       restaurants_backup_urlherstel: {
         Row: {
           backup_at: string | null
@@ -5091,6 +5142,24 @@ export type Database = {
         }
         Relationships: []
       }
+      stage_canon: {
+        Row: {
+          nieuw: string | null
+          oud: string | null
+          slug: string | null
+        }
+        Insert: {
+          nieuw?: string | null
+          oud?: string | null
+          slug?: string | null
+        }
+        Update: {
+          nieuw?: string | null
+          oud?: string | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
       stage_course: {
         Row: {
           course: string | null
@@ -5109,6 +5178,24 @@ export type Database = {
           oud?: string | null
           slug?: string | null
           soort?: string | null
+        }
+        Relationships: []
+      }
+      stage_course2: {
+        Row: {
+          course: string | null
+          oud: string | null
+          slug: string | null
+        }
+        Insert: {
+          course?: string | null
+          oud?: string | null
+          slug?: string | null
+        }
+        Update: {
+          course?: string | null
+          oud?: string | null
+          slug?: string | null
         }
         Relationships: []
       }
