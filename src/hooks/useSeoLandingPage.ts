@@ -113,7 +113,7 @@ export function useSeoLandingPage(slug: string | undefined) {
   const [redirectTo, setRedirectTo] = useState<string | null>(null);
   const [canonicalDishName, setCanonicalDishName] = useState<string | null>(null);
   const [isHub, setIsHub] = useState(false);
-  const [groupMembers, setGroupMembers] = useState<Array<{ slug: string; name: string; count: number; seoSlug: string | null }>>([]);
+  const [groupMembers, setGroupMembers] = useState<Array<{ slug: string; name: string; translation: string | null; count: number; seoSlug: string | null }>>([]);
   const [parentHub, setParentHub] = useState<{ slug: string | null; name: string; dishSlug: string } | null>(null);
   const [synthesized, setSynthesized] = useState(false);
 
@@ -331,13 +331,13 @@ export function useSeoLandingPage(slug: string | undefined) {
         // - Hub pages: dishes sharing this dish_group (the whole family).
         if (canonicalSlug && effectivePageData.city_id) {
           // Collect all dish IDs to include (paginated to bypass 1000-row limit)
-          const dishRows: Array<{ id: string; name: string; slug: string; canonical_slug: string | null }> = [];
+          const dishRows: Array<{ id: string; name: string; slug: string; canonical_slug: string | null; vertaling_nl: string | null }> = [];
           let from = 0;
           const pageSize = 1000;
           while (true) {
             const q = supabase
               .from('dishes')
-              .select('id, name, slug, canonical_slug')
+              .select('id, name, slug, canonical_slug, vertaling_nl')
               .range(from, from + pageSize - 1);
             const { data: dishBatch } = isHubPage
               ? await q.eq('dish_group', canonicalSlug)
@@ -412,9 +412,15 @@ export function useSeoLandingPage(slug: string | undefined) {
               if (rBatch) results.push(...(rBatch as Restaurant[]));
             }
             // Attach signatureDish per restaurant from the canonical-strict match map
+            const vertalingByName = new Map<string, string>();
+            for (const d of dishRows) {
+              if (d.vertaling_nl) vertalingByName.set(d.name, d.vertaling_nl);
+            }
+            const dishTranslationsMap = vertalingByName.size > 0 ? Object.fromEntries(vertalingByName) : undefined;
             for (const r of results) {
               const m = matchByRestaurant.get(r.id);
               if (m) (r as any).signatureDish = { name: m.name, price: m.price };
+              if (dishTranslationsMap) (r as any).dishTranslations = dishTranslationsMap;
             }
             results.sort((a, b) => {
               if (a.is_featured !== b.is_featured) return a.is_featured ? -1 : 1;
@@ -429,14 +435,20 @@ export function useSeoLandingPage(slug: string | undefined) {
             // (excluding the hub itself) with ≥1 matching restaurant in this city.
             if (isHubPage) {
               const inCityIds = new Set(filteredResults.map(r => r.id));
-              const memberCounts = new Map<string, { count: number; name: string; slug: string }>();
+              const memberCounts = new Map<string, { count: number; name: string; slug: string; translation: string | null }>();
               // Representative name per canonical (prefer canonical dish row)
               const canonicalRepName = new Map<string, string>();
+              const canonicalRepTranslation = new Map<string, string | null>();
               for (const d of dishRows) {
                 const canon = (d.canonical_slug && d.canonical_slug.length > 0) ? d.canonical_slug : d.slug;
                 if (canon === canonicalSlug) continue; // skip hub itself
-                if (d.slug === canon) canonicalRepName.set(canon, d.name);
-                else if (!canonicalRepName.has(canon)) canonicalRepName.set(canon, d.name);
+                if (d.slug === canon) {
+                  canonicalRepName.set(canon, d.name);
+                  canonicalRepTranslation.set(canon, d.vertaling_nl ?? null);
+                } else if (!canonicalRepName.has(canon)) {
+                  canonicalRepName.set(canon, d.name);
+                  canonicalRepTranslation.set(canon, d.vertaling_nl ?? null);
+                }
               }
               for (const [rid, canons] of restaurantCanonicalMatches) {
                 if (!inCityIds.has(rid)) continue;
@@ -444,8 +456,9 @@ export function useSeoLandingPage(slug: string | undefined) {
                   if (canon === canonicalSlug) continue;
                   const cur = memberCounts.get(canon);
                   const name = canonicalRepName.get(canon) || canon;
+                  const translation = canonicalRepTranslation.get(canon) ?? null;
                   if (cur) cur.count += 1;
-                  else memberCounts.set(canon, { count: 1, name, slug: canon });
+                  else memberCounts.set(canon, { count: 1, name, slug: canon, translation });
                 }
               }
               const members = Array.from(memberCounts.values())
@@ -480,6 +493,7 @@ export function useSeoLandingPage(slug: string | undefined) {
                 setGroupMembers(members.map(m => ({
                   slug: m.slug,
                   name: m.name,
+                  translation: m.translation,
                   count: m.count,
                   seoSlug: seoBySlug.get(m.slug) || null,
                 })));

@@ -946,6 +946,7 @@ export type Database = {
           slug: string
           synonyms: string[] | null
           updated_at: string
+          vertaling_nl: string | null
         }
         Insert: {
           canonical_slug?: string | null
@@ -966,6 +967,7 @@ export type Database = {
           slug: string
           synonyms?: string[] | null
           updated_at?: string
+          vertaling_nl?: string | null
         }
         Update: {
           canonical_slug?: string | null
@@ -986,6 +988,7 @@ export type Database = {
           slug?: string
           synonyms?: string[] | null
           updated_at?: string
+          vertaling_nl?: string | null
         }
         Relationships: []
       }
@@ -1130,6 +1133,27 @@ export type Database = {
           course?: string | null
           id?: string | null
           slug?: string | null
+        }
+        Relationships: []
+      }
+      dishes_backup_vertaling: {
+        Row: {
+          backup_at: string | null
+          id: string | null
+          slug: string | null
+          vertaling_nl: string | null
+        }
+        Insert: {
+          backup_at?: string | null
+          id?: string | null
+          slug?: string | null
+          vertaling_nl?: string | null
+        }
+        Update: {
+          backup_at?: string | null
+          id?: string | null
+          slug?: string | null
+          vertaling_nl?: string | null
         }
         Relationships: []
       }
@@ -1575,6 +1599,24 @@ export type Database = {
         Relationships: []
       }
       kaartlezer_nieuwe_dishes: {
+        Row: {
+          created_at: string | null
+          dish_id: string
+          slug: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dish_id: string
+          slug?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dish_id?: string
+          slug?: string | null
+        }
+        Relationships: []
+      }
+      kaartlezer_nieuwe_dishes_b2: {
         Row: {
           created_at: string | null
           dish_id: string
@@ -3234,6 +3276,111 @@ export type Database = {
         Relationships: []
       }
       restaurant_dishes_backup_kaartlezer: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          backup_at: string | null
+          clicks: number | null
+          confidence_score: number | null
+          course_type: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          dietary_tags: string[] | null
+          dish_id: string | null
+          id: string | null
+          is_gluten_free: boolean | null
+          is_halal: boolean | null
+          is_signature: boolean | null
+          is_vegan: boolean | null
+          is_vegetarian: boolean | null
+          menu_section: string | null
+          price: number | null
+          rejected_reason: string | null
+          restaurant_id: string | null
+          screen_canonical: string | null
+          screen_course: string | null
+          screen_reason: string | null
+          screen_score: number | null
+          sort_order: number | null
+          source: string | null
+          status: string | null
+          tier: string | null
+          updated_at: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          backup_at?: string | null
+          clicks?: number | null
+          confidence_score?: number | null
+          course_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          dietary_tags?: string[] | null
+          dish_id?: string | null
+          id?: string | null
+          is_gluten_free?: boolean | null
+          is_halal?: boolean | null
+          is_signature?: boolean | null
+          is_vegan?: boolean | null
+          is_vegetarian?: boolean | null
+          menu_section?: string | null
+          price?: number | null
+          rejected_reason?: string | null
+          restaurant_id?: string | null
+          screen_canonical?: string | null
+          screen_course?: string | null
+          screen_reason?: string | null
+          screen_score?: number | null
+          sort_order?: number | null
+          source?: string | null
+          status?: string | null
+          tier?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          backup_at?: string | null
+          clicks?: number | null
+          confidence_score?: number | null
+          course_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          dietary_tags?: string[] | null
+          dish_id?: string | null
+          id?: string | null
+          is_gluten_free?: boolean | null
+          is_halal?: boolean | null
+          is_signature?: boolean | null
+          is_vegan?: boolean | null
+          is_vegetarian?: boolean | null
+          menu_section?: string | null
+          price?: number | null
+          rejected_reason?: string | null
+          restaurant_id?: string | null
+          screen_canonical?: string | null
+          screen_course?: string | null
+          screen_reason?: string | null
+          screen_score?: number | null
+          sort_order?: number | null
+          source?: string | null
+          status?: string | null
+          tier?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
+      restaurant_dishes_backup_kaartlezer_b2: {
         Row: {
           approved_at: string | null
           approved_by: string | null
@@ -5157,6 +5304,21 @@ export type Database = {
         }
         Relationships: []
       }
+      stage_vertaling: {
+        Row: {
+          slug: string | null
+          vertaling: string | null
+        }
+        Insert: {
+          slug?: string | null
+          vertaling?: string | null
+        }
+        Update: {
+          slug?: string | null
+          vertaling?: string | null
+        }
+        Relationships: []
+      }
       support_conversations: {
         Row: {
           created_at: string
@@ -6147,6 +6309,7 @@ export type Database = {
           slug: string
           synonyms: string[] | null
           updated_at: string
+          vertaling_nl: string | null
         }[]
         SetofOptions: {
           from: "*"

@@ -21,6 +21,7 @@ type City = Database['public']['Tables']['cities']['Row'];
 export interface SearchResult extends Restaurant {
   cityName?: string;
   matchedDishes?: string[];
+  dishTranslations?: Record<string, string>;
   matchScore: number;
   bayesianRating: number;
   isSponsored?: boolean;
@@ -237,6 +238,28 @@ export function useSearch() {
     }
     setDidYouMean(firstDidYouMean);
     setIsFuzzyMatch(fuzzy);
+
+    // Dutch display translations for matched dish names (dishes.vertaling_nl).
+    // Display-only: never affects ranking, titles or URLs.
+    let dishTranslations: Record<string, string> | undefined;
+    if (queryTerms.length > 0) {
+      const matchedNames = new Set<string>();
+      restaurantDishMap.forEach(infos => infos.forEach(d => matchedNames.add(d.name)));
+      if (matchedNames.size > 0) {
+        const { data: translationRows } = await supabase
+          .from('dishes')
+          .select('name, vertaling_nl')
+          .in('name', [...matchedNames])
+          .not('vertaling_nl', 'is', null);
+        if (translationRows && translationRows.length > 0) {
+          dishTranslations = {};
+          for (const row of translationRows as Array<{ name: string; vertaling_nl: string | null }>) {
+            if (row.vertaling_nl) dishTranslations[row.name] = row.vertaling_nl;
+          }
+          restaurantDishMap.forEach(infos => infos.forEach(d => { d.translation = dishTranslations![d.name]; }));
+        }
+      }
+    }
 
     // A search term without matches → 0 results. Never fall back to all restaurants.
     if (queryTerms.length > 0 && dishLinkedRestaurantIds.size === 0) {
@@ -589,6 +612,7 @@ export function useSearch() {
           chainName: restaurant.chain_id ? chainNameById.get(restaurant.chain_id) : undefined,
           chainLocationsCount: restaurant.chain_id ? chainCountById.get(restaurant.chain_id) : undefined,
           matchedDishes: scored.matchedDishes,
+          dishTranslations,
           matchScore: scored.matchScore,
           bayesianRating: scored.bayesianRating,
           isSponsored: scored.isSponsored,

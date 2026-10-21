@@ -37,6 +37,7 @@ export interface MenuItem {
   image_url: string | null;
   is_available: boolean;
   is_signature: boolean;
+  vertaling_nl: string | null;
 }
 
 export function useMenuItems(restaurantId: string | undefined) {
@@ -70,6 +71,7 @@ export function useMenuItems(restaurantId: string | undefined) {
             dish:dishes(
               id,
               name,
+              vertaling_nl,
               cuisine_tags,
               course
             )
@@ -82,7 +84,7 @@ export function useMenuItems(restaurantId: string | undefined) {
         const items: MenuItem[] = (restaurantDishes || [])
           .filter(rd => rd.dish)
           .map(rd => {
-            const dish = rd.dish as { id: string; name: string; cuisine_tags: string[] | null; course: string | null };
+            const dish = rd.dish as { id: string; name: string; vertaling_nl: string | null; cuisine_tags: string[] | null; course: string | null };
             const cuisineTags = dish.cuisine_tags || [];
             const courseType = normalizeCourse(dish.course ?? (rd as any).course_type);
             
@@ -102,6 +104,7 @@ export function useMenuItems(restaurantId: string | undefined) {
               image_url: null,
               is_available: true,
               is_signature: rd.is_signature,
+              vertaling_nl: dish.vertaling_nl ?? null,
             };
           });
 

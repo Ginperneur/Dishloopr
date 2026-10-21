@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { useMenuItems, type CourseType } from '@/hooks/useMenuItems';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Toggle } from '@/components/ui/toggle';
-import { formatDishName } from '@/lib/utils';
+import { formatDishName, isDutchLocale } from '@/lib/utils';
 import { tTaxonomy } from '@/lib/i18n/taxonomy';
 
 const COURSE_EMOJI_KEY: Record<CourseType, string> = {
@@ -26,7 +26,8 @@ interface MenuSectionProps {
 type FilterType = 'signature' | 'vegetarian' | 'glutenFree' | 'halal';
 
 export function MenuSection({ restaurantId }: MenuSectionProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isNl = isDutchLocale(i18n.language);
   const { menuItems, courseTypes, loading, error } = useMenuItems(restaurantId);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<Set<FilterType>>(new Set());
@@ -234,6 +235,9 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-sm font-medium">{formatDishName(item.name)}</span>
+                              {isNl && item.vertaling_nl && (
+                                <span className="text-xs text-muted-foreground font-normal">({item.vertaling_nl})</span>
+                              )}
                               {item.is_signature && (
                                 <Badge variant="secondary" className="bg-primary/10 text-primary dark:bg-primary/20 gap-1 text-[10px] px-1.5 py-0">
                                   <Star className="h-2.5 w-2.5 fill-current" />
