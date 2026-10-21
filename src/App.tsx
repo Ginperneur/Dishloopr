@@ -10,8 +10,9 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { Skeleton } from "@/components/ui/skeleton";
-import { OnboardingDialog } from "@/components/onboarding/OnboardingDialog";
-import { CookieConsent } from "@/components/legal/CookieConsent";
+import { AfterIdle } from "@/components/util/AfterIdle";
+const OnboardingDialog = lazy(() => import("@/components/onboarding/OnboardingDialog").then((m) => ({ default: m.OnboardingDialog })));
+const CookieConsent = lazy(() => import("@/components/legal/CookieConsent").then((m) => ({ default: m.CookieConsent })));
 import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 
 // Eagerly load critical routes
@@ -95,8 +96,7 @@ const App = () => (
               <Sonner />
               <BrowserRouter>
                 <Suspense fallback={<PageLoader />}>
-                  <OnboardingDialog />
-                  <CookieConsent />
+                  <AfterIdle><OnboardingDialog /><CookieConsent /></AfterIdle>
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/search" element={<SearchPage />} />
