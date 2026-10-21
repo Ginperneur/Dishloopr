@@ -1,3 +1,5 @@
+import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
+import { escapeHtml } from "../_shared/auth.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 
@@ -35,21 +37,29 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
-    const payload: EmailHookPayload = await req.json();
+    // Only the auth system may call this hook: verify the signed webhook payload.
+    const hookSecret = (Deno.env.get("SEND_EMAIL_HOOK_SECRET") ?? "").replace("v1,whsec_", "");
+    if (!hookSecret) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const rawBody = await req.text();
+    let payload: EmailHookPayload;
+    try {
+      payload = new Webhook(hookSecret).verify(rawBody, Object.fromEntries(req.headers)) as EmailHookPayload;
+    } catch {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     
-    console.log("Email hook received:", {
-      email: payload.user.email,
-      action: payload.email_data.email_action_type,
-    });
+    console.log("Email hook received:", { action: payload.email_data.email_action_type });
 
     const { user, email_data } = payload;
-    const userName = user.user_metadata?.name || user.email.split('@')[0];
+    const userName = escapeHtml(user.user_metadata?.name || user.email.split('@')[0]);
     
     let subject: string;
     let htmlContent: string;
     
     // Build confirmation URL
-    const confirmationUrl = `${email_data.site_url}/auth/v1/verify?token=${email_data.token_hash}&type=${email_data.email_action_type}&redirect_to=${encodeURIComponent(email_data.redirect_to)}`;
+    const confirmationUrl = escapeHtml(`${email_data.site_url}/auth/v1/verify?token=${email_data.token_hash}&type=${email_data.email_action_type}&redirect_to=${encodeURIComponent(email_data.redirect_to)}`);
 
     switch (email_data.email_action_type) {
       case "signup":
