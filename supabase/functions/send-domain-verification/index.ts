@@ -1,3 +1,4 @@
+import { requireAdminOrInternal, serviceClient, escapeHtml } from "../_shared/auth.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 
@@ -21,6 +22,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    { const __deny = await requireAdminOrInternal(req, serviceClient(), corsHeaders); if (__deny) return __deny; }
     const { email, code, restaurantName }: DomainVerificationRequest = await req.json();
 
     if (!email || !code || !restaurantName) {
@@ -30,7 +32,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "Dishloopr <noreply@dishloopr.com>",
       to: [email],
-      subject: `Verificatiecode voor ${restaurantName} op Dishloopr`,
+      subject: `Verificatiecode voor ${String(restaurantName).replace(/[\r\n]/g, " ").slice(0, 120)} op Dishloopr`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -42,11 +44,11 @@ const handler = async (req: Request): Promise<Response> => {
           <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
             <h1 style="font-size: 24px; margin: 0 0 8px 0; color: #111;">Verificatiecode</h1>
             <p style="color: #6b7280; margin: 0 0 24px 0;">
-              Gebruik onderstaande code om het eigenaarschap van <strong>${restaurantName}</strong> op Dishloopr te bevestigen.
+              Gebruik onderstaande code om het eigenaarschap van <strong>${escapeHtml(restaurantName)}</strong> op Dishloopr te bevestigen.
             </p>
             
             <div style="background: #f3f4f6; border-radius: 8px; padding: 24px; text-align: center; margin: 24px 0;">
-              <span style="font-size: 32px; font-weight: 700; letter-spacing: 8px; color: #111; font-family: monospace;">${code}</span>
+              <span style="font-size: 32px; font-weight: 700; letter-spacing: 8px; color: #111; font-family: monospace;">${escapeHtml(code)}</span>
             </div>
             
             <p style="color: #6b7280; font-size: 14px; margin: 24px 0 0 0;">
