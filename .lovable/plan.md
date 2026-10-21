@@ -1,55 +1,29 @@
-## Doel
+# Vijf kleine verbeteringen
 
-Elke pagina volledig vertaald in NL / EN / DE / FR / ES, zonder Nederlandse "leaks". Drie soorten content vragen elk een eigen aanpak.
+## 1. Knop 'Uitgelicht' alleen tonen als er iets uitgelicht is
+- Eén kleine controle telt of er minstens 1 actief restaurant is dat uitgelicht of bovenaan geplaatst is (`is_featured` of `is_top_listing`). Het resultaat wordt 5 minuten bewaard, zodat het menu niet bij elke pagina opnieuw vraagt.
+- Bij 0 verdwijnt de knop 'Uitgelicht'. Zodra er 1 bij komt, staat hij er automatisch weer.
+- De knop staat nu alleen in de bovenste navigatie. In de footer en het snelmenu onderaan staat hij niet. Duikt hij daar later toch op, dan geldt dezelfde regel.
 
-## Type content & aanpak
+## 2. Score op de collectiepagina (/collection/:slug)
+- Score en aantal reviews komen uit `google_rating` en `google_reviews_count`, met dezelfde opmaak als op de zoekkaarten.
+- Is `google_rating` leeg of 0, dan staan er geen sterren.
+- `featured_reason` wordt gewone grijze tekst: niet cursief, zonder aanhalingstekens.
 
-| Soort | Voorbeeld | Aanpak |
-|---|---|---|
-| UI-strings (statisch) | "Bij mij in de buurt", "Opslaan", "Alle gerechten" | `t()` + sleutels in `src/i18n/locales/*.json` |
-| Enum-achtige DB-waarden | cuisines (`italiaans`), ambience_tags (`gezellig`), `course_type` (`hoofdgerecht`), dietary labels | Centrale mapping `CONSTANT → i18n key` in `src/lib/i18n/` |
-| Echte redactionele DB-content | collectietitels, subtitels, beschrijvingen | JSONB-kolommen `title_i18n`, `subtitle_i18n`, `description_i18n` op `collections`, met NL als fallback |
+## 3. Titel van de zoekpagina
+- "… restaurants in Europa" wordt "… restaurants in Nederland". Is er een stad gekozen, dan staat de stadsnaam erin.
+- Dat geldt ook voor de omschrijving van de pagina, in alle vijf talen.
 
-## Fase 1 — Foundation (1 PR)
+## 4. Foutpagina's niet laten indexeren
+- De 404-pagina en de pagina 'Restaurant niet gevonden' krijgen allebei `noindex, nofollow`. Nu heeft de 404-pagina alleen `noindex` en heeft 'Restaurant niet gevonden' niets.
 
-1. Inventariseer alle hardcoded NL-strings en alle DB-enums via een `rg`-sweep; output als checklist in deze plan-thread.
-2. Maak `src/lib/i18n/taxonomy.ts` met mappings:
-   - `CUISINE_I18N_KEYS`, `AMBIENCE_I18N_KEYS` (bestaat al deels), `COURSE_TYPE_I18N_KEYS`, `DIETARY_I18N_KEYS`, `PRICE_LEVEL_I18N_KEYS`.
-   - Eén helper `tTaxonomy(t, type, value)` met sane fallback (capitalize raw value).
-3. Voeg alle bijbehorende keys toe in alle 5 locale-bestanden onder secties `taxonomy.cuisines.*`, `taxonomy.ambience.*`, `taxonomy.course.*`, `taxonomy.dietary.*`.
+## 5. Leeg parkeerblok verbergen
+- Het blok 'Parkeergelegenheid' op de restaurantpagina verschijnt alleen als de eigenaar of een beheerder iets heeft ingevuld. Dat kan een ja of nee zijn, een garage of een opmerking.
+- Zonder ingevulde informatie verdwijnt het blok helemaal. De tekst "onbekend" verdwijnt dan ook.
 
-## Fase 2 — Statische UI sweep
-
-Per pagina-groep een focused commit:
-- **Homepage** (`Index.tsx`, `home/*`): "Bij mij in de buurt", "Ontdek per stad", cuisine-knoppen, "Alle gerechten", trending sections, collections strip.
-- **Zoek + filters**: filter-popover labels, chip-labels, "Zelfde gerecht/prijsklasse", lege-staat teksten.
-- **Restaurantpagina**: menu-categorieën (course types), review-sectie, "Opslaan", "Bekend om", openingstijden labels, social proof.
-- **Collectie-detail, /steden, /collecties**: subtitles, lege staten, CTA's.
-
-Alle hardcoded NL → `t('section.key')` + entries in alle 5 locale-bestanden.
-
-## Fase 3 — Dynamische redactionele content (collecties)
-
-1. Migratie: voeg `title_i18n jsonb`, `subtitle_i18n jsonb`, `description_i18n jsonb` toe aan `collections`. Default `{}`. Fallback-volgorde in code: `title_i18n[lang] → title_i18n.nl → title`.
-2. Backfill: kopieer huidige `title`/`subtitle`/`description` naar `*_i18n.nl`.
-3. Admin-UI in `CollectionEditor`: tab per taal voor titel/subtitel/beschrijving. (Of: laat admin alleen NL invullen en gebruik AI-vertaal-knop via Lovable AI Gateway — vergelijkbaar met bestaande translate-flow.)
-4. Helper `useLocalizedField(row, 'title')` voor de frontend.
-
-Cuisine/ambience-tags zijn enums → vallen onder Fase 1, geen schema-werk.
-
-## Fase 4 — QA + lint
-
-1. Voeg een `scripts/check-i18n.ts` toe die alle locale-bestanden vergelijkt op missende sleutels (CI-vriendelijk).
-2. Loop alle 5 talen handmatig door op /, /search, /restaurant/:slug, /collections, /steden.
-3. Sla missing-key-warnings van i18next op via een dev-overlay om laatste leaks te vinden.
-
-## Uitvoeringsvolgorde & verwachting
-
-Ik stel voor dat ik per turn één fase (of subset van fase 2) oplever — anders wordt elke PR onreviewbaar. Eerstvolgende oplevering na akkoord: **Fase 1 (foundation + taxonomy)**.
-
-## Wat ik NIET in scope plaats (tenzij je het er bij wilt)
-
-- Admin-panel vertalen (intern gebruik, NL volstaat).
-- Owner-dashboard vertalen (B2B, gefaseerd via aparte ticket).
-- Restaurant-namen/adressen vertalen (niet wenselijk — eigennamen).
-- SEO-vertalingen via hreflang (memory zegt expliciet: client-side i18n, geen hreflang).
+## Technisch
+- Nieuwe hook `useHasFeatured` (React Query, `count` met `head: true`, `.eq('is_active', true)` plus `.or('is_featured.eq.true,is_top_listing.eq.true')`). Wordt gebruikt in `Header.tsx` en, als de link daar ooit komt, in Footer en BottomNav.
+- `useCollections.ts`: `google_rating` en `google_reviews_count` mee selecteren. `CollectionPage.tsx`: de ster-weergave van `DatabaseRestaurantCard` volgen, verbergen bij null of 0, en de `featured_reason`-klasse wordt `text-sm text-muted-foreground`.
+- `SearchPage.tsx` en alle locale-bestanden: de keys `dishRestaurantsInCountry`, `descDishInCountry` en `descSearchInCountry` noemen Nederland (EN Netherlands, DE Niederlande, FR Pays-Bas, ES Países Bajos).
+- `SEOHead` krijgt een optie `nofollow`. NotFound en de foutweergave in `RestaurantPage` gebruiken `noindex` + `nofollow`.
+- `ParkingSection` geeft `null` terug als `hasParkingInfo(info)` false is. Er komt een unit-test bij voor `hasParkingInfo` (leeg = false, alleen garage = true).
