@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
 interface RecentlyViewedItem {
   slug: string;
@@ -11,14 +11,15 @@ const STORAGE_KEY = 'dishloopr_recently_viewed';
 const MAX_ITEMS = 20;
 
 export function useRecentlyViewed() {
-  const [items, setItems] = useState<RecentlyViewedItem[]>([]);
-
-  useEffect(() => {
+  // Read synchronously so "Laatst bekeken" reserves its space on the first render (no layout shift).
+  const [items, setItems] = useState<RecentlyViewedItem[]>(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) setItems(JSON.parse(stored));
-    } catch {}
-  }, []);
+      const stored = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const addItem = useCallback((item: Omit<RecentlyViewedItem, 'timestamp'>) => {
     setItems(prev => {

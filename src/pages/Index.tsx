@@ -6,15 +6,11 @@ import { SearchBar } from '@/components/search/SearchBar';
 import { Layout } from '@/components/layout/Layout';
 import { TrendingDishes } from '@/components/home/TrendingDishes';
 import { FeaturedRestaurants } from '@/components/home/FeaturedRestaurants';
-import { UpcomingEvents } from '@/components/home/UpcomingEvents';
 import { SocialProof } from '@/components/home/SocialProof';
 import { RecentlyViewed } from '@/components/home/RecentlyViewed';
-import { SeasonalSuggestions } from '@/components/home/SeasonalSuggestions';
 import { ExploreCities } from '@/components/home/ExploreCities';
-import { HowItWorks } from '@/components/home/HowItWorks';
 import { DatabaseRestaurantCard } from '@/components/restaurant/DatabaseRestaurantCard';
 import { SurpriseMe } from '@/components/ai/SurpriseMe';
-import { PersonalizedRecommendations } from '@/components/ai/PersonalizedRecommendations';
 import { FeaturedCollections } from '@/components/collections/CollectionsGrid';
 import { SEOHead, createWebsiteSchema } from '@/components/seo/SEOHead';
 import { Button } from '@/components/ui/button';
@@ -23,7 +19,14 @@ import { useTrendingDishes } from '@/hooks/useTrendingDishes';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useSavedSearches } from '@/hooks/useSavedSearches';
 import { useContentAvailability } from '@/hooks/useContentAvailability';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+
+// Below-the-fold sections load as separate chunks
+const UpcomingEvents = lazy(() => import('@/components/home/UpcomingEvents').then((m) => ({ default: m.UpcomingEvents })));
+const SeasonalSuggestions = lazy(() => import('@/components/home/SeasonalSuggestions').then((m) => ({ default: m.SeasonalSuggestions })));
+const HowItWorks = lazy(() => import('@/components/home/HowItWorks').then((m) => ({ default: m.HowItWorks })));
+const PersonalizedRecommendations = lazy(() => import('@/components/ai/PersonalizedRecommendations').then((m) => ({ default: m.PersonalizedRecommendations })));
 import { toast } from 'sonner';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -45,7 +48,7 @@ const Index = () => {
   const { dishes: trendingDishes, loading: dishesLoading } = useTrendingDishes();
   const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, clearLocation } = useGeolocation();
   const { saved: savedSearches, remove: removeSavedSearch, setAlerts: setSavedAlerts } = useSavedSearches();
-  const { hasCollections, hasEvents } = useContentAvailability();
+  const { hasCollections, hasEvents, loading: availabilityLoading } = useContentAvailability();
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [nearbyRequested, setNearbyRequested] = useState(false);
   const [feedTab, setFeedTab] = useState<'foryou' | 'nearby'>('foryou');
@@ -116,7 +119,7 @@ const Index = () => {
         
         <div className="container relative px-4 md:px-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="text-center mb-5 md:mb-10"
@@ -270,7 +273,7 @@ const Index = () => {
       <FeaturedRestaurants />
 
       {/* Featured Collections — prominent editorial/paid slot */}
-      {hasCollections && (
+      {(availabilityLoading || hasCollections) && (
         <section
           id="collections"
           className="py-6 md:py-8 scroll-mt-24"
@@ -371,23 +374,34 @@ const Index = () => {
       <SocialProof />
 
       {/* How it works — only for first-time visitors */}
-      {showHowItWorks && <HowItWorks />}
+      {showHowItWorks && <Suspense fallback={null}><HowItWorks /></Suspense>}
 
       {/* Trending Dishes — shown before personalized picks */}
       <div id="trending" className="scroll-mt-24">
-        <TrendingDishes dishes={trendingDishes} />
+        {dishesLoading ? (
+          <section className="py-6 md:py-8" aria-hidden="true">
+            <div className="container px-4 md:px-6">
+              <Skeleton className="h-7 w-48 mb-4" />
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+              </div>
+            </div>
+          </section>
+        ) : (
+          <TrendingDishes dishes={trendingDishes} />
+        )}
       </div>
 
       {/* Personalized Recommendations for logged-in users */}
-      <PersonalizedRecommendations />
+      <Suspense fallback={null}><PersonalizedRecommendations /></Suspense>
 
       {/* Upcoming Events */}
       <div id="events" className="scroll-mt-24">
-        <UpcomingEvents />
+        <Suspense fallback={null}><UpcomingEvents /></Suspense>
       </div>
 
       {/* Seasonal Suggestions */}
-      <SeasonalSuggestions />
+      <Suspense fallback={null}><SeasonalSuggestions /></Suspense>
     </Layout>
   );
 };
