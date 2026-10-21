@@ -34,6 +34,15 @@ export default function LoginPage() {
   const { toast } = useToast();
   const { user, loading, signIn, signUp } = useAuth();
   const initialTab = searchParams.get('tab') === 'signup' ? 'signup' : 'login';
+  const rawRedirect = searchParams.get('redirect');
+  const redirectParam = rawRedirect && rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : null;
+  useEffect(() => {
+    if (redirectParam) sessionStorage.setItem('postAuthRedirect', redirectParam);
+  }, [redirectParam]);
+  const takeRedirect = () => {
+    const r = redirectParam || sessionStorage.getItem('postAuthRedirect');
+    return r && r.startsWith('/') && !r.startsWith('//') ? r : null;
+  };
   
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,7 +59,7 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     const result = await lovable.auth.signInWithOAuth('google', {
-      redirect_uri: window.location.origin,
+      redirect_uri: redirectParam ? `${window.location.origin}/login?redirect=${encodeURIComponent(redirectParam)}` : window.location.origin,
     });
     if (result?.error) {
       toast({
@@ -66,8 +75,9 @@ export default function LoginPage() {
   useEffect(() => {
     if (user && !loading) {
       const accountType = user.user_metadata?.account_type;
-      const destination = accountType === 'restaurant' ? '/owner-dashboard' : '/my-dashboard';
-      toast({
+      const back = takeRedirect();
+      const destination = back || (accountType === 'restaurant' ? '/owner-dashboard' : '/my-dashboard');
+      if (!back) toast({
         title: 'Je bent al ingelogd',
         description: 'We sturen je door naar je dashboard.',
       });
@@ -109,7 +119,7 @@ export default function LoginPage() {
         title: 'Welkom terug!',
         description: 'Je bent succesvol ingelogd.',
       });
-      navigate('/');
+      navigate(takeRedirect() || '/');
     }
   };
 

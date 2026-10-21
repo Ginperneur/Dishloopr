@@ -54,6 +54,13 @@ import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 
 export default function RestaurantPage() {
   const { slug } = useParams<{ slug: string }>();
+  const claimLocation = useLocation();
+  const claimNavigate = useNavigate();
+  useEffect(() => {
+    if (slug && new URLSearchParams(claimLocation.search).get('claim') === '1') {
+      claimNavigate(`/claim/${slug}`, { replace: true });
+    }
+  }, [slug, claimLocation.search, claimNavigate]);
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
@@ -170,6 +177,8 @@ export default function RestaurantPage() {
   }
 
   const openingHours = (restaurant.opening_hours || {}) as { [key: string]: string };
+  const claimStatus = (restaurant as any).claim_status as string | null | undefined;
+  const canBeClaimed = claimStatus !== 'verified_owner' && claimStatus !== 'locked';
 
   // Generate SEO structured data
   const restaurantSchema = createRestaurantSchema({
@@ -277,6 +286,11 @@ export default function RestaurantPage() {
                   <h1 className="text-2xl md:text-4xl font-bold mb-1 md:mb-2 truncate">
                     {restaurant.name}
                   </h1>
+                  {canBeClaimed && (
+                    <Link to={`/claim/${restaurant.slug}`} className="inline-flex items-center min-h-11 text-sm font-medium text-primary hover:underline">
+                      Is dit jouw restaurant? Claim gratis
+                    </Link>
+                  )}
 
                   {restaurant.chain && (
                     <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mb-1">
@@ -567,6 +581,16 @@ export default function RestaurantPage() {
                 />
               </div>
             </motion.div>
+
+            {canBeClaimed && (
+              <div className="rounded-lg border bg-muted/40 p-5 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+                <div>
+                  <p className="font-semibold">Is dit jouw restaurant?</p>
+                  <p className="text-sm text-muted-foreground">Claim gratis en beheer je menu, openingstijden en foto's.</p>
+                </div>
+                <Button asChild><Link to={`/claim/${restaurant.slug}`}>Claim gratis</Link></Button>
+              </div>
+            )}
 
             {/* Related Internal Links for SEO */}
             <RelatedLinks

@@ -4781,6 +4781,48 @@ export type Database = {
           },
         ]
       }
+      search_logs: {
+        Row: {
+          city: string | null
+          clicked_at: string | null
+          clicked_restaurant_id: string | null
+          created_at: string
+          filters: Json
+          id: number
+          query: string
+          query_norm: string
+          results_count: number | null
+          session_id: string | null
+          source: string
+        }
+        Insert: {
+          city?: string | null
+          clicked_at?: string | null
+          clicked_restaurant_id?: string | null
+          created_at?: string
+          filters?: Json
+          id?: never
+          query: string
+          query_norm: string
+          results_count?: number | null
+          session_id?: string | null
+          source?: string
+        }
+        Update: {
+          city?: string | null
+          clicked_at?: string | null
+          clicked_restaurant_id?: string | null
+          created_at?: string
+          filters?: Json
+          id?: never
+          query?: string
+          query_norm?: string
+          results_count?: number | null
+          session_id?: string | null
+          source?: string
+        }
+        Relationships: []
+      }
       search_synonyms: {
         Row: {
           created_at: string | null
@@ -6373,6 +6415,25 @@ export type Database = {
         Args: { _restaurant_id: string; _user_id: string }
         Returns: boolean
       }
+      log_search: {
+        Args: {
+          p_city?: string
+          p_filters?: Json
+          p_query: string
+          p_results_count?: number
+          p_session_id?: string
+          p_source?: string
+        }
+        Returns: number
+      }
+      log_search_click: {
+        Args: {
+          p_log_id: number
+          p_restaurant_id: string
+          p_session_id: string
+        }
+        Returns: undefined
+      }
       parse_search_query: {
         Args: { p_query: string }
         Returns: {
@@ -6422,6 +6483,19 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      search_log_report: {
+        Args: { p_days?: number; p_only_zero?: boolean }
+        Returns: {
+          gem_resultaten: number
+          klikken: number
+          laatst: string
+          sessies: number
+          steden: string
+          zoekopdrachten: number
+          zoekterm: string
+          zonder_resultaat: number
+        }[]
       }
       search_restaurants: {
         Args: { p_city_id?: string; p_limit?: number; p_term: string }
@@ -6491,6 +6565,7 @@ export type Database = {
         | "html_file"
         | "google_business"
         | "domain_email"
+        | "manual_proof"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -6655,6 +6730,7 @@ export const Constants = {
         "html_file",
         "google_business",
         "domain_email",
+        "manual_proof",
       ],
     },
   },

@@ -1,5 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
+import { escapeHtml } from "../_shared/auth.ts";
+import {
+  extractDomain, domainMatches, codeExpiry, isExpired, attemptsExhausted, canSendAnotherCode, canStartClaim,
+  OPEN_CLAIM_STATUSES,
+} from "./rules.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,24 +25,6 @@ async function sha256(text: string): Promise<string> {
     .join("");
 }
 
-function extractDomain(url: string | null | undefined): string | null {
-  if (!url) return null;
-  try {
-    const u = new URL(url.startsWith("http") ? url : `https://${url}`);
-    return u.hostname.replace(/^www\./, "").toLowerCase();
-  } catch {
-    return null;
-  }
-}
-
-function domainMatches(email: string, restaurantDomain: string | null): boolean {
-  if (!restaurantDomain) return false;
-  const parts = email.toLowerCase().split("@");
-  if (parts.length !== 2) return false;
-  const ed = parts[1];
-  return ed === restaurantDomain || ed.endsWith(`.${restaurantDomain}`);
-}
-
 function randomCode(len = 6): string {
   const buf = new Uint32Array(1);
   crypto.getRandomValues(buf);
@@ -55,7 +42,7 @@ Deno.serve(async (req) => {
   // Rate-limit before any DB work
   const rl = await enforceRateLimit(req, {
     functionName: "verify-claim",
-    user: { max: 20, window: 60 * 30 }, // 20 attempts / 30 min per user
+    user: { max: 60, window: 60 * 30 }, // 60 calls / 30 min per user
     anon: { max: 5, window: 60 * 60 },
   });
   if (!rl.allowed && rl.response) return rl.response;
@@ -75,6 +62,152 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const action = String(body.action || "");
+    const now = Date.now();
+
+    const isAdminUser = async () => {
+      const { data } = await admin.rpc("has_role", { _user_id: user.id, _role: "admin" });
+      return data === true;
+    };
+
+    const log = (restaurantId: string, claimId: string | null, actionType: string, after: unknown, role = "user") =>
+      admin.from("claim_activity_logs").insert({
+        actor_id: user.id, actor_role: role, restaurant_id: restaurantId, claim_id: claimId,
+        action_type: actionType, action_category: "verification", after_data: after,
+      });
+
+    const sendMail = async (to: string, subject: string, html: string) => {
+      const key = Deno.env.get("RESEND_API_KEY");
+      if (!key) return false;
+      const r = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ from: "Dishloopr <noreply@dishloopr.com>", to: [to], subject, html }),
+      });
+      if (!r.ok) console.error("[verify-claim] mail failed", await r.text());
+      return r.ok;
+    };
+    const mailShell = (title: string, inner: string) =>
+      `<div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2 style="margin:0 0 12px;color:#F26522">${title}</h2>${inner}<p style="color:#999;font-size:12px;margin-top:24px">Dishloopr</p></div>`;
+
+    /** Grants ownership: claim verified, restaurant verified_owner, manager + team member + role, log. */
+    const promote = async (claim: { id: string; user_id: string; restaurant_id: string }, method: string, proof: Record<string, unknown>, actorRole: string) => {
+      const ts = new Date().toISOString();
+      await admin.from("restaurant_claims").update({
+        status: "verified", verification_method: method, verification_completed_at: ts,
+        verification_proof: { ...proof, method, verified_at: ts }, is_primary: true,
+        reviewed_by: actorRole === "admin" ? user.id : null, reviewed_at: actorRole === "admin" ? ts : null,
+      }).eq("id", claim.id);
+      await admin.from("restaurants").update({
+        claim_status: "verified_owner", claimed_by_owner_id: claim.user_id, updated_at: ts,
+      }).eq("id", claim.restaurant_id);
+      await admin.from("restaurant_managers").upsert(
+        { restaurant_id: claim.restaurant_id, user_id: claim.user_id, role: "primary_owner", accepted_at: ts },
+        { onConflict: "restaurant_id,user_id" },
+      );
+      const { data: owner } = await admin.auth.admin.getUserById(claim.user_id);
+      const ownerEmail = owner?.user?.email ?? null;
+      const { data: tm } = await admin.from("restaurant_team_members").select("id")
+        .eq("restaurant_id", claim.restaurant_id).eq("user_id", claim.user_id).maybeSingle();
+      if (tm) {
+        await admin.from("restaurant_team_members").update({ role: "owner", status: "accepted", accepted_at: ts }).eq("id", tm.id);
+      } else {
+        await admin.from("restaurant_team_members").insert({
+          restaurant_id: claim.restaurant_id, user_id: claim.user_id, invited_email: ownerEmail ?? `${claim.user_id}@owner.local`,
+          role: "owner", status: "accepted", invited_by: user.id, accepted_at: ts,
+        });
+      }
+      const { data: pendingReq } = await admin.from("claim_requests").select("id")
+        .eq("restaurant_id", claim.restaurant_id).eq("user_id", claim.user_id).eq("status", "pending").maybeSingle();
+      if (pendingReq) {
+        await admin.from("claim_requests").update({ status: "approved", reviewed_by: user.id, reviewed_at: ts, updated_at: ts }).eq("id", pendingReq.id);
+      } else {
+        await admin.from("claim_requests").insert({
+          restaurant_id: claim.restaurant_id, user_id: claim.user_id, status: "approved",
+          notes: `Geverifieerd via ${method}`, reviewed_by: user.id, reviewed_at: ts,
+        });
+      }
+      const { data: role } = await admin.from("user_roles").select("id").eq("user_id", claim.user_id).eq("role", "owner").maybeSingle();
+      if (!role) await admin.from("user_roles").insert({ user_id: claim.user_id, role: "owner" });
+      await admin.from("restaurant_claims").update({ status: "superseded" })
+        .eq("restaurant_id", claim.restaurant_id).neq("id", claim.id).in("status", OPEN_CLAIM_STATUSES);
+      await log(claim.restaurant_id, claim.id, actorRole === "admin" ? "ADMIN_APPROVED" : "VERIFICATION_COMPLETED", { method, ...proof }, actorRole);
+      await admin.from("claim_verification_secrets").delete().eq("claim_id", claim.id);
+      return ownerEmail;
+    };
+
+    // -------- STATUS (no claim needed) --------
+    if (action === "status" || action === "start_claim") {
+      const restaurantId = String(body.restaurantId || "");
+      if (!/^[0-9a-f-]{36}$/i.test(restaurantId)) return json({ error: "restaurantId vereist" }, 400);
+      const { data: r } = await admin.from("restaurants").select("id, name, website_url, claim_status, claimed_by_owner_id").eq("id", restaurantId).maybeSingle();
+      if (!r) return json({ error: "Restaurant niet gevonden" }, 404);
+      const { data: open } = await admin.from("restaurant_claims")
+        .select("id, status, verification_method, verification_proof")
+        .eq("restaurant_id", restaurantId).eq("user_id", user.id).in("status", OPEN_CLAIM_STATUSES)
+        .order("created_at", { ascending: false }).limit(1).maybeSingle();
+      const isOwner = r.claim_status === "verified_owner" && r.claimed_by_owner_id === user.id;
+      const domain = extractDomain(r.website_url);
+
+      if (action === "status") {
+        return json({
+          claimStatus: r.claim_status, isOwner, websiteDomain: domain,
+          openClaim: open ? { id: open.id, status: open.status, method: open.verification_method,
+            manualSubmitted: (open.verification_proof as any)?.method === "manual_proof" } : null,
+        });
+      }
+
+      if (open) return json({ claimId: open.id, existing: true });
+      const check = canStartClaim(r.claim_status, false);
+      if (!check.ok) return json({ error: check.reason === "already_claimed" ? "Dit restaurant is al geclaimd." : "Dit restaurant kan nu niet geclaimd worden.", reason: check.reason }, 409);
+      const { data: allowed } = await admin.rpc("can_create_claim", { _user_id: user.id });
+      if (allowed === false) return json({ error: "Je hebt te veel openstaande claims. Wacht tot die zijn beoordeeld." }, 429);
+      const { data: created, error: insErr } = await admin.from("restaurant_claims")
+        .insert({ restaurant_id: restaurantId, user_id: user.id, status: "pending", email_verified: !!user.email_confirmed_at })
+        .select("id").single();
+      if (insErr || !created) return json({ error: insErr?.message ?? "Claim aanmaken mislukt" }, 500);
+      if (r.claim_status === "unclaimed" || !r.claim_status) {
+        await admin.from("restaurants").update({ claim_status: "claimed_unverified" }).eq("id", restaurantId);
+      }
+      await log(restaurantId, created.id, "CLAIM_STARTED", { status: "pending" });
+      return json({ claimId: created.id });
+    }
+
+    // -------- ADMIN: approve / reject --------
+    if (action === "admin_approve" || action === "admin_reject") {
+      if (!(await isAdminUser())) return json({ error: "Alleen beheerders" }, 403);
+      const claimId = String(body.claimId || "");
+      const { data: c } = await admin.from("restaurant_claims").select("id, user_id, restaurant_id, status, verification_proof").eq("id", claimId).maybeSingle();
+      if (!c) return json({ error: "Claim niet gevonden" }, 404);
+      if (!OPEN_CLAIM_STATUSES.includes(c.status)) return json({ error: "Claim is al afgehandeld" }, 400);
+      const { data: r } = await admin.from("restaurants").select("name, slug, claim_status").eq("id", c.restaurant_id).maybeSingle();
+      const name = escapeHtml(r?.name ?? "je restaurant");
+      const site = "https://dishloopr.com";
+
+      if (action === "admin_approve") {
+        if (r?.claim_status === "verified_owner") return json({ error: "Restaurant heeft al een eigenaar" }, 409);
+        const email = await promote(c, "manual_proof", { ...(c.verification_proof as object), approved_by: user.id }, "admin");
+        if (email) await sendMail(email, `Je claim voor ${r?.name ?? "je restaurant"} is goedgekeurd`,
+          mailShell("Claim goedgekeurd", `<p>Goed nieuws: je bent nu de geverifieerde eigenaar van <b>${name}</b> op Dishloopr.</p><p><a href="${site}/owner-dashboard?welcome=1" style="color:#F26522">Ga naar je dashboard</a></p>`));
+        return json({ success: true });
+      }
+      const reason = String(body.reason || "").trim().slice(0, 1000);
+      if (!reason) return json({ error: "Geef een reden op" }, 400);
+      const ts = new Date().toISOString();
+      await admin.from("restaurant_claims").update({ status: "rejected", admin_notes: reason, reviewed_by: user.id, reviewed_at: ts }).eq("id", c.id);
+      await admin.from("claim_requests").update({ status: "rejected", admin_notes: reason, reviewed_by: user.id, reviewed_at: ts, updated_at: ts })
+        .eq("restaurant_id", c.restaurant_id).eq("user_id", c.user_id).eq("status", "pending");
+      const { count } = await admin.from("restaurant_claims").select("id", { count: "exact", head: true })
+        .eq("restaurant_id", c.restaurant_id).in("status", OPEN_CLAIM_STATUSES);
+      if (!count && r?.claim_status === "claimed_unverified") {
+        await admin.from("restaurants").update({ claim_status: "unclaimed" }).eq("id", c.restaurant_id);
+      }
+      await log(c.restaurant_id, c.id, "ADMIN_REJECTED", { reason }, "admin");
+      const { data: u } = await admin.auth.admin.getUserById(c.user_id);
+      if (u?.user?.email) await sendMail(u.user.email, `Je claim voor ${r?.name ?? "je restaurant"} is afgewezen`,
+        mailShell("Claim afgewezen", `<p>We konden je claim voor <b>${name}</b> niet goedkeuren.</p><p><b>Reden:</b> ${escapeHtml(reason)}</p><p>Vragen? <a href="${site}/contact" style="color:#F26522">Neem contact op</a>.</p>`));
+      return json({ success: true });
+    }
+
     const claimId = String(body.claimId || "");
     if (!claimId) return json({ error: "claimId vereist" }, 400);
 
@@ -86,76 +219,80 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (claimErr || !claim) return json({ error: "Claim niet gevonden" }, 404);
     if (claim.user_id !== user.id) return json({ error: "Geen toegang tot deze claim" }, 403);
-    if (!["pending", "email_verified", "phone_verified"].includes(claim.status)) {
+    if (!OPEN_CLAIM_STATUSES.includes(claim.status)) {
       return json({ error: "Claim kan niet meer geverifieerd worden" }, 400);
     }
 
     const { data: restaurant } = await admin
       .from("restaurants")
-      .select("id, name, website")
+      .select("id, name, website_url, claim_status")
       .eq("id", claim.restaurant_id)
       .maybeSingle();
     if (!restaurant) return json({ error: "Restaurant niet gevonden" }, 404);
+    if (restaurant.claim_status === "verified_owner") return json({ error: "Dit restaurant is al geclaimd." }, 409);
+
+    // -------- MANUAL PROOF --------
+    if (action === "submit_manual") {
+      const files = Array.isArray(body.files) ? body.files.map(String) : [];
+      const fullName = String(body.fullName || "").trim().slice(0, 120);
+      const jobTitle = String(body.jobTitle || "").trim().slice(0, 120);
+      const phone = String(body.phone || "").replace(/\s+/g, "").slice(0, 20);
+      if (!fullName || !jobTitle) return json({ error: "Naam en functie zijn verplicht" }, 400);
+      if (!/^\+?[0-9]{8,15}$/.test(phone)) return json({ error: "Vul een geldig telefoonnummer in" }, 400);
+      if (files.length < 1 || files.length > 5 || files.some((f: string) => !f.startsWith(`${user.id}/`) || f.includes(".."))) {
+        return json({ error: "Upload 1 tot 5 bewijsstukken" }, 400);
+      }
+      const ts = new Date().toISOString();
+      const proof = { method: "manual_proof", files, full_name: fullName, job_title: jobTitle, phone, submitted_at: ts };
+      await admin.from("restaurant_claims").update({
+        status: "pending", verification_method: "manual_proof", verification_started_at: ts,
+        verification_proof: proof, phone_number: phone,
+      }).eq("id", claimId);
+      const { data: existingReq } = await admin.from("claim_requests").select("id")
+        .eq("restaurant_id", restaurant.id).eq("user_id", user.id).eq("status", "pending").maybeSingle();
+      const reqRow = { proof_documents: files, notes: `${fullName} — ${jobTitle} — ${phone}`, updated_at: ts };
+      if (existingReq) await admin.from("claim_requests").update(reqRow).eq("id", existingReq.id);
+      else await admin.from("claim_requests").insert({ ...reqRow, restaurant_id: restaurant.id, user_id: user.id, status: "pending" });
+      await admin.from("restaurants").update({ claim_status: "claimed_unverified" }).eq("id", restaurant.id);
+      await log(restaurant.id, claimId, "MANUAL_PROOF_SUBMITTED", { files: files.length, job_title: jobTitle });
+      return json({ success: true, status: "pending_admin_review" });
+    }
 
     // -------- DOMAIN EMAIL: send code --------
     if (action === "send_domain_code") {
       const email = String(body.email || "").trim().toLowerCase();
-      const restaurantDomain = extractDomain(restaurant.website);
+      const restaurantDomain = extractDomain(restaurant.website_url);
       if (!restaurantDomain) {
-        return json({ error: "Restaurant heeft geen geverifieerd websitedomein" }, 400);
+        return json({ error: "Dit restaurant heeft geen website. Kies handmatige verificatie." }, 400);
       }
-      if (!email.includes("@") || !domainMatches(email, restaurantDomain)) {
+      if (!domainMatches(email, restaurantDomain)) {
         return json({ error: `E-mailadres moet eindigen op @${restaurantDomain}` }, 400);
+      }
+      const { count: sentLastHour } = await admin.from("claim_activity_logs")
+        .select("id", { count: "exact", head: true })
+        .eq("claim_id", claimId).eq("action_type", "DOMAIN_CODE_SENT")
+        .gte("created_at", new Date(now - 60 * 60 * 1000).toISOString());
+      if (!canSendAnotherCode(sentLastHour ?? 0)) {
+        return json({ error: "Je hebt al 3 codes aangevraagd in het afgelopen uur. Probeer het later opnieuw." }, 429);
       }
 
       const code = randomCode(6);
       const codeHash = await sha256(`${claimId}:${code}`);
-      const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
-
-      const { error: upsertErr } = await admin
-        .from("claim_verification_secrets")
-        .upsert({
-          claim_id: claimId,
-          method: "domain_email",
-          code_hash: codeHash,
-          email,
-          attempts: 0,
-          expires_at: expiresAt,
-          updated_at: new Date().toISOString(),
-        });
+      const { error: upsertErr } = await admin.from("claim_verification_secrets").upsert({
+        claim_id: claimId, method: "domain_email", code_hash: codeHash, email, attempts: 0,
+        expires_at: codeExpiry(now).toISOString(), updated_at: new Date().toISOString(),
+      });
       if (upsertErr) return json({ error: upsertErr.message }, 500);
 
-      // Mirror lightweight, non-secret metadata to the claim (no code stored!)
-      await admin
-        .from("restaurant_claims")
-        .update({
-          verification_method: "domain_email",
-          verification_started_at: new Date().toISOString(),
-          verification_proof: { method: "domain_email", email, sent_at: new Date().toISOString() },
-        })
-        .eq("id", claimId);
+      await admin.from("restaurant_claims").update({
+        verification_method: "domain_email", verification_started_at: new Date().toISOString(),
+        verification_proof: { method: "domain_email", email, sent_at: new Date().toISOString() },
+      }).eq("id", claimId);
+      await log(restaurant.id, claimId, "DOMAIN_CODE_SENT", { email });
 
-      // Send email
-      const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-      if (!RESEND_API_KEY) return json({ error: "Mailservice niet geconfigureerd" }, 500);
-      const mailRes = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${RESEND_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: "Dishloopr <noreply@dishloopr.com>",
-          to: [email],
-          subject: `Verificatiecode voor ${restaurant.name} op Dishloopr`,
-          html: `<div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2 style="margin:0 0 8px">Verificatiecode</h2><p style="color:#555;margin:0 0 16px">Gebruik onderstaande code om eigenaarschap van <b>${restaurant.name}</b> te bevestigen.</p><div style="background:#f3f4f6;border-radius:8px;padding:20px;text-align:center;font-size:28px;letter-spacing:8px;font-family:monospace;font-weight:700">${code}</div><p style="color:#777;font-size:13px;margin-top:16px">Code is 30 minuten geldig. Heb je dit niet aangevraagd? Negeer deze e-mail.</p></div>`,
-        }),
-      });
-      if (!mailRes.ok) {
-        const t = await mailRes.text();
-        console.error("[verify-claim] resend failed", t);
-        return json({ error: "Kon e-mail niet versturen" }, 502);
-      }
+      const ok = await sendMail(email, `Verificatiecode voor ${restaurant.name} op Dishloopr`,
+        mailShell("Verificatiecode", `<p style="color:#555">Gebruik deze code om eigenaarschap van <b>${escapeHtml(restaurant.name)}</b> te bevestigen.</p><div style="background:#f3f4f6;border-radius:8px;padding:20px;text-align:center;font-size:28px;letter-spacing:8px;font-family:monospace;font-weight:700">${code}</div><p style="color:#777;font-size:13px;margin-top:16px">De code is 15 minuten geldig. Heb je dit niet aangevraagd? Negeer deze e-mail.</p>`));
+      if (!ok) return json({ error: "Kon e-mail niet versturen. Probeer het later opnieuw." }, 502);
       return json({ success: true });
     }
 
@@ -163,91 +300,20 @@ Deno.serve(async (req) => {
     if (action === "verify_domain_code") {
       const code = String(body.code || "").trim();
       if (!/^\d{6}$/.test(code)) return json({ error: "Ongeldige code" }, 400);
-
-      const { data: secret } = await admin
-        .from("claim_verification_secrets")
-        .select("*")
-        .eq("claim_id", claimId)
-        .maybeSingle();
+      const { data: secret } = await admin.from("claim_verification_secrets").select("*").eq("claim_id", claimId).maybeSingle();
       if (!secret || secret.method !== "domain_email") {
         return json({ error: "Geen actieve verificatie. Vraag eerst een nieuwe code aan." }, 400);
       }
-      if (new Date(secret.expires_at).getTime() < Date.now()) {
-        return json({ error: "Code is verlopen. Vraag een nieuwe aan." }, 400);
-      }
-      if (secret.attempts >= 5) {
-        return json({ error: "Te veel pogingen. Vraag een nieuwe code aan." }, 429);
-      }
-
+      if (isExpired(secret.expires_at, now)) return json({ error: "Code is verlopen. Vraag een nieuwe aan." }, 400);
+      if (attemptsExhausted(secret.attempts ?? 0)) return json({ error: "Te veel pogingen. Vraag een nieuwe code aan." }, 429);
       const submittedHash = await sha256(`${claimId}:${code}`);
       if (submittedHash !== secret.code_hash) {
-        await admin
-          .from("claim_verification_secrets")
+        await admin.from("claim_verification_secrets")
           .update({ attempts: (secret.attempts ?? 0) + 1, updated_at: new Date().toISOString() })
           .eq("claim_id", claimId);
         return json({ error: "Onjuiste code" }, 400);
       }
-
-      // Promote claim
-      await admin
-        .from("restaurant_claims")
-        .update({
-          status: "verified",
-          verification_method: "domain_email",
-          verification_completed_at: new Date().toISOString(),
-          verification_proof: {
-            method: "domain_email",
-            email: secret.email,
-            verified_at: new Date().toISOString(),
-          },
-          is_primary: true,
-        })
-        .eq("id", claimId);
-
-      await admin
-        .from("restaurants")
-        .update({ claim_status: "verified_owner", updated_at: new Date().toISOString() })
-        .eq("id", restaurant.id);
-
-      await admin.from("restaurant_managers").upsert(
-        {
-          restaurant_id: restaurant.id,
-          user_id: user.id,
-          role: "primary_owner",
-          accepted_at: new Date().toISOString(),
-        },
-        { onConflict: "restaurant_id,user_id" },
-      );
-
-      const { data: existingRole } = await admin
-        .from("user_roles")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("role", "owner")
-        .maybeSingle();
-      if (!existingRole) {
-        await admin.from("user_roles").insert({ user_id: user.id, role: "owner" });
-      }
-
-      await admin
-        .from("restaurant_claims")
-        .update({ status: "superseded" })
-        .eq("restaurant_id", restaurant.id)
-        .neq("id", claimId);
-
-      await admin.from("claim_activity_logs").insert({
-        actor_id: user.id,
-        actor_role: "user",
-        restaurant_id: restaurant.id,
-        claim_id: claimId,
-        action_type: "VERIFICATION_COMPLETED",
-        action_category: "verification",
-        after_data: { method: "domain_email", email: secret.email },
-      });
-
-      // Burn the secret
-      await admin.from("claim_verification_secrets").delete().eq("claim_id", claimId);
-
+      await promote(claim, "domain_email", { email: secret.email }, "user");
       return json({ success: true });
     }
 
