@@ -22,7 +22,7 @@ export function RatingSummary({ size = 'sm', className, ...input }: Props) {
         <span className="font-semibold text-foreground">{formatScore(d.google, lang)}</span>
         <span className="text-xs text-muted-foreground">
           {d.googleCount > 0
-            ? `(${t('rating.googleReviews', '{{count}} Google-reviews', { count: d.googleCount, formatted: formatCount(d.googleCount, lang) }).replace(String(d.googleCount), formatCount(d.googleCount, lang))})`
+            ? `(${t('rating.googleReviews', '{{n}} Google-reviews', { n: formatCount(d.googleCount, lang) })})`
             : t('rating.google', 'Google')}
         </span>
       </div>
