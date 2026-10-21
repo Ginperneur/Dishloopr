@@ -1,3 +1,4 @@
+import { getCaller, escapeHtml } from "../_shared/auth.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -11,6 +12,10 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const caller = await getCaller(req);
+    if (!caller) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -39,7 +44,7 @@ Deno.serve(async (req) => {
       .eq("id", reviewId)
       .single();
 
-    if (!review) {
+    if (!review || review.user_id !== caller.id) {
       return new Response(JSON.stringify({ error: "Review not found" }), {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -81,7 +86,7 @@ Deno.serve(async (req) => {
       .eq("id", review.user_id)
       .single();
 
-    const reviewerName = reviewerProfile?.name || "Een gebruiker";
+    const reviewerName = escapeHtml(reviewerProfile?.name || "Een gebruiker");
     const stars = "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
 
     // Send email
@@ -97,11 +102,11 @@ Deno.serve(async (req) => {
         subject: `Nieuwe review voor ${restaurant.name} - ${stars}`,
         html: `
           <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-            <h2 style="color: #333;">Nieuwe review voor ${restaurant.name}</h2>
+            <h2 style="color: #333;">Nieuwe review voor ${escapeHtml(restaurant.name)}</h2>
             <div style="background: #f9f9f9; border-radius: 12px; padding: 20px; margin: 16px 0;">
               <p style="font-size: 20px; margin: 0 0 8px;">${stars}</p>
-              ${review.title ? `<p style="font-weight: 600; margin: 0 0 8px;">${review.title}</p>` : ""}
-              ${review.body ? `<p style="color: #555; margin: 0;">${review.body}</p>` : ""}
+              ${review.title ? `<p style="font-weight: 600; margin: 0 0 8px;">${escapeHtml(review.title)}</p>` : ""}
+              ${review.body ? `<p style="color: #555; margin: 0;">${escapeHtml(review.body)}</p>` : ""}
               <p style="color: #888; font-size: 13px; margin: 12px 0 0;">— ${reviewerName}</p>
             </div>
             <p style="color: #666; font-size: 14px;">
@@ -115,7 +120,7 @@ Deno.serve(async (req) => {
 
     const emailResult = await emailRes.json();
 
-    return new Response(JSON.stringify({ success: true, emailResult }), {
+    return new Response(JSON.stringify({ success: true, id: emailResult?.id ?? null }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

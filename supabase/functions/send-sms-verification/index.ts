@@ -148,7 +148,7 @@ serve(async (req) => {
         );
       }
 
-      console.log(`SMS sent to ${cleanPhone} for claim ${claimId}`);
+      console.log(`SMS sent for claim ${claimId}`);
 
       return new Response(
         JSON.stringify({ success: true, message: 'Verification code sent' }),

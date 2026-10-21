@@ -1,3 +1,4 @@
+import { requireAdminOrInternal, serviceClient, escapeHtml } from "../_shared/auth.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 
@@ -83,6 +84,7 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    { const __deny = await requireAdminOrInternal(req, supabase as any, corsHeaders); if (__deny) return __deny; }
 
     // Get pending notifications
     const { data: notifications, error: notifError } = await supabase
@@ -190,7 +192,7 @@ const handler = async (req: Request): Promise<Response> => {
         );
 
         if (emailResult.success) {
-          console.log(`Email sent to ${typedProfile.email}`);
+          console.log(`Email sent for notification ${notification.id}`);
 
           // Mark as sent
           await supabase

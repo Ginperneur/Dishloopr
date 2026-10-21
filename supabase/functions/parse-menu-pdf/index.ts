@@ -1,3 +1,4 @@
+import { isSafePublicUrl } from "../_shared/auth.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 
@@ -100,7 +101,12 @@ serve(async (req) => {
         ? pdfBase64.split(',')[1]
         : pdfBase64;
     } else {
-      const resp = await fetch(pdfUrl);
+      if (!isSafePublicUrl(String(pdfUrl))) {
+        return new Response(JSON.stringify({ error: 'Invalid pdfUrl' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const resp = await fetch(String(pdfUrl), { redirect: 'manual' });
       if (!resp.ok) {
         return new Response(JSON.stringify({ error: `PDF kon niet worden opgehaald (${resp.status})` }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },

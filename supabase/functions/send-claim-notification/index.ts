@@ -1,3 +1,4 @@
+import { escapeHtml } from "../_shared/auth.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -72,27 +73,32 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    const { 
-      claimId,
-      restaurantName, 
-      restaurantAddress,
-      userName,
-      userEmail,
-      role,
-      notes 
-    }: ClaimNotificationRequest = await req.json();
+    const body: ClaimNotificationRequest = await req.json();
+    // Confirmation always goes to the signed-in user's own address, never a caller-chosen one.
+    const userEmail = claims.user.email;
+    if (!userEmail) {
+      return new Response(JSON.stringify({ error: 'No email on account' }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const clip = (v: unknown, n: number) => String(v ?? '').slice(0, n);
+    const restaurantNameRaw = clip(body.restaurantName, 200).replace(/[\r\n]/g, ' ');
+    const claimId = escapeHtml(clip(body.claimId, 64));
+    const restaurantName = escapeHtml(restaurantNameRaw);
+    const restaurantAddress = escapeHtml(clip(body.restaurantAddress, 300));
+    const userName = escapeHtml(clip(body.userName, 120));
+    const role = escapeHtml(clip(body.role, 60));
+    const notes = escapeHtml(clip(body.notes, 2000));
+    const userEmailHtml = escapeHtml(userEmail);
 
-    console.log("Sending claim notification for:", restaurantName);
+    console.log("Sending claim notification");
 
     // Get admin email from database
     const adminEmail = await getAdminEmail();
-    console.log("Using admin email:", adminEmail);
 
     // Send notification to admin
     const adminEmailResponse = await resend.emails.send({
       from: "Dishloopr <noreply@resend.dev>",
       to: [adminEmail],
-      subject: `Nieuwe claim aanvraag: ${restaurantName}`,
+      subject: `Nieuwe claim aanvraag: ${restaurantNameRaw}`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 20px;">🔔 Nieuwe Claim Aanvraag</h1>
@@ -105,7 +111,7 @@ serve(async (req: Request): Promise<Response> => {
           <div style="border-left: 4px solid #f97316; padding-left: 15px; margin-bottom: 20px;">
             <h3 style="color: #1a1a1a; font-size: 16px; margin: 0 0 10px 0;">Aanvrager</h3>
             <p style="color: #666; margin: 5px 0;"><strong>Naam:</strong> ${userName}</p>
-            <p style="color: #666; margin: 5px 0;"><strong>Email:</strong> ${userEmail}</p>
+            <p style="color: #666; margin: 5px 0;"><strong>Email:</strong> ${userEmailHtml}</p>
             <p style="color: #666; margin: 5px 0;"><strong>Rol:</strong> ${role}</p>
           </div>
           
@@ -135,7 +141,7 @@ serve(async (req: Request): Promise<Response> => {
     const userEmailResponse = await resend.emails.send({
       from: "Dishloopr <noreply@resend.dev>",
       to: [userEmail],
-      subject: `Claim aanvraag ontvangen voor ${restaurantName}`,
+      subject: `Claim aanvraag ontvangen voor ${restaurantNameRaw}`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 20px;">✅ Claim Aanvraag Ontvangen</h1>
@@ -183,8 +189,8 @@ serve(async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        adminEmail: adminEmailResponse,
-        userEmail: userEmailResponse
+        adminEmailId: adminEmailResponse.data?.id ?? null,
+        userEmailId: userEmailResponse.data?.id ?? null
       }),
       {
         status: 200,

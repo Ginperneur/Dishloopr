@@ -1,3 +1,4 @@
+import { getCaller } from "../_shared/auth.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
 
@@ -12,6 +13,7 @@ serve(async (req) => {
   }
 
   try {
+    { const __u = await getCaller(req); if (!__u) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }
     const rl = await enforceRateLimit(req, {
       functionName: "analyze-reviews",
       user: { max: 10, window: 3600 },

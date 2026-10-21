@@ -1,3 +1,4 @@
+import { requireAdminOrInternal, serviceClient, escapeHtml } from "../_shared/auth.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
@@ -24,6 +25,7 @@ serve(async (req) => {
   }
 
   try {
+    { const __deny = await requireAdminOrInternal(req, serviceClient(), corsHeaders); if (__deny) return __deny; }
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
       throw new Error("RESEND_API_KEY not configured");

@@ -1115,6 +1115,27 @@ export type Database = {
         }
         Relationships: []
       }
+      dishes_backup_canon: {
+        Row: {
+          backup_at: string | null
+          canonical_slug: string | null
+          id: string | null
+          slug: string | null
+        }
+        Insert: {
+          backup_at?: string | null
+          canonical_slug?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Update: {
+          backup_at?: string | null
+          canonical_slug?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
       dishes_backup_course: {
         Row: {
           backup_at: string | null
@@ -1595,6 +1616,24 @@ export type Database = {
           rating?: number
           resolved_at?: string | null
           restaurant_id?: string
+        }
+        Relationships: []
+      }
+      internal_job_secrets: {
+        Row: {
+          created_at: string
+          name: string
+          secret: string
+        }
+        Insert: {
+          created_at?: string
+          name: string
+          secret?: string
+        }
+        Update: {
+          created_at?: string
+          name?: string
+          secret?: string
         }
         Relationships: []
       }
@@ -4519,6 +4558,36 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurants_backup_featured: {
+        Row: {
+          backup_at: string | null
+          featured_until: string | null
+          id: string | null
+          is_featured: boolean | null
+          is_top_listing: boolean | null
+          name: string | null
+          top_until: string | null
+        }
+        Insert: {
+          backup_at?: string | null
+          featured_until?: string | null
+          id?: string | null
+          is_featured?: boolean | null
+          is_top_listing?: boolean | null
+          name?: string | null
+          top_until?: string | null
+        }
+        Update: {
+          backup_at?: string | null
+          featured_until?: string | null
+          id?: string | null
+          is_featured?: boolean | null
+          is_top_listing?: boolean | null
+          name?: string | null
+          top_until?: string | null
+        }
+        Relationships: []
+      }
       restaurants_backup_urlherstel: {
         Row: {
           backup_at: string | null
@@ -5091,6 +5160,24 @@ export type Database = {
         }
         Relationships: []
       }
+      stage_canon: {
+        Row: {
+          nieuw: string | null
+          oud: string | null
+          slug: string | null
+        }
+        Insert: {
+          nieuw?: string | null
+          oud?: string | null
+          slug?: string | null
+        }
+        Update: {
+          nieuw?: string | null
+          oud?: string | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
       stage_course: {
         Row: {
           course: string | null
@@ -5109,6 +5196,24 @@ export type Database = {
           oud?: string | null
           slug?: string | null
           soort?: string | null
+        }
+        Relationships: []
+      }
+      stage_course2: {
+        Row: {
+          course: string | null
+          oud: string | null
+          slug: string | null
+        }
+        Insert: {
+          course?: string | null
+          oud?: string | null
+          slug?: string | null
+        }
+        Update: {
+          course?: string | null
+          oud?: string | null
+          slug?: string | null
         }
         Relationships: []
       }
@@ -6350,6 +6455,7 @@ export type Database = {
         Returns: undefined
       }
       update_user_badges: { Args: { p_user_id: string }; Returns: undefined }
+      verify_cron_secret: { Args: { p_secret: string }; Returns: boolean }
     }
     Enums: {
       app_role: "user" | "owner" | "admin" | "moderator"

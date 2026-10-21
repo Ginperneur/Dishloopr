@@ -82,13 +82,24 @@ serve(async (req) => {
       if (mgr) allowed = true;
     }
     if (!allowed) {
+      // A claimant (not yet verified) may only add the first photos to a restaurant
+      // that has none yet and is not owned by someone else — never replace existing photos.
       const { data: claim } = await supabaseAdmin
         .from('claim_requests')
         .select('id')
         .eq('user_id', user.id)
         .eq('restaurant_id', restaurant_id)
         .maybeSingle();
-      if (claim) allowed = true;
+      if (claim) {
+        const { data: rest } = await supabaseAdmin
+          .from('restaurants')
+          .select('images, claimed_by_owner_id')
+          .eq('id', restaurant_id)
+          .maybeSingle();
+        const hasImages = Array.isArray(rest?.images) && rest!.images.length > 0;
+        const ownedByOther = !!rest?.claimed_by_owner_id && rest.claimed_by_owner_id !== user.id;
+        if (rest && !hasImages && !ownedByOther) allowed = true;
+      }
     }
     if (!allowed) {
       return new Response(

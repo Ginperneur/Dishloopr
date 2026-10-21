@@ -99,6 +99,23 @@ serve(async (req) => {
 
     // Resolve / create conversation
     let convId = conversationId;
+    if (convId) {
+      const { data: existing } = await admin
+        .from("support_conversations")
+        .select("id, user_id, session_id")
+        .eq("id", convId)
+        .maybeSingle();
+      const owns = existing && (
+        (userId && existing.user_id === userId) ||
+        (!existing.user_id && sessionId && existing.session_id === sessionId)
+      );
+      if (!owns) {
+        return new Response(
+          JSON.stringify({ error: "Conversation not found" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
     if (!convId) {
       const { data: newConv, error: convErr } = await admin
         .from("support_conversations")

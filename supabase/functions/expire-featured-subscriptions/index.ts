@@ -1,3 +1,4 @@
+import { requireAdminOrInternal, serviceClient, escapeHtml } from "../_shared/auth.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
@@ -17,6 +18,7 @@ serve(async (req) => {
   }
 
   try {
+    { const __deny = await requireAdminOrInternal(req, serviceClient(), corsHeaders); if (__deny) return __deny; }
     logStep("Starting expiration check");
 
     const supabaseAdmin = createClient(

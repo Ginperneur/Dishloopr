@@ -1,3 +1,4 @@
+import { getCaller } from "../_shared/auth.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
@@ -98,15 +99,21 @@ serve(async (req) => {
 
       case "check-eligibility": {
         // Check if restaurant can subscribe to a slot
-        const authHeader = req.headers.get('Authorization');
-        if (!authHeader?.startsWith('Bearer ')) {
-          return new Response(
-            JSON.stringify({ error: 'Unauthorized' }),
-            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
 
         const { restaurantId, cityId, cuisine } = await req.json();
+        const __caller = await getCaller(req);
+        if (!__caller) {
+          return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        const __rid = restaurantId;
+        const [{ data: __adm }, { data: __own }, { data: __mgr }] = await Promise.all([
+          supabaseClient.rpc('has_role', { _user_id: __caller.id, _role: 'admin' }),
+          supabaseClient.rpc('is_verified_owner', { _user_id: __caller.id, _restaurant_id: __rid }),
+          supabaseClient.rpc('has_restaurant_access', { _user_id: __caller.id, _restaurant_id: __rid, _min_role: 'editor' }),
+        ]);
+        if (!__adm && !__own && !__mgr) {
+          return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
 
         // Get or create slot
         let { data: slot } = await supabaseClient
@@ -166,7 +173,7 @@ serve(async (req) => {
           eligible: !inCoolingOff && !existingSub && !isFull,
           inCoolingOff,
           hasActiveSubscription: !!existingSub,
-          existingSubscription: existingSub,
+          existingSubscription: existingSub ? { id: existingSub.id, status: existingSub.status, expires_at: existingSub.expires_at } : null,
           isFull,
           waitlistPosition: waitlistPos,
           activeCount,
@@ -179,15 +186,21 @@ serve(async (req) => {
       }
 
       case "join-waitlist": {
-        const authHeader = req.headers.get('Authorization');
-        if (!authHeader?.startsWith('Bearer ')) {
-          return new Response(
-            JSON.stringify({ error: 'Unauthorized' }),
-            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
 
         const { restaurantId, slotId, selectedAmbiances } = await req.json();
+        const __caller = await getCaller(req);
+        if (!__caller) {
+          return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        const __rid = restaurantId;
+        const [{ data: __adm }, { data: __own }, { data: __mgr }] = await Promise.all([
+          supabaseClient.rpc('has_role', { _user_id: __caller.id, _role: 'admin' }),
+          supabaseClient.rpc('is_verified_owner', { _user_id: __caller.id, _restaurant_id: __rid }),
+          supabaseClient.rpc('has_restaurant_access', { _user_id: __caller.id, _restaurant_id: __rid, _min_role: 'editor' }),
+        ]);
+        if (!__adm && !__own && !__mgr) {
+          return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
 
         // Get current waitlist count
         const { count } = await supabaseClient
