@@ -126,8 +126,9 @@ export async function loadLandingRestaurants(page: SeoLandingPage) {
   const { canonical, isHub } = landingIdentity(page);
   if (!canonical || !page.city_id) return { restaurants: [] as LandingRestaurant[], members: [] as LandingMember[] };
   const cityId = page.city_id;
-  const [cityRestaurants, matches] = await Promise.all([
-    readAllPages<LandingRestaurant>((from, to) => supabase.from('restaurants').select('*')
+  const [cityRestaurants, matches, dishRows] = await Promise.all([
+    readAllPages<LandingRestaurant>((from, to) => supabase.from('restaurants')
+      .select('id, name, slug, address, rating, review_count, price_level, images, cuisines, ambience_tags, meal_types, is_featured, is_top_listing, geo_lat, geo_lng, opening_hours, google_rating, google_reviews_count')
       .eq('city_id', cityId).eq('is_active', true).order('id').range(from, to)),
     readAllPages((from, to) => {
       const query = supabase.from('restaurant_dishes')
@@ -137,18 +138,25 @@ export async function loadLandingRestaurants(page: SeoLandingPage) {
         .order('id').range(from, to);
       return isHub ? query.eq('dishes.dish_group', canonical) : query.eq('dishes.canonical_slug', canonical);
     }),
+    readAllPages<LandingDish>((from, to) => {
+      const query = supabase.from('dishes').select(DISH_FIELDS).order('id').range(from, to);
+      return isHub ? query.eq('dish_group', canonical) : query.eq('canonical_slug', canonical);
+    }),
   ]);
   const best = new Map<string, { name: string; price: number | null; is_signature: boolean }>();
   const matchedMembers = new Map<string, Set<string>>();
   const representatives = new Map<string, LandingDish>();
   const translations: Record<string, string> = {};
+  for (const dish of dishRows) {
+    const member = dish.canonical_slug || dish.slug;
+    if (!representatives.has(member) || dish.slug === member) representatives.set(member, dish);
+    if (dish.vertaling_nl) translations[dish.name] = dish.vertaling_nl;
+  }
   for (const match of matches) {
     const dish = match.dishes;
     if (!dish) continue;
     if (dish.vertaling_nl) translations[dish.name] = dish.vertaling_nl;
     const member = dish.canonical_slug || dish.slug;
-    const existingRep = representatives.get(member);
-    if (!existingRep || dish.slug === member) representatives.set(member, dish);
     const set = matchedMembers.get(match.restaurant_id) ?? new Set<string>();
     set.add(member); matchedMembers.set(match.restaurant_id, set);
     const price = match.price != null && Number.isFinite(Number(match.price)) ? Number(match.price) : null;
