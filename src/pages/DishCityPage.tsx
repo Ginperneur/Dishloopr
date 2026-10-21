@@ -27,7 +27,7 @@ export default function DishCityPage() {
   const location = useLocation();
   const { t, i18n } = useTranslation();
   const isNl = isDutchLocale(i18n.language);
-  const { page, restaurants, loading, error, redirectTo, isHub, groupMembers, parentHub, synthesized } = useSeoLandingPage(slug);
+  const { page, restaurants, loading, resultsLoading, navigationLoading, error, redirectTo, isHub, groupMembers, parentHub, synthesized } = useSeoLandingPage(slug);
 
   const activeFacet = getFacet(facetSlug);
   const isFacetRoute = !!facetSlug;
@@ -59,7 +59,7 @@ export default function DishCityPage() {
     city: page?.city?.name ?? null,
     filters: activeFacet ? { facet: facetSlug } : {},
     resultsCount: visibleRestaurants.length,
-    ready: !loading && !!page,
+    ready: !loading && !resultsLoading && !error && !!page,
   });
 
   const hasQueryParams = location.search && location.search.length > 1;
@@ -68,7 +68,7 @@ export default function DishCityPage() {
   const belowIndexThreshold = isFacetRoute && visibleRestaurants.length < 3;
   // Synthesized (on-the-fly) base pages inherit the same ≥3 rule.
   const synthesizedBelowThreshold = !isFacetRoute && synthesized && restaurants.length < 3;
-  const noindex = unknownFacet || belowIndexThreshold || synthesizedBelowThreshold || (isFacetRoute && hasQueryParams);
+  const noindex = resultsLoading || !!error || unknownFacet || belowIndexThreshold || synthesizedBelowThreshold || (isFacetRoute && hasQueryParams);
 
   if (redirectTo) {
     return <Navigate to={redirectTo} replace />;
@@ -78,8 +78,14 @@ export default function DishCityPage() {
     return <NotFound />;
   }
 
-  if (unknownFacet && !loading) {
+  if (unknownFacet) {
     return <NotFound />;
+  }
+
+  if (error === 'Failed to load page') {
+    return <Layout><div className="container px-4 py-12"><p role="alert">{t('common.error')}</p>
+      <Button onClick={() => window.location.reload()} className="mt-4">{t('common.retry', 'Opnieuw proberen')}</Button>
+    </div></Layout>;
   }
 
   if (loading) {
@@ -113,7 +119,7 @@ export default function DishCityPage() {
     ...(activeFacet ? [{ name: activeFacet.label, url: `https://dishloopr.com/eten/${page.slug}/${activeFacet.slug}` }] : []),
   ];
 
-  const restaurantItemList = visibleRestaurants.length > 0 ? createItemListSchema(
+  const restaurantItemList = !resultsLoading && visibleRestaurants.length > 0 ? createItemListSchema(
     visibleRestaurants.map((r, i) => ({
       name: r.name,
       url: `https://dishloopr.com/restaurant/${r.slug}`,
@@ -122,7 +128,7 @@ export default function DishCityPage() {
   ) : null;
 
   // Facet-specific FAQ (shown on the page and, when indexable, in JSON-LD).
-  const facetFAQ = (activeFacet && page.dish && page.city)
+  const facetFAQ = (!resultsLoading && activeFacet && page.dish && page.city)
     ? buildFacetFAQ(page.dish.name, page.city.name, activeFacet, visibleRestaurants.length)
     : [];
 
@@ -226,7 +232,7 @@ export default function DishCityPage() {
       {/* Hero Section */}
       <section className="container px-4 md:px-6 py-8 md:py-12">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={false}
           animate={{ opacity: 1, y: 0 }}
           className="max-w-4xl"
         >
@@ -280,6 +286,9 @@ export default function DishCityPage() {
       </section>
 
       {/* Parent hub link (member pages inside a dish_group) */}
+      {!activeFacet && page.dish?.dish_group && navigationLoading && (
+        <div className="container px-4 md:px-6 h-12"><div className="h-5 w-48 bg-muted animate-pulse rounded" /></div>
+      )}
       {!activeFacet && parentHub && parentHub.slug && (
         <section className="container px-4 md:px-6 pb-2">
           <Link
@@ -326,6 +335,7 @@ export default function DishCityPage() {
 
       {/* Facet filter chips — indexable filter URLs (programmatic SEO) */}
       <section className="container px-4 md:px-6 pb-2">
+        {resultsLoading && <div className="h-36 bg-muted animate-pulse rounded" />}
         {FACET_GROUPS.map(group => {
           const items = group.facets.filter(f => (facetCounts[f.slug] || 0) > 0 || activeFacet?.slug === f.slug);
           if (items.length === 0) return null;
@@ -369,7 +379,7 @@ export default function DishCityPage() {
       <section className="container px-4 md:px-6 py-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">
-            {visibleRestaurants.length > 0
+            {resultsLoading ? t('common.loading') : visibleRestaurants.length > 0
               ? `${visibleRestaurants.length} restaurants gevonden`
               : 'Aanbevolen restaurants'
             }
@@ -382,9 +392,13 @@ export default function DishCityPage() {
           )}
         </div>
 
-        {visibleRestaurants.length > 0 ? (
+        {resultsLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map(i => <SkeletonCard key={i} />)}
+          </div>
+        ) : visibleRestaurants.length > 0 ? (
           <motion.div
-            initial={{ opacity: 0 }}
+            initial={false}
             animate={{ opacity: 1 }}
             className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
           >

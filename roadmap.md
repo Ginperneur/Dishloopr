@@ -1,6 +1,7 @@
 # Parkeerinformatie
 - [x] Plan uitgewerkt voor sneller ophalen van gerecht×stad-pagina’s.
-- [ ] Snelheidsplan uitvoeren en opnieuw meten — wacht op goedkeuring van het plan.
+- [x] Snelheidsplan uitgevoerd: afzonderlijke tekst, stadsgebonden selectie, parallelle paginering en filtercache; 12 tests geslaagd, vier selecties identiek, mobiele weergave en SEO gecontroleerd.
+- [ ] Vergelijkbare mobiele Lighthouse-productiemeting — geblokkeerd: geen actuele productie-uitvoer beschikbaar in de sandbox; de automatische controle meldt build OK maar stelt geen meetbare productieversie beschikbaar. Previewmeting uitgevoerd, niet vergelijkbaar met eerdere productiecijfers.
 - [x] Parkeerinformatie opslaan met bestaande beveiliging.
 - [x] Invullen door geverifieerde eigenaar en beheerder; tonen op restaurantpagina.
 - [x] Weergave en parkeermogelijkheden getest (4 tests geslaagd).
