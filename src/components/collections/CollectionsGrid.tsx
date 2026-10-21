@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useCollections, Collection } from '@/hooks/useCollections';
 import { localizedField } from '@/lib/i18n/localizedField';
 import { useTranslation } from 'react-i18next';
+import { optimizedImage, imgLoadingProps } from '@/lib/imageUrl';
 
 interface CollectionCardProps {
   collection: Collection;
@@ -35,8 +36,11 @@ function CollectionCard({ collection, index }: CollectionCardProps) {
         <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300">
           <div className="relative h-48 overflow-hidden">
             <img
-              src={collection.cover_image || placeholderImages[index % placeholderImages.length]}
+              src={optimizedImage(collection.cover_image || placeholderImages[index % placeholderImages.length], { width: 600 })}
               alt={title}
+              width={600}
+              height={384}
+              {...imgLoadingProps(false)}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
@@ -155,8 +159,11 @@ export function FeaturedCollections() {
           <Link to={`/collection/${collection.slug}`}>
             <div className="group relative h-32 md:h-40 rounded-xl overflow-hidden">
               <img
-                src={collection.cover_image || `https://images.unsplash.com/photo-155512663${index}?w=400&q=80`}
+                src={optimizedImage(collection.cover_image || `https://images.unsplash.com/photo-155512663${index}?w=400&q=80`, { width: 400 })}
                 alt={localizedField(collection.title_i18n, collection.title, i18n.language)}
+                width={400}
+                height={256}
+                {...imgLoadingProps(false)}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />

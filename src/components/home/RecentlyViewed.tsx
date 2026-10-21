@@ -2,11 +2,12 @@ import { Link } from 'react-router-dom';
 import { Clock, ImageOff } from 'lucide-react';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { useState } from 'react';
+import { optimizedImage, imgLoadingProps } from '@/lib/imageUrl';
 
 function SmallImage({ src, alt }: { src: string; alt: string }) {
   const [failed, setFailed] = useState(false);
   if (failed) return <div className="w-full h-full flex items-center justify-center"><ImageOff className="w-5 h-5 text-muted-foreground/40" /></div>;
-  return <img src={src} alt={alt} className="w-full h-full object-cover" loading="lazy" onError={() => setFailed(true)} />;
+  return <img src={optimizedImage(src, { width: 160 })} alt={alt} width={160} height={160} className="w-full h-full object-cover" {...imgLoadingProps(false)} onError={() => setFailed(true)} />;
 }
 
 export function RecentlyViewed() {
