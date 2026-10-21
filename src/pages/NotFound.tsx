@@ -20,6 +20,7 @@ const NotFound = () => {
         title="Pagina niet gevonden | Dishloopr"
         description="De pagina die je zoekt bestaat niet of is verplaatst."
         noindex
+        nofollow
       />
       <div className="container py-32 flex flex-col items-center justify-center text-center">
         <h1 className="text-8xl font-bold text-primary mb-4">404</h1>

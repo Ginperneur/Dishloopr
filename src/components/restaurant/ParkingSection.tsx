@@ -6,6 +6,7 @@ import { hasParkingInfo, parseParkingInfo } from '@/lib/parking';
 export function ParkingSection({ value, cityName }: { value: unknown; cityName?: string }) {
   const { t } = useTranslation();
   const info = parseParkingInfo(value);
+  if (!hasParkingInfo(info)) return null;
   const query = [info.garage_name, info.garage_address, cityName].filter(Boolean).join(', ');
 
   return (
@@ -13,7 +14,7 @@ export function ParkingSection({ value, cityName }: { value: unknown; cityName?:
       <h2 className="text-lg md:text-xl font-bold flex items-center gap-2">
         <Car className="h-5 w-5 text-primary" /> {t('parking.title')}
       </h2>
-      {!hasParkingInfo(info) ? <p className="text-sm text-muted-foreground">{t('parking.unknown')}</p> : (
+      {(
         <div className="space-y-3 text-sm">
           {info.own_parking !== null && <p>{t(info.own_parking ? 'parking.ownYes' : 'parking.ownNo')}</p>}
           {info.street_parking !== null && <p>{t(info.street_parking ? 'parking.streetYes' : 'parking.streetNo')}</p>}
