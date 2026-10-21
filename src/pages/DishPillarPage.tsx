@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchLogger } from '@/lib/searchLog';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
@@ -144,6 +145,11 @@ export default function DishPillarPage() {
 
     fetchData();
   }, [dishSlug]);
+
+  useSearchLogger({
+    source: 'dish_page', query: dish?.name ?? dishSlug ?? '', city: null, filters: {},
+    resultsCount: cityData.reduce((n, c) => n + c.restaurantCount, 0), ready: !loading && !!dish,
+  });
 
   if (notFound) return <NotFound />;
 
