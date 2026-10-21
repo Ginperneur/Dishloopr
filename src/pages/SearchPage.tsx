@@ -1,3 +1,4 @@
+import { useSearchLogger } from '@/lib/searchLog';
 import { useState, useEffect, useRef, lazy, Suspense, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';

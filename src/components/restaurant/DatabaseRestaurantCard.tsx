@@ -1,3 +1,4 @@
+import { logSearchClick } from '@/lib/searchLog';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';

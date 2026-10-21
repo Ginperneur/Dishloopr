@@ -1,3 +1,4 @@
+import { logSearchClick } from '@/lib/searchLog';
 import { useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import L from 'leaflet';

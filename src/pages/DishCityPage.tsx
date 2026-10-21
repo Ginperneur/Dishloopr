@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useSearchLogger } from '@/lib/searchLog';
 import { useParams, Link, Navigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
@@ -51,6 +52,15 @@ export default function DishCityPage() {
     }
     return counts;
   }, [restaurants]);
+
+  useSearchLogger({
+    source: 'dish_page',
+    query: page?.dish?.name ?? slug ?? '',
+    city: page?.city?.name ?? null,
+    filters: activeFacet ? { facet: facetSlug } : {},
+    resultsCount: visibleRestaurants.length,
+    ready: !loading && !!page,
+  });
 
   const hasQueryParams = location.search && location.search.length > 1;
   // Facet pages need >=3 matching restaurants to be indexable.

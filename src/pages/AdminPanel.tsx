@@ -79,6 +79,7 @@ import { LinkHealthChecker } from '@/components/admin/LinkHealthChecker';
 import { MissingWebsiteUrls } from '@/components/admin/MissingWebsiteUrls';
 import { ManualReviewQueue } from '@/components/admin/ManualReviewQueue';
 import { DishScreeningManager } from '@/components/admin/DishScreeningManager';
+import { SearchLogReport } from '@/components/admin/SearchLogReport';
 
 import { openConfirm } from '@/components/ui/confirm-dialog';
 interface Stats {
@@ -101,6 +102,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'revenue': { title: "Omzet Dashboard", description: "MRR, betalingen en top-spenders" },
   'user-insights': { title: "User Insights", description: "Gebruikersactiviteit en retentie" },
   'search-analytics': { title: "Zoek Analytics", description: "Populaire zoekopdrachten en zero results" },
+  'search-log': { title: "Zoeklog", description: "Alle zoekopdrachten, zonder resultaat en klikken" },
   'geographic': { title: "Geografische Dekking", description: "Restaurantdichtheid per stad" },
   'churn': { title: "Churn Risk", description: "Inactieve eigenaren en retentie" },
   'claim-analytics': { title: "Claim Analyse", description: "Claim funnel en conversie" },
@@ -405,6 +407,7 @@ export default function AdminPanel() {
               {activeSection === 'revenue' && <RevenueDashboard />}
               {activeSection === 'user-insights' && <UserInsights />}
               {activeSection === 'search-analytics' && <SearchAnalytics />}
+              {activeSection === 'search-log' && <SearchLogReport />}
               {activeSection === 'geographic' && <GeographicCoverage />}
               {activeSection === 'churn' && <ChurnRiskDashboard />}
               {activeSection === 'claim-analytics' && <ClaimAnalytics />}

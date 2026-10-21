@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchLogger } from '@/lib/searchLog';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
@@ -125,6 +126,11 @@ export default function CityDetailPage() {
 
     fetchData();
   }, [citySlug]);
+
+  useSearchLogger({
+    source: 'city_page', query: '', city: city?.name ?? null, filters: {},
+    resultsCount: totalRestaurants, ready: !loading && !!city,
+  });
 
   if (notFound) return <NotFound />;
 
