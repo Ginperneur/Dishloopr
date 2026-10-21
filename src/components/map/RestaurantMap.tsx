@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { optimizedImage } from '@/lib/imageUrl';
 
 // Fix Leaflet default marker icons (bundlers sometimes break URL resolution)
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -174,7 +175,9 @@ export function RestaurantMap({ restaurants, userLocation, onClose, className = 
 
       if (restaurant.images?.[0]) {
         const img = document.createElement('img');
-        img.src = restaurant.images[0];
+        img.src = optimizedImage(restaurant.images[0], { width: 480 });
+        img.width = 240;
+        img.height = 96;
         img.alt = restaurant.name;
         img.loading = 'lazy';
         img.style.width = '100%';
