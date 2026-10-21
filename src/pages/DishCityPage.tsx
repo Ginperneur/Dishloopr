@@ -18,12 +18,14 @@ import {
 import { useSeoLandingPage } from '@/hooks/useSeoLandingPage';
 import { FACET_GROUPS, getFacet, matchesFacet, buildFacetFAQ } from '@/lib/dishCityFacets';
 import { getHubDisplayName, getHubChipHeading, HUB_CHIP_CAP } from '@/lib/dishGroups';
+import { isDutchLocale } from '@/lib/utils';
 import NotFound from './NotFound';
 
 export default function DishCityPage() {
   const { slug, facet: facetSlug } = useParams<{ slug: string; facet?: string }>();
   const location = useLocation();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isNl = isDutchLocale(i18n.language);
   const { page, restaurants, loading, error, redirectTo, isHub, groupMembers, parentHub, synthesized } = useSeoLandingPage(slug);
 
   const activeFacet = getFacet(facetSlug);
@@ -301,6 +303,9 @@ export default function DishCityPage() {
                   className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-full border border-border hover:bg-primary/10 transition-colors"
                 >
                   {m.name}
+                  {isNl && m.translation && (
+                    <span className="text-xs text-muted-foreground font-normal">({m.translation})</span>
+                  )}
                   <span className="text-xs opacity-70">({m.count})</span>
                 </Link>
               );

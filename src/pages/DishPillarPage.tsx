@@ -8,7 +8,7 @@ import { SEOHead, createBreadcrumbSchema, createItemListSchema } from '@/compone
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { formatDishName } from '@/lib/utils';
+import { formatDishName, isDutchLocale } from '@/lib/utils';
 import NotFound from './NotFound';
 
 interface CityDishData {
@@ -21,10 +21,11 @@ interface CityDishData {
 
 export default function DishPillarPage() {
   const { dishSlug } = useParams<{ dishSlug: string }>();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isNl = isDutchLocale(i18n.language);
   const [dish, setDish] = useState<{ id: string; name: string; slug: string; name_en: string | null; search_count: number; synonyms: string[] | null; cuisine_tags: string[] | null } | null>(null);
   const [cityData, setCityData] = useState<CityDishData[]>([]);
-  const [relatedDishes, setRelatedDishes] = useState<{ name: string; slug: string }[]>([]);
+  const [relatedDishes, setRelatedDishes] = useState<{ name: string; slug: string; vertaling_nl: string | null }[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -118,7 +119,7 @@ export default function DishPillarPage() {
       if (dishData.cuisine_tags && dishData.cuisine_tags.length > 0) {
         const { data: related } = await supabase
           .from('dishes')
-          .select('name, slug')
+          .select('name, slug, vertaling_nl')
           .eq('is_active', true)
           .neq('id', dishData.id)
           .overlaps('cuisine_tags', dishData.cuisine_tags)
@@ -127,9 +128,9 @@ export default function DishPillarPage() {
         setRelatedDishes(related || []);
       } else {
         // Fallback: get popular dishes
-        const { data: popular } = await supabase
-          .from('dishes')
-          .select('name, slug')
+          const { data: popular } = await supabase
+            .from('dishes')
+            .select('name, slug, vertaling_nl')
           .eq('is_active', true)
           .neq('id', dishData.id)
           .order('search_count', { ascending: false })
@@ -308,6 +309,9 @@ export default function DishPillarPage() {
                 className="inline-flex items-center gap-1 px-4 py-2 text-sm font-medium rounded-full border border-border hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
               >
                 {rd.name}
+                {isNl && rd.vertaling_nl && (
+                  <span className="text-xs text-muted-foreground font-normal">({rd.vertaling_nl})</span>
+                )}
                 <ArrowRight className="h-3 w-3" />
               </Link>
             ))}
