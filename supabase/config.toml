@@ -1,97 +1,69 @@
 project_id = "uktafmxojymsojqewzuy"
 
-[functions.parse-menu]
-verify_jwt = false
-
-[functions.moderate-review]
-verify_jwt = true
-
-[functions.parse-menu-image]
-verify_jwt = false
-
-[functions.create-listing-checkout]
-verify_jwt = false
-
-[functions.stripe-webhook]
-verify_jwt = false
-
-[functions.ai-recommendations]
-verify_jwt = false
-
-[functions.create-sponsored-checkout]
-verify_jwt = false
-
-[functions.calculate-sponsored-price]
-verify_jwt = false
-
-[functions.google-places-search]
-verify_jwt = false
-
-[functions.send-new-restaurant-notifications]
-verify_jwt = false
-
-[functions.generate-sitemap]
-verify_jwt = false
-
-[functions.send-claim-notification]
-verify_jwt = false
-
-[functions.send-sms-verification]
-verify_jwt = false
-
-[functions.generate-seo-faq]
-verify_jwt = false
-
-[functions.geocode-restaurants]
-verify_jwt = false
-
-[functions.n8n-menu-webhook]
-verify_jwt = false
-
-[functions.fetch-google-photos]
-verify_jwt = false
-
-[functions.expire-featured-subscriptions]
-verify_jwt = false
-
-[functions.featured-marketplace]
-verify_jwt = false
-
-[functions.create-featured-checkout]
-verify_jwt = false
-
-[functions.email-hook]
-verify_jwt = false
-
-[functions.send-domain-verification]
-verify_jwt = false
-
-[functions.create-verification-checkout]
-verify_jwt = false
-
-[functions.analyze-reviews]
-verify_jwt = false
-
-[functions.create-newsletter-checkout]
-verify_jwt = false
-
-[functions.send-bulk-email]
-verify_jwt = false
-
-[functions.scrape-menu]
-verify_jwt = false
-
-[functions.support-chat]
-verify_jwt = false
-
-[functions.create-owner-pro-checkout]
-verify_jwt = false
-
-[functions.check-owner-pro-status]
-verify_jwt = false
-
-[functions.owner-pro-portal]
-verify_jwt = false
-
-[functions.send-anomaly-alerts]
-verify_jwt = false
+[functions]
+  [functions.ai-recommendations]
+    verify_jwt = false
+  [functions.analyze-reviews]
+    verify_jwt = false
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.calculate-sponsored-price]
+    verify_jwt = false
+  [functions.check-owner-pro-status]
+    verify_jwt = false
+  [functions.create-featured-checkout]
+    verify_jwt = false
+  [functions.create-listing-checkout]
+    verify_jwt = false
+  [functions.create-newsletter-checkout]
+    verify_jwt = false
+  [functions.create-owner-pro-checkout]
+    verify_jwt = false
+  [functions.create-sponsored-checkout]
+    verify_jwt = false
+  [functions.create-verification-checkout]
+    verify_jwt = false
+  [functions.email-hook]
+    verify_jwt = false
+  [functions.expire-featured-subscriptions]
+    verify_jwt = false
+  [functions.featured-marketplace]
+    verify_jwt = false
+  [functions.fetch-google-photos]
+    verify_jwt = false
+  [functions.generate-seo-faq]
+    verify_jwt = false
+  [functions.generate-sitemap]
+    verify_jwt = false
+  [functions.geocode-restaurants]
+    verify_jwt = false
+  [functions.google-places-search]
+    verify_jwt = false
+  [functions.moderate-review]
+    verify_jwt = true
+  [functions.n8n-menu-webhook]
+    verify_jwt = false
+  [functions.owner-pro-portal]
+    verify_jwt = false
+  [functions.parse-menu]
+    verify_jwt = false
+  [functions.parse-menu-image]
+    verify_jwt = false
+  [functions.scrape-menu]
+    verify_jwt = false
+  [functions.send-anomaly-alerts]
+    verify_jwt = false
+  [functions.send-bulk-email]
+    verify_jwt = false
+  [functions.send-claim-notification]
+    verify_jwt = false
+  [functions.send-domain-verification]
+    verify_jwt = false
+  [functions.send-new-restaurant-notifications]
+    verify_jwt = false
+  [functions.send-sms-verification]
+    verify_jwt = false
+  [functions.stripe-webhook]
+    verify_jwt = false
+  [functions.support-chat]
+    verify_jwt = false
