@@ -67,6 +67,7 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
   const { t, i18n } = useTranslation();
   const isNl = isDutchLocale(i18n.language);
   const location = useLocation();
+  const ownStats = useOwnReviewStats(restaurant.id);
   const { isFavorite, toggleFavorite } = useFavorites();
   const { isRecentlyViewed } = useRecentlyViewed();
   const [isLikeAnimating, setIsLikeAnimating] = useState(false);
