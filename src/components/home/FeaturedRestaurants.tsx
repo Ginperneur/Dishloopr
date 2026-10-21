@@ -97,7 +97,7 @@ export function FeaturedRestaurants() {
           {loading
             ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
             : restaurants.map((r, i) => (
-                <DatabaseRestaurantCard key={r.id} restaurant={r} index={i} />
+                <DatabaseRestaurantCard key={r.id} restaurant={r} index={i} priority={i === 0} />
               ))}
         </div>
       </div>
