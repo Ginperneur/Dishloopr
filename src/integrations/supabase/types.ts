@@ -2654,6 +2654,7 @@ export type Database = {
       restaurant_contacts: {
         Row: {
           afgemeld_op: string | null
+          afmeld_token: string
           alle_emails: string[] | null
           bron: string
           created_at: string
@@ -2676,6 +2677,7 @@ export type Database = {
         }
         Insert: {
           afgemeld_op?: string | null
+          afmeld_token?: string
           alle_emails?: string[] | null
           bron?: string
           created_at?: string
@@ -2698,6 +2700,7 @@ export type Database = {
         }
         Update: {
           afgemeld_op?: string | null
+          afmeld_token?: string
           alle_emails?: string[] | null
           bron?: string
           created_at?: string
@@ -3853,6 +3856,59 @@ export type Database = {
           reden?: string | null
         }
         Relationships: []
+      }
+      restaurant_optout_requests: {
+        Row: {
+          admin_notitie: string | null
+          afgehandeld_op: string | null
+          created_at: string
+          email: string
+          id: string
+          naam_aanvrager: string | null
+          restaurant_id: string | null
+          restaurant_naam: string
+          soort: string
+          status: string
+          toelichting: string | null
+          website: string | null
+        }
+        Insert: {
+          admin_notitie?: string | null
+          afgehandeld_op?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          naam_aanvrager?: string | null
+          restaurant_id?: string | null
+          restaurant_naam: string
+          soort: string
+          status?: string
+          toelichting?: string | null
+          website?: string | null
+        }
+        Update: {
+          admin_notitie?: string | null
+          afgehandeld_op?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          naam_aanvrager?: string | null
+          restaurant_id?: string | null
+          restaurant_naam?: string
+          soort?: string
+          status?: string
+          toelichting?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_optout_requests_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       restaurant_pending_edits: {
         Row: {
@@ -6240,6 +6296,18 @@ export type Database = {
           term: string
         }[]
       }
+      request_restaurant_optout: {
+        Args: {
+          p_email: string
+          p_naam: string
+          p_restaurant_naam: string
+          p_restaurant_slug: string
+          p_soort: string
+          p_toelichting: string
+          p_website: string
+        }
+        Returns: string
+      }
       rescan_discovery_duplicates: { Args: { p_rules?: Json }; Returns: Json }
       save_restaurant_parking: {
         Args: {
@@ -6325,6 +6393,10 @@ export type Database = {
       sync_owner_pro_restaurants: {
         Args: { _user_id: string }
         Returns: undefined
+      }
+      unsubscribe_restaurant_contact: {
+        Args: { p_token: string }
+        Returns: string
       }
       update_user_badges: { Args: { p_user_id: string }; Returns: undefined }
       verify_cron_secret: { Args: { p_secret: string }; Returns: boolean }
