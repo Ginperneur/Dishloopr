@@ -59,26 +59,14 @@ serve(async (req) => {
       });
     }
 
-    // Allow: admins, restaurant managers, or users with a claim_request for this restaurant
+    // Allow: admins or verified restaurant managers with editor rights
     const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
     let allowed = !!isAdmin;
     if (!allowed) {
-      const { data: mgr } = await supabase
-        .from('restaurant_managers')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('restaurant_id', restaurantId)
-        .maybeSingle();
-      if (mgr) allowed = true;
-    }
-    if (!allowed) {
-      const { data: claim } = await supabase
-        .from('claim_requests')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('restaurant_id', restaurantId)
-        .maybeSingle();
-      if (claim) allowed = true;
+      const { data: hasAccess } = await supabase.rpc('has_restaurant_access', {
+        _user_id: user.id, _restaurant_id: restaurantId, _min_role: 'editor',
+      });
+      allowed = hasAccess === true;
     }
     if (!allowed) {
       return new Response(JSON.stringify({ error: 'Forbidden: no access to this restaurant' }), {
