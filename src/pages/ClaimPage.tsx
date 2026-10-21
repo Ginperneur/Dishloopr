@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { ClaimStatusBadge } from '@/components/claims/ClaimStatusBadge';
 import { VerificationRequiredDialog } from '@/components/claims/VerificationRequiredDialog';
@@ -39,6 +39,7 @@ interface GooglePlaceResult {
 
 export default function ClaimPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { 
     userClaims, 
     canCreateClaim, 
@@ -277,47 +278,16 @@ export default function ClaimPage() {
           .eq('id', restaurantId);
       }
 
-      // Create claim using the new system
-      const result = await createClaim(restaurantId, phoneNumber || undefined);
-      
-      if (result.success && result.claimId) {
-        // Upload proof files if any
-        if (proofFiles.length > 0) {
-          setIsUploadingFiles(true);
-          const uploadedUrls: string[] = [];
-          
-          for (const file of proofFiles) {
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${result.claimId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-            
-            const { data: uploadData, error: uploadError } = await supabase.storage
-              .from('menus') // Using menus bucket for claim documents
-              .upload(`claim-documents/${fileName}`, file);
-            
-            if (uploadError) {
-              console.error('Upload error:', uploadError);
-            } else if (uploadData) {
-              uploadedUrls.push(uploadData.path);
-            }
-          }
-          
-          // Update claim with proof documents
-          if (uploadedUrls.length > 0) {
-            await supabase
-              .from('claim_requests')
-              .update({ proof_documents: uploadedUrls })
-              .eq('id', result.claimId);
-          }
-          
-          setIsUploadingFiles(false);
-        }
-        
-        setCurrentClaimId(result.claimId);
-        setShowPhoneVerification(true);
-        setProofFiles([]);
-        toast.success('Claim aangemaakt! Verifieer nu je telefoonnummer.');
-      } else if (result.error) {
-        toast.error(result.error);
+      // Continue in the two-route verification flow (business e-mail or manual proof)
+      const { data: target } = await supabase
+        .from('restaurants')
+        .select('slug')
+        .eq('id', restaurantId)
+        .maybeSingle();
+      if (target?.slug) {
+        navigate(`/claim/${target.slug}`);
+      } else {
+        toast.error('Restaurant niet gevonden.');
       }
 
     } catch (error) {
@@ -489,8 +459,7 @@ export default function ClaimPage() {
                 <div className="text-sm">
                   <p className="font-medium mb-1">Hoe werkt het?</p>
                   <p className="text-muted-foreground">
-                    Claimen geeft je geen directe controle. Na telefoonverificatie krijg je beperkte toegang. 
-                    Volledige controle (profiel bewerken, reviews beantwoorden, analytics) vereist extra verificatie.
+                    Zoek je restaurant en kies daarna een van twee routes. <strong>Direct:</strong> we sturen een code naar je zakelijke e-mailadres op het domein van je website. <strong>Handmatig:</strong> upload een KvK-uittreksel of een foto van een factuur of menukaart; wij controleren binnen 2 werkdagen.
                   </p>
                 </div>
               </div>

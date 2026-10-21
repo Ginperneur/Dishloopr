@@ -625,6 +625,23 @@ export default function OwnerDashboard() {
         {/* Overview-only mission-control band: KPIs + briefing + actions */}
         {activeTab === 'overview' && (
         <>
+        {searchParams.get('welcome') === '1' && selectedRestaurant && (
+          <Card className="mb-6 border-primary/30 bg-primary/5">
+            <CardContent className="p-5">
+              <p className="font-semibold text-lg mb-1">Welkom, je bent nu de eigenaar van {selectedRestaurant.name}!</p>
+              <p className="text-sm text-muted-foreground mb-3">Loop deze punten na zodat gasten de juiste informatie zien:</p>
+              <ul className="grid sm:grid-cols-2 gap-1">
+                {['Menu en prijzen controleren', 'Openingstijden', "Foto's", 'Parkeerinformatie', 'Sfeer-tags'].map((item) => (
+                  <li key={item}>
+                    <button type="button" onClick={() => setActiveTab('content')} className="flex items-center gap-2 min-h-11 text-sm hover:text-primary">
+                      <span className="h-4 w-4 rounded border border-primary" aria-hidden /> {item}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
         {/* Daily Briefing - hero insight card (first) */}
         {selectedRestaurant && (
           <DailyBriefing

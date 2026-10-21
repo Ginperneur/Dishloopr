@@ -24,6 +24,7 @@ const LoginPage = lazy(() => import("./pages/LoginPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const EmailConfirmPage = lazy(() => import("./pages/EmailConfirmPage"));
+const ClaimRestaurantPage = lazy(() => import("./pages/ClaimRestaurantPage"));
 const OwnerDashboard = lazy(() => import("./pages/OwnerDashboard"));
 const InternalFeedbackPage = lazy(() => import("./pages/InternalFeedbackPage"));
 const FoodieDashboard = lazy(() => import("./pages/FoodieDashboard"));
@@ -119,6 +120,7 @@ const App = () => (
                   <Route path="/terms" element={<TermsPage />} />
                   <Route path="/privacy" element={<PrivacyPage />} />
                   <Route path="/claim" element={<ClaimPage />} />
+                  <Route path="/claim/:slug" element={<ClaimRestaurantPage />} />
                   <Route path="/for-restaurants" element={<ForRestaurantsPage />} />
                   <Route path="/add-restaurant" element={<AddRestaurantPage />} />
                   <Route path="/suggest-restaurant" element={<SuggestRestaurantPage />} />

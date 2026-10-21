@@ -26,6 +26,7 @@ import { SponsoredProductsManager } from '@/components/admin/SponsoredProductsMa
 import { BulkRestaurantUpload } from '@/components/admin/BulkRestaurantUpload';
 import { ClaimRequestsQueue } from '@/components/admin/ClaimRequestsQueue';
 import { ClaimsVerificationManager } from '@/components/admin/ClaimsVerificationManager';
+import { ClaimReviewQueue } from '@/components/admin/ClaimReviewQueue';
 import { DishesManager } from '@/components/admin/DishesManager';
 import { CitiesManager } from '@/components/admin/CitiesManager';
 import { UserRolesManager } from '@/components/admin/UserRolesManager';
@@ -511,11 +512,13 @@ export default function AdminPanel() {
               {activeSection === 'chains' && <ChainsManager />}
               
               {activeSection === 'claims' && (
-                <Tabs defaultValue="requests" className="space-y-4">
+                <Tabs defaultValue="review" className="space-y-4">
                   <TabsList>
+                    <TabsTrigger value="review">Te beoordelen</TabsTrigger>
                     <TabsTrigger value="requests">Claim Requests</TabsTrigger>
                     <TabsTrigger value="verification">Verificatie Beheer</TabsTrigger>
                   </TabsList>
+                  <TabsContent value="review"><ClaimReviewQueue onUpdate={fetchData} /></TabsContent>
                   <TabsContent value="requests"><ClaimRequestsQueue onUpdate={fetchData} /></TabsContent>
                   <TabsContent value="verification"><ClaimsVerificationManager /></TabsContent>
                 </Tabs>
