@@ -554,18 +554,32 @@ export default function RestaurantPage() {
               <h2 className="text-lg md:text-xl font-bold mb-4 md:mb-6">{t('reviews.title')}</h2>
               
               <div className="space-y-6">
-                <ReviewForm 
-                  onSubmit={submitReview} 
-                  submitting={submitting}
-                  restaurantId={restaurant.id}
-                  ambienceTags={restaurant.ambience_tags || []}
-                  cuisines={restaurant.cuisines || []}
-                />
+                {!reviewsLoading && !hasOwnScore && (
+                  <div className="rounded-lg border bg-muted/40 p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+                    <p className="font-medium">{t('rating.firstReviewCta', 'Ben je hier geweest? Schrijf de eerste Dishloopr-review')}</p>
+                    <Button
+                      className="min-h-[44px]"
+                      onClick={() => document.getElementById('review-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                    >
+                      {t('rating.writeReview', 'Schrijf een review')}
+                    </Button>
+                  </div>
+                )}
+                <div id="review-form" className="scroll-mt-24">
+                  <ReviewForm 
+                    onSubmit={submitReview} 
+                    submitting={submitting}
+                    restaurantId={restaurant.id}
+                    ambienceTags={restaurant.ambience_tags || []}
+                    cuisines={restaurant.cuisines || []}
+                  />
+                </div>
                 <ReviewList 
                   reviews={reviews} 
                   loading={reviewsLoading} 
                   isOwner={user?.id === restaurant?.claimed_by_owner_id}
                   onRefetch={refetch}
+                  hideEmpty={!hasOwnScore}
                 />
               </div>
             </motion.div>
