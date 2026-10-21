@@ -1,3 +1,4 @@
+import { getCaller } from "../_shared/auth.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
@@ -17,6 +18,7 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  { const __u = await getCaller(req); if (!__u) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }); }
   const __rl = await enforceRateLimit(req, {
     functionName: "moderate-review",
     isAi: true,
