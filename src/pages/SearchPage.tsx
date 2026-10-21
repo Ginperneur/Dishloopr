@@ -1,3 +1,4 @@
+import { useSearchLogger } from '@/lib/searchLog';
 import { useState, useEffect, useRef, lazy, Suspense, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -245,6 +246,21 @@ export default function SearchPage() {
       default:
         return 0; // Keep original order (best match from search)
     }
+  });
+
+  useSearchLogger({
+    source: 'search',
+    query: dishQuery,
+    city: cityParam !== 'all' ? (cities.find((c: any) => c.id === cityParam)?.name ?? cityParam) : null,
+    filters: {
+      prijs: filters.priceLevel, sfeer: filters.ambienceTags, maaltijdtype: filters.mealTypes,
+      open_nu: !!filters.openNow, dieet: filters.dietaryOptions, keuken: filters.cuisines,
+      concept: filters.concepts, ervaring: filters.experiences,
+    },
+    resultsCount: openNowFiltered.length,
+    ready: !loading && (!!dishQuery || cityParam !== 'all'),
+    loading,
+    loadKey: `${dishQuery}|${cityParam}`,
   });
 
   // Scroll back to where the user was once restored results are on screen.

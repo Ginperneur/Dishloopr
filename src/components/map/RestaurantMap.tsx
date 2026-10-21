@@ -1,3 +1,4 @@
+import { logSearchClick } from '@/lib/searchLog';
 import { useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import L from 'leaflet';
@@ -217,6 +218,7 @@ export function RestaurantMap({ restaurants, userLocation, onClose, className = 
       btn.style.fontWeight = '600';
       btn.style.fontSize = '12px';
       btn.addEventListener('click', () => {
+        logSearchClick(restaurant.id);
         navigate(`/restaurant/${restaurant.slug}`, { state: searchOrigin ? { from: searchOrigin } : undefined });
       });
       root.appendChild(btn);

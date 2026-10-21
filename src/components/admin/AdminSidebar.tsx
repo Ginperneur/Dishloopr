@@ -40,6 +40,7 @@ const navGroups = [
       { id: 'revenue', label: 'Omzet', icon: Crown },
       { id: 'user-insights', label: 'Gebruikersinzicht', icon: Users },
       { id: 'search-analytics', label: 'Zoek Analytics', icon: Search },
+      { id: 'search-log', label: 'Zoeklog', icon: Search },
       { id: 'geographic', label: 'Dekking', icon: MapPin },
       { id: 'churn', label: 'Verlooprisico', icon: AlertCircle },
       { id: 'claim-analytics', label: 'Claim Analyse', icon: Shield },

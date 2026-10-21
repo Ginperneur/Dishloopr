@@ -1,3 +1,4 @@
+import { logSearchClick } from '@/lib/searchLog';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
@@ -90,6 +91,7 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
       <Link
         to={`/restaurant/${restaurant.slug}`}
         state={location.pathname === '/search' ? { from: `${location.pathname}${location.search}${location.hash}` } : undefined}
+        onClick={() => logSearchClick(restaurant.id)}
         className={`block restaurant-card rounded-2xl overflow-hidden group ${
           isFeatured ? 'ring-2 ring-primary/20' : ''
         }`}
