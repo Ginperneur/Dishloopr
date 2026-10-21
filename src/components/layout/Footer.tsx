@@ -166,6 +166,7 @@ export function Footer() {
             <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
               <li><Link to="/terms" className="hover:text-foreground transition-colors">{t('footer.terms')}</Link></li>
               <li><Link to="/privacy" className="hover:text-foreground transition-colors">{t('footer.privacy')}</Link></li>
+              <li><Link to="/voor-restaurants/afmelden" className="hover:text-foreground transition-colors">Restaurant aanpassen of verwijderen</Link></li>
             </ul>
           </div>
 
