@@ -114,7 +114,7 @@ export function useSeoLandingPages() {
   }, []);
 
   const updatePage = async (id: string, updates: Partial<SeoLandingPage>) => {
-    const { faq_content, ...rest } = updates;
+    const { faq_content, dish: _dish, city: _city, ...rest } = updates as Partial<SeoLandingPage> & { dish?: unknown; city?: unknown };
     const { error } = await supabase
       .from('seo_landing_pages')
       .update({
