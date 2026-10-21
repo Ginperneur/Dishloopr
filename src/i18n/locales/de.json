@@ -297,7 +297,11 @@
     "subscribe": "Abonnieren",
     "newsletterSuccess": "Danke! Du bist für den Newsletter angemeldet.",
     "allRights": "Alle Rechte vorbehalten.",
-    "madeIn": "Gemacht in den Niederlanden"
+    "madeIn": "Gemacht in den Niederlanden",
+    "newsletterOk": "Geschafft! Du stehst auf der Liste.",
+    "newsletterExists": "Du stehst bereits auf der Liste.",
+    "newsletterInvalid": "Bitte gib eine gültige E-Mail-Adresse ein.",
+    "newsletterError": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
   },
   "forRestaurants": {
     "pageTitle": "Restaurants auf Dishloopr beanspruchen",

@@ -298,7 +298,11 @@
     "subscribe": "Aanmelden",
     "newsletterSuccess": "Bedankt! Je bent aangemeld voor de nieuwsbrief.",
     "allRights": "Alle rechten voorbehouden.",
-    "madeIn": "Gemaakt in Nederland"
+    "madeIn": "Gemaakt in Nederland",
+    "newsletterOk": "Gelukt! Je staat op de lijst.",
+    "newsletterExists": "Je staat al op de lijst.",
+    "newsletterInvalid": "Vul een geldig e-mailadres in.",
+    "newsletterError": "Er ging iets mis. Probeer het opnieuw."
   },
   "forRestaurants": {
     "pageTitle": "Restaurants claimen op Dishloopr",

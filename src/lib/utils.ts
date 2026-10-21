@@ -52,3 +52,8 @@ export function slugify(text: string): string {
 export function isDutchLocale(lang?: string | null): boolean {
   return (lang || '').toLowerCase().startsWith('nl');
 }
+
+/** Rounds down to whole hundreds for numbers >= 100; smaller numbers stay exact. */
+export function roundDownHundreds(n: number): number {
+  return n >= 100 ? Math.floor(n / 100) * 100 : n;
+}
