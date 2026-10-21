@@ -14,6 +14,7 @@ interface RestaurantCardProps {
 }
 
 import { AMBIENCE_TAG_STYLES, AMBIENCE_TAG_I18N_KEYS } from '@/lib/constants';
+import { optimizedImage, imgLoadingProps } from '@/lib/imageUrl';
 
 const priceLabels: { [key: number]: string } = {
   1: '€',
@@ -59,8 +60,11 @@ export function RestaurantCard({ restaurant, index = 0, variant = 'default' }: R
         <div className="relative aspect-[16/10] overflow-hidden bg-muted">
           {hasImage ? (
             <img
-              src={restaurant.images[0]}
+              src={optimizedImage(restaurant.images[0], { width: 400 })}
               alt={restaurant.name}
+              width={400}
+              height={250}
+              {...imgLoadingProps(false)}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';

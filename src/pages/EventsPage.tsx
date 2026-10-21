@@ -13,6 +13,7 @@ import { SEOHead, createBreadcrumbSchema } from '@/components/seo/SEOHead';
 import { useRestaurantEvents } from '@/hooks/useRestaurantEvents';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { optimizedImage, imgLoadingProps } from '@/lib/imageUrl';
 
 interface EventWithRestaurant {
   id: string;
@@ -186,8 +187,11 @@ export default function EventsPage() {
                       <div className="relative h-40 overflow-hidden bg-muted">
                         {restaurantImage ? (
                           <img
-                            src={restaurantImage}
+                            src={optimizedImage(restaurantImage, { width: 400 })}
                             alt={event.title}
+                            width={400}
+                            height={160}
+                            {...imgLoadingProps(false)}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                           />
                         ) : (

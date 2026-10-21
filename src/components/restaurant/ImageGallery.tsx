@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { optimizedImage, imgLoadingProps } from '@/lib/imageUrl';
 
 interface ImageGalleryProps {
   images: string[];
@@ -213,7 +214,9 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
         <AnimatePresence mode="wait">
           <motion.img
             key={currentIndex}
-            src={images[currentIndex]}
+            src={optimizedImage(images[currentIndex], { width: 1200 })}
+            width={1200}
+            height={675}
             alt={`${restaurantName} - ${currentIndex + 1}`}
             className="w-full h-full object-cover cursor-pointer select-none"
             style={{
@@ -221,7 +224,7 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
               WebkitBackfaceVisibility: 'hidden',
               backfaceVisibility: 'hidden',
             }}
-            initial={{ opacity: 0 }}
+            initial={currentIndex === 0 ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
@@ -302,7 +305,9 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
               >
                 {loadedImages.has(index) ? (
                   <img
-                    src={image}
+                    src={optimizedImage(image, { width: 160 })}
+                    width={160}
+                    height={120}
                     alt={`${restaurantName} thumbnail ${index + 1}`}
                     className="w-full h-full object-cover"
                     loading="lazy"
@@ -398,7 +403,7 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
             >
               <motion.img
                 key={`fullscreen-${currentIndex}`}
-                src={images[currentIndex]}
+                src={optimizedImage(images[currentIndex], { width: 1920, quality: 80 })}
                 alt={`${restaurantName} - ${currentIndex + 1}`}
                 className="max-w-[90vw] max-h-[85vh] object-contain select-none"
                 style={{

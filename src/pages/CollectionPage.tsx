@@ -12,6 +12,7 @@ import { localizedField } from '@/lib/i18n/localizedField';
 import { useTranslation } from 'react-i18next';
 import { RatingSummary } from '@/components/restaurant/RatingSummary';
 import { useOwnReviewStats } from '@/hooks/useOwnReviewStats';
+import { optimizedImage, imgLoadingProps } from '@/lib/imageUrl';
 
 function RestaurantCard({ item, index }: { item: CollectionRestaurant; index: number }) {
   const { restaurant } = item;
@@ -29,8 +30,11 @@ function RestaurantCard({ item, index }: { item: CollectionRestaurant; index: nu
             {/* Image */}
             <div className="relative w-full md:w-48 h-48 md:h-auto flex-shrink-0 overflow-hidden">
               <img
-                src={restaurant.images?.[0] || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&q=80'}
+                src={optimizedImage(restaurant.images?.[0] || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&q=80', { width: 400 })}
                 alt={restaurant.name}
+                width={400}
+                height={300}
+                {...imgLoadingProps(false)}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
               
@@ -190,8 +194,11 @@ export default function CollectionPage() {
       {/* Hero */}
       <div className="relative h-64 md:h-80 overflow-hidden">
         <img
-          src={collection.cover_image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80'}
+          src={optimizedImage(collection.cover_image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80', { width: 1200 })}
           alt={title}
+          width={1200}
+          height={320}
+          {...imgLoadingProps(true)}
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
