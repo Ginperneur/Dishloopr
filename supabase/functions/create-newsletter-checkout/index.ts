@@ -80,6 +80,20 @@ serve(async (req) => {
       { auth: { persistSession: false } },
     );
 
+    // Only admins or the restaurant's verified managers (finance rights) may buy placements
+    const { data: callerIsAdmin } = await supabaseAdmin.rpc("has_role", { _user_id: user.id, _role: "admin" });
+    if (!callerIsAdmin) {
+      const { data: hasAccess } = await supabaseAdmin.rpc("has_restaurant_access", {
+        _user_id: user.id, _restaurant_id: restaurantId, _min_role: "finance",
+      });
+      if (hasAccess !== true) {
+        return new Response(JSON.stringify({ error: "Forbidden: no access to this restaurant" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // Look up scope-specific Stripe price ID + EUR amount from app_settings
     const priceKey =
       finalScope === "city"
