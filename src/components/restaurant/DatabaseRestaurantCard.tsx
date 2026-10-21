@@ -9,6 +9,7 @@ import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { useState } from 'react';
 import type { Database } from '@/integrations/supabase/types';
 import { SponsoredBadge } from '@/components/sponsored/SponsoredBadge';
+import { isDutchLocale } from '@/lib/utils';
 import { isOpenNow } from '@/lib/openingHours';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
@@ -17,6 +18,7 @@ type RestaurantCardData = Restaurant & {
   chainName?: string;
   chainLocationsCount?: number;
   matchedDishes?: string[];
+  dishTranslations?: Record<string, string>;
   hasDishMatch?: boolean;
   signatureDish?: { name: string; price: number | null } | null;
 };
@@ -59,7 +61,8 @@ function ImageWithFallback({ src, alt }: { src: string; alt: string }) {
 }
 
 export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = false }: DatabaseRestaurantCardProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isNl = isDutchLocale(i18n.language);
   const location = useLocation();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { isRecentlyViewed } = useRecentlyViewed();
@@ -239,12 +242,20 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
           {/* Matched Dishes */}
           {restaurant.matchedDishes && restaurant.matchedDishes.length > 0 && (
             <div className="flex flex-wrap gap-1 sm:gap-1.5 mb-2 sm:mb-3">
-              {restaurant.matchedDishes.slice(0, 3).map((dish) => (
-                <Badge key={dish} variant="outline" className="text-[10px] sm:text-xs capitalize border-primary/30 text-primary bg-primary/5">
-                  <UtensilsCrossed className="h-2.5 w-2.5 mr-0.5" />
-                  {dish}
-                </Badge>
-              ))}
+              {restaurant.matchedDishes.slice(0, 3).map((dish) => {
+                const tr = isNl ? restaurant.dishTranslations?.[dish] : undefined;
+                return (
+                  <Badge key={dish} variant="outline" className="text-[10px] sm:text-xs capitalize border-primary/30 text-primary bg-primary/5">
+                    <UtensilsCrossed className="h-2.5 w-2.5 mr-0.5" />
+                    {dish}
+                    {tr && (
+                      <span className="ml-0.5 text-[9px] sm:text-[10px] text-muted-foreground font-normal normal-case">
+                        ({tr})
+                      </span>
+                    )}
+                  </Badge>
+                );
+              })}
             </div>
           )}
 
@@ -258,10 +269,12 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
             const priceNum = sig.price !== null && sig.price !== undefined && !isNaN(Number(sig.price))
               ? Number(sig.price)
               : null;
+            const sigTr = isNl ? restaurant.dishTranslations?.[sig.name] : undefined;
             return (
               <div className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3 line-clamp-1">
                 <span className="font-medium text-foreground">Bekend om:</span>{' '}
                 <span className="capitalize">{sig.name}</span>
+                {sigTr && <span className="font-normal"> ({sigTr})</span>}
                 {priceNum !== null && <> — {formatEuroNL(priceNum)}</>}
               </div>
             );
