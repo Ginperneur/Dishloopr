@@ -25,6 +25,7 @@ import { AddRestaurantModal } from '@/components/admin/AddRestaurantModal';
 import { SponsoredProductsManager } from '@/components/admin/SponsoredProductsManager';
 import { BulkRestaurantUpload } from '@/components/admin/BulkRestaurantUpload';
 import { ClaimRequestsQueue } from '@/components/admin/ClaimRequestsQueue';
+import { OptoutRequestsManager } from '@/components/admin/OptoutRequestsManager';
 import { ClaimsVerificationManager } from '@/components/admin/ClaimsVerificationManager';
 import { ClaimReviewQueue } from '@/components/admin/ClaimReviewQueue';
 import { DishesManager } from '@/components/admin/DishesManager';
@@ -117,6 +118,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'users': { title: "Gebruikers", description: "Geregistreerde gebruikers" },
   'roles': { title: "Rollen", description: "Gebruikersrollen toewijzen" },
   'claims': { title: "Claims", description: "Restaurant claims verwerken" },
+  'optouts': { title: "Afmeldingen", description: "Opt-out- en aanpasverzoeken van restaurants" },
   'suggestions': { title: "Suggesties", description: "Door bezoekers ingediende restaurant-suggesties" },
   'sponsored': { title: "Sponsored", description: "Gesponsorde producten beheren" },
   'featured-slots': { title: "Featured Spots", description: "Featured slots en sfeer-pricing" },
@@ -403,6 +405,7 @@ export default function AdminPanel() {
               {/* Section content */}
               {activeSection === 'today' && <AdminToday onNavigate={handleNavigateToTab} />}
               {activeSection === 'suggestions' && <RestaurantSuggestionsQueue />}
+              {activeSection === 'optouts' && <OptoutRequestsManager />}
               {activeSection === 'kpi' && <KpiDashboard />}
               {activeSection === 'revenue' && <RevenueDashboard />}
               {activeSection === 'user-insights' && <UserInsights />}

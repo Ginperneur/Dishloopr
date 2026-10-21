@@ -722,6 +722,11 @@ export default function RestaurantPage() {
           ) : null}
         </div>
       )}
+      <p className="container text-center text-xs text-muted-foreground py-6">
+        Ben je de eigenaar?{' '}
+        <Link to={`/claim/${restaurant.slug}`} className="underline hover:text-foreground">Claim</Link>{' of '}
+        <Link to={`/voor-restaurants/afmelden?slug=${encodeURIComponent(restaurant.slug)}&naam=${encodeURIComponent(restaurant.name)}`} className="underline hover:text-foreground">laat dit aanpassen</Link>
+      </p>
     </Layout>
   );
 }

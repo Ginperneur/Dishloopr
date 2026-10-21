@@ -21,6 +21,8 @@ import SearchPage from "./pages/SearchPage";
 
 // Lazy load all other routes
 const RestaurantPage = lazy(() => import("./pages/RestaurantPage"));
+const RestaurantOptoutPage = lazy(() => import("./pages/RestaurantOptoutPage"));
+const UnsubscribePage = lazy(() => import("./pages/UnsubscribePage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
@@ -120,6 +122,8 @@ const App = () => (
                   <Route path="/contact" element={<ContactPage />} />
                   <Route path="/terms" element={<TermsPage />} />
                   <Route path="/privacy" element={<PrivacyPage />} />
+                  <Route path="/voor-restaurants/afmelden" element={<RestaurantOptoutPage />} />
+                  <Route path="/afmelden" element={<UnsubscribePage />} />
                   <Route path="/claim" element={<ClaimPage />} />
                   <Route path="/claim/:slug" element={<ClaimRestaurantPage />} />
                   <Route path="/for-restaurants" element={<ForRestaurantsPage />} />
