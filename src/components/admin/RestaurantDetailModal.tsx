@@ -142,7 +142,7 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
   const updateTags = async (field: 'cuisines' | 'ambience_tags' | 'concepts' | 'meal_types' | 'experiences', tags: string[]) => {
     const { error } = await supabase
       .from('restaurants')
-      .update({ [field]: tags })
+      .update({ [field]: tags } as never)
       .eq('id', restaurant.id);
 
     if (error) {

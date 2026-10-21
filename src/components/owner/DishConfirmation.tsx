@@ -109,7 +109,7 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
           if (Object.keys(patch).length === 0) return;
           const { error: upErr } = await supabase
             .from('restaurant_dishes')
-            .update(patch)
+            .update(patch as never)
             .eq('id', item.id);
           if (!upErr) updated += 1;
         }),
@@ -195,7 +195,7 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
   const toggleDietaryOption = async (dishId: string, field: string, currentValue: boolean) => {
     const { error } = await supabase
       .from('restaurant_dishes')
-      .update({ [field]: !currentValue })
+      .update({ [field]: !currentValue } as never)
       .eq('id', dishId);
 
     if (error) {

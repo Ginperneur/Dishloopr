@@ -61,7 +61,7 @@ export function DishScreeningManager() {
     if (!row.dish.canonical_slug && row.screen_canonical) patch.canonical_slug = row.screen_canonical;
     if (!row.dish.course && row.screen_course) patch.course = row.screen_course;
     if (Object.keys(patch).length > 0) {
-      await supabase.from('dishes').update(patch).eq('id', row.dish.id);
+      await supabase.from('dishes').update(patch as never).eq('id', row.dish.id);
     }
     const { error } = await supabase.from('restaurant_dishes').update({
       status: 'approved_by_admin',
@@ -93,7 +93,7 @@ export function DishScreeningManager() {
           if (!row.dish.canonical_slug && row.screen_canonical) patch.canonical_slug = row.screen_canonical;
           if (!row.dish.course && row.screen_course) patch.course = row.screen_course;
           if (Object.keys(patch).length > 0) {
-            await supabase.from('dishes').update(patch).eq('id', row.dish.id);
+            await supabase.from('dishes').update(patch as never).eq('id', row.dish.id);
           }
         }
         const { error } = await supabase.from('restaurant_dishes').update({

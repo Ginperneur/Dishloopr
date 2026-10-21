@@ -141,7 +141,7 @@ export function NewsletterManager() {
       updateData.sent_at = new Date().toISOString();
       updateData.recipient_count = subscriberCount;
     }
-    const { error } = await supabase.from('newsletter_editions').update(updateData).eq('id', id);
+    const { error } = await supabase.from('newsletter_editions').update(updateData as never).eq('id', id);
     if (error) toast.error('Update mislukt');
     else { toast.success(status === 'sent' ? 'Editie gemarkeerd als verzonden' : 'Status bijgewerkt'); fetchData(); }
   };
