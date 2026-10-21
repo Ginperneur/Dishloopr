@@ -9,10 +9,14 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import logo from '@/assets/dishloopr-logo.png';
 import { useContentAvailability } from '@/hooks/useContentAvailability';
+import { useAuth } from '@/contexts/AuthContext';
+import { newsletterEmailSchema } from '@/lib/validations';
 
 export function Footer() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [seoLinks, setSeoLinks] = useState<{ slug: string; label: string }[]>([]);
   const { hasCollections, hasEvents } = useContentAvailability();
@@ -34,24 +38,24 @@ export function Footer() {
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
-    
+    const parsed = newsletterEmailSchema.safeParse(email);
+    if (!parsed.success) {
+      setEmailError(t('footer.newsletterInvalid', 'Vul een geldig e-mailadres in.'));
+      return;
+    }
+    setEmailError(null);
     setIsLoading(true);
-    try {
-      const { error } = await supabase
-        .from('newsletter_subscribers')
-        .upsert({ email, is_active: true }, { onConflict: 'email' });
-      
-      if (error) throw error;
-      toast.success(t('footer.newsletterSuccess', 'Bedankt! Je bent aangemeld voor de nieuwsbrief.'));
+    const { error } = await supabase
+      .from('newsletter_subscribers')
+      .insert({ email: parsed.data, user_id: user?.id ?? null });
+    if (!error) {
+      toast.success(t('footer.newsletterOk', 'Gelukt! Je staat op de lijst.'));
       setEmail('');
-    } catch (err: any) {
-      if (err.code === '23505') {
-        toast.info('Je bent al aangemeld voor de nieuwsbrief!');
-        setEmail('');
-      } else {
-        toast.error('Er ging iets mis. Probeer het opnieuw.');
-      }
+    } else if (error.code === '23505') {
+      toast.success(t('footer.newsletterExists', 'Je staat al op de lijst.'));
+      setEmail('');
+    } else {
+      toast.error(t('footer.newsletterError', 'Er ging iets mis. Probeer het opnieuw.'));
     }
     setIsLoading(false);
   };
@@ -68,21 +72,27 @@ export function Footer() {
             <p className="text-sm text-muted-foreground mb-4">
               {t('footer.newsletterSubtitle', 'Ontvang wekelijks de beste restaurant tips en nieuwe gerechten in je inbox.')}
             </p>
-            <form onSubmit={handleNewsletterSubmit} method="post" className="flex gap-2 max-w-md mx-auto">
-              <Input
-                type="email"
-                name="email"
-                autoComplete="email"
-                placeholder={t('footer.emailPlaceholder', 'Je e-mailadres')}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="flex-1"
-                required
-              />
-              <Button type="submit" disabled={isLoading} className="gap-1">
-                {isLoading ? '...' : t('footer.subscribe', 'Aanmelden')}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
+            <form onSubmit={handleNewsletterSubmit} method="post" noValidate className="max-w-md mx-auto">
+              <div className="flex gap-2">
+                <Input
+                  type="email"
+                  name="email"
+                  autoComplete="email"
+                  placeholder={t('footer.emailPlaceholder', 'Je e-mailadres')}
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError(null); }}
+                  className="flex-1"
+                  aria-invalid={!!emailError}
+                  aria-describedby={emailError ? 'newsletter-error' : undefined}
+                />
+                <Button type="submit" disabled={isLoading} className="gap-1">
+                  {isLoading ? '...' : t('footer.subscribe', 'Aanmelden')}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+              {emailError && (
+                <p id="newsletter-error" role="alert" className="mt-2 text-sm text-destructive text-left">{emailError}</p>
+              )}
             </form>
           </div>
         </div>

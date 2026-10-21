@@ -63,3 +63,6 @@ export function validateWithErrors<T>(schema: z.ZodSchema<T>, data: unknown): Va
   const errors = result.error.errors.map(e => e.message);
   return { success: false, errors };
 }
+
+// Newsletter signup e-mail
+export const newsletterEmailSchema = z.string().trim().toLowerCase().email().max(255);

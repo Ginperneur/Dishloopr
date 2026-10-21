@@ -298,7 +298,11 @@
     "subscribe": "Subscribe",
     "newsletterSuccess": "Thanks! You've been subscribed to the newsletter.",
     "allRights": "All rights reserved.",
-    "madeIn": "Made in the Netherlands"
+    "madeIn": "Made in the Netherlands",
+    "newsletterOk": "Done! You're on the list.",
+    "newsletterExists": "You're already on the list.",
+    "newsletterInvalid": "Please enter a valid email address.",
+    "newsletterError": "Something went wrong. Please try again."
   },
   "forRestaurants": {
     "pageTitle": "Claim restaurants on Dishloopr",

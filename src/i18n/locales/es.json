@@ -297,7 +297,11 @@
     "subscribe": "Suscribirse",
     "newsletterSuccess": "¡Gracias! Te has suscrito al boletín.",
     "allRights": "Todos los derechos reservados.",
-    "madeIn": "Hecho en los Países Bajos"
+    "madeIn": "Hecho en los Países Bajos",
+    "newsletterOk": "¡Listo! Ya estás en la lista.",
+    "newsletterExists": "Ya estás en la lista.",
+    "newsletterInvalid": "Introduce un correo electrónico válido.",
+    "newsletterError": "Algo salió mal. Inténtalo de nuevo."
   },
   "forRestaurants": {
     "pageTitle": "Reclamar restaurantes en Dishloopr",
