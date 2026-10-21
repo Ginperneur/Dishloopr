@@ -1,3 +1,4 @@
+import { isSafePublicUrl } from "../_shared/auth.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
@@ -99,6 +100,12 @@ serve(async (req) => {
     if (imageUrl) {
       const url = String(imageUrl).trim();
       const lower = url.toLowerCase();
+      if (!isSafePublicUrl(url)) {
+        return new Response(
+          JSON.stringify({ error: 'Ongeldige afbeeldings-URL', code: 'INVALID_URL' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        );
+      }
 
       // Reject PDFs explicitly
       if (lower.includes('.pdf') || lower.endsWith('/pdf')) {
@@ -115,14 +122,14 @@ serve(async (req) => {
       try {
         let contentType = '';
 
-        const headResp = await fetch(url, { method: 'HEAD', redirect: 'follow' });
+        const headResp = await fetch(url, { method: 'HEAD', redirect: 'manual' });
         contentType = headResp.headers.get('content-type') ?? '';
 
         if ((!headResp.ok || !contentType) && headResp.status !== 405) {
           // Fallback: some servers don’t support HEAD or don’t include content-type
           const getResp = await fetch(url, {
             method: 'GET',
-            redirect: 'follow',
+            redirect: 'manual',
             headers: { Range: 'bytes=0-2047' },
           });
           contentType = getResp.headers.get('content-type') ?? '';
