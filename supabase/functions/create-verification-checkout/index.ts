@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { safeOrigin } from "../_shared/auth.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
@@ -33,6 +34,24 @@ serve(async (req) => {
     const { claimId, restaurantId, restaurantName } = await req.json();
     if (!claimId || !restaurantId) throw new Error("Missing claimId or restaurantId");
 
+    const adminClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } },
+    );
+    const { data: ownClaim } = await adminClient
+      .from("restaurant_claims")
+      .select("id, user_id, restaurant_id, status")
+      .eq("id", claimId)
+      .maybeSingle();
+    if (!ownClaim || ownClaim.user_id !== user.id || ownClaim.restaurant_id !== restaurantId ||
+        ["verified", "rejected", "superseded"].includes(ownClaim.status)) {
+      return new Response(JSON.stringify({ error: "Claim not found" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 403,
+      });
+    }
+
     logStep("Creating verification checkout", { claimId, restaurantId, userId: user.id });
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -46,7 +65,7 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
-    const origin = req.headers.get("origin") || "https://dishloopr.com";
+    const origin = safeOrigin(req);
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,

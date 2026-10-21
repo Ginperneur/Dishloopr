@@ -108,14 +108,30 @@ serve(async (req) => {
       );
     }
 
-    let photoRefs: string[] = photo_references || [];
+    // Non-admins cannot choose which Google place or photos are fetched:
+    // always use the place stored on the restaurant record.
+    const maxPhotos = Math.min(Math.max(Number(max_photos) || 5, 1), 10);
+    let effectivePlaceId = place_id;
+    let photoRefs: string[] = (photo_references || []).slice(0, maxPhotos);
+    if (!isAdmin) {
+      const { data: restPlace } = await supabaseAdmin
+        .from('restaurants').select('google_place_id').eq('id', restaurant_id).maybeSingle();
+      effectivePlaceId = restPlace?.google_place_id ?? undefined;
+      photoRefs = [];
+      if (!effectivePlaceId) {
+        return new Response(
+          JSON.stringify({ success: true, images: [], message: 'No Google place linked' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
 
     // If place_id is provided but no photo_references, fetch them from Google Places
-    if (place_id && photoRefs.length === 0) {
-      console.log('Fetching photo references from Google Places for:', place_id);
+    if (effectivePlaceId && photoRefs.length === 0) {
+      console.log('Fetching photo references from Google Places for:', effectivePlaceId);
       
       const detailsUrl = new URL('https://maps.googleapis.com/maps/api/place/details/json');
-      detailsUrl.searchParams.set('place_id', place_id);
+      detailsUrl.searchParams.set('place_id', effectivePlaceId);
       detailsUrl.searchParams.set('fields', 'photos');
       detailsUrl.searchParams.set('key', apiKey);
 
@@ -124,7 +140,7 @@ serve(async (req) => {
 
       if (detailsData.status === 'OK' && detailsData.result?.photos) {
         photoRefs = detailsData.result.photos
-          .slice(0, max_photos)
+          .slice(0, maxPhotos)
           .map((photo: { photo_reference: string }) => photo.photo_reference);
       }
     }

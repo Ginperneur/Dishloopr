@@ -82,8 +82,11 @@ function toCsv(data: Record<string, unknown>[]): string {
   const flatRows = data.map(row => flattenObject(row));
   const headers = [...new Set(flatRows.flatMap(r => Object.keys(r)))];
 
-  const escape = (val: string) => {
-    if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+  const escape = (raw: string) => {
+    let val = String(raw ?? '');
+    // Neutralise spreadsheet formulas (=, +, -, @, tab, CR)
+    if (/^[=+\-@\t\r]/.test(val)) val = `'${val}`;
+    if (val.includes(',') || val.includes('"') || val.includes('\n') || val.includes('\r')) {
       return `"${val.replace(/"/g, '""')}"`;
     }
     return val;

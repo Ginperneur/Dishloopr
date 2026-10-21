@@ -15,7 +15,7 @@ const MessageSchema = z.object({
 
 const RequestSchema = z.object({
   conversationId: z.string().uuid().optional(),
-  sessionId: z.string().min(8).max(80).optional(),
+  sessionId: z.string().min(20).max(80).optional(),
   message: z.string().trim().min(1).max(2000),
   history: z.array(MessageSchema).max(30).optional(),
 });
@@ -130,6 +130,20 @@ serve(async (req) => {
       convId = newConv.id;
     }
 
+    // Prior turns come from stored messages only; client-supplied history is ignored
+    let storedHistory: { role: string; content: string }[] = [];
+    if (conversationId) {
+      const { data: prior } = await admin
+        .from("support_messages")
+        .select("role, content, created_at")
+        .eq("conversation_id", convId)
+        .in("role", ["user", "assistant"])
+        .order("created_at", { ascending: false })
+        .limit(20);
+      storedHistory = (prior ?? []).reverse().map((m) => ({ role: m.role, content: m.content }));
+    }
+    void history;
+
     // Persist user message
     await admin.from("support_messages").insert({
       conversation_id: convId,
@@ -140,7 +154,7 @@ serve(async (req) => {
     // Build messages for AI
     const aiMessages = [
       { role: "system", content: SYSTEM_PROMPT },
-      ...history.slice(-20).map((m) => ({ role: m.role, content: m.content })),
+      ...storedHistory,
       { role: "user", content: message },
     ];
 

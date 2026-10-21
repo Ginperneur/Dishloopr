@@ -59,7 +59,7 @@ serve(async (req) => {
     // Verify the claim belongs to this user
     const { data: claim, error: claimError } = await supabaseAdmin
       .from('restaurant_claims')
-      .select('id, user_id, phone_verification_code, phone_code_expires_at, claim_attempt_count')
+      .select('id, user_id, restaurant_id, phone_verification_code, phone_code_expires_at, claim_attempt_count')
       .eq('id', claimId)
       .single();
 
@@ -77,6 +77,22 @@ serve(async (req) => {
       );
     }
 
+    // The number must be the restaurant's own public phone number
+    const { data: rest } = await supabaseAdmin
+      .from('restaurants').select('phone').eq('id', claim.restaurant_id).maybeSingle();
+    const norm = (v: string) => {
+      let d = String(v || '').replace(/[^\d+]/g, '');
+      if (d.startsWith('00')) d = '+' + d.slice(2);
+      if (d.startsWith('0')) d = '+31' + d.slice(1);
+      return d;
+    };
+    if (!rest?.phone || norm(rest.phone) !== norm(cleanPhone)) {
+      return new Response(
+        JSON.stringify({ error: 'Phone number must match the restaurant\'s listed number' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Rate limiting: max 5 attempts
     if (claim.claim_attempt_count >= 5) {
       return new Response(
@@ -87,7 +103,7 @@ serve(async (req) => {
 
     if (action === 'send') {
       // Generate 6-digit code
-      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const verificationCode = (100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000)).toString();
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
 
       // Send SMS via Twilio

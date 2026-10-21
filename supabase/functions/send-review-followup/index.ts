@@ -1,4 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { requireAdminOrInternal } from '../_shared/auth.ts'
+const esc = (v: unknown) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" } as Record<string, string>)[c]);
+
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,6 +19,8 @@ Deno.serve(async (req) => {
     const resendKey = Deno.env.get('RESEND_API_KEY')!
 
     const supabase = createClient(supabaseUrl, serviceRoleKey)
+    const denied = await requireAdminOrInternal(req, supabase, corsHeaders)
+    if (denied) return denied
 
     // Find intents from 2 days ago that haven't been followed up
     const twoDaysAgo = new Date()
@@ -90,9 +95,9 @@ Deno.serve(async (req) => {
           subject: `Hoe was het bij ${restaurant.name}? 🍽️`,
           html: `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h2 style="color: #1a1a1a;">Hoi ${profile.name || 'daar'} 👋</h2>
+              <h2 style="color: #1a1a1a;">Hoi ${esc(profile.name || 'daar')} 👋</h2>
               <p style="color: #444; font-size: 16px; line-height: 1.6;">
-                We zagen dat je een paar dagen geleden een reservering hebt gemaakt bij <strong>${restaurant.name}</strong> via Dishloopr.
+                We zagen dat je een paar dagen geleden een reservering hebt gemaakt bij <strong>${esc(restaurant.name)}</strong> via Dishloopr.
               </p>
               <p style="color: #444; font-size: 16px; line-height: 1.6;">
                 Hoe was het? Jouw mening helpt andere foodies om de beste plekken te vinden! 🙏
