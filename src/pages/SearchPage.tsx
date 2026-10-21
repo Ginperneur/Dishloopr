@@ -259,6 +259,7 @@ export default function SearchPage() {
     },
     resultsCount: openNowFiltered.length,
     ready: !loading && (!!dishQuery || cityParam !== 'all'),
+    loading,
   });
 
   // Scroll back to where the user was once restored results are on screen.

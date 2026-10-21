@@ -56,17 +56,23 @@ interface LoggerArgs {
   filters: Record<string, unknown>;
   resultsCount: number;
   ready: boolean;
+  /** When given, a key is only logged after loading went true at least once for it. */
+  loading?: boolean;
 }
 
 /** Logs a search once per new term/city/filter combo, 1.5s after results are loaded. Never throws. */
-export function useSearchLogger({ source, query, city, filters, resultsCount, ready }: LoggerArgs) {
+export function useSearchLogger({ source, query, city, filters, resultsCount, ready, loading }: LoggerArgs) {
   const key = searchKey(source, query, city, filters);
   const loggedKey = useRef<string | null>(readLast()?.key ?? null);
   const countRef = useRef(resultsCount);
   countRef.current = resultsCount;
+  const seen = useRef<{ key: string; loaded: boolean }>({ key, loaded: false });
+  if (seen.current.key !== key) seen.current = { key, loaded: false };
+  if (loading) seen.current.loaded = true;
+  const settled = loading === undefined || (seen.current.loaded && !loading);
 
   useEffect(() => {
-    if (!ready || key === loggedKey.current) return;
+    if (!ready || !settled || key === loggedKey.current) return;
     const t = setTimeout(() => {
       loggedKey.current = key;
       try {
@@ -88,7 +94,7 @@ export function useSearchLogger({ source, query, city, filters, resultsCount, re
     }, LOG_DEBOUNCE_MS);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, ready]);
+  }, [key, ready, settled]);
 }
 
 /** Fire-and-forget click attribution to the last logged search. */
