@@ -22,6 +22,7 @@ function toCsv(rows: Record<string, unknown>[]): string {
   const headers = Array.from(new Set(rows.flatMap((r) => Object.keys(r))));
   const escape = (v: unknown) => {
     const s = v === null || v === undefined ? '' : String(v);
+    if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   return [

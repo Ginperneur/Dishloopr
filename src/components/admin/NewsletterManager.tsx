@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -599,7 +600,7 @@ export function NewsletterManager() {
           </DialogHeader>
           <div
             className="border rounded-lg p-4 bg-white"
-            dangerouslySetInnerHTML={{ __html: previewHtml }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(previewHtml) }}
           />
         </DialogContent>
       </Dialog>
