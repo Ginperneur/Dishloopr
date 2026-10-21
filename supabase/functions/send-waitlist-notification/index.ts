@@ -165,9 +165,7 @@ serve(async (req) => {
     });
 
     logStep("Email sent successfully", { 
-      to: profile.email, 
-      restaurant: restaurant.name,
-      response: emailResponse 
+      restaurantId: restaurant.id ?? undefined,
     });
 
     return new Response(

@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { safeOrigin } from "../_shared/auth.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
@@ -123,7 +124,7 @@ serve(async (req) => {
     }
 
     // Create checkout session
-    const origin = req.headers.get("origin") || "https://dishloopr.com";
+    const origin = safeOrigin(req);
     const dishName = (product as any).dishes?.name || 'Gerecht';
     const cityName = (product as any).cities?.name || 'Stad';
 

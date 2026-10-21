@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { safeOrigin } from "../_shared/auth.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
@@ -32,7 +33,7 @@ serve(async (req) => {
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     if (customers.data.length === 0) throw new Error("Geen Stripe-klant gevonden");
 
-    const origin = req.headers.get("origin") || "https://dishloopr.com";
+    const origin = safeOrigin(req);
     const portal = await stripe.billingPortal.sessions.create({
       customer: customers.data[0].id,
       return_url: `${origin}/owner`,
