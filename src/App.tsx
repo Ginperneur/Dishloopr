@@ -10,7 +10,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { Skeleton } from "@/components/ui/skeleton";
-import { OnboardingDialog } from "@/components/onboarding/OnboardingDialog";
+import { AfterIdle } from "@/components/util/AfterIdle";
+const OnboardingDialog = lazy(() => import("@/components/onboarding/OnboardingDialog").then((m) => ({ default: m.OnboardingDialog })));
 import { CookieConsent } from "@/components/legal/CookieConsent";
 import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 
@@ -95,8 +96,8 @@ const App = () => (
               <Sonner />
               <BrowserRouter>
                 <Suspense fallback={<PageLoader />}>
-                  <OnboardingDialog />
                   <CookieConsent />
+                  <AfterIdle><OnboardingDialog /></AfterIdle>
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/search" element={<SearchPage />} />

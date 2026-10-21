@@ -69,6 +69,7 @@ function AnimatedCounter({ value, suffix = '' }: { value: number; suffix?: strin
 export function SocialProof() {
   const { t } = useTranslation();
   const [stats, setStats] = useState<Stats>(() => cachedStats ?? { restaurants: 0, reviews: 0, cities: 0, dishes: 0 });
+  const loaded = stats.restaurants > 0 || stats.dishes > 0;
 
   useEffect(() => {
     let cancelled = false;
@@ -91,10 +92,15 @@ export function SocialProof() {
 
   return (
     <section
-      className="py-4 md:py-6 border-y border-border/50 bg-muted/20"
+      className="py-4 md:py-6 border-y border-border/50 bg-muted/20 min-h-[74px] md:min-h-[90px]"
       aria-label={t('stats.aria', 'Statistieken over Dishloopr')}
     >
       <div className="container px-4 md:px-6">
+        {!loaded && (
+          <div className="flex justify-center gap-3 md:gap-10" aria-hidden="true">
+            {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-9 md:h-11 w-28 rounded-full bg-muted animate-pulse" />)}
+          </div>
+        )}
         {/* Mobile: horizontal scroll strip */}
         <motion.div
           initial={{ opacity: 0, y: 6 }}

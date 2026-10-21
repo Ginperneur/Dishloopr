@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { RoutingReason } from '@/hooks/useAlternativeRestaurants';
+import { optimizedImage, imgLoadingProps } from '@/lib/imageUrl';
 
 interface AlternativeRestaurant {
   id: string;
@@ -117,8 +118,11 @@ export function AlternativeRestaurants({
                   <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted shrink-0">
                     {restaurant.images && restaurant.images.length > 0 ? (
                       <img
-                        src={restaurant.images[0]}
+                        src={optimizedImage(restaurant.images[0], { width: 128 })}
                         alt={restaurant.name}
+                        width={64}
+                        height={64}
+                        {...imgLoadingProps(false)}
                         className="w-full h-full object-cover"
                       />
                     ) : (

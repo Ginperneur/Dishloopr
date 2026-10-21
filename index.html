@@ -47,27 +47,26 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Dishloopr" />
     
-    <!-- Google Analytics 4 -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WMC594FJG9"></script>
+    <!-- Google Analytics 4: queue events now, load the script after first render -->
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-WMC594FJG9');
+      (function(){
+        function load(){var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-WMC594FJG9';document.head.appendChild(s);}
+        window.addEventListener('load',function(){('requestIdleCallback' in window)?requestIdleCallback(load,{timeout:4000}):setTimeout(load,2000);});
+      })();
     </script>
     
-    <!-- Preconnect to important origins -->
+    <!-- Fonts: only used weights, non-blocking stylesheet, swap -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Bricolage+Grotesque:wght@700;800&display=swap" />
-    <!-- Preload critical font files (LCP-text) with correct crossorigin. Google Fonts serves woff2 from fonts.gstatic.com. -->
-    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/dmsans/v15/rP2Hp2ywxg089UriCZOIHTWEBlwu8Q.woff2" />
-    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/dmsans/v15/rP2Hp2ywxg089UriCZaIHTWEBlwu8Q.woff2" />
-    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/bricolagegrotesque/v7/3y9U6as8bTXq_nANBjzKo3IeZx8z6up5BeSl5jBNz_19PxaXzQ.woff2" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Bricolage+Grotesque:wght@700;800&display=swap" />
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Bricolage+Grotesque:wght@700;800&display=swap" /></noscript>
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/dmsans/v17/rP2Yp2ywxg089UriI5-g4vlH9VoD8Cmcqbu0-K4.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/bricolagegrotesque/v9/3y9U6as8bTXq_nANBjzKo3IeZx8z6up5BeSl5jBNz_19PpbpMXuECpwUxJBOm_OJWiaaD30YfKfjZZoLvfzl-Molsg.woff2" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Bricolage+Grotesque:wght@700&display=swap" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Bricolage+Grotesque:wght@700&display=swap" /></noscript>
     <link rel="preconnect" href="https://uktafmxojymsojqewzuy.supabase.co" />
-    <link rel="preconnect" href="https://www.googletagmanager.com" />
     
     <!-- Structured Data: Organization + WebSite -->
     <script type="application/ld+json">

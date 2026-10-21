@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Cookie, X } from 'lucide-react';
@@ -12,15 +12,8 @@ export function getCookieConsent(): Consent {
 }
 
 export function CookieConsent() {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const t = setTimeout(() => {
-      if (!getCookieConsent()) setVisible(true);
-    }, 800);
-    return () => clearTimeout(t);
-  }, []);
+  // Shown on first paint (no delay) so the banner never becomes a late LCP element.
+  const [visible, setVisible] = useState(() => typeof window !== 'undefined' && !getCookieConsent());
 
   const decide = (val: 'accepted' | 'rejected') => {
     try { localStorage.setItem(STORAGE_KEY, val); } catch {}

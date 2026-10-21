@@ -105,6 +105,9 @@ export function Header() {
           <img
             src={logo}
             alt="Dishloopr"
+            width={40}
+            height={40}
+            fetchPriority="high"
             className={`w-auto no-aspect-fallback transition-[height] duration-200 ${
               scrolled ? 'h-7 md:h-8' : 'h-8 md:h-10'
             }`}

@@ -1,7 +1,10 @@
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { BottomNav } from './BottomNav';
-import { SupportChat } from '@/components/support/SupportChat';
+import { lazy } from 'react';
+import { AfterIdle } from '@/components/util/AfterIdle';
+
+const SupportChat = lazy(() => import('@/components/support/SupportChat').then((m) => ({ default: m.SupportChat })));
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -27,7 +30,7 @@ export function Layout({ children, showFooter = true }: LayoutProps) {
       </main>
       {showFooter && <Footer />}
       <BottomNav />
-      <SupportChat />
+      <AfterIdle timeout={3000}><SupportChat /></AfterIdle>
     </div>
   );
 }

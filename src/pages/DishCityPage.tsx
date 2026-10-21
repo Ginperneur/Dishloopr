@@ -391,11 +391,11 @@ export default function DishCityPage() {
             {visibleRestaurants.map((restaurant, index) => (
               <motion.div
                 key={restaurant.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={index < 3 ? false : { opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(index * 0.05, 0.3) }}
               >
-                <DatabaseRestaurantCard restaurant={restaurant as any} />
+                <DatabaseRestaurantCard restaurant={restaurant as any} priority={index === 0} />
               </motion.div>
             ))}
           </motion.div>

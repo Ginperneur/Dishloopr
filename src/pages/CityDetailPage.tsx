@@ -266,7 +266,7 @@ export default function CityDetailPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: Math.min(index * 0.05, 0.3) }}
             >
-              <DatabaseRestaurantCard restaurant={restaurant} index={index} />
+              <DatabaseRestaurantCard restaurant={restaurant} index={index} priority={index === 0} />
             </motion.div>
           ))}
         </div>
