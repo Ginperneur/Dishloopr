@@ -71,7 +71,7 @@ export function BulkActionsManager() {
       const chunk = ids.slice(i, i + 200);
       const { error } = await supabase
         .from('restaurants')
-        .update({ [field]: value })
+        .update({ [field]: value } as never)
         .in('id', chunk);
       if (!error) updated += chunk.length;
     }

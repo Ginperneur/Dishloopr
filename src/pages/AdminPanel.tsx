@@ -272,7 +272,7 @@ export default function AdminPanel() {
   };
 
   const updateRestaurantStatus = async (id: string, field: string, value: boolean) => {
-    const { error } = await supabase.from('restaurants').update({ [field]: value }).eq('id', id);
+    const { error } = await supabase.from('restaurants').update({ [field]: value } as never).eq('id', id);
     if (error) { toast.error('Update mislukt'); } else {
       toast.success('Restaurant bijgewerkt');
       setRestaurants(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r));
