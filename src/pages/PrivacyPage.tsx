@@ -22,7 +22,7 @@ export default function PrivacyPage() {
           className="max-w-3xl mx-auto"
         >
           <h1 className="text-4xl font-bold mb-2">Privacybeleid</h1>
-          <p className="text-sm text-muted-foreground mb-8">Laatst bijgewerkt: 4 mei 2026</p>
+          <p className="text-sm text-muted-foreground mb-8">Laatst bijgewerkt: 21 oktober 2026</p>
           
           <div className="prose prose-lg dark:prose-invert max-w-none space-y-8">
             <section>
@@ -37,7 +37,7 @@ export default function PrivacyPage() {
             <section>
               <h2 className="text-2xl font-semibold mb-4">1a. Verwerkingsverantwoordelijke</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Verwerkingsverantwoordelijke in de zin van de AVG is Dishloopr, gevestigd in Nederland.
+                Verwerkingsverantwoordelijke in de zin van de AVG is Dishloopr, gevestigd in Nederland (KvK-nummer: [KvK-nummer], vestigingsadres: [vestigingsadres]).
                 Voor vragen of verzoeken kun je contact opnemen via{' '}
                 <a href="mailto:privacy@dishloopr.com" className="text-primary hover:underline">privacy@dishloopr.com</a>.
               </p>
@@ -57,10 +57,22 @@ export default function PrivacyPage() {
               <h2 className="text-2xl font-semibold mb-4">2. Welke gegevens verzamelen wij?</h2>
               <ul className="text-muted-foreground space-y-2">
                 <li><strong>Accountgegevens:</strong> naam, e-mailadres, en eventueel profielfoto</li>
-                <li><strong>Gebruiksgegevens:</strong> zoekopdrachten, bezochte pagina's, en interacties</li>
+                <li><strong>Gebruiksgegevens:</strong> zoekopdrachten, bezochte pagina's, en interacties. Zoekopdrachten worden zonder naam of IP-adres opgeslagen om de zoekfunctie te verbeteren, maximaal 12 maanden.</li>
                 <li><strong>Reviews:</strong> door jou geplaatste beoordelingen en foto's</li>
                 <li><strong>Technische gegevens:</strong> IP-adres, browsertype, en apparaatinformatie</li>
               </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4">2a. Gegevens van restaurants</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Wij tonen openbare bedrijfsinformatie van restaurants (naam, adres, menukaart, prijzen, openingstijden,
+                foto's en beoordelingen), afkomstig uit Google Places en de eigen website van het restaurant. Om eigenaren
+                te benaderen bewaren wij het zakelijke contactadres van de website (grondslag: gerechtvaardigd belang).
+                Elke e-mail bevat een afmeldlink. Via{' '}
+                <a href="/voor-restaurants/afmelden" className="text-primary hover:underline">/voor-restaurants/afmelden</a>{' '}
+                kan een restaurant gegevens laten aanpassen of verwijderen.
+              </p>
             </section>
 
             <section>
@@ -84,6 +96,8 @@ export default function PrivacyPage() {
                 <li><strong>Resend</strong> — transactionele en marketing e-mails.</li>
                 <li><strong>Stripe</strong> — betalingen voor premium diensten en abonnementen.</li>
                 <li><strong>Google Maps & Places</strong> — kaarten en restaurantverrijking.</li>
+                <li><strong>Google (Gemini)</strong> — uitlezen en vertalen van menukaarten.</li>
+                <li><strong>Cloudflare</strong> — hosting (in de toekomst).</li>
                 <li><strong>Lovable AI Gateway</strong> — AI-functies zoals "Surprise Me" en classificatie.</li>
                 <li>Wanneer wettelijk vereist of ter bescherming van rechten.</li>
               </ul>
@@ -156,9 +170,6 @@ export default function PrivacyPage() {
               </p>
             </section>
 
-            <p className="text-sm text-muted-foreground pt-8 border-t border-border">
-              Laatste update: januari 2026
-            </p>
           </div>
         </motion.div>
       </div>
