@@ -158,6 +158,7 @@ export default function RestaurantPage() {
   if (error || !restaurant) {
     return (
       <Layout>
+        <SEOHead title={t('restaurant.notFound', 'Restaurant niet gevonden')} description={t('restaurant.notFound', 'Restaurant niet gevonden')} noindex nofollow />
         <div className="container py-16 text-center">
           <h1 className="text-2xl font-bold mb-4">{error || t('restaurant.notFound', 'Restaurant niet gevonden')}</h1>
           <Button asChild>

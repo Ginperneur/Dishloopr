@@ -59,11 +59,15 @@ function RestaurantCard({ item, index }: { item: CollectionRestaurant; index: nu
                 <h3 className="text-xl font-bold group-hover:text-primary transition-colors">
                   {restaurant.name}
                 </h3>
-                <div className="flex items-center gap-1 text-sm">
-                  <Star className="h-4 w-4 fill-rating text-rating" />
-                  <span className="font-semibold">{Number(restaurant.rating).toFixed(1)}</span>
-                  <span className="text-muted-foreground">({restaurant.review_count})</span>
-                </div>
+                {restaurant.google_rating != null && Number(restaurant.google_rating) > 0 && (
+                  <div className="flex items-center gap-1 text-sm">
+                    <Star className="h-4 w-4 fill-rating text-rating" />
+                    <span className="font-semibold">{Number(restaurant.google_rating).toFixed(1)}</span>
+                    {Number(restaurant.google_reviews_count) > 0 && (
+                      <span className="text-muted-foreground">({restaurant.google_reviews_count})</span>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
@@ -76,8 +80,8 @@ function RestaurantCard({ item, index }: { item: CollectionRestaurant; index: nu
 
               {/* Featured reason */}
               {item.featured_reason && (
-                <p className="text-sm text-primary font-medium mb-3 italic">
-                  "{item.featured_reason}"
+                <p className="text-sm text-muted-foreground mb-3">
+                  {item.featured_reason}
                 </p>
               )}
 

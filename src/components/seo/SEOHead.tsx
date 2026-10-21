@@ -13,6 +13,7 @@ interface SEOHeadProps {
   publishedTime?: string;
   modifiedTime?: string;
   noindex?: boolean;
+  nofollow?: boolean;
   structuredData?: object | object[];
 }
 
@@ -29,6 +30,7 @@ export function SEOHead({
   publishedTime,
   modifiedTime,
   noindex = false,
+  nofollow = false,
   structuredData,
 }: SEOHeadProps) {
   const fullTitle = title.includes('Dishloopr') ? title : `${title} | Dishloopr`;
@@ -69,7 +71,7 @@ export function SEOHead({
     
     // Robots
     if (noindex) {
-      updateMeta('robots', 'noindex, follow', true);
+      updateMeta('robots', nofollow ? 'noindex, nofollow' : 'noindex, follow', true);
     } else {
       updateMeta('robots', 'index, follow, max-image-preview:large', true);
     }
@@ -145,7 +147,7 @@ export function SEOHead({
       const hreflangs = document.querySelectorAll('link[hreflang]');
       hreflangs.forEach(el => el.remove());
     };
-  }, [fullTitle, description, canonicalUrl, ogType, fullOgImage, ogImageAlt, twitterCard, keywords, author, publishedTime, modifiedTime, noindex, structuredData]);
+  }, [fullTitle, description, canonicalUrl, ogType, fullOgImage, ogImageAlt, twitterCard, keywords, author, publishedTime, modifiedTime, noindex, nofollow, structuredData]);
 
   return null;
 }

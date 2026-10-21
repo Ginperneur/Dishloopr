@@ -38,6 +38,8 @@ export interface CollectionRestaurant {
     address: string;
     rating: number;
     review_count: number;
+    google_rating: number | null;
+    google_reviews_count: number | null;
     price_level: number;
     cuisines: string[] | null;
     ambience_tags: string[] | null;
@@ -126,6 +128,8 @@ export function useCollection(slug: string | undefined) {
           address,
           rating,
           review_count,
+          google_rating,
+          google_reviews_count,
           price_level,
           cuisines,
           ambience_tags,

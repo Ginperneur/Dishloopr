@@ -18,6 +18,7 @@ import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import logo from '@/assets/dishloopr-logo.png';
 import { LANGUAGES } from '@/lib/constants';
 import { useContentAvailability } from '@/hooks/useContentAvailability';
+import { useHasFeatured } from '@/hooks/useHasFeatured';
 
 export function Header() {
   const { t, i18n } = useTranslation();
@@ -28,6 +29,7 @@ export function Header() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const { hasCollections, hasEvents } = useContentAvailability();
+  const hasFeatured = useHasFeatured();
 
   // Scroll-shrink behavior on mobile
   useEffect(() => {
@@ -121,9 +123,11 @@ export function Header() {
               {t('nav.collections')}
             </Link>
           )}
-          <Link to="/search?featured=true" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
-            {t('nav.featured')}
-          </Link>
+          {hasFeatured && (
+            <Link to="/search?featured=true" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
+              {t('nav.featured')}
+            </Link>
+          )}
           {hasEvents && (
             <Link to="/events" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1.5">
               <PartyPopper className="h-4 w-4" />
