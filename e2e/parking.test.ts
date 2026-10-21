@@ -25,3 +25,12 @@ describe('restaurant parking options', () => {
     expect(hasParkingInfo(info)).toBe(false);
   });
 });
+describe('parking block visibility', () => {
+  test('nothing filled in hides the parking block', () => {
+    expect(hasParkingInfo(parseParkingInfo(null))).toBe(false);
+    expect(hasParkingInfo(parseParkingInfo({}))).toBe(false);
+  });
+  test('only a garage filled in shows the parking block', () => {
+    expect(hasParkingInfo(parseParkingInfo({ garage_name: 'Q-Park' }))).toBe(true);
+  });
+});
