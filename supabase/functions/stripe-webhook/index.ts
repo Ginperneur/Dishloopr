@@ -67,12 +67,25 @@ serve(async (req) => {
         const claimId = metadata.claim_id;
         logStep("Processing micro-payment verification", { claimId, restaurantId });
 
+        // The claim must belong to the paying user and to this restaurant
+        const { data: claimRow } = await supabaseAdmin
+          .from("restaurant_claims")
+          .select("id, user_id, restaurant_id, status")
+          .eq("id", claimId)
+          .maybeSingle();
+        if (!claimRow || claimRow.user_id !== userId || claimRow.restaurant_id !== restaurantId ||
+            ["verified", "rejected", "superseded"].includes(claimRow.status)) {
+          logStep("Claim does not match payment metadata, ignoring", { claimId });
+          return new Response(JSON.stringify({ received: true }), { status: 200 });
+        }
+
         // Get the restaurant name for name matching
         const { data: restaurant } = await supabaseAdmin
           .from("restaurants")
-          .select("name")
+          .select("name, claim_status")
           .eq("id", restaurantId)
           .single();
+        const alreadyOwned = restaurant?.claim_status === "verified_owner";
 
         const restaurantName = restaurant?.name?.toLowerCase().trim() || "";
 
@@ -90,13 +103,10 @@ serve(async (req) => {
         logStep("Name matching", { payerName, restaurantName });
 
         // Check if payer name matches restaurant name (fuzzy: one contains the other or significant overlap)
-        const nameMatches = payerName.length > 0 && restaurantName.length > 0 && (
-          restaurantName.includes(payerName) ||
-          payerName.includes(restaurantName) ||
-          // Check if any word (3+ chars) from payer name appears in restaurant name
-          payerName.split(/\s+/).some((word: string) => word.length >= 3 && restaurantName.includes(word)) ||
-          restaurantName.split(/\s+/).some((word: string) => word.length >= 3 && payerName.includes(word))
-        );
+        // Strict: the payer name must contain the full restaurant name, and an
+        // already-owned restaurant is never auto-transferred (admin review instead).
+        const nameMatches = !alreadyOwned && restaurantName.length >= 3 &&
+          payerName.length > 0 && payerName.includes(restaurantName);
 
         if (nameMatches) {
           logStep("Name match succeeded, auto-verifying");

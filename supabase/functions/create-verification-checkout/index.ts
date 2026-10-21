@@ -34,6 +34,24 @@ serve(async (req) => {
     const { claimId, restaurantId, restaurantName } = await req.json();
     if (!claimId || !restaurantId) throw new Error("Missing claimId or restaurantId");
 
+    const adminClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } },
+    );
+    const { data: ownClaim } = await adminClient
+      .from("restaurant_claims")
+      .select("id, user_id, restaurant_id, status")
+      .eq("id", claimId)
+      .maybeSingle();
+    if (!ownClaim || ownClaim.user_id !== user.id || ownClaim.restaurant_id !== restaurantId ||
+        ["verified", "rejected", "superseded"].includes(ownClaim.status)) {
+      return new Response(JSON.stringify({ error: "Claim not found" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 403,
+      });
+    }
+
     logStep("Creating verification checkout", { claimId, restaurantId, userId: user.id });
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
