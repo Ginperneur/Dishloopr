@@ -6,3 +6,4 @@
 - [x] Claimen zonder sms: eindtest beide routes
 - [ ] Claim-e-mails (code, goedgekeurd, afgewezen) komen niet aan: afzenderdomein dishloopr.com is niet geverifieerd bij de maildienst — wacht op gebruiker
 - [ ] 2 kleine testbewijsbestanden staan nog in de privé bewijsmap
+- [ ] Claim-mails (code/goedgekeurd/afgewezen) omzetten van de oude maildienst naar het nieuwe afzenderadres notify.dishloopr.com
