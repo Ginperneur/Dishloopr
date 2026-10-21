@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS newsletter_subscribers_email_lower_key ON public.newsletter_subscribers (lower(email));
