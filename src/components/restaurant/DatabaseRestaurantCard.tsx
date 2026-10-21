@@ -12,6 +12,8 @@ import type { Database } from '@/integrations/supabase/types';
 import { SponsoredBadge } from '@/components/sponsored/SponsoredBadge';
 import { isDutchLocale } from '@/lib/utils';
 import { isOpenNow } from '@/lib/openingHours';
+import { RatingSummary } from '@/components/restaurant/RatingSummary';
+import { useOwnReviewStats } from '@/hooks/useOwnReviewStats';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 
@@ -65,6 +67,7 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
   const { t, i18n } = useTranslation();
   const isNl = isDutchLocale(i18n.language);
   const location = useLocation();
+  const ownStats = useOwnReviewStats(restaurant.id);
   const { isFavorite, toggleFavorite } = useFavorites();
   const { isRecentlyViewed } = useRecentlyViewed();
   const [isLikeAnimating, setIsLikeAnimating] = useState(false);
@@ -186,27 +189,12 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
               {restaurant.name}
             </h3>
             <div className="flex items-center gap-1 shrink-0">
-              {restaurant.review_count > 0 && Number(restaurant.rating) > 0 ? (
-                <>
-                  <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-rating text-rating" />
-                  <span className="font-semibold text-sm sm:text-base">{Number(restaurant.rating).toFixed(1)}</span>
-                  <span className="text-muted-foreground text-xs sm:text-sm">
-                    ({restaurant.review_count})
-                  </span>
-                </>
-              ) : (restaurant as any).google_rating && Number((restaurant as any).google_rating) > 0 ? (
-                <>
-                  <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-muted-foreground/50 text-muted-foreground/50" />
-                  <span className="font-semibold text-sm sm:text-base">{Number((restaurant as any).google_rating).toFixed(1)}</span>
-                  {(restaurant as any).google_reviews_count > 0 && (
-                    <span className="text-muted-foreground text-xs sm:text-sm">
-                      ({(restaurant as any).google_reviews_count})
-                    </span>
-                  )}
-                </>
-              ) : (
-                <span className="text-muted-foreground text-xs">Nieuw</span>
-              )}
+              <RatingSummary
+                googleRating={(restaurant as any).google_rating}
+                googleReviewsCount={(restaurant as any).google_reviews_count}
+                ownReviewCount={ownStats?.count}
+                ownAverage={ownStats?.average}
+              />
             </div>
           </div>
 

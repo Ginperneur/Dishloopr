@@ -654,5 +654,13 @@
     "nearby": "In der Nähe",
     "inArea": "In der Umgebung",
     "openNow": "Jetzt geöffnet"
+  },
+  "rating": {
+    "google": "Google",
+    "googleReviews": "{{n}} Google-Bewertungen",
+    "onDishloopr": "auf Dishloopr",
+    "onGoogle": "auf Google",
+    "firstReviewCta": "Warst du schon hier? Schreib die erste Dishloopr-Bewertung",
+    "writeReview": "Bewertung schreiben"
   }
 }

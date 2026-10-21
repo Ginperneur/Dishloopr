@@ -51,6 +51,8 @@ import { tTaxonomy } from '@/lib/i18n/taxonomy';
 import { TikTokIcon } from '@/components/icons/TikTokIcon';
 import { useClickTracking } from '@/hooks/useClickTracking';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
+import { RatingSummary } from '@/components/restaurant/RatingSummary';
+import { OWN_REVIEW_THRESHOLD } from '@/lib/ratingDisplay';
 
 export default function RestaurantPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -179,6 +181,9 @@ export default function RestaurantPage() {
   const openingHours = (restaurant.opening_hours || {}) as { [key: string]: string };
   const claimStatus = (restaurant as any).claim_status as string | null | undefined;
   const canBeClaimed = claimStatus !== 'verified_owner' && claimStatus !== 'locked';
+  const ownReviewCount = reviews.length;
+  const ownAverage = ownReviewCount > 0 ? reviews.reduce((s, r) => s + (Number(r.rating) || 0), 0) / ownReviewCount : 0;
+  const hasOwnScore = ownReviewCount >= OWN_REVIEW_THRESHOLD && ownAverage > 0;
 
   // Generate SEO structured data
   const restaurantSchema = createRestaurantSchema({
@@ -192,8 +197,8 @@ export default function RestaurantPage() {
     website: restaurant.website_url || undefined,
     cuisines: restaurant.cuisines || [],
     priceRange: '€'.repeat(restaurant.price_level),
-    rating: Number(restaurant.rating),
-    reviewCount: restaurant.review_count,
+    rating: hasOwnScore ? ownAverage : 0,
+    reviewCount: hasOwnScore ? ownReviewCount : 0,
     geo: restaurant.geo_lat && restaurant.geo_lng ? {
       lat: Number(restaurant.geo_lat),
       lng: Number(restaurant.geo_lng)
@@ -223,8 +228,8 @@ export default function RestaurantPage() {
           name: restaurant.name,
           city: restaurant.city?.name || t('restaurant.metaCityFallback', 'Nederland'),
           cuisines: restaurant.cuisines?.join(', ') || t('restaurant.metaCuisinesFallback', 'Heerlijk eten'),
-          reviewSuffix: restaurant.review_count > 0
-            ? t('restaurant.metaDescriptionReviews', ' met {{count}} reviews en een {{rating}} rating', { count: restaurant.review_count, rating: Number(restaurant.rating).toFixed(1) })
+          reviewSuffix: hasOwnScore
+            ? t('restaurant.metaDescriptionReviews', ' met {{count}} reviews en een {{rating}} rating', { count: ownReviewCount, rating: ownAverage.toFixed(1) })
             : '',
         })}
         canonical={`https://dishloopr.com/restaurant/${restaurant.slug}`}
@@ -302,30 +307,13 @@ export default function RestaurantPage() {
                   )}
 
                   <div className="flex flex-wrap items-center gap-2 md:gap-4 text-sm md:text-base text-muted-foreground mb-3">
-                    {restaurant.review_count > 0 && Number(restaurant.rating) > 0 ? (
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 md:h-5 md:w-5 fill-rating text-rating" />
-                        <span className="font-semibold text-foreground">{Number(restaurant.rating).toFixed(1)}</span>
-                        <span>({restaurant.review_count} {t('restaurant.reviews')})</span>
-                      </div>
-                    ) : (restaurant as any).google_rating && Number((restaurant as any).google_rating) > 0 ? (
-                      <div className="flex items-center gap-1">
-                        <Star className="h-3.5 w-3.5 md:h-4 md:w-4 fill-muted-foreground/50 text-muted-foreground/50" />
-                        <span className="font-semibold text-foreground">{Number((restaurant as any).google_rating).toFixed(1)}</span>
-                        <span className="text-xs text-muted-foreground">
-                          Google-rating{(restaurant as any).google_reviews_count > 0 ? ` (${(restaurant as any).google_reviews_count})` : ''}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">{t('restaurant.noReviewsYet', 'Nog geen beoordelingen')}</span>
-                    )}
-                    {/* Show Google rating alongside when we have own reviews too */}
-                    {restaurant.review_count > 0 && (restaurant as any).google_rating && Number((restaurant as any).google_rating) > 0 && (
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Star className="h-3 w-3 fill-muted-foreground/50 text-muted-foreground/50" />
-                        <span>Google-rating {Number((restaurant as any).google_rating).toFixed(1)}</span>
-                      </div>
-                    )}
+                    <RatingSummary
+                      size="md"
+                      googleRating={(restaurant as any).google_rating}
+                      googleReviewsCount={(restaurant as any).google_reviews_count}
+                      ownReviewCount={ownReviewCount}
+                      ownAverage={ownAverage}
+                    />
                     <span className="hidden md:inline">{PRICE_LABELS_FULL[restaurant.price_level]}</span>
                     <span className="md:hidden">{'€'.repeat(restaurant.price_level)}</span>
                   </div>
@@ -566,18 +554,32 @@ export default function RestaurantPage() {
               <h2 className="text-lg md:text-xl font-bold mb-4 md:mb-6">{t('reviews.title')}</h2>
               
               <div className="space-y-6">
-                <ReviewForm 
-                  onSubmit={submitReview} 
-                  submitting={submitting}
-                  restaurantId={restaurant.id}
-                  ambienceTags={restaurant.ambience_tags || []}
-                  cuisines={restaurant.cuisines || []}
-                />
+                {!reviewsLoading && !hasOwnScore && (
+                  <div className="rounded-lg border bg-muted/40 p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+                    <p className="font-medium">{t('rating.firstReviewCta', 'Ben je hier geweest? Schrijf de eerste Dishloopr-review')}</p>
+                    <Button
+                      className="min-h-[44px]"
+                      onClick={() => document.getElementById('review-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                    >
+                      {t('rating.writeReview', 'Schrijf een review')}
+                    </Button>
+                  </div>
+                )}
+                <div id="review-form" className="scroll-mt-24">
+                  <ReviewForm 
+                    onSubmit={submitReview} 
+                    submitting={submitting}
+                    restaurantId={restaurant.id}
+                    ambienceTags={restaurant.ambience_tags || []}
+                    cuisines={restaurant.cuisines || []}
+                  />
+                </div>
                 <ReviewList 
                   reviews={reviews} 
                   loading={reviewsLoading} 
                   isOwner={user?.id === restaurant?.claimed_by_owner_id}
                   onRefetch={refetch}
+                  hideEmpty={!hasOwnScore}
                 />
               </div>
             </motion.div>

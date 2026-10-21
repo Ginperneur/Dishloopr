@@ -12,9 +12,10 @@ interface ReviewListProps {
   loading: boolean;
   isOwner?: boolean;
   onRefetch?: () => void;
+  hideEmpty?: boolean;
 }
 
-export function ReviewList({ reviews, loading, isOwner = false, onRefetch }: ReviewListProps) {
+export function ReviewList({ reviews, loading, isOwner = false, onRefetch, hideEmpty = false }: ReviewListProps) {
   const { t, i18n } = useTranslation();
   const dateLocaleMap: Record<string, string> = {
     nl: 'nl-NL', en: 'en-GB', de: 'de-DE', fr: 'fr-FR', es: 'es-ES',
@@ -36,6 +37,7 @@ export function ReviewList({ reviews, loading, isOwner = false, onRefetch }: Rev
   }
 
   if (reviews.length === 0) {
+    if (hideEmpty) return null;
     return (
       <p className="text-center text-muted-foreground py-8">
         {t('reviews.empty', 'Nog geen reviews. Wees de eerste!')}

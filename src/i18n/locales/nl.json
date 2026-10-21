@@ -664,5 +664,13 @@
     "nearby": "Dichtbij",
     "inArea": "In de buurt",
     "openNow": "Nu open"
+  },
+  "rating": {
+    "google": "Google",
+    "googleReviews": "{{n}} Google-reviews",
+    "onDishloopr": "op Dishloopr",
+    "onGoogle": "op Google",
+    "firstReviewCta": "Ben je hier geweest? Schrijf de eerste Dishloopr-review",
+    "writeReview": "Schrijf een review"
   }
 }

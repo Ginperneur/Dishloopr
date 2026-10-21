@@ -10,9 +10,12 @@ import { SEOHead, createBreadcrumbSchema, createItemListSchema } from '@/compone
 import { useCollection, CollectionRestaurant } from '@/hooks/useCollections';
 import { localizedField } from '@/lib/i18n/localizedField';
 import { useTranslation } from 'react-i18next';
+import { RatingSummary } from '@/components/restaurant/RatingSummary';
+import { useOwnReviewStats } from '@/hooks/useOwnReviewStats';
 
 function RestaurantCard({ item, index }: { item: CollectionRestaurant; index: number }) {
   const { restaurant } = item;
+  const ownStats = useOwnReviewStats(restaurant.id);
   
   return (
     <motion.div
@@ -59,15 +62,13 @@ function RestaurantCard({ item, index }: { item: CollectionRestaurant; index: nu
                 <h3 className="text-xl font-bold group-hover:text-primary transition-colors">
                   {restaurant.name}
                 </h3>
-                {restaurant.google_rating != null && Number(restaurant.google_rating) > 0 && (
-                  <div className="flex items-center gap-1 text-sm">
-                    <Star className="h-4 w-4 fill-rating text-rating" />
-                    <span className="font-semibold">{Number(restaurant.google_rating).toFixed(1)}</span>
-                    {Number(restaurant.google_reviews_count) > 0 && (
-                      <span className="text-muted-foreground">({restaurant.google_reviews_count})</span>
-                    )}
-                  </div>
-                )}
+                <RatingSummary
+                  googleRating={restaurant.google_rating}
+                  googleReviewsCount={restaurant.google_reviews_count}
+                  ownReviewCount={ownStats?.count}
+                  ownAverage={ownStats?.average}
+                />
+                
               </div>
 
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
