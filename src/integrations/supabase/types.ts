@@ -1619,6 +1619,24 @@ export type Database = {
         }
         Relationships: []
       }
+      internal_job_secrets: {
+        Row: {
+          created_at: string
+          name: string
+          secret: string
+        }
+        Insert: {
+          created_at?: string
+          name: string
+          secret?: string
+        }
+        Update: {
+          created_at?: string
+          name?: string
+          secret?: string
+        }
+        Relationships: []
+      }
       kaartlezer_nieuwe_dishes: {
         Row: {
           created_at: string | null
@@ -6437,6 +6455,7 @@ export type Database = {
         Returns: undefined
       }
       update_user_badges: { Args: { p_user_id: string }; Returns: undefined }
+      verify_cron_secret: { Args: { p_secret: string }; Returns: boolean }
     }
     Enums: {
       app_role: "user" | "owner" | "admin" | "moderator"
