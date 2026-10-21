@@ -48,7 +48,7 @@ serve(async (req) => {
     }
 
     const user = claims.user;
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    logStep("User authenticated", { userId: user.id });
 
     const { 
       restaurantId, 

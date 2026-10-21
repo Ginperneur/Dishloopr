@@ -54,7 +54,7 @@ serve(async (req) => {
     
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    logStep("User authenticated", { userId: user.id });
 
     // Verify user owns or is admin for this restaurant
     const { data: restaurant, error: restaurantError } = await supabaseClient
