@@ -3,4 +3,6 @@
 - [x] Invullen door geverifieerde eigenaar en beheerder; tonen op restaurantpagina.
 - [x] Weergave en parkeermogelijkheden getest (4 tests geslaagd).
 - [ ] Opslaan via ingelogd account controleren — geblokkeerd: geen previewsessie of account voor de aanvrager beschikbaar.
-- [ ] Claimen zonder sms: eindtest ingelogd (route A code + route B upload/goedkeuren) — wacht op inloggen in de preview
+- [x] Claimen zonder sms: eindtest beide routes
+- [ ] Claim-e-mails (code, goedgekeurd, afgewezen) komen niet aan: afzenderdomein dishloopr.com is niet geverifieerd bij de maildienst — wacht op gebruiker
+- [ ] 2 kleine testbewijsbestanden staan nog in de privé bewijsmap
