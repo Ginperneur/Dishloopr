@@ -14,6 +14,7 @@ import { isDutchLocale } from '@/lib/utils';
 import { isOpenNow } from '@/lib/openingHours';
 import { RatingSummary } from '@/components/restaurant/RatingSummary';
 import { useOwnReviewStats } from '@/hooks/useOwnReviewStats';
+import { optimizedImage, optimizedSrcSet, imgLoadingProps } from '@/lib/imageUrl';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 
@@ -30,6 +31,8 @@ interface DatabaseRestaurantCardProps {
   restaurant: RestaurantCardData;
   index?: number;
   isSponsored?: boolean;
+  /** Marks the card image as the LCP candidate (eager + high priority, no fade-in). */
+  priority?: boolean;
 }
 
 import { PRICE_LABELS, AMBIENCE_TAG_STYLES, AMBIENCE_TAG_I18N_KEYS } from '@/lib/constants';
@@ -38,32 +41,32 @@ function formatEuroNL(value: number): string {
   return `€${value.toFixed(2).replace('.', ',')}`;
 }
 
-function ImageWithFallback({ src, alt }: { src: string; alt: string }) {
-  const [failed, setFailed] = useState(false);
-  
-  if (failed) {
+function ImageWithFallback({ src, alt, priority = false }: { src: string; alt: string; priority?: boolean }) {
+  const [stage, setStage] = useState<0 | 1 | 2>(0);
+  if (stage === 2) {
     return (
       <div className="absolute inset-0 flex items-center justify-center">
         <ImageOff className="w-12 h-12 text-muted-foreground/40" />
       </div>
     );
   }
-
+  const optimized = stage === 0 ? optimizedImage(src, { width: 400 }) : src;
   return (
     <img
-      src={src}
+      src={optimized}
+      srcSet={stage === 0 ? optimizedSrcSet(src, 400) : undefined}
+      sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw"
       alt={alt}
-      width={640}
-      height={360}
-      loading="lazy"
-      decoding="async"
+      width={400}
+      height={250}
+      {...imgLoadingProps(priority)}
       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-      onError={() => setFailed(true)}
+      onError={() => setStage((s) => (s === 0 && optimized !== src ? 1 : 2))}
     />
   );
 }
 
-export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = false }: DatabaseRestaurantCardProps) {
+export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = false, priority = false }: DatabaseRestaurantCardProps) {
   const { t, i18n } = useTranslation();
   const isNl = isDutchLocale(i18n.language);
   const location = useLocation();
@@ -87,9 +90,9 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={priority || index < 2 ? false : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05, duration: 0.4 }}
+      transition={{ delay: Math.min(index, 6) * 0.05, duration: 0.4 }}
     >
       <Link
         to={`/restaurant/${restaurant.slug}`}
@@ -105,6 +108,7 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
             <ImageWithFallback
               src={restaurant.images![0]}
               alt={restaurant.name}
+              priority={priority}
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
