@@ -1,4 +1,6 @@
 # Parkeerinformatie
+- [x] Plan uitgewerkt voor sneller ophalen van gerecht×stad-pagina’s.
+- [ ] Snelheidsplan uitvoeren en opnieuw meten — wacht op goedkeuring van het plan.
 - [x] Parkeerinformatie opslaan met bestaande beveiliging.
 - [x] Invullen door geverifieerde eigenaar en beheerder; tonen op restaurantpagina.
 - [x] Weergave en parkeermogelijkheden getest (4 tests geslaagd).
