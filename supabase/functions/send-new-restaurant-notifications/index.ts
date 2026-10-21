@@ -1,6 +1,8 @@
 import { requireAdminOrInternal, serviceClient, escapeHtml } from "../_shared/auth.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
+const esc = (v: unknown) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" } as Record<string, string>)[c]);
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -157,16 +159,16 @@ const handler = async (req: Request): Promise<Response> => {
           </head>
           <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5;">
             <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-              ${restaurantImage ? `<img src="${restaurantImage}" alt="${typedRestaurant.name}" style="width: 100%; height: 200px; object-fit: cover;">` : ''}
+              ${restaurantImage ? `<img src="${esc(restaurantImage)}" alt="${esc(typedRestaurant.name)}" style="width: 100%; height: 200px; object-fit: cover;">` : ''}
               <div style="padding: 24px;">
-                <h1 style="color: #1a1a1a; font-size: 24px; margin: 0 0 8px;">Hoi ${typedProfile.name || 'foodie'}! 👋</h1>
+                <h1 style="color: #1a1a1a; font-size: 24px; margin: 0 0 8px;">Hoi ${esc(typedProfile.name || 'foodie')}! 👋</h1>
                 <p style="color: #666; font-size: 16px; margin: 0 0 20px;">Er is een nieuw restaurant dat perfect bij je smaak past!</p>
                 
                 <div style="background: #f8f8f8; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-                  <h2 style="color: #1a1a1a; font-size: 20px; margin: 0 0 8px;">${typedRestaurant.name}</h2>
-                  <p style="color: #666; margin: 0 0 4px;">📍 ${typedRestaurant.address}${cityData ? `, ${cityData.name}` : ''}</p>
-                  <p style="color: #666; margin: 0 0 4px;">🍴 ${cuisinesList}</p>
-                  ${ambienceList ? `<p style="color: #666; margin: 0;">✨ ${ambienceList}</p>` : ''}
+                  <h2 style="color: #1a1a1a; font-size: 20px; margin: 0 0 8px;">${esc(typedRestaurant.name)}</h2>
+                  <p style="color: #666; margin: 0 0 4px;">📍 ${esc(typedRestaurant.address)}${cityData ? `, ${esc(cityData.name)}` : ''}</p>
+                  <p style="color: #666; margin: 0 0 4px;">🍴 ${esc(cuisinesList)}</p>
+                  ${ambienceList ? `<p style="color: #666; margin: 0;">✨ ${esc(ambienceList)}</p>` : ''}
                 </div>
                 
                 <a href="${restaurantUrl}" style="display: inline-block; background: linear-gradient(135deg, #ff6b35, #ff8c5a); color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 16px;">
@@ -175,7 +177,7 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
               <div style="background: #f8f8f8; padding: 16px 24px; text-align: center;">
                 <p style="color: #999; font-size: 12px; margin: 0;">
-                  Je ontvangt deze email omdat je interesse hebt in ${cuisinesList} gerechten.<br>
+                  Je ontvangt deze email omdat je interesse hebt in ${esc(cuisinesList)} gerechten.<br>
                   <a href="${baseUrl}/profile" style="color: #ff6b35;">Beheer je voorkeuren</a>
                 </p>
               </div>

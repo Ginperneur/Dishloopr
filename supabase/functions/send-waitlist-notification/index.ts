@@ -2,6 +2,8 @@ import { requireAdminOrInternal, serviceClient, escapeHtml } from "../_shared/au
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+const esc = (v: unknown) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" } as Record<string, string>)[c]);
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -117,11 +119,11 @@ serve(async (req) => {
             <h1 style="color: #f97316; margin: 0;">🍽️ Dishloopr</h1>
           </div>
           
-          <h2 style="color: #1a1a1a;">Goed nieuws, ${ownerName}!</h2>
+          <h2 style="color: #1a1a1a;">Goed nieuws, ${esc(ownerName)}!</h2>
           
-          <p>Er is een <strong>premium uitgelichte plek</strong> vrijgekomen voor <strong>${slot.cuisine}</strong> restaurants in <strong>${cityName}</strong>.</p>
+          <p>Er is een <strong>premium uitgelichte plek</strong> vrijgekomen voor <strong>${esc(slot.cuisine)}</strong> restaurants in <strong>${esc(cityName)}</strong>.</p>
           
-          <p>Jouw restaurant <strong>${restaurant.name}</strong> stond op de wachtlijst en komt nu in aanmerking voor deze exclusieve zichtbaarheid!</p>
+          <p>Jouw restaurant <strong>${esc(restaurant.name)}</strong> stond op de wachtlijst en komt nu in aanmerking voor deze exclusieve zichtbaarheid!</p>
           
           <div style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
             <p style="color: white; margin: 0 0 8px 0; font-size: 14px;">Maandelijkse investering vanaf</p>
@@ -146,7 +148,7 @@ serve(async (req) => {
             <li>✨ Premium zichtbaarheid in zoekresultaten</li>
             <li>🏆 Uitgelicht badge op je restaurantpagina</li>
             <li>📊 Gedetailleerde analytics over views en clicks</li>
-            <li>🎯 Prioriteit in jouw categorie (${slot.cuisine})</li>
+            <li>🎯 Prioriteit in jouw categorie (${esc(slot.cuisine)})</li>
           </ul>
           
           <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">

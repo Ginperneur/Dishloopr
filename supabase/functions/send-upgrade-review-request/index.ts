@@ -1,5 +1,7 @@
 import { requireAdminOrInternal, serviceClient, escapeHtml } from "../_shared/auth.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const esc = (v: unknown) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" } as Record<string, string>)[c]);
+
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -34,10 +36,10 @@ function buildEmailHtml(opts: {
   restaurantName: string | null;
   kindLabel: string;
 }): string {
-  const greeting = opts.ownerName ? `Hi ${opts.ownerName}` : "Hi";
+  const greeting = opts.ownerName ? `Hi ${esc(opts.ownerName)}` : "Hi";
   const ctx = opts.restaurantName
-    ? `je <strong>${opts.kindLabel}</strong> voor <strong>${opts.restaurantName}</strong> is afgelopen`
-    : `je <strong>${opts.kindLabel}</strong> is afgelopen`;
+    ? `je <strong>${esc(opts.kindLabel)}</strong> voor <strong>${esc(opts.restaurantName)}</strong> is afgelopen`
+    : `je <strong>${esc(opts.kindLabel)}</strong> is afgelopen`;
 
   return `
   <div style="font-family: 'DM Sans', system-ui, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color:#1a1a1a;">
