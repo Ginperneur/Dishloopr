@@ -253,7 +253,9 @@ export default function SearchPage() {
   const searchReady = !loading && (!!dishQuery || cityParam !== 'all');
   const searchCity = cities.find(c => c.id === selectedCityId)?.name || '';
   useEffect(() => {
-    if (searchReady) sendAnalyticsEvent('search', { search_term: safeSearchTerm(dishQuery), city: searchCity, results_count: openNowFiltered.length });
+    if (!searchReady) return;
+    const timer = window.setTimeout(() => sendAnalyticsEvent('search', { search_term: safeSearchTerm(dishQuery), city: searchCity, results_count: openNowFiltered.length }), 500);
+    return () => window.clearTimeout(timer);
   }, [searchReady, dishQuery, searchCity, openNowFiltered.length]);
 
   useSearchLogger({

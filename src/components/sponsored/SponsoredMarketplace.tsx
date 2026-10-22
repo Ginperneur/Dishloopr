@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useSponsoredProducts, useSponsoredPurchases } from '@/hooks/useSponsoredProducts';
 import { toast } from 'sonner';
 import { CHECKOUT_ENABLED, COMING_SOON_LABEL } from '@/lib/checkoutFlags';
+import { sendAnalyticsEvent } from '@/lib/cookieConsent';
 
 interface SponsoredMarketplaceProps {
   restaurantId: string;
@@ -57,6 +58,7 @@ export function SponsoredMarketplace({ restaurantId, restaurantName }: Sponsored
 
   const handlePurchase = async () => {
     if (!selectedProduct) return;
+    sendAnalyticsEvent('click_package', { package: 'sponsored' });
 
     setPurchasing(true);
     const checkoutUrl = await purchaseSlot(selectedProduct.id, restaurantId, duration);

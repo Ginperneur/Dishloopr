@@ -32,6 +32,7 @@ export function AnalyticsTab({ analytics, restaurant, reviews }: AnalyticsTabPro
 
   const clickBreakdown = useMemo(() => [
     { name: 'Website', clicks: analytics?.websiteClicks || 0, fill: 'hsl(var(--primary))' },
+    { name: 'Route', clicks: analytics?.routeClicks || 0, fill: 'hsl(var(--primary))' },
     { name: 'Telefoon', clicks: analytics?.phoneClicks || 0, fill: 'hsl(var(--primary) / 0.7)' },
     { name: 'Reservering', clicks: analytics?.reservationClicks || 0, fill: 'hsl(var(--primary) / 0.4)' },
   ], [analytics]);
@@ -42,65 +43,11 @@ export function AnalyticsTab({ analytics, restaurant, reviews }: AnalyticsTabPro
 
   return (
     <div className="space-y-6">
-      {/* Views Area Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Weergaven per dag (laatste 30 dagen)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient id="viewsGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 12 }}
-                  className="fill-muted-foreground"
-                  interval="preserveStartEnd"
-                />
-                <YAxis
-                  tick={{ fontSize: 12 }}
-                  className="fill-muted-foreground"
-                  allowDecimals={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    fontSize: 13,
-                  }}
-                  labelStyle={{ color: 'hsl(var(--foreground))' }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="views"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  fill="url(#viewsGradient)"
-                  name="Weergaven"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          ) : (
-            <OwnerEmptyState
-              icon={LineChart}
-              title="Nog geen analytics-data"
-              description="Zodra gasten je profiel bekijken zie je hier dagelijkse weergaven, klikken en trends."
-            />
-          )}
-        </CardContent>
-      </Card>
-
+      <h3 className="font-semibold">Laatste 30 dagen</h3>
+      <div className="grid grid-cols-2 gap-4">
+        <div><p className="text-sm text-muted-foreground">Vertoningen in resultaten</p><p className="text-2xl font-bold">{analytics?.impressions ?? '—'}</p></div>
+        <div><p className="text-sm text-muted-foreground">Paginabezoeken</p><p className="text-2xl font-bold">{analytics?.totalViews ?? '—'}</p></div>
+      </div>
       <div className="grid md:grid-cols-2 gap-6">
         {/* Click Breakdown Bar Chart */}
         <Card>

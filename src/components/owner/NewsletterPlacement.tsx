@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Newspaper, CreditCard, Loader2, MapPin, Map, Globe2 } from 'lucide-react';
+import { sendAnalyticsEvent } from '@/lib/cookieConsent';
 
 interface Props {
   restaurantId: string;
@@ -75,6 +76,7 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
       return;
     }
     setSubmitting(true);
+    sendAnalyticsEvent('click_package', { package: 'newsletter' });
     try {
       const { data, error } = await supabase.functions.invoke('create-newsletter-checkout', {
         body: {

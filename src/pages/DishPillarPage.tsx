@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDishName, isDutchLocale } from '@/lib/utils';
 import NotFound from './NotFound';
+import { sendAnalyticsEvent } from '@/lib/cookieConsent';
 
 interface CityDishData {
   cityId: string;
@@ -29,6 +30,9 @@ export default function DishPillarPage() {
   const [relatedDishes, setRelatedDishes] = useState<{ name: string; slug: string; vertaling_nl: string | null }[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  useEffect(() => {
+    if (!loading && dish) sendAnalyticsEvent('view_dish_page', { dish: dish.slug, city: '', results_count: cityData.reduce((n, c) => n + c.restaurantCount, 0) });
+  }, [loading, dish?.slug]);
 
   useEffect(() => {
     if (!dishSlug) return;

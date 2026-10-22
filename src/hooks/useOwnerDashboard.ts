@@ -1,13 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
+import { summarizeMetrics } from '@/lib/metricRules';
 import type { Database } from '@/integrations/supabase/types';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type Review = Database['public']['Tables']['reviews']['Row'];
 
 export interface OwnerAnalytics {
+  impressions: number;
+  routeClicks: number;
+  topDishes: { dish: string; count: number }[];
   totalViews: number;
   totalClicks: number;
   websiteClicks: number;
@@ -29,6 +33,8 @@ export function useOwnerDashboard() {
   const [analytics, setAnalytics] = useState<OwnerAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [cityName, setCityName] = useState<string>('');
+  const selectedId = useRef<string>();
+  selectedId.current = selectedRestaurant?.id;
 
   useEffect(() => {
     if (user) {
@@ -38,6 +44,7 @@ export function useOwnerDashboard() {
 
   useEffect(() => {
     if (selectedRestaurant) {
+      setAnalytics(null);
       fetchRestaurantData(selectedRestaurant.id);
       fetchCityName(selectedRestaurant.city_id);
     }
@@ -120,6 +127,10 @@ export function useOwnerDashboard() {
   };
 
   const fetchRestaurantData = async (restaurantId: string) => {
+    const statsPromise = Promise.resolve(supabase.rpc('restaurant_stats_summary', { p_restaurant_id: restaurantId, p_days: 30 }))
+      .then(({ data, error }) => {
+        if (selectedId.current === restaurantId) setAnalytics(!error && data ? summarizeMetrics(data) : null);
+      }).catch(() => { if (selectedId.current === restaurantId) setAnalytics(null); });
     // Fetch reviews
     const { data: reviewData } = await supabase
       .from('reviews')
@@ -143,50 +154,8 @@ export function useOwnerDashboard() {
       })));
     }
 
-    // Fetch analytics
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    await statsPromise;
 
-    const { data: analyticsData } = await supabase
-      .from('analytics_events')
-      .select('*')
-      .eq('restaurant_id', restaurantId)
-      .gte('created_at', thirtyDaysAgo.toISOString());
-
-    if (analyticsData) {
-      const viewsByDay: { [date: string]: number } = {};
-      let totalViews = 0;
-      let totalClicks = 0;
-      let websiteClicks = 0;
-      let phoneClicks = 0;
-      let reservationClicks = 0;
-
-      analyticsData.forEach(event => {
-        const date = event.created_at.split('T')[0];
-        
-        if (event.event_type === 'view') {
-          totalViews++;
-          viewsByDay[date] = (viewsByDay[date] || 0) + 1;
-        } else if (event.event_type === 'click') {
-          totalClicks++;
-          const metadata = event.metadata as { type?: string } | null;
-          if (metadata?.type === 'website') websiteClicks++;
-          if (metadata?.type === 'phone') phoneClicks++;
-          if (metadata?.type === 'reservation') reservationClicks++;
-        }
-      });
-
-      setAnalytics({
-        totalViews,
-        totalClicks,
-        websiteClicks,
-        phoneClicks,
-        reservationClicks,
-        viewsByDay: Object.entries(viewsByDay)
-          .map(([date, count]) => ({ date, count }))
-          .sort((a, b) => a.date.localeCompare(b.date))
-      });
-    }
   };
 
   const respondToReview = async (reviewId: string, response: string) => {

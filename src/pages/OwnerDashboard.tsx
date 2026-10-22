@@ -7,6 +7,7 @@ import {
   MousePointer, 
   Globe, 
   Phone, 
+  MapPin,
   Star,
   MessageSquare,
   Store,
@@ -693,35 +694,44 @@ export default function OwnerDashboard() {
             <StatCard
               variant="primary"
               title="Profielweergaven (30d)"
-              value={analytics?.totalViews || 0}
+              value={analytics?.totalViews ?? '—'}
               icon={Eye}
-              trend={calculateTrend(analytics?.totalViews || 0)}
               sparkline={(analytics?.viewsByDay || []).map(d => d.count)}
             />
           </div>
           <StatCard
             title="Totale clicks"
-            value={analytics?.totalClicks || 0}
+            value={analytics?.totalClicks ?? '—'}
             icon={MousePointer}
-            trend={calculateTrend(analytics?.totalClicks || 0)}
             sparkline={(analytics?.viewsByDay || []).map(d => d.count)}
           />
           <div className="grid grid-cols-2 gap-3 md:gap-4 md:col-span-3 lg:col-span-1 lg:grid-cols-1">
             <StatCard
               title="Website"
-              value={isVerified ? (analytics?.websiteClicks || 0) : 0}
+              value={analytics?.websiteClicks ?? '—'}
               icon={Globe}
-              locked={!isVerified}
             />
             <StatCard
               title="Telefoon"
-              value={isVerified ? (analytics?.phoneClicks || 0) : 0}
+              value={analytics?.phoneClicks ?? '—'}
               icon={Phone}
-              locked={!isVerified}
             />
           </div>
         </motion.div>
 
+        <section className="mb-6 space-y-4">
+          <h2 className="font-semibold">Gevonden in de laatste 30 dagen</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <StatCard title="Vertoningen in resultaten" value={analytics?.impressions ?? '—'} icon={Eye} />
+            <StatCard title="Route" value={analytics?.routeClicks ?? '—'} icon={MapPin} />
+            <StatCard title="Reserveren" value={analytics?.reservationClicks ?? '—'} icon={MousePointer} />
+          </div>
+          <h3 className="font-medium">Top 5 gerechten</h3>
+          <ol className="divide-y divide-border">
+            {analytics?.topDishes.map(item => <li key={item.dish} className="flex justify-between py-2 text-sm"><span className="capitalize">{item.dish.replace(/-/g, ' ')}</span><span className="tabular-nums">{item.count}</span></li>)}
+          </ol>
+          {analytics && !analytics.topDishes.length && <p className="text-sm text-muted-foreground">Nog geen vertoningen op gerecht.</p>}
+        </section>
         {/* Profile completeness ring (after KPIs) */}
         {selectedRestaurant && (
           <ProfileCompletenessCard

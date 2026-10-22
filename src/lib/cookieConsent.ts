@@ -43,7 +43,7 @@ let currentChoice: CookieChoice | null = null;
 
 export function sendAnalyticsEvent(name: string, params: Record<string, string | number | boolean> = {}): void {
   if (!started || currentChoice !== 'accepted') return;
-  try { analyticsWindow().gtag?.('event', name, { ...params, ...(location.hostname === 'localhost' || location.hostname.includes('preview') ? { debug_mode: true } : {}) }); } catch { /* Analytics never interrupts the page. */ }
+  try { analyticsWindow().gtag?.('event', name, { ...params, page_location: `${location.origin}${location.pathname}`, page_referrer: '', ...(location.hostname === 'localhost' || location.hostname.includes('preview') ? { debug_mode: true } : {}) }); } catch { /* Analytics never interrupts the page. */ }
 }
 
 function analyticsWindow(): AnalyticsWindow { return window as AnalyticsWindow; }
@@ -74,7 +74,7 @@ function startAnalytics(): void {
   queue('consent', 'update', { analytics_storage: 'granted' });
   queue('set', 'developer_id.dZjgwMW', true);
   queue('js', new Date());
-  queue('config', measurementId);
+  queue('config', measurementId, { send_page_view: false, page_location: `${location.origin}${location.pathname}`, page_referrer: '', ...(location.hostname === 'localhost' || location.hostname.includes('preview') ? { debug_mode: true } : {}) });
   const script = document.createElement('script');
   script.id = 'dl-google-analytics';
   script.async = true;
