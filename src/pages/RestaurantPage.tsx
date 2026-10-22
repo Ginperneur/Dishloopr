@@ -53,6 +53,8 @@ import { useClickTracking } from '@/hooks/useClickTracking';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { RatingSummary } from '@/components/restaurant/RatingSummary';
 import { OWN_REVIEW_THRESHOLD } from '@/lib/ratingDisplay';
+import { trackRestaurantMetric } from '@/lib/restaurantMetrics';
+import { sendAnalyticsEvent } from '@/lib/cookieConsent';
 
 export default function RestaurantPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -133,10 +135,23 @@ export default function RestaurantPage() {
     }
   }, [restaurant, getUnavailabilityReason, latitude, longitude, findAlternatives]);
 
+  const stateContext = (location.state as { metricContext?: unknown } | null)?.metricContext;
+  const metricContext = typeof stateContext === 'string' && stateContext ? stateContext : 'zoek';
+  // Phone and route links are counted once by the shared click observer.
+  const trackCTA = (type: string) => {
+    trackCTAClick(type as Parameters<typeof trackCTAClick>[0]);
+    if (!restaurant || type === 'phone' || type === 'directions') return;
+    const reserve = type.startsWith('reservation');
+    trackRestaurantMetric(restaurant.id, reserve ? 'reserveren' : 'website', metricContext);
+    sendAnalyticsEvent(reserve ? 'click_reserve' : 'click_website', { restaurant_slug: restaurant.slug });
+  };
+
   // Track page view
   useEffect(() => {
     if (restaurant?.id) {
       trackPageView();
+      trackRestaurantMetric(restaurant.id, 'bekeken', metricContext);
+      sendAnalyticsEvent('view_restaurant', { restaurant_slug: restaurant.slug, city: restaurant.city?.name || '' });
     }
   }, [restaurant?.id, trackPageView]);
 
@@ -222,6 +237,7 @@ export default function RestaurantPage() {
 
   return (
     <Layout>
+      <div data-restaurant-profile={restaurant.id} data-restaurant-slug={restaurant.slug} data-metric-context={metricContext}>
       <SEOHead
         title={`${restaurant.name} - ${restaurant.cuisines?.slice(0, 2).join(' & ') || t('restaurant.metaTitleSuffix', 'Restaurant')} | Dishloopr`}
         description={t('restaurant.metaDescription', 'Bekijk {{name}} in {{city}}. {{cuisines}}{{reviewSuffix}}.', {
@@ -429,9 +445,10 @@ export default function RestaurantPage() {
                       hashtags={['dishloopr', ...(restaurant.cuisines || [])]}
                       variant="icon"
                       className="h-8 w-8"
+                      onShare={() => trackRestaurantMetric(restaurant.id, 'delen', metricContext)}
                     />
                     {restaurant.website_url && (
-                      <Button variant="outline" size="sm" onClick={() => trackCTAClick('website')} asChild>
+                      <Button variant="outline" size="sm" onClick={() => trackCTA('website')} asChild>
                         <a href={restaurant.website_url} target="_blank" rel="noopener noreferrer" className="gap-2">
                           <Globe className="h-4 w-4" />
                           <span className="hidden sm:inline">Website</span>
@@ -462,7 +479,7 @@ export default function RestaurantPage() {
               {/* CTA Buttons */}
               <div className="grid grid-cols-2 gap-2">
                 {hasDigitalReservation && reservationHref && (
-                  <Button className="col-span-2 bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" onClick={() => trackCTAClick('reservation')} asChild>
+                  <Button className="col-span-2 bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" onClick={() => trackCTA('reservation')} asChild>
                     <a href={reservationHref} target="_blank" rel="noopener noreferrer" className="gap-2">
                       <Calendar className="h-5 w-5" />
                       {t('restaurant.reserve')}
@@ -470,7 +487,7 @@ export default function RestaurantPage() {
                   </Button>
                 )}
                 {restaurant.phone && (
-                  <Button variant="outline" size="default" onClick={() => trackCTAClick('phone')} asChild>
+                  <Button variant="outline" size="default" onClick={() => trackCTA('phone')} asChild>
                     <a href={`tel:${restaurant.phone}`}>
                       <Phone className="h-4 w-4 mr-1.5" />
                       {t('openingHours.callNow')}
@@ -478,7 +495,7 @@ export default function RestaurantPage() {
                   </Button>
                 )}
                 {restaurant.geo_lat && restaurant.geo_lng && (
-                  <Button variant="outline" size="default" onClick={() => trackCTAClick('directions')} asChild>
+                  <Button variant="outline" size="default" onClick={() => trackCTA('directions')} asChild>
                     <a 
                       href={`https://www.google.com/maps/dir/?api=1&destination=${restaurant.geo_lat},${restaurant.geo_lng}`}
                       target="_blank"
@@ -621,14 +638,14 @@ export default function RestaurantPage() {
                 phone={restaurant.phone}
                 googleMapsUrl={googleMapsUrl}
                 googlePlaceId={restaurant.google_place_id}
-                onClickTrack={trackCTAClick}
+                onClickTrack={trackCTA}
               />
 
               {/* Website & Contact Card */}
               <div className="p-6 rounded-2xl border border-border bg-card">
                 <div className="space-y-3">
                   {restaurant.website_url && (
-                    <Button variant="outline" className="w-full" size="lg" onClick={() => trackCTAClick('website')} asChild>
+                    <Button variant="outline" className="w-full" size="lg" onClick={() => trackCTA('website')} asChild>
                       <a href={restaurant.website_url} target="_blank" rel="noopener noreferrer">
                         <Globe className="h-4 w-4 mr-2" />
                         {t('restaurant.website')}
@@ -638,7 +655,7 @@ export default function RestaurantPage() {
 
                   <div className="grid grid-cols-2 gap-3">
                     {restaurant.phone && (
-                      <Button variant="outline" onClick={() => trackCTAClick('phone')} asChild>
+                      <Button variant="outline" onClick={() => trackCTA('phone')} asChild>
                         <a href={`tel:${restaurant.phone}`}>
                           <Phone className="h-4 w-4 mr-2" />
                           {t('restaurant.call')}
@@ -646,7 +663,7 @@ export default function RestaurantPage() {
                       </Button>
                     )}
                     {restaurant.geo_lat && restaurant.geo_lng && (
-                      <Button variant="outline" onClick={() => trackCTAClick('directions')} asChild>
+                      <Button variant="outline" onClick={() => trackCTA('directions')} asChild>
                         <a 
                           href={`https://www.google.com/maps/dir/?api=1&destination=${restaurant.geo_lat},${restaurant.geo_lng}`}
                           target="_blank"
@@ -706,14 +723,14 @@ export default function RestaurantPage() {
       {hasReservation && (
         <div className="fixed left-0 right-0 z-40 lg:hidden bg-background/95 backdrop-blur border-t border-border p-3 safe-area-bottom" style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))' }}>
           {hasDigitalReservation && reservationHref ? (
-            <Button className="w-full bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" onClick={() => trackCTAClick('reservation')} asChild>
+            <Button className="w-full bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" onClick={() => trackCTA('reservation')} asChild>
               <a href={reservationHref} target="_blank" rel="noopener noreferrer" className="gap-2">
                 <Calendar className="h-5 w-5" />
                 {t('restaurant.reserve')}
               </a>
             </Button>
           ) : restaurant.phone ? (
-            <Button className="w-full bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" onClick={() => trackCTAClick('phone')} asChild>
+            <Button className="w-full bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" onClick={() => trackCTA('phone')} asChild>
               <a href={`tel:${restaurant.phone}`} className="gap-2">
                 <Phone className="h-5 w-5" />
                 {t('restaurant.callToReserve', 'Bel om te reserveren')}
@@ -727,6 +744,7 @@ export default function RestaurantPage() {
         <Link to={`/claim/${restaurant.slug}`} className="underline hover:text-foreground">Claim</Link>{' of '}
         <Link to={`/voor-restaurants/afmelden?slug=${encodeURIComponent(restaurant.slug)}&naam=${encodeURIComponent(restaurant.name)}`} className="underline hover:text-foreground">laat dit aanpassen</Link>
       </p>
+      </div>
     </Layout>
   );
 }

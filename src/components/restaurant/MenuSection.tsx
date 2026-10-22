@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Toggle } from '@/components/ui/toggle';
 import { formatDishName, isDutchLocale } from '@/lib/utils';
 import { tTaxonomy } from '@/lib/i18n/taxonomy';
+import { trackRestaurantMetric } from '@/lib/restaurantMetrics';
 
 const COURSE_EMOJI_KEY: Record<CourseType, string> = {
   borrel: 'taxonomy.course.borrelEmoji',
@@ -92,6 +93,7 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
     const el = categoryRefs.current[category];
     const topBefore = el ? el.getBoundingClientRect().top : null;
 
+    if (expandedCategory !== category) trackRestaurantMetric(restaurantId, 'menu', document.querySelector<HTMLElement>('[data-restaurant-profile]')?.dataset.metricContext || 'zoek');
     setExpandedCategory(prev => (prev === category ? null : category));
 
     // After the collapse/expand animation settles, restore the clicked

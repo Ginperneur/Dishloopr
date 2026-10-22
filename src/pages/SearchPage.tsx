@@ -27,6 +27,8 @@ import { toast } from 'sonner';
 import { useSavedSearches } from '@/hooks/useSavedSearches';
 import { slugify } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { sendAnalyticsEvent } from '@/lib/cookieConsent';
+import { safeSearchTerm } from '@/lib/metricRules';
 
 // Lazy load the map component
 const RestaurantMap = lazy(() => import('@/components/map/RestaurantMap').then(m => ({ default: m.RestaurantMap })));
@@ -247,6 +249,12 @@ export default function SearchPage() {
         return 0; // Keep original order (best match from search)
     }
   });
+
+  const searchReady = !loading && (!!dishQuery || cityParam !== 'all');
+  const searchCity = cities.find(c => c.id === selectedCityId)?.name || '';
+  useEffect(() => {
+    if (searchReady) sendAnalyticsEvent('search', { search_term: safeSearchTerm(dishQuery), city: searchCity, results_count: openNowFiltered.length });
+  }, [searchReady, dishQuery, searchCity, openNowFiltered.length]);
 
   useSearchLogger({
     source: 'search',

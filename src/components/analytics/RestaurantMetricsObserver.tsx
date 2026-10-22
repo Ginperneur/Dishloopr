@@ -37,11 +37,11 @@ export function RestaurantMetricsObserver() {
       }
       // Covers secondary contact links that aren't wired to the primary CTA callback.
       const profile = target?.closest<HTMLElement>('[data-restaurant-profile]');
-      if (profile && !target?.closest('[data-tracked-cta]')) {
+      if (profile) {
         const href = link?.getAttribute('href') || '';
         let metric: RestaurantMetric | undefined;
         if (href.startsWith('tel:')) metric = 'telefoon';
-        else if (/google\.com\/maps/.test(href)) metric = 'route';
+        else if (/google\.com\/maps\/(dir|search)/.test(href)) metric = 'route';
         if (metric) {
           trackRestaurantMetric(profile.dataset.restaurantProfile || '', metric, profile.dataset.metricContext || 'zoek');
           sendAnalyticsEvent(metric === 'telefoon' ? 'click_phone' : 'click_route', { restaurant_slug: profile.dataset.restaurantSlug || '' });

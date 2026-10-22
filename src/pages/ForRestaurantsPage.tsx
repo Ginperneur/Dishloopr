@@ -31,10 +31,13 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { sendAnalyticsEvent } from '@/lib/cookieConsent';
 
 export default function ForRestaurantsPage() {
   const { t } = useTranslation();
   const [restaurantCount, setRestaurantCount] = useState<number | null>(null);
+
+  useEffect(() => { sendAnalyticsEvent('view_packages'); }, []);
 
   useEffect(() => {
     supabase
@@ -249,7 +252,7 @@ export default function ForRestaurantsPage() {
                       <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> 1 gratis profiel-tag per categorie</li>
                     </ul>
                     <Button asChild variant="outline" className="w-full">
-                      <Link to="/claim">Claim je restaurant</Link>
+                      <Link to="/claim" onClick={() => sendAnalyticsEvent('click_package', { package: 'gratis' })}>Claim je restaurant</Link>
                     </Button>
                   </CardContent>
                 </Card>

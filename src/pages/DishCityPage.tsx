@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import { sendAnalyticsEvent } from '@/lib/cookieConsent';
 import { useSearchLogger } from '@/lib/searchLog';
 import { useParams, Link, Navigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -61,6 +62,11 @@ export default function DishCityPage() {
     resultsCount: visibleRestaurants.length,
     ready: !loading && !resultsLoading && !error && !!page,
   });
+
+  const dishReady = !loading && !resultsLoading && !error && !!page;
+  useEffect(() => {
+    if (dishReady) sendAnalyticsEvent('view_dish_page', { dish: page?.dish?.slug || slug || '', city: page?.city?.name || '', results_count: visibleRestaurants.length });
+  }, [dishReady, page?.dish?.slug, page?.city?.name, slug, visibleRestaurants.length]);
 
   const hasQueryParams = location.search && location.search.length > 1;
   // Facet pages need >=3 matching restaurants to be indexable.
@@ -185,6 +191,7 @@ export default function DishCityPage() {
         noindex={noindex}
         structuredData={structuredData}
       />
+      <div hidden data-metric-context={page.dish?.slug || page.slug} />
 
       {/* Breadcrumb */}
       <div className="container px-4 md:px-6 pt-4">
