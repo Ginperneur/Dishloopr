@@ -1,5 +1,7 @@
 # Parkeerinformatie
-- [ ] Tweelaagse meting: cookievrije impressies en acties, echte 30-dagen eigenaarcijfers, GA-events na toestemming; previewcontrole.
+- [x] Tweelaagse meting gebouwd: cookievrije impressies en acties opgeslagen; 30-dagen eigenaarcijfers gekoppeld; GA debug-events na toestemming verzonden; 12 tests geslaagd.
+- [ ] Eigenaarsdashboard ingelogd controleren — geen app-account gevonden voor de aanvrager; aanmelden in preview nodig.
+- [ ] GA4 DebugView-weergave controleren — debug-events aantoonbaar verzonden, geen toegang tot de GA4-beheerweergave.
 - [x] Cookiekeuze hersteld: 6 tests geslaagd; verse browsersessies bevestigen geen Analytics vóór keuze/bij necessary, cookies na accepteren, bewaren met datum, footerinstellingen en intrekken/sluiten.
 - [x] Plan uitgewerkt voor sneller ophalen van gerecht×stad-pagina’s.
 - [x] Snelheidsplan uitgevoerd: afzonderlijke tekst, stadsgebonden selectie, parallelle paginering en filtercache; 12 tests geslaagd, vier selecties identiek, mobiele weergave en SEO gecontroleerd.

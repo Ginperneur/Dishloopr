@@ -127,6 +127,10 @@ export function useOwnerDashboard() {
   };
 
   const fetchRestaurantData = async (restaurantId: string) => {
+    const statsPromise = Promise.resolve(supabase.rpc('restaurant_stats_summary', { p_restaurant_id: restaurantId, p_days: 30 }))
+      .then(({ data, error }) => {
+        if (selectedId.current === restaurantId) setAnalytics(!error && data ? summarizeMetrics(data) : null);
+      }).catch(() => { if (selectedId.current === restaurantId) setAnalytics(null); });
     // Fetch reviews
     const { data: reviewData } = await supabase
       .from('reviews')
@@ -150,11 +154,7 @@ export function useOwnerDashboard() {
       })));
     }
 
-    const { data: metrics, error: metricsError } = await supabase.rpc('restaurant_stats_summary', { p_restaurant_id: restaurantId, p_days: 30 });
-    if (selectedId.current === restaurantId) {
-      if (!metricsError && metrics) setAnalytics(summarizeMetrics(metrics));
-      else setAnalytics(null);
-    }
+    await statsPromise;
 
   };
 
