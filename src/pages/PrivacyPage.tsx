@@ -26,7 +26,7 @@ export default function PrivacyPage() {
           <address className="not-italic text-muted-foreground mb-8 leading-relaxed">
             <strong className="text-foreground">Dishloopr</strong><br />
             KvK: 82000611<br />
-            Vestigingsadres: [INVULLEN]<br />
+            Vestigingsadres: Hoogstraat 44, Goirle<br />
             <a href="mailto:info@dishloopr.com" className="text-primary hover:underline">info@dishloopr.com</a>
           </address>
           

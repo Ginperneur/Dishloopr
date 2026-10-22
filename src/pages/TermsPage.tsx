@@ -26,7 +26,7 @@ export default function TermsPage() {
           <address className="not-italic text-muted-foreground mb-8 leading-relaxed">
             <strong className="text-foreground">Dishloopr</strong><br />
             KvK: 82000611<br />
-            Vestigingsadres: [INVULLEN]<br />
+            Vestigingsadres: Hoogstraat 44, Goirle<br />
             <a href="mailto:info@dishloopr.com" className="text-primary hover:underline">info@dishloopr.com</a>
           </address>
           
@@ -121,7 +121,7 @@ export default function TermsPage() {
                   <strong>Founding Partner.</strong> Een uitgelichte plek op één gerechtpagina, altijd gemarkeerd
                   als ‘Uitgelicht’. Wij geven geen garantie op aantallen bezoekers. De prijs blijft vast zolang
                   het abonnement doorloopt. Facturering start op de launchdatum. Gaat de launch niet door vóór
-                  [DATUM], dan ontvang je een volledige terugbetaling. Een maandabonnement is maandelijks
+                  31 maart 2027, dan ontvang je een volledige terugbetaling. Een maandabonnement is maandelijks
                   opzegbaar; een jaarabonnement loopt het jaar uit. Dishloopr mag misleidende plaatsingen
                   weigeren of beëindigen.
                 </li>
@@ -132,7 +132,7 @@ export default function TermsPage() {
                 </li>
                 <li>
                   <strong>Betaling en facturen.</strong> Betaling verloopt via Stripe. Facturen worden per e-mail
-                  verstuurd. Bedragen zijn [INCLUSIEF/EXCLUSIEF] btw.
+                  verstuurd. Bedragen zijn exclusief btw.
                 </li>
                 <li>
                   <strong>Zakelijke aansprakelijkheid.</strong> De aansprakelijkheid van Dishloopr tegenover
