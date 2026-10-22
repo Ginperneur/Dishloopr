@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
@@ -33,6 +33,8 @@ export function useOwnerDashboard() {
   const [analytics, setAnalytics] = useState<OwnerAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [cityName, setCityName] = useState<string>('');
+  const selectedId = useRef<string>();
+  selectedId.current = selectedRestaurant?.id;
 
   useEffect(() => {
     if (user) {
@@ -149,8 +151,10 @@ export function useOwnerDashboard() {
     }
 
     const { data: metrics, error: metricsError } = await supabase.rpc('restaurant_stats_summary', { p_restaurant_id: restaurantId, p_days: 30 });
-    if (!metricsError && metrics) setAnalytics(summarizeMetrics(metrics));
-    else setAnalytics(null);
+    if (selectedId.current === restaurantId) {
+      if (!metricsError && metrics) setAnalytics(summarizeMetrics(metrics));
+      else setAnalytics(null);
+    }
 
   };
 

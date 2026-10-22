@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { CHECKOUT_ENABLED, COMING_SOON_LABEL, COMING_SOON_TOAST } from '@/lib/checkoutFlags';
+import { sendAnalyticsEvent } from '@/lib/cookieConsent';
 
 const VALID_CUISINES = [
   "Italiaans", "Japans", "Chinees", "Indiaas", "Mexicaans", "Thais", "Grieks",
@@ -79,6 +80,7 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
   };
 
   const handleAddPaidTag = async (categoryKey: string, dbField: string, tagValue: string) => {
+    sendAnalyticsEvent('click_package', { package: 'extra_tag' });
     if (!user) return;
     if (!CHECKOUT_ENABLED.tag) {
       toast.info(COMING_SOON_TOAST);

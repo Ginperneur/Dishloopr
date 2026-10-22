@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { ProBillingInterval } from '@/lib/proPricing';
 import { CHECKOUT_ENABLED, COMING_SOON_TOAST } from '@/lib/checkoutFlags';
+import { sendAnalyticsEvent } from '@/lib/cookieConsent';
 
 export function useOwnerProCheckout() {
   const [loading, setLoading] = useState<ProBillingInterval | null>(null);
@@ -11,6 +12,7 @@ export function useOwnerProCheckout() {
   const queryClient = useQueryClient();
 
   const startCheckout = async (interval: ProBillingInterval = 'monthly') => {
+    sendAnalyticsEvent('click_package', { package: 'owner_pro' });
     if (!CHECKOUT_ENABLED.pro) {
       toast.info(COMING_SOON_TOAST);
       return;
