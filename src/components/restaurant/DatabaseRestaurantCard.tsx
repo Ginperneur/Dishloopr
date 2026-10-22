@@ -1,4 +1,5 @@
 import { logSearchClick } from '@/lib/searchLog';
+import { metricContext } from '@/lib/metricRules';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
@@ -90,13 +91,15 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
 
   return (
     <motion.div
+      data-restaurant-id={restaurant.id}
+      data-position={index + 1}
       initial={priority || index < 2 ? false : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index, 6) * 0.05, duration: 0.4 }}
     >
       <Link
         to={`/restaurant/${restaurant.slug}`}
-        state={location.pathname === '/search' ? { from: `${location.pathname}${location.search}${location.hash}` } : undefined}
+        state={{ from: `${location.pathname}${location.search}${location.hash}`, metricContext: document.querySelector<HTMLElement>('[data-metric-context]')?.dataset.metricContext || metricContext(location.pathname, location.search) }}
         onClick={() => logSearchClick(restaurant.id)}
         className={`block restaurant-card rounded-2xl overflow-hidden group ${
           isFeatured ? 'ring-2 ring-primary/20' : ''

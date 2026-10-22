@@ -39,6 +39,12 @@ type AnalyticsWindow = Window & {
 
 let measurementId = '';
 let started = false;
+let currentChoice: CookieChoice | null = null;
+
+export function sendAnalyticsEvent(name: string, params: Record<string, string | number | boolean> = {}): void {
+  if (!started || currentChoice !== 'accepted') return;
+  try { analyticsWindow().gtag?.('event', name, { ...params, ...(location.hostname === 'localhost' || location.hostname.includes('preview') ? { debug_mode: true } : {}) }); } catch { /* Analytics never interrupts the page. */ }
+}
 
 function analyticsWindow(): AnalyticsWindow { return window as AnalyticsWindow; }
 
@@ -80,11 +86,13 @@ export function initializeCookieAnalytics(id: string | undefined): void {
   measurementId = id ?? '';
   analyticsWindow().dataLayer = analyticsWindow().dataLayer || [];
   queue('consent', 'default', DENIED_CONSENT);
-  if (getCookieConsent() === 'accepted') startAnalytics();
+  currentChoice = getCookieConsent();
+  if (currentChoice === 'accepted') startAnalytics();
   else clearAnalyticsCookies();
 }
 
 export function chooseCookies(choice: CookieChoice): void {
+  currentChoice = choice;
   try { persistCookieChoice(localStorage, choice); } catch { /* Storage access can throw. */ }
   if (choice === 'accepted') {
     startAnalytics();

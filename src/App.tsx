@@ -14,6 +14,7 @@ import { AfterIdle } from "@/components/util/AfterIdle";
 const OnboardingDialog = lazy(() => import("@/components/onboarding/OnboardingDialog").then((m) => ({ default: m.OnboardingDialog })));
 import { CookieConsent } from "@/components/legal/CookieConsent";
 import { ConfirmProvider } from "@/components/ui/confirm-dialog";
+import { RestaurantMetricsObserver } from '@/components/analytics/RestaurantMetricsObserver';
 
 // Eagerly load critical routes
 import Index from "./pages/Index";
@@ -97,6 +98,7 @@ const App = () => (
               <Toaster />
               <Sonner />
               <BrowserRouter>
+                <RestaurantMetricsObserver />
                 <Suspense fallback={<PageLoader />}>
                   <CookieConsent />
                   <AfterIdle><OnboardingDialog /></AfterIdle>
