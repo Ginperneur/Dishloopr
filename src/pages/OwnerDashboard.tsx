@@ -7,6 +7,7 @@ import {
   MousePointer, 
   Globe, 
   Phone, 
+  MapPin,
   Star,
   MessageSquare,
   Store,
@@ -693,14 +694,14 @@ export default function OwnerDashboard() {
             <StatCard
               variant="primary"
               title="Profielweergaven (30d)"
-              value={analytics?.totalViews || 0}
+              value={analytics?.totalViews ?? '—'}
               icon={Eye}
               sparkline={(analytics?.viewsByDay || []).map(d => d.count)}
             />
           </div>
           <StatCard
             title="Totale clicks"
-            value={analytics?.totalClicks || 0}
+            value={analytics?.totalClicks ?? '—'}
             icon={MousePointer}
             sparkline={(analytics?.viewsByDay || []).map(d => d.count)}
           />
@@ -727,7 +728,7 @@ export default function OwnerDashboard() {
           </div>
           <h3 className="font-medium">Top 5 gerechten</h3>
           <ol className="divide-y divide-border">
-            {analytics?.topDishes.map(item => <li key={item.dish} className="flex justify-between py-2 text-sm"><span className="capitalize">{item.dish.replaceAll('-', ' ')}</span><span className="tabular-nums">{item.count}</span></li>)}
+            {analytics?.topDishes.map(item => <li key={item.dish} className="flex justify-between py-2 text-sm"><span className="capitalize">{item.dish.replace(/-/g, ' ')}</span><span className="tabular-nums">{item.count}</span></li>)}
           </ol>
           {analytics && !analytics.topDishes.length && <p className="text-sm text-muted-foreground">Nog geen vertoningen op gerecht.</p>}
         </section>

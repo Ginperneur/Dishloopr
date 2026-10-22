@@ -43,7 +43,7 @@ let currentChoice: CookieChoice | null = null;
 
 export function sendAnalyticsEvent(name: string, params: Record<string, string | number | boolean> = {}): void {
   if (!started || currentChoice !== 'accepted') return;
-  try { analyticsWindow().gtag?.('event', name, { ...params, ...(location.hostname === 'localhost' || location.hostname.includes('preview') ? { debug_mode: true } : {}) }); } catch { /* Analytics never interrupts the page. */ }
+  try { analyticsWindow().gtag?.('event', name, { ...params, page_location: `${location.origin}${location.pathname}`, page_referrer: '', ...(location.hostname === 'localhost' || location.hostname.includes('preview') ? { debug_mode: true } : {}) }); } catch { /* Analytics never interrupts the page. */ }
 }
 
 function analyticsWindow(): AnalyticsWindow { return window as AnalyticsWindow; }
