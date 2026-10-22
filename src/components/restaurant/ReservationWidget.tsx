@@ -226,7 +226,7 @@ export function ReservationWidget({
       {zenchefId && widgetLoaded && reservationUrl && (
         <div className="mt-4 pt-4 border-t border-border">
           <Button variant="outline" size="sm" className="w-full" asChild>
-            <a href={reservationUrl} target="_blank" rel="noopener noreferrer">
+            <a href={reservationUrl} target="_blank" rel="noopener noreferrer" onClick={() => onClickTrack?.('reservation')}>
               <ExternalLink className="h-3 w-3 mr-2" />
               Reserveer via website
             </a>

@@ -104,6 +104,8 @@ export function AlternativeRestaurants({
           {alternatives.map((restaurant, index) => (
             <motion.div
               key={restaurant.id}
+              data-restaurant-id={restaurant.id}
+              data-position={index + 1}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.1 }}

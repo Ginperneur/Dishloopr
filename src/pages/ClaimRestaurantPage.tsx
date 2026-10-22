@@ -80,8 +80,9 @@ export default function ClaimRestaurantPage() {
 
   const ensureClaim = async (claimRoute: 'email' | 'manual') => {
     if (claimId) return claimId;
-    sendAnalyticsEvent('claim_start', { restaurant_slug: restaurant!.slug, route: claimRoute });
-    const r = await call({ action: 'start_claim', restaurantId: restaurant!.id });
+    if (!restaurant) throw new Error('Restaurant niet gevonden');
+    sendAnalyticsEvent('claim_start', { restaurant_slug: restaurant.slug, route: claimRoute });
+    const r = await call({ action: 'start_claim', restaurantId: restaurant.id });
     setClaimId(r.claimId);
     return r.claimId as string;
   };
@@ -101,7 +102,7 @@ export default function ClaimRestaurantPage() {
     try {
       await call({ action: 'verify_domain_code', claimId, code });
       setRoute('done');
-      sendAnalyticsEvent('claim_submitted', { restaurant_slug: restaurant!.slug, route: 'email' });
+      sendAnalyticsEvent('claim_submitted', { restaurant_slug: restaurant?.slug || '', route: 'email' });
       toast.success('Gelukt! Je bent nu de geverifieerde eigenaar.');
       setTimeout(() => navigate('/owner-dashboard?welcome=1'), 1200);
     } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
@@ -121,7 +122,7 @@ export default function ClaimRestaurantPage() {
         paths.push(path);
       }
       await call({ action: 'submit_manual', claimId: id, files: paths, fullName, jobTitle, phone });
-      sendAnalyticsEvent('claim_submitted', { restaurant_slug: restaurant!.slug, route: 'manual' });
+      sendAnalyticsEvent('claim_submitted', { restaurant_slug: restaurant?.slug || '', route: 'manual' });
       setRoute('pending');
     } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
   };
