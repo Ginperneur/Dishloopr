@@ -22,7 +22,13 @@ export default function PrivacyPage() {
           className="max-w-3xl mx-auto"
         >
           <h1 className="text-4xl font-bold mb-2">Privacybeleid</h1>
-          <p className="text-sm text-muted-foreground mb-8">Laatst bijgewerkt: 21 oktober 2026</p>
+          <p className="text-sm text-muted-foreground mb-6">Laatst bijgewerkt: 22 oktober 2026</p>
+          <address className="not-italic text-muted-foreground mb-8 leading-relaxed">
+            <strong className="text-foreground">Dishloopr</strong><br />
+            KvK: 82000611<br />
+            Vestigingsadres: [INVULLEN]<br />
+            <a href="mailto:info@dishloopr.com" className="text-primary hover:underline">info@dishloopr.com</a>
+          </address>
           
           <div className="prose prose-lg dark:prose-invert max-w-none space-y-8">
             <section>
@@ -37,9 +43,9 @@ export default function PrivacyPage() {
             <section>
               <h2 className="text-2xl font-semibold mb-4">1a. Verwerkingsverantwoordelijke</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Verwerkingsverantwoordelijke in de zin van de AVG is Dishloopr, gevestigd in Nederland (KvK-nummer: [KvK-nummer], vestigingsadres: [vestigingsadres]).
+                Verwerkingsverantwoordelijke in de zin van de AVG is Dishloopr. De bedrijfsgegevens staan bovenaan dit beleid.
                 Voor vragen of verzoeken kun je contact opnemen via{' '}
-                <a href="mailto:privacy@dishloopr.com" className="text-primary hover:underline">privacy@dishloopr.com</a>.
+                <a href="mailto:info@dishloopr.com" className="text-primary hover:underline">info@dishloopr.com</a>.
               </p>
             </section>
 

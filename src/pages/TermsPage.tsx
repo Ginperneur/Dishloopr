@@ -22,7 +22,13 @@ export default function TermsPage() {
           className="max-w-3xl mx-auto"
         >
           <h1 className="text-4xl font-bold mb-2">Algemene Voorwaarden</h1>
-          <p className="text-sm text-muted-foreground mb-8">Laatst bijgewerkt: 4 mei 2026</p>
+          <p className="text-sm text-muted-foreground mb-6">Laatst bijgewerkt: 22 oktober 2026</p>
+          <address className="not-italic text-muted-foreground mb-8 leading-relaxed">
+            <strong className="text-foreground">Dishloopr</strong><br />
+            KvK: 82000611<br />
+            Vestigingsadres: [INVULLEN]<br />
+            <a href="mailto:info@dishloopr.com" className="text-primary hover:underline">info@dishloopr.com</a>
+          </address>
           
           <div className="prose prose-lg dark:prose-invert max-w-none space-y-8">
             <section>
@@ -39,6 +45,8 @@ export default function TermsPage() {
                 Dishloopr is een platform dat gebruikers helpt restaurants te vinden op basis van specifieke gerechten. 
                 Wij bieden een zoekmachine, reviews en informatie over restaurants. De informatie op ons platform is 
                 met zorg samengesteld, maar wij garanderen niet de volledigheid of juistheid ervan.
+                Menukaarten en prijzen komen deels uit openbare bronnen en kunnen verouderd zijn.
+                Vraag allergeneninformatie altijd na bij het restaurant.
               </p>
             </section>
 
@@ -56,14 +64,18 @@ export default function TermsPage() {
                 Bij het plaatsen van reviews verleen je Dishloopr het recht deze te publiceren en te gebruiken. 
                 Reviews moeten eerlijk, respectvol en relevant zijn. Wij behouden het recht om reviews te verwijderen 
                 die niet aan onze richtlijnen voldoen.
+                Onrechtmatige inhoud kun je melden via{' '}
+                <a href="mailto:info@dishloopr.com" className="text-primary hover:underline">info@dishloopr.com</a>.
+                Wij beoordelen meldingen binnen 5 werkdagen.
               </p>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold mb-4">5. Restauranteigenaren</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Restauranteigenaren kunnen hun restaurant claimen en beheren via ons platform. 
-                Voor premium listings en advertenties gelden aanvullende voorwaarden en tarieven.
+                Restauranteigenaren kunnen hun restaurant gratis claimen en beheren via ons platform.
+                Voor betaalde pakketten gelden aanvullende voorwaarden en tarieven, waaronder het artikel
+                ‘Betaalde diensten voor restaurants’ hieronder.
               </p>
             </section>
 
@@ -87,11 +99,10 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-semibold mb-4">7a. Herroepingsrecht (consumenten)</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Consumenten in de EU hebben in principe 14 dagen herroepingsrecht bij online aankopen.
-                Bij betaalde digitale diensten (zoals premium-listings, claim-verificatie en nieuwsbriefcampagnes)
-                start de dienst direct na betaling op jouw uitdrukkelijk verzoek; je doet daarmee afstand van het
-                herroepingsrecht voor reeds geleverde dienstdelen. Reeds gepubliceerde plaatsingen en verstuurde
-                campagnes worden niet gerestitueerd.
+                Claimen is gratis. Betaalde pakketten, zoals Founding Partner en Menuservice, worden aan
+                restaurants aangeboden als zakelijke overeenkomsten. Voor deze zakelijke overeenkomsten
+                geldt geen herroepingsrecht. Het wettelijke herroepingsrecht geldt uitsluitend voor consumenten;
+                zij hebben bij overeenkomsten op afstand in beginsel 14 dagen bedenktijd, behoudens wettelijke uitzonderingen.
               </p>
             </section>
 
@@ -99,10 +110,35 @@ export default function TermsPage() {
               <h2 className="text-2xl font-semibold mb-4">7b. Toepasselijk recht en geschillen</h2>
               <p className="text-muted-foreground leading-relaxed">
                 Op deze voorwaarden is Nederlands recht van toepassing. Geschillen worden voorgelegd aan de
-                bevoegde rechter in Nederland, tenzij dwingend consumentenrecht anders bepaalt. Consumenten
-                kunnen ook gebruik maken van het ODR-platform van de Europese Commissie
-                (ec.europa.eu/consumers/odr).
+                bevoegde rechter in Nederland, tenzij dwingend consumentenrecht anders bepaalt.
               </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4">7c. Betaalde diensten voor restaurants</h2>
+              <ol className="text-muted-foreground space-y-4 leading-relaxed">
+                <li>
+                  <strong>Founding Partner.</strong> Een uitgelichte plek op één gerechtpagina, altijd gemarkeerd
+                  als ‘Uitgelicht’. Wij geven geen garantie op aantallen bezoekers. De prijs blijft vast zolang
+                  het abonnement doorloopt. Facturering start op de launchdatum. Gaat de launch niet door vóór
+                  [DATUM], dan ontvang je een volledige terugbetaling. Een maandabonnement is maandelijks
+                  opzegbaar; een jaarabonnement loopt het jaar uit. Dishloopr mag misleidende plaatsingen
+                  weigeren of beëindigen.
+                </li>
+                <li>
+                  <strong>Menuservice.</strong> Levering vindt plaats binnen 3 werkdagen. Het restaurant controleert
+                  de menukaart, prijzen en allergeneninformatie en blijft daarvoor verantwoordelijk.
+                  Correcties binnen 14 dagen na levering zijn kosteloos.
+                </li>
+                <li>
+                  <strong>Betaling en facturen.</strong> Betaling verloopt via Stripe. Facturen worden per e-mail
+                  verstuurd. Bedragen zijn [INCLUSIEF/EXCLUSIEF] btw.
+                </li>
+                <li>
+                  <strong>Zakelijke aansprakelijkheid.</strong> De aansprakelijkheid van Dishloopr tegenover
+                  zakelijke klanten is beperkt tot het bedrag dat in de laatste 12 maanden voor de dienst is betaald.
+                </li>
+              </ol>
             </section>
 
             <section>
@@ -115,9 +151,6 @@ export default function TermsPage() {
               </p>
             </section>
 
-            <p className="text-sm text-muted-foreground pt-8 border-t border-border">
-              Laatste update: januari 2026
-            </p>
           </div>
         </motion.div>
       </div>
