@@ -19,7 +19,7 @@ test('search terms containing contact details are not sent to GA', () => {
   expect(safeSearchTerm('0612345678')).toBe('');
   expect(safeSearchTerm('ramen')).toBe('ramen');
 });
-test('GA events are absent without consent and queued only after accepting', () => {
+test('GA events are absent without consent and queued only after accepting', async () => {
   const values = new Map<string, string>();
   Object.assign(globalThis, { window: { dataLayer: [] }, localStorage: { getItem: (k: string) => values.get(k) || null, setItem: (k: string, v: string) => values.set(k, v) }, location: { hostname: 'localhost', pathname: '/search' }, document: { cookie: '', createElement: () => ({}), head: { appendChild: () => {} } } });
   initializeCookieAnalytics('G-TEST123');
@@ -27,6 +27,7 @@ test('GA events are absent without consent and queued only after accepting', () 
   const queued = () => (window as unknown as { dataLayer: IArguments[] }).dataLayer.filter(v => v[0] === 'event');
   expect(queued().length).toBe(0);
   chooseCookies('accepted');
+  await Promise.resolve(); await Promise.resolve();
   sendAnalyticsEvent('search', { search_term: 'ramen' });
   expect(queued().length).toBe(1);
   expect(queued()[0][2]).toMatchObject({ debug_mode: true, search_term: 'ramen' });
