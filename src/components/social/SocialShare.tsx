@@ -15,6 +15,7 @@ interface SocialShareProps {
   hashtags?: string[];
   variant?: 'button' | 'icon';
   className?: string;
+  onShare?: () => void;
 }
 
 export function SocialShare({ 
@@ -23,7 +24,8 @@ export function SocialShare({
   description = '', 
   hashtags = ['dishloopr', 'restaurant'],
   variant = 'button',
-  className = ''
+  className = '',
+  onShare,
 }: SocialShareProps) {
   // Always share the production URL, not preview URLs
   const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
@@ -56,6 +58,7 @@ export function SocialShare({
   };
 
   const handleShare = (platform: keyof typeof shareLinks) => {
+    onShare?.();
     const link = shareLinks[platform];
     window.open(link, '_blank', 'width=600,height=400,noopener,noreferrer');
   };
@@ -63,6 +66,7 @@ export function SocialShare({
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(withUtm('copy-link', 'share'));
+      onShare?.();
       toast.success('Link gekopieerd naar klembord');
     } catch {
       toast.error('Kon link niet kopiëren');
@@ -77,6 +81,7 @@ export function SocialShare({
           text: description,
           url: withUtm('native', 'share'),
         });
+        onShare?.();
       } catch (error) {
         // User cancelled or share failed
         if ((error as Error).name !== 'AbortError') {

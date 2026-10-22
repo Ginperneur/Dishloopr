@@ -20,11 +20,13 @@ function RestaurantCard({ item, index }: { item: CollectionRestaurant; index: nu
   
   return (
     <motion.div
+      data-restaurant-id={restaurant.id}
+      data-position={index + 1}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
     >
-      <Link to={`/restaurant/${restaurant.slug}`}>
+      <Link to={`/restaurant/${restaurant.slug}`} state={{ metricContext: 'collectie' }}>
         <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300">
           <div className="flex flex-col md:flex-row">
             {/* Image */}

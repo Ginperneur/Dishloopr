@@ -11,7 +11,7 @@ import logo from '@/assets/dishloopr-logo.png';
 import { useContentAvailability } from '@/hooks/useContentAvailability';
 import { useAuth } from '@/contexts/AuthContext';
 import { newsletterEmailSchema } from '@/lib/validations';
-import { openCookieSettings } from '@/lib/cookieConsent';
+import { openCookieSettings, sendAnalyticsEvent } from '@/lib/cookieConsent';
 
 export function Footer() {
   const { t } = useTranslation();
@@ -50,6 +50,7 @@ export function Footer() {
       .from('newsletter_subscribers')
       .insert({ email: parsed.data, user_id: user?.id ?? null });
     if (!error) {
+      sendAnalyticsEvent('newsletter_signup');
       toast.success(t('footer.newsletterOk', 'Gelukt! Je staat op de lijst.'));
       setEmail('');
     } else if (error.code === '23505') {

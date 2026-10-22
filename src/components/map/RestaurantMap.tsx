@@ -4,6 +4,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { optimizedImage } from '@/lib/imageUrl';
+import { metricContext } from '@/lib/metricRules';
+import { sendAnalyticsEvent } from '@/lib/cookieConsent';
 
 // Fix Leaflet default marker icons (bundlers sometimes break URL resolution)
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -171,6 +173,7 @@ export function RestaurantMap({ restaurants, userLocation, onClose, className = 
       });
 
       const root = document.createElement('div');
+      root.dataset.restaurantId = restaurant.id;
       root.style.minWidth = '200px';
 
       if (restaurant.images?.[0]) {
@@ -222,7 +225,8 @@ export function RestaurantMap({ restaurants, userLocation, onClose, className = 
       btn.style.fontSize = '12px';
       btn.addEventListener('click', () => {
         logSearchClick(restaurant.id);
-        navigate(`/restaurant/${restaurant.slug}`, { state: searchOrigin ? { from: searchOrigin } : undefined });
+        sendAnalyticsEvent('select_restaurant', { restaurant_slug: restaurant.slug, position: mappableRestaurants.indexOf(restaurant) + 1, list: 'kaart' });
+        navigate(`/restaurant/${restaurant.slug}`, { state: { ...(searchOrigin ? { from: searchOrigin } : {}), metricContext: metricContext(window.location.pathname, window.location.search) } });
       });
       root.appendChild(btn);
 

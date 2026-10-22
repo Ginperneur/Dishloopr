@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { sendAnalyticsEvent } from '@/lib/cookieConsent';
 
 type Status = {
   claimStatus: string | null;
@@ -77,8 +78,9 @@ export default function ClaimRestaurantPage() {
     return <Navigate to={`/login?tab=signup&redirect=${encodeURIComponent(`/claim/${slug}`)}`} replace />;
   }
 
-  const ensureClaim = async () => {
+  const ensureClaim = async (claimRoute: 'email' | 'manual') => {
     if (claimId) return claimId;
+    sendAnalyticsEvent('claim_start', { restaurant_slug: restaurant!.slug, route: claimRoute });
     const r = await call({ action: 'start_claim', restaurantId: restaurant!.id });
     setClaimId(r.claimId);
     return r.claimId as string;
@@ -87,7 +89,7 @@ export default function ClaimRestaurantPage() {
   const sendCode = async () => {
     setBusy(true);
     try {
-      const id = await ensureClaim();
+      const id = await ensureClaim('email');
       await call({ action: 'send_domain_code', claimId: id, email: email.trim().toLowerCase() });
       setCodeSent(true);
       toast.success(`Code verstuurd naar ${email.trim()}`);
@@ -99,6 +101,7 @@ export default function ClaimRestaurantPage() {
     try {
       await call({ action: 'verify_domain_code', claimId, code });
       setRoute('done');
+      sendAnalyticsEvent('claim_submitted', { restaurant_slug: restaurant!.slug, route: 'email' });
       toast.success('Gelukt! Je bent nu de geverifieerde eigenaar.');
       setTimeout(() => navigate('/owner-dashboard?welcome=1'), 1200);
     } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
@@ -108,7 +111,7 @@ export default function ClaimRestaurantPage() {
     if (!files.length) { toast.error('Upload minimaal één bewijsstuk'); return; }
     setBusy(true);
     try {
-      const id = await ensureClaim();
+      const id = await ensureClaim('manual');
       const paths: string[] = [];
       for (const f of files.slice(0, 5)) {
         const ext = (f.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -118,6 +121,7 @@ export default function ClaimRestaurantPage() {
         paths.push(path);
       }
       await call({ action: 'submit_manual', claimId: id, files: paths, fullName, jobTitle, phone });
+      sendAnalyticsEvent('claim_submitted', { restaurant_slug: restaurant!.slug, route: 'manual' });
       setRoute('pending');
     } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
   };

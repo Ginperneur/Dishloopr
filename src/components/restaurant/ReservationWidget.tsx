@@ -214,7 +214,7 @@ export function ReservationWidget({
             Reserveer direct bij {restaurantName}
           </p>
           <Button className="w-full" size="lg" asChild>
-            <a href={reservationUrl} target="_blank" rel="noopener noreferrer">
+            <a href={reservationUrl} target="_blank" rel="noopener noreferrer" onClick={() => onClickTrack?.('reservation')}>
               <ExternalLink className="h-4 w-4 mr-2" />
               {t('restaurant.reserve')}
             </a>

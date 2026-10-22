@@ -1,4 +1,5 @@
 # Navigation
+- Batch anonymous restaurant counters through track_restaurant_metrics without browser identifiers; owner totals come from restaurant_stats_summary, while GA events use the consent module only.
 
 - Centralize cookie persistence and Analytics lifecycle in the consent module; expose only the public measurement ID from the named environment setting, so no other secrets reach the browser and Analytics cannot start before consent.
 

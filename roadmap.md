@@ -1,4 +1,5 @@
 # Parkeerinformatie
+- [ ] Tweelaagse meting: cookievrije impressies en acties, echte 30-dagen eigenaarcijfers, GA-events na toestemming; previewcontrole.
 - [x] Cookiekeuze hersteld: 6 tests geslaagd; verse browsersessies bevestigen geen Analytics vóór keuze/bij necessary, cookies na accepteren, bewaren met datum, footerinstellingen en intrekken/sluiten.
 - [x] Plan uitgewerkt voor sneller ophalen van gerecht×stad-pagina’s.
 - [x] Snelheidsplan uitgevoerd: afzonderlijke tekst, stadsgebonden selectie, parallelle paginering en filtercache; 12 tests geslaagd, vier selecties identiek, mobiele weergave en SEO gecontroleerd.
