@@ -3957,6 +3957,38 @@ export type Database = {
           },
         ]
       }
+      restaurant_stats_daily: {
+        Row: {
+          context: string
+          dag: string
+          metric: string
+          n: number
+          restaurant_id: string
+        }
+        Insert: {
+          context?: string
+          dag?: string
+          metric: string
+          n?: number
+          restaurant_id: string
+        }
+        Update: {
+          context?: string
+          dag?: string
+          metric?: string
+          n?: number
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_stats_daily_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_suggestions: {
         Row: {
           address: string | null
@@ -6309,6 +6341,14 @@ export type Database = {
         Returns: string
       }
       rescan_discovery_duplicates: { Args: { p_rules?: Json }; Returns: Json }
+      restaurant_stats_summary: {
+        Args: { p_days?: number; p_restaurant_id: string }
+        Returns: {
+          context: string
+          metric: string
+          totaal: number
+        }[]
+      }
       save_restaurant_parking: {
         Args: {
           p_garage_address: string
@@ -6394,6 +6434,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: undefined
       }
+      track_restaurant_metrics: { Args: { p_items: Json }; Returns: number }
       unsubscribe_restaurant_contact: {
         Args: { p_token: string }
         Returns: string
