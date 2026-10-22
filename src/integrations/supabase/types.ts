@@ -2297,6 +2297,89 @@ export type Database = {
           },
         ]
       }
+      presale_combos: {
+        Row: {
+          city_id: string | null
+          created_at: string | null
+          dish_slug: string | null
+          gerecht: string | null
+          pagina_slug: string
+          rang_in_stad: number | null
+          restaurants: number | null
+          stad: string | null
+        }
+        Insert: {
+          city_id?: string | null
+          created_at?: string | null
+          dish_slug?: string | null
+          gerecht?: string | null
+          pagina_slug: string
+          rang_in_stad?: number | null
+          restaurants?: number | null
+          stad?: string | null
+        }
+        Update: {
+          city_id?: string | null
+          created_at?: string | null
+          dish_slug?: string | null
+          gerecht?: string | null
+          pagina_slug?: string
+          rang_in_stad?: number | null
+          restaurants?: number | null
+          stad?: string | null
+        }
+        Relationships: []
+      }
+      presale_targets: {
+        Row: {
+          created_at: string | null
+          gerecht: string | null
+          id: number
+          notitie: string | null
+          pagina_slug: string
+          positie: number | null
+          restaurant_id: string
+          stad: string | null
+          status: string
+          totaal: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          gerecht?: string | null
+          id?: never
+          notitie?: string | null
+          pagina_slug: string
+          positie?: number | null
+          restaurant_id: string
+          stad?: string | null
+          status?: string
+          totaal?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          gerecht?: string | null
+          id?: never
+          notitie?: string | null
+          pagina_slug?: string
+          positie?: number | null
+          restaurant_id?: string
+          stad?: string | null
+          status?: string
+          totaal?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "presale_targets_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
