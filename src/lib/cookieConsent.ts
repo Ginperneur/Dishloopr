@@ -74,7 +74,7 @@ function startAnalytics(): void {
   queue('consent', 'update', { analytics_storage: 'granted' });
   queue('set', 'developer_id.dZjgwMW', true);
   queue('js', new Date());
-  queue('config', measurementId);
+  queue('config', measurementId, { send_page_view: false, page_location: `${location.origin}${location.pathname}`, page_referrer: '', ...(location.hostname === 'localhost' || location.hostname.includes('preview') ? { debug_mode: true } : {}) });
   const script = document.createElement('script');
   script.id = 'dl-google-analytics';
   script.async = true;

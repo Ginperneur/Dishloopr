@@ -14,7 +14,7 @@ export function flushRestaurantMetrics(keepalive = false): void {
         body: JSON.stringify({ p_items: batch }),
       }).catch(() => {});
     } else {
-      void Promise.resolve(supabase.rpc('track_restaurant_metrics' as never, { p_items: batch } as never)).catch(() => {});
+      void Promise.resolve(supabase.rpc('track_restaurant_metrics', { p_items: batch })).catch(() => {});
     }
   }
 }
