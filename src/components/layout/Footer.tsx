@@ -11,6 +11,7 @@ import logo from '@/assets/dishloopr-logo.png';
 import { useContentAvailability } from '@/hooks/useContentAvailability';
 import { useAuth } from '@/contexts/AuthContext';
 import { newsletterEmailSchema } from '@/lib/validations';
+import { openCookieSettings } from '@/lib/cookieConsent';
 
 export function Footer() {
   const { t } = useTranslation();
@@ -166,6 +167,7 @@ export function Footer() {
             <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
               <li><Link to="/terms" className="hover:text-foreground transition-colors">{t('footer.terms')}</Link></li>
               <li><Link to="/privacy" className="hover:text-foreground transition-colors">{t('footer.privacy')}</Link></li>
+              <li><Button variant="link" onClick={openCookieSettings} className="h-auto p-0 text-xs md:text-sm text-muted-foreground hover:text-foreground font-normal">Cookie-instellingen</Button></li>
               <li><Link to="/voor-restaurants/afmelden" className="hover:text-foreground transition-colors">Restaurant aanpassen of verwijderen</Link></li>
             </ul>
           </div>

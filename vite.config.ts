@@ -5,6 +5,10 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  // GA measurement IDs are public identifiers; expose only this named setting.
+  define: {
+    'import.meta.env.VITE_GOOGLE_ANALYTICS_MEASUREMENT_ID': JSON.stringify(process.env.GOOGLE_ANALYTICS_MEASUREMENT_ID ?? ''),
+  },
   server: {
     host: "::",
     port: 8080,

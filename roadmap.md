@@ -1,4 +1,5 @@
 # Parkeerinformatie
+- [x] Cookiekeuze hersteld: 6 tests geslaagd; verse browsersessies bevestigen geen Analytics vóór keuze/bij necessary, cookies na accepteren, bewaren met datum, footerinstellingen en intrekken/sluiten.
 - [x] Plan uitgewerkt voor sneller ophalen van gerecht×stad-pagina’s.
 - [x] Snelheidsplan uitgevoerd: afzonderlijke tekst, stadsgebonden selectie, parallelle paginering en filtercache; 12 tests geslaagd, vier selecties identiek, mobiele weergave en SEO gecontroleerd.
 - [ ] Vergelijkbare mobiele Lighthouse-productiemeting — geblokkeerd: geen actuele productie-uitvoer beschikbaar in de sandbox; de automatische controle meldt build OK maar stelt geen meetbare productieversie beschikbaar. Previewmeting uitgevoerd, niet vergelijkbaar met eerdere productiecijfers.
