@@ -1,4 +1,5 @@
 # Parkeerinformatie
+- [ ] Presale: adminoverzicht, restaurantbrede updates, filters, tellers en CSV; ingelogde eindtest.
 - [x] Tweelaagse meting gebouwd: cookievrije impressies en acties opgeslagen; 30-dagen eigenaarcijfers gekoppeld; GA debug-events na toestemming verzonden; 12 tests geslaagd.
 - [ ] Eigenaarsdashboard ingelogd controleren — geen app-account gevonden voor de aanvrager; aanmelden in preview nodig.
 - [ ] GA4 DebugView-weergave controleren — debug-events aantoonbaar verzonden, geen toegang tot de GA4-beheerweergave.
