@@ -26,3 +26,18 @@ describe('cookie consent rules', () => {
     expect(cookieDomains('www.dishloopr.com')).toEqual(['', 'www.dishloopr.com', 'dishloopr.com', 'com']);
   });
 });
+describe('analytics start rules', () => {
+  test('only GA4 measurement IDs are accepted', async () => {
+    const { isMeasurementId } = await import('../src/lib/cookieConsent');
+    expect(isMeasurementId('G-ABC123')).toBe(true);
+    expect(isMeasurementId('')).toBe(false);
+    expect(isMeasurementId('UA-123-1')).toBe(false);
+    expect(isMeasurementId(null)).toBe(false);
+  });
+  test('localhost uses a host-only cookie so _ga can be written', async () => {
+    const { analyticsCookieDomain } = await import('../src/lib/cookieConsent');
+    expect(analyticsCookieDomain('localhost')).toBe('none');
+    expect(analyticsCookieDomain('127.0.0.1')).toBe('none');
+    expect(analyticsCookieDomain('dishloopr.com')).toBe('auto');
+  });
+});
