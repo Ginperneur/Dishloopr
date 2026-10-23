@@ -47,7 +47,6 @@ export default function ClaimRestaurantPage() {
   const [email, setEmail] = useState('');
   const [codeSent, setCodeSent] = useState(false);
   const [deliveryError, setDeliveryError] = useState('');
-  const [code, setCode] = useState('');
   // Route B
   const [files, setFiles] = useState<File[]>([]);
   const [fullName, setFullName] = useState('');
@@ -104,17 +103,6 @@ export default function ClaimRestaurantPage() {
       setCodeSent(true);
       toast.success(`Code verstuurd naar ${email.trim()}`);
     } catch (e: any) { setDeliveryError(e.message); toast.error(e.message); } finally { setBusy(false); }
-  };
-
-  const verifyCode = async () => {
-    setBusy(true);
-    try {
-      await call({ action: 'verify_domain_code', claimId, code });
-      setRoute('done');
-      sendAnalyticsEvent('claim_submitted', { restaurant_slug: restaurant?.slug || '', route: 'email' });
-      toast.success('Gelukt! Je bent nu de geverifieerde eigenaar.');
-      setTimeout(() => navigate('/owner-dashboard?welcome=1'), 1200);
-    } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
   };
 
   const submitManual = async () => {

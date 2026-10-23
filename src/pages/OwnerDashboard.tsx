@@ -388,7 +388,6 @@ export default function OwnerDashboard() {
 
   return (
     <Layout showFooter={false}>
-      <div className="container"><PendingClaimCodes /></div>
       <SEOHead
         title="Owner dashboard | Dishloopr"
         description="Beheer je restaurantprofiel, foto's, gerechten en reviews in het Dishloopr Owner dashboard."
@@ -515,6 +514,7 @@ export default function OwnerDashboard() {
               role="main"
               className="w-full px-4 md:px-6 py-6 md:py-8 max-w-[1600px] mx-auto focus:outline-none"
             >
+              <PendingClaimCodes />
               {/* Page header */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}

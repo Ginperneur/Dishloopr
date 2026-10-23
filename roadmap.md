@@ -1,7 +1,7 @@
 # Parkeerinformatie
-- [ ] Claim hervatten via mail/inloggen/dashboard; 30 minuten en 60 seconden pauze testen; testclaim opruimen.
+- [x] Claim hervat na tab sluiten/verversen, mailbestemming en inloggen; dashboardcodeveld zichtbaar, verzendpauze bevestigd; 12 tests; tijdelijke restaurants/claims/codes verwijderd.
 - [x] Claimcodemail via geverifieerde mailvoorziening; 11 tests, echte verzending 06:52 UTC, gekoppelde logregels, duidelijke foutmelding en testrestaurant/testclaim opgeruimd.
-- [ ] Claim definitief bevestigen met ontvangen inboxcode — geen toegang tot mailbox; verzendbewijs bevestigd, inboxontvangst niet verifieerbaar.
+- [x] Eerste testclaim op 23 oktober werd tijdens de previewtest domain_email/verified; code-invoer zelf niet door de agent uitgevoerd of waargenomen wegens ontbrekende mailboxtoegang.
 - [x] Presale: adminoverzicht, restaurantbrede updates, filters, tellers en veilige CSV; 8 regels getest.
 - [ ] Presale ingelogde eindtest — aanvrager heeft geen app-account; aanmelden als admin in preview nodig.
 - [x] Tweelaagse meting gebouwd: cookievrije impressies en acties opgeslagen; 30-dagen eigenaarcijfers gekoppeld; GA debug-events na toestemming verzonden; 12 tests geslaagd.
