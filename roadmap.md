@@ -1,4 +1,5 @@
 # Parkeerinformatie
+- [ ] Claimcodemail herstellen, verzending na succes loggen en testrestaurant met testclaim opruimen; inboxcode nodig voor definitieve verificatie.
 - [x] Presale: adminoverzicht, restaurantbrede updates, filters, tellers en veilige CSV; 8 regels getest.
 - [ ] Presale ingelogde eindtest — aanvrager heeft geen app-account; aanmelden als admin in preview nodig.
 - [x] Tweelaagse meting gebouwd: cookievrije impressies en acties opgeslagen; 30-dagen eigenaarcijfers gekoppeld; GA debug-events na toestemming verzonden; 12 tests geslaagd.

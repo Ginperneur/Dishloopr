@@ -43,6 +43,7 @@ export default function ClaimRestaurantPage() {
   // Route A
   const [email, setEmail] = useState('');
   const [codeSent, setCodeSent] = useState(false);
+  const [deliveryError, setDeliveryError] = useState('');
   const [code, setCode] = useState('');
   // Route B
   const [files, setFiles] = useState<File[]>([]);
@@ -89,12 +90,13 @@ export default function ClaimRestaurantPage() {
 
   const sendCode = async () => {
     setBusy(true);
+    setDeliveryError('');
     try {
       const id = await ensureClaim('email');
       await call({ action: 'send_domain_code', claimId: id, email: email.trim().toLowerCase() });
       setCodeSent(true);
       toast.success(`Code verstuurd naar ${email.trim()}`);
-    } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
+    } catch (e: any) { setDeliveryError(e.message); toast.error(e.message); } finally { setBusy(false); }
   };
 
   const verifyCode = async () => {
@@ -196,6 +198,7 @@ export default function ClaimRestaurantPage() {
               </div>
             ) : route === 'email' ? (
               <Card><CardContent className="p-6 space-y-4">
+                {deliveryError && <p role="alert" className="text-sm text-destructive">{deliveryError}</p>}
                 {!codeSent ? (
                   <>
                     <div className="space-y-2">
