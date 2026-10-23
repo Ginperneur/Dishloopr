@@ -6424,6 +6424,15 @@ export type Database = {
         Returns: string
       }
       rescan_discovery_duplicates: { Args: { p_rules?: Json }; Returns: Json }
+      restaurant_positions: {
+        Args: { p_slug: string }
+        Returns: {
+          dish_name: string
+          page_slug: string
+          position: number
+          total: number
+        }[]
+      }
       restaurant_stats_summary: {
         Args: { p_days?: number; p_restaurant_id: string }
         Returns: {
