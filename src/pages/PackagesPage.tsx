@@ -38,7 +38,7 @@ function Price({ main, sub }: { main: string; sub?: string }) {
 }
 
 function LinkButton({ url, label, pkg, variant = 'default' }: { url?: string; label: string; pkg: string; variant?: 'default' | 'outline' }) {
-  if (!isUsableLink(url)) return <Button disabled variant="outline" className="min-h-11 w-full">{label}: binnenkort beschikbaar</Button>;
+  if (!isUsableLink(url)) return <Button disabled variant="outline" className="min-h-11 h-auto w-full whitespace-normal text-xs">{label}: binnenkort beschikbaar</Button>;
   return (
     <Button asChild variant={variant} className="min-h-11 w-full">
       <a href={url} onClick={() => track(pkg)} rel="noopener">{label}</a>
@@ -115,7 +115,7 @@ export default function PackagesPage() {
           <p className="text-muted-foreground mt-2">{restaurant ? `Voor ${restaurant.name}. ` : ''}Kies wat bij je restaurant past. Claimen is altijd gratis.</p>
         </div>
 
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           <div className="flex flex-col gap-4 rounded-xl border bg-card p-6">
             <h2 className="text-xl font-semibold">Gratis</h2>
             <Price main="€0" />
