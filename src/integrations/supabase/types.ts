@@ -2380,6 +2380,27 @@ export type Database = {
           },
         ]
       }
+      pro_waitlist: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          restaurant_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          restaurant_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          restaurant_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -6409,6 +6430,13 @@ export type Database = {
           city_id: string
           city_name: string
           term: string
+        }[]
+      }
+      public_package_links: {
+        Args: never
+        Returns: {
+          key: string
+          url: string
         }[]
       }
       request_restaurant_optout: {
