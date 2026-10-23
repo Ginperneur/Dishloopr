@@ -1,5 +1,6 @@
 # Parkeerinformatie
-- [ ] Claimcodemail herstellen, verzending na succes loggen en testrestaurant met testclaim opruimen; inboxcode nodig voor definitieve verificatie.
+- [x] Claimcodemail via geverifieerde mailvoorziening; 11 tests, echte verzending 06:52 UTC, gekoppelde logregels, duidelijke foutmelding en testrestaurant/testclaim opgeruimd.
+- [ ] Claim definitief bevestigen met ontvangen inboxcode — geen toegang tot mailbox; verzendbewijs bevestigd, inboxontvangst niet verifieerbaar.
 - [x] Presale: adminoverzicht, restaurantbrede updates, filters, tellers en veilige CSV; 8 regels getest.
 - [ ] Presale ingelogde eindtest — aanvrager heeft geen app-account; aanmelden als admin in preview nodig.
 - [x] Tweelaagse meting gebouwd: cookievrije impressies en acties opgeslagen; 30-dagen eigenaarcijfers gekoppeld; GA debug-events na toestemming verzonden; 12 tests geslaagd.
@@ -14,6 +15,5 @@
 - [x] Weergave en parkeermogelijkheden getest (4 tests geslaagd).
 - [ ] Opslaan via ingelogd account controleren — geblokkeerd: geen previewsessie of account voor de aanvrager beschikbaar.
 - [x] Claimen zonder sms: eindtest beide routes
-- [ ] Claim-e-mails (code, goedgekeurd, afgewezen) komen niet aan: afzenderdomein dishloopr.com is niet geverifieerd bij de maildienst — wacht op gebruiker
+- [ ] Goedkeurings- en afwijzingsmails gebruiken nog de oude maildienst — buiten scope van de codemailreparatie.
 - [ ] 2 kleine testbewijsbestanden staan nog in de privé bewijsmap
-- [ ] Claim-mails (code/goedgekeurd/afgewezen) omzetten van de oude maildienst naar het nieuwe afzenderadres notify.dishloopr.com
