@@ -19,3 +19,4 @@
 
 - Render restaurant and collection photos through `optimizedImage` in `src/lib/imageUrl.ts` with an explicit width/height, so storage images are served resized as WebP and never shift the layout.
 - Load the support chat and onboarding dialog after idle via `AfterIdle`, and keep below-the-fold homepage sections as lazy chunks, so they never delay the first render.
+- Invite-page positions come from restaurant_positions(), whose order (featured, top listing, rating, id) must stay identical to compareLandingOrder used by /eten pages, so owner-facing ranks always match.
