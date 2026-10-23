@@ -123,7 +123,7 @@ export function PresaleManager() {
   );
   const ContactCells = ({ phone, email }: { phone: string; email?: string | null }) => (<>
     <TableCell className="whitespace-nowrap">{phone ? <a href={`tel:${phone.replace(/[^\d+]/g, '')}`} className="hover:underline">{phone}</a> : '—'}</TableCell>
-    <TableCell>{email ? <a href={`mailto:${email}`} className="hover:underline break-all">{email}</a> : '—'}</TableCell>
+    <TableCell>{email ? <a href={`mailto:${email}`} className="hover:underline whitespace-nowrap">{email}</a> : '—'}</TableCell>
   </>);
 
   return (
