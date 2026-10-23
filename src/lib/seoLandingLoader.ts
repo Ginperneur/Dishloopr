@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { SeoLandingPage } from '@/hooks/useSeoLandingPage';
+import { compareLandingOrder } from '@/lib/inviteChecklist';
 
 export interface LandingDish {
   id: string; name: string; slug: string; canonical_slug: string | null;
@@ -172,11 +173,7 @@ export async function loadLandingRestaurants(page: SeoLandingPage) {
     return { ...r, signatureDish: match ? { name: match.name, price: match.price } : undefined,
       dishTranslations: Object.keys(translations).length ? translations : undefined };
   });
-  restaurants.sort((a, b) => {
-    if (a.is_featured !== b.is_featured) return a.is_featured ? -1 : 1;
-    if (a.is_top_listing !== b.is_top_listing) return a.is_top_listing ? -1 : 1;
-    return (b.rating || 0) - (a.rating || 0);
-  });
+  restaurants.sort(compareLandingOrder);
   const counts = new Map<string, number>();
   if (isHub) for (const restaurant of restaurants) {
     for (const member of matchedMembers.get(restaurant.id) ?? []) {
