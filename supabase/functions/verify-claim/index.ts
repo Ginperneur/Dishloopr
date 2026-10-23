@@ -1,6 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
 import { escapeHtml } from "../_shared/auth.ts";
+import { sendTemplateEmail } from "../_shared/transactional-email-templates/send-email.ts";
+import { deliverDomainCode } from "./domainDelivery.ts";
 import {
   extractDomain, domainMatches, codeExpiry, isExpired, attemptsExhausted, canSendAnotherCode, canStartClaim,
   OPEN_CLAIM_STATUSES,
@@ -142,7 +144,7 @@ Deno.serve(async (req) => {
       const { data: r } = await admin.from("restaurants").select("id, name, website_url, claim_status, claimed_by_owner_id").eq("id", restaurantId).maybeSingle();
       if (!r) return json({ error: "Restaurant niet gevonden" }, 404);
       const { data: open } = await admin.from("restaurant_claims")
-        .select("id, status, verification_method, verification_proof")
+        .select("id, restaurant_id, status, verification_method, verification_proof")
         .eq("restaurant_id", restaurantId).eq("user_id", user.id).in("status", OPEN_CLAIM_STATUSES)
         .order("created_at", { ascending: false }).limit(1).maybeSingle();
       const isOwner = r.claim_status === "verified_owner" && r.claimed_by_owner_id === user.id;
@@ -156,15 +158,15 @@ Deno.serve(async (req) => {
         });
       }
 
-      if (open) return json({ claimId: open.id, existing: true });
+      if (open?.restaurant_id === restaurantId) return json({ claimId: open.id, existing: true });
       const check = canStartClaim(r.claim_status, false);
       if (!check.ok) return json({ error: check.reason === "already_claimed" ? "Dit restaurant is al geclaimd." : "Dit restaurant kan nu niet geclaimd worden.", reason: check.reason }, 409);
       const { data: allowed } = await admin.rpc("can_create_claim", { _user_id: user.id });
       if (allowed === false) return json({ error: "Je hebt te veel openstaande claims. Wacht tot die zijn beoordeeld." }, 429);
       const { data: created, error: insErr } = await admin.from("restaurant_claims")
         .insert({ restaurant_id: restaurantId, user_id: user.id, status: "pending", email_verified: !!user.email_confirmed_at })
-        .select("id").single();
-      if (insErr || !created) return json({ error: insErr?.message ?? "Claim aanmaken mislukt" }, 500);
+        .select("id, restaurant_id").single();
+      if (insErr || !created?.id || created.restaurant_id !== restaurantId) return json({ error: "Claim aanmaken mislukt. Probeer opnieuw; er is geen code verstuurd." }, 500);
       if (r.claim_status === "unclaimed" || !r.claim_status) {
         await admin.from("restaurants").update({ claim_status: "claimed_unverified" }).eq("id", restaurantId);
       }
@@ -217,7 +219,7 @@ Deno.serve(async (req) => {
       .select("id, user_id, status, restaurant_id")
       .eq("id", claimId)
       .maybeSingle();
-    if (claimErr || !claim) return json({ error: "Claim niet gevonden" }, 404);
+    if (claimErr || !claim?.restaurant_id) return json({ error: "Claim niet gevonden. Start de claim opnieuw; er is geen code verstuurd." }, 404);
     if (claim.user_id !== user.id) return json({ error: "Geen toegang tot deze claim" }, 403);
     if (!OPEN_CLAIM_STATUSES.includes(claim.status)) {
       return json({ error: "Claim kan niet meer geverifieerd worden" }, 400);
@@ -278,21 +280,35 @@ Deno.serve(async (req) => {
 
       const code = randomCode(6);
       const codeHash = await sha256(`${claimId}:${code}`);
-      const { error: upsertErr } = await admin.from("claim_verification_secrets").upsert({
-        claim_id: claimId, method: "domain_email", code_hash: codeHash, email, attempts: 0,
-        expires_at: codeExpiry(now).toISOString(), updated_at: new Date().toISOString(),
-      });
-      if (upsertErr) return json({ error: upsertErr.message }, 500);
-
-      await admin.from("restaurant_claims").update({
-        verification_method: "domain_email", verification_started_at: new Date().toISOString(),
-        verification_proof: { method: "domain_email", email, sent_at: new Date().toISOString() },
-      }).eq("id", claimId);
-      await log(restaurant.id, claimId, "DOMAIN_CODE_SENT", { email });
-
-      const ok = await sendMail(email, `Verificatiecode voor ${restaurant.name} op Dishloopr`,
-        mailShell("Verificatiecode", `<p style="color:#555">Gebruik deze code om eigenaarschap van <b>${escapeHtml(restaurant.name)}</b> te bevestigen.</p><div style="background:#f3f4f6;border-radius:8px;padding:20px;text-align:center;font-size:28px;letter-spacing:8px;font-family:monospace;font-weight:700">${code}</div><p style="color:#777;font-size:13px;margin-top:16px">De code is 15 minuten geldig. Heb je dit niet aangevraagd? Negeer deze e-mail.</p>`));
-      if (!ok) return json({ error: "Kon e-mail niet versturen. Probeer het later opnieuw." }, 502);
+      try {
+        await deliverDomainCode({
+          persist: async () => {
+            const { error } = await admin.from("claim_verification_secrets").upsert({
+              claim_id: claimId, method: "domain_email", code_hash: codeHash, email, attempts: 0,
+              expires_at: codeExpiry(now).toISOString(), updated_at: new Date().toISOString(),
+            });
+            if (error) throw new Error("Verificatiecode opslaan mislukt");
+          },
+          send: () => sendTemplateEmail('claim-code', email, {
+            templateData: { restaurantName: restaurant.name, code },
+            idempotencyKey: `claim-code-${claimId}-${codeHash}`,
+          }),
+          recordSent: async () => {
+            const ts = new Date().toISOString();
+            const { error: updateError } = await admin.from("restaurant_claims").update({
+              verification_method: "domain_email", verification_started_at: ts,
+              verification_proof: { method: "domain_email", email, sent_at: ts },
+            }).eq("id", claimId).eq("restaurant_id", restaurant.id);
+            if (updateError) throw new Error("Verificatie bijwerken mislukt");
+            const { error: logError } = await log(restaurant.id, claimId, "DOMAIN_CODE_SENT", { method: "domain_email" });
+            if (logError) throw new Error("Verzending registreren mislukt");
+          },
+        });
+      } catch (error) {
+        // Never log recipients or codes. Keep claim intact so the visitor can retry.
+        console.error("[verify-claim] domain delivery failed", { claimId, restaurantId: restaurant.id, code: (error as { code?: string }).code || "delivery_failed" });
+        return json({ error: "De verificatiemail kon niet worden verstuurd. Je claim is bewaard, maar nog niet bevestigd. Probeer later opnieuw of neem contact op via info@dishloopr.com." }, 502);
+      }
       return json({ success: true });
     }
 
