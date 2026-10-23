@@ -1,25 +1,40 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Download, Loader2, Mail, Phone, Instagram, Save, RefreshCw } from 'lucide-react';
+import { Download, Loader2, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { toast } from 'sonner';
-import { PRESALE_STATUSES, groupPresale, filterPresale, presaleCounts, presaleUpdate, presaleCsv, type PresaleTarget, type PresaleRestaurant, type PresaleContact, type PresaleStatus } from '@/lib/presale';
+import {
+  PRESALE_STATUSES, groupPresale, filterPresale, presaleRows, filterRows, rowStatusCounts, cityCounts,
+  contactPhone, rowsCsv, presaleUpdate,
+  type PresaleTarget, type PresaleRestaurant, type PresaleContact, type PresaleStatus,
+} from '@/lib/presale';
 
-function instagramUrl(value: string) {
-  const handle = value.trim().replace(/^@/, '');
-  if (/^[a-zA-Z0-9._]+$/.test(handle)) return `https://www.instagram.com/${handle}/`;
-  try {
-    const url = new URL(handle.startsWith('http') ? handle : `https://${handle}`);
-    return url.protocol === 'https:' && (url.hostname === 'instagram.com' || url.hostname === 'www.instagram.com') ? url.href : undefined;
-  } catch { return undefined; }
+const PAGE_SIZE = 50;
+
+function StatusSelect({ value, disabled, onChange, label }: { value: string; disabled: boolean; onChange: (v: PresaleStatus) => void; label: string }) {
+  return (
+    <Select value={value} disabled={disabled} onValueChange={v => onChange(v as PresaleStatus)}>
+      <SelectTrigger className="h-9 w-36" aria-label={label}><SelectValue /></SelectTrigger>
+      <SelectContent>{PRESALE_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+    </Select>
+  );
+}
+
+function NoteInput({ value, disabled, onSave, label }: { value: string; disabled: boolean; onSave: (v: string) => void; label: string }) {
+  const [draft, setDraft] = useState(value);
+  useEffect(() => setDraft(value), [value]);
+  return (
+    <Input value={draft} disabled={disabled} aria-label={label} maxLength={2000} className="h-9 min-w-48"
+      onChange={e => setDraft(e.target.value)}
+      onBlur={() => { if (draft !== value) onSave(draft); }} />
+  );
 }
 
 export function PresaleManager() {
@@ -28,116 +43,191 @@ export function PresaleManager() {
   const [restaurants, setRestaurants] = useState<PresaleRestaurant[]>([]);
   const [contacts, setContacts] = useState<PresaleContact[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
   const [busy, setBusy] = useState<Record<string, boolean>>({});
-  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [view, setView] = useState<'page' | 'restaurant'>('page');
   const [city, setCity] = useState('all');
   const [status, setStatus] = useState('all');
-  const [threePlus, setThreePlus] = useState(false);
-  const [hasEmail, setHasEmail] = useState(false);
+  const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
   const load = useCallback(async () => {
     if (!isAdmin) return;
-    setLoading(true); setError(false);
+    setLoading(true);
     try {
       const all: PresaleTarget[] = [];
       for (let from = 0; ; from += 1000) {
-        const result = await supabase.from('presale_targets').select('id,pagina_slug,stad,gerecht,positie,totaal,restaurant_id,status,notitie,updated_at').order('id').range(from, from + 999);
-        if (result.error) throw result.error;
-        all.push(...(result.data ?? []));
-        if ((result.data?.length ?? 0) < 1000) break;
+        const r = await supabase.from('presale_targets').select('id,pagina_slug,stad,gerecht,positie,totaal,restaurant_id,status,notitie,updated_at').order('id').range(from, from + 999);
+        if (r.error) throw r.error;
+        all.push(...(r.data ?? []));
+        if ((r.data?.length ?? 0) < 1000) break;
       }
       const ids = [...new Set(all.map(r => r.restaurant_id))];
       const chunks = Array.from({ length: Math.ceil(ids.length / 150) }, (_, i) => ids.slice(i * 150, (i + 1) * 150));
       const batches = await Promise.all(chunks.map(async chunk => {
         const [r, c] = await Promise.all([
-          supabase.from('restaurants').select('id,name,slug,phone').in('id', chunk),
-          supabase.from('restaurant_contacts').select('restaurant_id,email,email_kwaliteit,instagram').in('restaurant_id', chunk),
+          supabase.from('restaurants').select('id,name,slug,phone,claimed_by_owner_id').in('id', chunk),
+          supabase.from('restaurant_contacts').select('restaurant_id,email,email_kwaliteit,instagram,telefoon_site').in('restaurant_id', chunk),
         ]);
         if (r.error) throw r.error;
         if (c.error) throw c.error;
-        return { restaurants: r.data ?? [], contacts: c.data ?? [] };
+        return { r: r.data ?? [], c: c.data ?? [] };
       }));
-      setTargets(all); setRestaurants(batches.flatMap(b => b.restaurants)); setContacts(batches.flatMap(b => b.contacts));
-    } catch { setError(true); toast.error('Presale laden mislukt. Probeer opnieuw.'); }
+      setTargets(all); setRestaurants(batches.flatMap(b => b.r)); setContacts(batches.flatMap(b => b.c));
+    } catch { toast.error('Presale laden mislukt. Probeer opnieuw.'); }
     finally { setLoading(false); }
   }, [isAdmin]);
   useEffect(() => { void load(); }, [load]);
-  useEffect(() => { setPage(1); }, [city, status, threePlus, hasEmail]);
+  useEffect(() => { setPage(1); }, [city, status, search, view]);
 
-  const groups = useMemo(() => groupPresale(targets, restaurants, contacts), [targets, restaurants, contacts]);
-  const counts = useMemo(() => presaleCounts(groups), [groups]);
-  const cities = useMemo(() => [...new Set(groups.flatMap(g => g.cities))].sort((a, b) => a.localeCompare(b, 'nl')), [groups]);
-  const filtered = useMemo(() => filterPresale(groups, { city, status, threePlus, hasEmail }), [groups, city, status, threePlus, hasEmail]);
-  const pages = Math.max(1, Math.ceil(filtered.length / 25));
-  const currentPage = Math.min(page, pages);
+  const rows = useMemo(() => presaleRows(targets, restaurants, contacts), [targets, restaurants, contacts]);
+  const groups = useMemo(() => groupPresale(targets, restaurants, contacts)
+    .sort((a, b) => (a.bestPosition ?? Infinity) - (b.bestPosition ?? Infinity) || b.pageCount - a.pageCount), [targets, restaurants, contacts]);
+  const cities = useMemo(() => cityCounts(targets), [targets]);
+  const statusCounts = useMemo(() => rowStatusCounts(targets), [targets]);
+  const filteredRows = useMemo(() => filterRows(rows, { city, status, search }), [rows, city, status, search]);
+  const filteredGroups = useMemo(() => filterPresale(groups, { city, status, threePlus: false, hasEmail: false, search }), [groups, city, status, search]);
+  const total = view === 'page' ? filteredRows.length : filteredGroups.length;
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const current = Math.min(page, pages);
+  const slice = <T,>(list: T[]) => list.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
 
-  const update = async (id: string, patch: { status?: PresaleStatus; notitie?: string }) => {
-    if (!isAdmin || busy[id]) return;
-    setBusy(prev => ({ ...prev, [id]: true }));
+  const save = async (key: string, scope: { id?: number; restaurantId?: string }, patch: { status?: PresaleStatus; notitie?: string }) => {
+    setBusy(b => ({ ...b, [key]: true }));
     try {
       const values = presaleUpdate(patch);
-      const result = await supabase.from('presale_targets').update(values).eq('restaurant_id', id).select('id');
-      if (result.error || !result.data?.length) throw result.error ?? new Error('No rows updated');
-      setTargets(prev => prev.map(row => row.restaurant_id === id ? { ...row, ...values } : row));
-      if (patch.notitie !== undefined) setNotes(prev => { const next = { ...prev }; delete next[id]; return next; });
-      toast.success('Restaurant bijgewerkt');
-    } catch { toast.error('Opslaan mislukt. Je wijzigingen zijn niet opgeslagen.'); }
-    finally { setBusy(prev => ({ ...prev, [id]: false })); }
+      let q = supabase.from('presale_targets').update(values);
+      q = scope.id !== undefined ? q.eq('id', scope.id) : q.eq('restaurant_id', scope.restaurantId!);
+      const r = await q.select('id');
+      if (r.error || !r.data?.length) throw r.error ?? new Error('no rows');
+      const touched = new Set(r.data.map(x => x.id));
+      setTargets(prev => prev.map(t => touched.has(t.id) ? { ...t, ...values } : t));
+      toast.success(patch.status ? 'Status opgeslagen' : 'Notitie opgeslagen');
+    } catch { toast.error('Opslaan mislukt. Je wijziging is niet opgeslagen.'); }
+    finally { setBusy(b => ({ ...b, [key]: false })); }
   };
+
   const exportCsv = () => {
-    const url = URL.createObjectURL(new Blob([presaleCsv(filtered)], { type: 'text/csv;charset=utf-8' }));
-    const link = document.createElement('a'); link.href = url; link.download = `dishloopr-presale-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+    const url = URL.createObjectURL(new Blob([rowsCsv(filteredRows)], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a'); a.href = url; a.download = `dishloopr-presale-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
   };
 
   if (checkingAdmin) return <p className="text-muted-foreground">Laden…</p>;
   if (!isAdmin) return null;
-  return <section className="space-y-5" aria-label="Presale">
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <h2 className="text-xl font-bold">Presale</h2>
-      <div className="flex gap-2">
-        <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading || Object.values(busy).some(Boolean)} aria-label="Presale vernieuwen" title="Vernieuwen"><RefreshCw className="h-4 w-4" /></Button>
-        <Button variant="outline" size="sm" onClick={exportCsv} disabled={loading || error || !filtered.length}><Download className="mr-2 h-4 w-4" />CSV-export</Button>
+
+  const RestaurantCell = ({ r }: { r?: PresaleRestaurant }) => (
+    <div className="flex flex-wrap items-center gap-2">
+      {r ? <Link to={`/restaurant/${r.slug}`} className="font-medium text-primary hover:underline">{r.name}</Link> : <span>Onbekend</span>}
+      {r?.claimed_by_owner_id && <Badge variant="secondary">Al geclaimd</Badge>}
+    </div>
+  );
+  const ContactCells = ({ phone, email }: { phone: string; email?: string | null }) => (<>
+    <TableCell className="whitespace-nowrap">{phone ? <a href={`tel:${phone.replace(/[^\d+]/g, '')}`} className="hover:underline">{phone}</a> : '—'}</TableCell>
+    <TableCell>{email ? <a href={`mailto:${email}`} className="hover:underline whitespace-nowrap">{email}</a> : '—'}</TableCell>
+  </>);
+
+  return (
+    <section className="space-y-5" aria-label="Presale">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-bold">Presale</h2>
+        <div className="flex flex-wrap gap-2">
+          <ToggleGroup type="single" value={view} onValueChange={v => v && setView(v as 'page' | 'restaurant')} variant="outline">
+            <ToggleGroupItem value="page">Per pagina ({targets.length})</ToggleGroupItem>
+            <ToggleGroupItem value="restaurant">Per restaurant ({groups.length})</ToggleGroupItem>
+          </ToggleGroup>
+          <Button variant="outline" onClick={() => void load()} disabled={loading}><RefreshCw className="mr-2 h-4 w-4" />Vernieuwen</Button>
+          <Button onClick={exportCsv} disabled={loading || !filteredRows.length}><Download className="mr-2 h-4 w-4" />Exporteer CSV</Button>
+        </div>
       </div>
-    </div>
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7 border-y border-border py-4">
-      {PRESALE_STATUSES.map(s => <div key={s}><p className="text-xs text-muted-foreground capitalize">{s}</p><p className="text-2xl font-semibold tabular-nums">{loading ? '—' : counts[s]}</p></div>)}
-    </div>
-    <div className="flex flex-wrap items-center gap-4">
-      <Select value={city} onValueChange={setCity}><SelectTrigger className="w-44" aria-label="Filter stad"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Alle steden</SelectItem>{cities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
-      <Select value={status} onValueChange={setStatus}><SelectTrigger className="w-44" aria-label="Filter status"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Alle statussen</SelectItem>{PRESALE_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select>
-      <div className="flex items-center gap-2"><Checkbox id="presale-three" checked={threePlus} onCheckedChange={v => setThreePlus(v === true)} /><Label htmlFor="presale-three">Op 3+ pagina’s</Label></div>
-      <div className="flex items-center gap-2"><Checkbox id="presale-email" checked={hasEmail} onCheckedChange={v => setHasEmail(v === true)} /><Label htmlFor="presale-email">Heeft e-mail</Label></div>
-    </div>
-    {loading ? <div className="space-y-3" aria-label="Presale laden">{[1, 2, 3].map(i => <div key={i} className="h-28 animate-pulse rounded bg-muted" />)}</div> : error ? <div role="alert" className="py-8"><p className="mb-3 text-destructive">Presale kon niet worden geladen.</p><Button onClick={() => void load()}>Opnieuw proberen</Button></div> : <>
-      <p className="text-sm text-muted-foreground">{filtered.length} restaurants · {filtered.reduce((n, g) => n + g.pageCount, 0)} gerechtpagina-plaatsingen</p>
-      <div className="overflow-x-auto">
-        <Table className="min-w-[980px]">
-          <TableHeader><TableRow><TableHead>Restaurant / stad</TableHead><TableHead>Pagina’s / beste positie</TableHead><TableHead>Contact</TableHead><TableHead>Status / notitie</TableHead></TableRow></TableHeader>
-          <TableBody>{filtered.slice((currentPage - 1) * 25, currentPage * 25).map(g => {
-            const name = g.restaurant?.name ?? g.id;
-            const ig = g.contact?.instagram ? instagramUrl(g.contact.instagram) : undefined;
-            const note = notes[g.id] ?? g.note;
-            return <TableRow key={g.id} data-presale-restaurant={g.id}>
-              <TableCell className="align-top w-52"><p className="font-semibold">{g.restaurant ? <Link className="hover:underline text-primary" to={`/restaurant/${g.restaurant.slug}`}>{name}</Link> : name}</p><p className="text-sm text-muted-foreground mt-1">{g.cities.join(', ') || '—'}</p></TableCell>
-              <TableCell className="align-top max-w-80"><p className="mb-2 text-sm font-medium">{g.pageCount} pagina’s · beste #{g.bestPosition ?? '—'}</p><div className="flex flex-wrap gap-x-3 gap-y-1">{g.pages.map(p => <Link key={p.pagina_slug} className="text-sm text-primary hover:underline" to={`/eten/${p.pagina_slug}`} title={`${p.stad ?? ''} · #${p.positie ?? '—'} van ${p.totaal ?? '—'}`}>{p.gerecht ?? p.pagina_slug} #{p.positie ?? '—'}</Link>)}</div></TableCell>
-              <TableCell className="align-top max-w-72"><div className="space-y-2 text-sm break-words">
-                {g.contact?.email ? <div><a href={`mailto:${g.contact.email}`} className="inline-flex items-center gap-2 text-primary hover:underline"><Mail className="h-3.5 w-3.5 shrink-0" />{g.contact.email}</a><div className="mt-1"><Badge variant="secondary">{g.contact.email_kwaliteit || 'Kwaliteit onbekend'}</Badge></div></div> : <p className="text-muted-foreground">Geen e-mail</p>}
-                {g.contact?.instagram && (ig ? <a href={ig} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary hover:underline"><Instagram className="h-3.5 w-3.5 shrink-0" />{g.contact.instagram}</a> : <p>{g.contact.instagram}</p>)}
-                {g.restaurant?.phone && <a href={`tel:${g.restaurant.phone.replace(/[^+\d]/g, '')}`} className="flex items-center gap-2 text-primary hover:underline"><Phone className="h-3.5 w-3.5" />{g.restaurant.phone}</a>}
-              </div></TableCell>
-              <TableCell className="align-top w-64"><div className="space-y-2">
-                <Select value={g.status} disabled={busy[g.id]} onValueChange={s => { if (PRESALE_STATUSES.includes(s as PresaleStatus)) void update(g.id, { status: s as PresaleStatus }); }}><SelectTrigger aria-label={`Status ${name}`}><SelectValue /></SelectTrigger><SelectContent>{PRESALE_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select>
-                <Textarea rows={2} aria-label={`Notitie ${name}`} placeholder="Notitie" value={note} disabled={busy[g.id]} onChange={e => setNotes(prev => ({ ...prev, [g.id]: e.target.value }))} />
-                <Button variant="outline" size="sm" disabled={busy[g.id] || note === g.note} onClick={() => void update(g.id, { notitie: note })}>{busy[g.id] ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}Opslaan</Button>
-              </div></TableCell>
-            </TableRow>;
-          })}{!filtered.length && <TableRow><TableCell colSpan={4} className="py-12 text-center text-muted-foreground">Geen restaurants gevonden.</TableCell></TableRow>}</TableBody>
-        </Table>
+
+      <div className="space-y-2">
+        <div className="flex flex-wrap gap-2">
+          {PRESALE_STATUSES.map(s => (
+            <button key={s} onClick={() => setStatus(status === s ? 'all' : s)} className={`rounded-lg border px-3 py-1.5 text-sm ${status === s ? 'border-primary bg-primary/10' : 'bg-card'}`}>
+              {s} <span className="font-semibold">{statusCounts[s]}</span>
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {cities.map(([c, n]) => (
+            <button key={c} onClick={() => setCity(city === c ? 'all' : c)} className={`rounded-full border px-3 py-1 text-xs ${city === c ? 'border-primary bg-primary/10' : 'bg-card'}`}>
+              {c} <span className="font-semibold">{n}</span>
+            </button>
+          ))}
+        </div>
       </div>
-      {pages > 1 && <div className="flex justify-between items-center gap-3"><p className="text-sm text-muted-foreground">Pagina {currentPage} van {pages}</p><div className="flex gap-2"><Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>Vorige</Button><Button variant="outline" size="sm" disabled={currentPage === pages} onClick={() => setPage(currentPage + 1)}>Volgende</Button></div></div>}
-    </>}
-  </section>;
+
+      <div className="flex flex-wrap gap-3">
+        <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Zoek op restaurantnaam" aria-label="Zoek op restaurantnaam" className="w-64" />
+        <Select value={city} onValueChange={setCity}>
+          <SelectTrigger className="w-48" aria-label="Stad"><SelectValue /></SelectTrigger>
+          <SelectContent><SelectItem value="all">Alle steden</SelectItem>{cities.map(([c]) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+        </Select>
+        <Select value={status} onValueChange={setStatus}>
+          <SelectTrigger className="w-44" aria-label="Status filter"><SelectValue /></SelectTrigger>
+          <SelectContent><SelectItem value="all">Alle statussen</SelectItem>{PRESALE_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+        </Select>
+        <span className="self-center text-sm text-muted-foreground">{total} resultaten</span>
+      </div>
+
+      {loading ? <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div> : (
+        <div className="overflow-x-auto rounded-xl border">
+          {view === 'page' ? (
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>Restaurant</TableHead><TableHead>Stad</TableHead><TableHead>Gerecht</TableHead><TableHead>Positie</TableHead>
+                <TableHead>Telefoon</TableHead><TableHead>E-mail</TableHead><TableHead>Status</TableHead><TableHead>Notitie</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>{slice(filteredRows).map(r => {
+                const key = `row-${r.id}`;
+                return (
+                  <TableRow key={r.id} data-testid="presale-row">
+                    <TableCell><RestaurantCell r={r.restaurant} /></TableCell>
+                    <TableCell>{r.stad ?? '—'}</TableCell>
+                    <TableCell><Link to={`/eten/${r.pagina_slug}`} className="hover:underline">{r.gerecht ?? r.pagina_slug}</Link></TableCell>
+                    <TableCell className="whitespace-nowrap">#{r.positie ?? '—'} / {r.totaal ?? '—'}</TableCell>
+                    <ContactCells phone={contactPhone(r)} email={r.contact?.email} />
+                    <TableCell><StatusSelect value={r.status} disabled={!!busy[key]} label={`Status ${r.restaurant?.name ?? ''}`} onChange={v => save(key, { id: r.id }, { status: v })} /></TableCell>
+                    <TableCell><NoteInput value={r.notitie ?? ''} disabled={!!busy[key]} label={`Notitie ${r.restaurant?.name ?? ''}`} onSave={v => save(key, { id: r.id }, { notitie: v })} /></TableCell>
+                  </TableRow>
+                );
+              })}</TableBody>
+            </Table>
+          ) : (
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>Restaurant</TableHead><TableHead>Stad</TableHead><TableHead>Pagina's</TableHead><TableHead>Beste positie</TableHead>
+                <TableHead>Telefoon</TableHead><TableHead>E-mail</TableHead><TableHead>Status</TableHead><TableHead>Notitie</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>{slice(filteredGroups).map(g => {
+                const key = `rest-${g.id}`;
+                return (
+                  <TableRow key={g.id} data-testid="presale-group">
+                    <TableCell><RestaurantCell r={g.restaurant} /></TableCell>
+                    <TableCell>{g.cities.join(', ')}</TableCell>
+                    <TableCell>
+                      <div className="font-semibold">{g.pageCount}</div>
+                      <div className="text-xs text-muted-foreground">{g.pages.map(p => `${p.gerecht ?? p.pagina_slug} #${p.positie ?? '—'}`).join(', ')}</div>
+                    </TableCell>
+                    <TableCell>#{g.bestPosition ?? '—'}</TableCell>
+                    <ContactCells phone={contactPhone(g)} email={g.contact?.email} />
+                    <TableCell><StatusSelect value={g.status} disabled={!!busy[key]} label={`Status ${g.restaurant?.name ?? ''}`} onChange={v => save(key, { restaurantId: g.id }, { status: v })} /></TableCell>
+                    <TableCell><NoteInput value={g.note} disabled={!!busy[key]} label={`Notitie ${g.restaurant?.name ?? ''}`} onSave={v => save(key, { restaurantId: g.id }, { notitie: v })} /></TableCell>
+                  </TableRow>
+                );
+              })}</TableBody>
+            </Table>
+          )}
+        </div>
+      )}
+
+      {pages > 1 && (
+        <div className="flex items-center justify-end gap-2">
+          <Button variant="outline" size="sm" disabled={current <= 1} onClick={() => setPage(current - 1)}>Vorige</Button>
+          <span className="text-sm">{current} / {pages}</span>
+          <Button variant="outline" size="sm" disabled={current >= pages} onClick={() => setPage(current + 1)}>Volgende</Button>
+        </div>
+      )}
+    </section>
+  );
 }

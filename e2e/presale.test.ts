@@ -22,3 +22,11 @@ test('CSV neutralizes all four formula prefixes and escapes quotes', () => {
   expect(['=SUM(1)', '+1', '-1', '@cmd'].map(csvCell)).toEqual(["'=SUM(1)", "'+1", "'-1", "'@cmd"]);
   expect(csvCell('a,"b"')).toBe('"a,""b"""');
 });
+import { presaleRows, filterRows, cityCounts } from '../src/lib/presale';
+test('per-page rows sort by position and filter by name', () => {
+  const t = (id: number, positie: number, stad: string, rid: string) => ({ id, restaurant_id: rid, pagina_slug: `p${id}`, stad, gerecht: 'x', positie, totaal: 10, status: 'nieuw', notitie: null, updated_at: null });
+  const rows = presaleRows([t(1, 5, 'Breda', 'a'), t(2, 1, 'Tilburg', 'b')], [{ id: 'a', name: 'Alfa', slug: 'alfa', phone: null }, { id: 'b', name: 'Beta', slug: 'beta', phone: null }], []);
+  expect(rows.map(r => r.id)).toEqual([2, 1]);
+  expect(filterRows(rows, { city: 'all', status: 'all', search: 'alf' }).map(r => r.id)).toEqual([1]);
+  expect(cityCounts(rows)).toEqual([['Breda', 1], ['Tilburg', 1]]);
+});
