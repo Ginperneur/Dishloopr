@@ -532,6 +532,9 @@ export default function OwnerDashboard() {
                     Bekijk pagina
                   </Link>
                 </Button>
+                <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
+                  <Link to={`/voor-restaurants/pakketten${selectedRestaurant?.slug ? `?slug=${selectedRestaurant.slug}` : ''}`}>Pakketten</Link>
+                </Button>
                 </div>
               </motion.div>
 
