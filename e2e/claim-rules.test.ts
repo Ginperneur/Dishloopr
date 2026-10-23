@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
-  attemptsExhausted, canSendAnotherCode, canStartClaim, codeExpiry, domainMatches, extractDomain, isExpired,
+  attemptsExhausted, canSendAnotherCode, canStartClaim, codeExpiry, domainMatches, extractDomain, isExpired, resendWaitSeconds,
 } from '../supabase/functions/verify-claim/rules';
 
 describe('claim verification rules', () => {
@@ -15,12 +15,18 @@ describe('claim verification rules', () => {
     expect(domainMatches('bistro@gmail.com', 'bistro.nl')).toBe(false);
     expect(domainMatches('info@fakebistro.nl', 'bistro.nl')).toBe(false);
   });
-  test('code is valid for 15 minutes', () => {
+  test('code is valid for 30 minutes', () => {
     const now = Date.now();
     const exp = codeExpiry(now);
-    expect(exp.getTime() - now).toBe(15 * 60 * 1000);
-    expect(isExpired(exp, now + 14 * 60 * 1000)).toBe(false);
-    expect(isExpired(exp, now + 16 * 60 * 1000)).toBe(true);
+    expect(exp.getTime() - now).toBe(30 * 60 * 1000);
+    expect(isExpired(exp, now + 29 * 60 * 1000)).toBe(false);
+    expect(isExpired(exp, now + 31 * 60 * 1000)).toBe(true);
+  });
+  test('resending requires 60 seconds', () => {
+    const sent = '2026-10-23T07:00:00Z';
+    expect(resendWaitSeconds(sent, Date.parse(sent))).toBe(60);
+    expect(resendWaitSeconds(sent, Date.parse(sent) + 59000)).toBe(1);
+    expect(resendWaitSeconds(sent, Date.parse(sent) + 60000)).toBe(0);
   });
   test('max 5 attempts per code', () => {
     expect(attemptsExhausted(4)).toBe(false);

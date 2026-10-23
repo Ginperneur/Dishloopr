@@ -1,6 +1,10 @@
 // Pure claim-verification rules (no Deno/runtime APIs) so they can be unit-tested.
 
-export const CODE_TTL_MINUTES = 15;
+export const CODE_TTL_MINUTES = 30;
+export function resendWaitSeconds(sentAt: string | null | undefined, now: number): number {
+  if (!sentAt) return 0;
+  return Math.max(0, Math.ceil((new Date(sentAt).getTime() + 60_000 - now) / 1000));
+}
 export const MAX_CODE_ATTEMPTS = 5;
 export const MAX_CODES_PER_HOUR = 3;
 export const OPEN_CLAIM_STATUSES = ["pending", "email_verified", "phone_verified"];
