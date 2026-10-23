@@ -64,6 +64,13 @@
       "when": 1792740365593,
       "tag": "0008_restaurant_positions_fast",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792741713978,
+      "tag": "0009_packages_links_pro_waitlist",
+      "breakpoints": true
     }
   ]
 }

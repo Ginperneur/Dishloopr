@@ -161,6 +161,7 @@ export function Footer() {
             <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
               <li><Link to="/for-restaurants" className="hover:text-foreground transition-colors">{t('footer.howItWorks')}</Link></li>
               <li><Link to="/claim" className="hover:text-foreground transition-colors">{t('footer.claimRestaurant')}</Link></li>
+              <li><Link to="/voor-restaurants/pakketten" className="hover:text-foreground transition-colors">Pakketten</Link></li>
               <li><Link to="/dashboard" className="hover:text-foreground transition-colors">{t('nav.dashboard')}</Link></li>
             </ul>
 

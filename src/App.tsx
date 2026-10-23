@@ -23,6 +23,8 @@ import SearchPage from "./pages/SearchPage";
 // Lazy load all other routes
 const RestaurantPage = lazy(() => import("./pages/RestaurantPage"));
 const RestaurantOptoutPage = lazy(() => import("./pages/RestaurantOptoutPage"));
+const PackagesPage = lazy(() => import("./pages/PackagesPage"));
+const ThanksPage = lazy(() => import("./pages/ThanksPage"));
 const RestaurantInvitePage = lazy(() => import("./pages/RestaurantInvitePage"));
 const UnsubscribePage = lazy(() => import("./pages/UnsubscribePage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
@@ -126,8 +128,8 @@ const App = () => (
                   <Route path="/terms" element={<TermsPage />} />
                   <Route path="/privacy" element={<PrivacyPage />} />
                   <Route path="/voor-restaurants/afmelden" element={<RestaurantOptoutPage />} />
-                  <Route path="/voor-restaurants/pakketten" element={<ForRestaurantsPage />} />
-                  <Route path="/voor-restaurants/bedankt" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/voor-restaurants/pakketten" element={<PackagesPage />} />
+                  <Route path="/voor-restaurants/bedankt" element={<ThanksPage />} />
                   <Route path="/voor-restaurants/:slug" element={<RestaurantInvitePage />} />
                   <Route path="/afmelden" element={<UnsubscribePage />} />
                   <Route path="/claim" element={<ClaimPage />} />
