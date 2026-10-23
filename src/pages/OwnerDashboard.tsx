@@ -131,6 +131,7 @@ import { useOptimizationInsights } from '@/hooks/useOptimizationInsights';
 import { useMarketInsights } from '@/hooks/useMarketInsights';
 import { useRestaurantDishes } from '@/hooks/useRestaurantDishes';
 import { type ClaimPermissions } from '@/types/claims';
+import { PendingClaimCodes } from '@/components/claims/PendingClaimCodes';
 
 export default function OwnerDashboard() {
   const { t } = useTranslation();
@@ -327,6 +328,7 @@ export default function OwnerDashboard() {
           noindex
         />
         <div className="container py-16 text-center">
+          <PendingClaimCodes />
           <Store className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
           <h1 className="text-2xl font-bold mb-2">Geen restaurants gevonden</h1>
           <p className="text-muted-foreground mb-6">
@@ -386,6 +388,7 @@ export default function OwnerDashboard() {
 
   return (
     <Layout showFooter={false}>
+      <div className="container"><PendingClaimCodes /></div>
       <SEOHead
         title="Owner dashboard | Dishloopr"
         description="Beheer je restaurantprofiel, foto's, gerechten en reviews in het Dishloopr Owner dashboard."

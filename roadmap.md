@@ -1,4 +1,5 @@
 # Parkeerinformatie
+- [ ] Claim hervatten via mail/inloggen/dashboard; 30 minuten en 60 seconden pauze testen; testclaim opruimen.
 - [x] Claimcodemail via geverifieerde mailvoorziening; 11 tests, echte verzending 06:52 UTC, gekoppelde logregels, duidelijke foutmelding en testrestaurant/testclaim opgeruimd.
 - [ ] Claim definitief bevestigen met ontvangen inboxcode — geen toegang tot mailbox; verzendbewijs bevestigd, inboxontvangst niet verifieerbaar.
 - [x] Presale: adminoverzicht, restaurantbrede updates, filters, tellers en veilige CSV; 8 regels getest.

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom';
+import { ClaimCodeForm, type ClaimCodeState } from '@/components/claims/ClaimCodeForm';
 import { ArrowLeft, CheckCircle2, Clock, FileUp, Loader2, Mail, ShieldAlert, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
@@ -16,7 +17,7 @@ type Status = {
   claimStatus: string | null;
   isOwner: boolean;
   websiteDomain: string | null;
-  openClaim: { id: string; status: string; method: string | null; manualSubmitted: boolean } | null;
+  openClaim: { id: string; status: string; method: string | null; manualSubmitted: boolean; codeState: ClaimCodeState } | null;
 };
 
 async function call(body: Record<string, unknown>) {
@@ -34,6 +35,8 @@ export default function ClaimRestaurantPage() {
   const { slug } = useParams<{ slug: string }>();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [codeState, setCodeState] = useState<ClaimCodeState | null>(null);
   const [restaurant, setRestaurant] = useState<{ id: string; name: string; slug: string } | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [status, setStatus] = useState<Status | null>(null);
@@ -70,13 +73,16 @@ export default function ClaimRestaurantPage() {
         if (s.openClaim) {
           setClaimId(s.openClaim.id);
           if (s.openClaim.manualSubmitted) setRoute('pending');
+          else if (s.openClaim.method === 'domain_email') {
+            setCodeState(s.openClaim.codeState); setEmail(s.openClaim.codeState.email); setCodeSent(true); setRoute('email');
+          } else if (new URLSearchParams(location.search).get('stap') === 'code') setRoute('email');
         }
       })
       .catch((e) => toast.error(e.message));
-  }, [user, restaurant]);
+  }, [user, restaurant, location.search]);
 
   if (!authLoading && !user) {
-    return <Navigate to={`/login?tab=signup&redirect=${encodeURIComponent(`/claim/${slug}`)}`} replace />;
+    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   }
 
   const ensureClaim = async (claimRoute: 'email' | 'manual') => {
@@ -93,7 +99,8 @@ export default function ClaimRestaurantPage() {
     setDeliveryError('');
     try {
       const id = await ensureClaim('email');
-      await call({ action: 'send_domain_code', claimId: id, email: email.trim().toLowerCase() });
+      const result = await call({ action: 'send_domain_code', claimId: id, email: email.trim().toLowerCase() });
+      setCodeState({ id, email: email.trim().toLowerCase(), sentAt: result.sentAt, expiresAt: result.expiresAt, attempts: 0 });
       setCodeSent(true);
       toast.success(`Code verstuurd naar ${email.trim()}`);
     } catch (e: any) { setDeliveryError(e.message); toast.error(e.message); } finally { setBusy(false); }
@@ -118,7 +125,8 @@ export default function ClaimRestaurantPage() {
       const paths: string[] = [];
       for (const f of files.slice(0, 5)) {
         const ext = (f.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '');
-        const path = `${user!.id}/${id}/${crypto.randomUUID()}.${ext}`;
+        if (!user) throw new Error('Log eerst in');
+        const path = `${user.id}/${id}/${crypto.randomUUID()}.${ext}`;
         const { error } = await supabase.storage.from('claim-proofs').upload(path, f, { contentType: f.type });
         if (error) throw new Error(`Uploaden mislukt: ${error.message}`);
         paths.push(path);
@@ -199,7 +207,7 @@ export default function ClaimRestaurantPage() {
             ) : route === 'email' ? (
               <Card><CardContent className="p-6 space-y-4">
                 {deliveryError && <p role="alert" className="text-sm text-destructive">{deliveryError}</p>}
-                {!codeSent ? (
+                {codeSent && codeState ? <ClaimCodeForm initial={codeState} onVerified={() => { setRoute('done'); navigate('/owner-dashboard?welcome=1'); }} /> : (
                   <>
                     <div className="space-y-2">
                       <Label htmlFor="claim-email">Zakelijk e-mailadres</Label>
@@ -209,20 +217,6 @@ export default function ClaimRestaurantPage() {
                     <Button className="w-full" onClick={sendCode} disabled={busy || !email.includes('@')}>
                       {busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Stuur code
                     </Button>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-sm text-muted-foreground">We hebben een 6-cijferige code gestuurd naar <strong className="text-foreground">{email}</strong>. De code is 15 minuten geldig. Kijk ook in je spam.</p>
-                    <div className="space-y-2">
-                      <Label htmlFor="claim-code">Code</Label>
-                      <Input id="claim-code" inputMode="numeric" value={code} maxLength={6}
-                        onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                        className="font-mono text-lg tracking-[0.5em] text-center" placeholder="123456" />
-                    </div>
-                    <Button className="w-full" onClick={verifyCode} disabled={busy || code.length !== 6}>
-                      {busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Bevestigen
-                    </Button>
-                    <button type="button" onClick={sendCode} disabled={busy} className="block mx-auto min-h-11 text-sm text-muted-foreground underline">Nieuwe code sturen</button>
                   </>
                 )}
                 <Button variant="ghost" className="w-full" onClick={() => { setRoute('choose'); setCodeSent(false); }}>Andere methode kiezen</Button>
