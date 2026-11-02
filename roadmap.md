@@ -1,5 +1,5 @@
 # Parkeerinformatie
-- [ ] Onbekende openingstijden: badges onderdrukken, melding op restaurantpagina en bestaande berekening behouden; tests en previewcontrole.
+- [x] Onbekende openingstijden: badges onderdrukt, neutrale melding op restaurantpagina; 15 tests geslaagd, 44 echte kaarten en Tensai Ramen op desktop/mobiel gecontroleerd.
 - [x] Claim hervat na tab sluiten/verversen, mailbestemming en inloggen; dashboardcodeveld zichtbaar, verzendpauze bevestigd; 12 tests; tijdelijke restaurants/claims/codes verwijderd.
 - [x] Claimcodemail via geverifieerde mailvoorziening; 11 tests, echte verzending 06:52 UTC, gekoppelde logregels, duidelijke foutmelding en testrestaurant/testclaim opgeruimd.
 - [x] Eerste testclaim op 23 oktober werd tijdens de previewtest domain_email/verified; code-invoer zelf niet door de agent uitgevoerd of waargenomen wegens ontbrekende mailboxtoegang.
