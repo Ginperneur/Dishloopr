@@ -4979,6 +4979,21 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurants_backup_openingstijden: {
+        Row: {
+          id: string | null
+          opening_hours: Json | null
+        }
+        Insert: {
+          id?: string | null
+          opening_hours?: Json | null
+        }
+        Update: {
+          id?: string | null
+          opening_hours?: Json | null
+        }
+        Relationships: []
+      }
       restaurants_backup_urlherstel: {
         Row: {
           backup_at: string | null
