@@ -5638,6 +5638,21 @@ export type Database = {
           },
         ]
       }
+      stage_opening_hours: {
+        Row: {
+          opening_hours: Json | null
+          restaurant_id: string | null
+        }
+        Insert: {
+          opening_hours?: Json | null
+          restaurant_id?: string | null
+        }
+        Update: {
+          opening_hours?: Json | null
+          restaurant_id?: string | null
+        }
+        Relationships: []
+      }
       support_conversations: {
         Row: {
           created_at: string
