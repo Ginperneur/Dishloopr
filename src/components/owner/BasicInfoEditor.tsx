@@ -114,20 +114,14 @@ export function BasicInfoEditor({ restaurantId, currentName, currentOpeningHours
           Wijzigingen aan naam, beschrijving en openingstijden worden ter goedkeuring aan een admin voorgelegd.
         </p>
 
-        <div>
-          <Label className="text-xs">Restaurantnaam</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Bv. Bella Napoli" />
-        </div>
-
-        <div>
-          <Label className="text-xs">Beschrijving (NL)</Label>
-          <Textarea
-            rows={4}
-            value={descriptionNl}
-            onChange={(e) => setDescriptionNl(e.target.value)}
-            placeholder="Wat maakt jouw restaurant uniek?"
-          />
-        </div>
+        {DAYS.every((d) => !hours[d.key]?.trim()) && (
+          <div className="flex items-start gap-3 rounded-md border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
+            <Clock className="h-5 w-5 shrink-0 text-primary mt-0.5" />
+            <p>
+              We missen nog je openingstijden — bezoekers zien nu 'onbekend' in plaats van 'open' of 'gesloten'. Vul dit als eerste in.
+            </p>
+          </div>
+        )}
 
         <div>
           <Label className="text-xs flex items-center gap-2 mb-2">
@@ -146,6 +140,21 @@ export function BasicInfoEditor({ restaurantId, currentName, currentOpeningHours
               </div>
             ))}
           </div>
+        </div>
+
+        <div>
+          <Label className="text-xs">Restaurantnaam</Label>
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Bv. Bella Napoli" />
+        </div>
+
+        <div>
+          <Label className="text-xs">Beschrijving (NL)</Label>
+          <Textarea
+            rows={4}
+            value={descriptionNl}
+            onChange={(e) => setDescriptionNl(e.target.value)}
+            placeholder="Wat maakt jouw restaurant uniek?"
+          />
         </div>
 
         <Button size="sm" onClick={submit} disabled={saving}>
