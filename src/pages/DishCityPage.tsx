@@ -262,14 +262,8 @@ export default function DishCityPage() {
           </h1>
 
           {!activeFacet && page.intro_text && (
-            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-6">
+            <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-5 line-clamp-2 md:line-clamp-none">
               {page.intro_text}
-            </p>
-          )}
-
-          {!activeFacet && page.extended_description && (
-            <p className="text-muted-foreground leading-relaxed mb-8">
-              {page.extended_description}
             </p>
           )}
 
