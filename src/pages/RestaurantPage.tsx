@@ -392,25 +392,27 @@ export default function RestaurantPage() {
                       const existing = new Set(
                         (restaurant.ambience_tags || []).map((t) => t?.toLowerCase())
                       );
-                      const ambienceExtras = splitClean((restaurant as any).ambience_clean).filter(
-                        (v) => !existing.has(v.toLowerCase())
-                      );
-                      const conceptChips = splitClean((restaurant as any).concept_clean);
-                      const mealTypeChips = splitClean((restaurant as any).meal_types_clean);
+                      // Drop extras whose parts ("Traditioneel/Klassiek") repeat an existing tag
+                      const ambienceExtras = splitClean((restaurant as any).ambience_clean).filter((v) => {
+                        const parts = v.toLowerCase().split('/').map((p) => p.trim());
+                        if (parts.some((p) => existing.has(p))) return false;
+                        existing.add(v.toLowerCase());
+                        return true;
+                      });
+                      const conceptChips = splitClean((restaurant as any).concept_clean)
+                        .filter((v) => !existing.has(v.toLowerCase()));
+                      const chipClass = 'px-2 md:px-3 py-0.5 md:py-1 text-xs md:text-sm font-medium rounded-full bg-muted text-muted-foreground capitalize';
                       return (
                         <>
                           {ambienceExtras.map((v) => (
-                            <span
-                              key={`amb-${v}`}
-                              className="px-2 md:px-3 py-0.5 md:py-1 text-xs md:text-sm font-medium rounded-full bg-muted text-muted-foreground capitalize"
-                            >
+                            <span key={`amb-${v}`} className={chipClass}>
                               {v}
                             </span>
                           ))}
                           {conceptChips.map((v) => (
-                            <Badge key={`concept-${v}`} variant="secondary" className="capitalize text-xs md:text-sm">
+                            <span key={`concept-${v}`} className={chipClass}>
                               {v}
-                            </Badge>
+                            </span>
                           ))}
                           {mealTypeChips.map((v) => (
                             <Badge key={`meal-${v}`} variant="outline" className="capitalize text-xs md:text-sm">
