@@ -7,15 +7,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import logo from '@/assets/dishloopr-logo-wordmark.png';
+import logoLight from '@/assets/dishloopr-logo-wordmark.png';
+import logoDark from '@/assets/dishloopr-logo-wordmark-dark.png';
 import { useContentAvailability } from '@/hooks/useContentAvailability';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/components/theme/ThemeProvider';
 import { newsletterEmailSchema } from '@/lib/validations';
 import { openCookieSettings, sendAnalyticsEvent } from '@/lib/cookieConsent';
 
 export function Footer() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { resolvedTheme } = useTheme();
+  const logo = resolvedTheme === 'dark' ? logoDark : logoLight;
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);

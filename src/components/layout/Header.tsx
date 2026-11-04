@@ -15,13 +15,17 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
-import logo from '@/assets/dishloopr-logo-wordmark.png';
+import { useTheme } from '@/components/theme/ThemeProvider';
+import logoLight from '@/assets/dishloopr-logo-wordmark.png';
+import logoDark from '@/assets/dishloopr-logo-wordmark-dark.png';
 import { LANGUAGES } from '@/lib/constants';
 import { useContentAvailability } from '@/hooks/useContentAvailability';
 import { useHasFeatured } from '@/hooks/useHasFeatured';
 
 export function Header() {
   const { t, i18n } = useTranslation();
+  const { resolvedTheme } = useTheme();
+  const logo = resolvedTheme === 'dark' ? logoDark : logoLight;
   const { user, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
