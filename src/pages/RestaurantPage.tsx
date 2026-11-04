@@ -401,6 +401,7 @@ export default function RestaurantPage() {
                       });
                       const conceptChips = splitClean((restaurant as any).concept_clean)
                         .filter((v) => !existing.has(v.toLowerCase()));
+                      const mealTypeChips = splitClean((restaurant as any).meal_types_clean);
                       const chipClass = 'px-2 md:px-3 py-0.5 md:py-1 text-xs md:text-sm font-medium rounded-full bg-muted text-muted-foreground capitalize';
                       return (
                         <>
