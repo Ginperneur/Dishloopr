@@ -183,7 +183,7 @@ export default function ClaimRestaurantPage() {
                   <p className="text-sm text-muted-foreground">
                     {status.websiteDomain
                       ? <>We sturen een code naar een adres dat eindigt op <strong>@{status.websiteDomain}</strong>. Binnen een paar minuten klaar.</>
-                      : 'Niet beschikbaar: dit restaurant heeft geen website bij ons.'}
+                      : 'Niet beschikbaar: we hebben geen bruikbaar eigen domein van dit restaurant. Gebruik de handmatige route hieronder.'}
                   </p>
                 </button>
                 <button type="button" onClick={() => setRoute('manual')} className="text-left rounded-lg border bg-card p-5 hover:border-primary transition">
