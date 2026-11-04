@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
-import logo from '@/assets/dishloopr-logo.png';
+import logo from '@/assets/dishloopr-logo-wordmark.png';
 import { LANGUAGES } from '@/lib/constants';
 import { useContentAvailability } from '@/hooks/useContentAvailability';
 import { useHasFeatured } from '@/hooks/useHasFeatured';
@@ -105,11 +105,11 @@ export function Header() {
           <img
             src={logo}
             alt="Dishloopr"
-            width={40}
+            width={127}
             height={40}
             fetchPriority="high"
             className={`w-auto no-aspect-fallback transition-[height] duration-200 ${
-              scrolled ? 'h-7 md:h-8' : 'h-8 md:h-10'
+              scrolled ? 'h-7 md:h-8' : 'h-8 md:h-9'
             }`}
             loading="eager"
             decoding="async"

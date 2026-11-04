@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import logo from '@/assets/dishloopr-logo.png';
+import logo from '@/assets/dishloopr-logo-wordmark.png';
 import { useContentAvailability } from '@/hooks/useContentAvailability';
 import { useAuth } from '@/contexts/AuthContext';
 import { newsletterEmailSchema } from '@/lib/validations';

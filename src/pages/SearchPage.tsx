@@ -480,7 +480,7 @@ export default function SearchPage() {
                 <>{t('search.featuredTitleHeading', 'Uitgelichte restaurants')}</>
               ) : dishQuery ? (
                 <>
-                  {dishQuery} {cityName && `in ${cityName}`}
+                  {dishQuery.charAt(0).toUpperCase() + dishQuery.slice(1)} {cityName && `in ${cityName}`}
                 </>
               ) : (
                 <>{cityName ? t('search.restaurantsInCity', { city: cityName, defaultValue: `Restaurants in ${cityName}` }) : 'Restaurants'}</>

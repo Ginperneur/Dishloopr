@@ -262,14 +262,8 @@ export default function DishCityPage() {
           </h1>
 
           {!activeFacet && page.intro_text && (
-            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-6">
+            <p className="text-base md:text-lg text-muted-foreground leading-relaxed mb-5 line-clamp-2 md:line-clamp-none">
               {page.intro_text}
-            </p>
-          )}
-
-          {!activeFacet && page.extended_description && (
-            <p className="text-muted-foreground leading-relaxed mb-8">
-              {page.extended_description}
             </p>
           )}
 
@@ -444,6 +438,14 @@ export default function DishCityPage() {
           </div>
         )}
       </section>
+
+      {!activeFacet && page.extended_description && (
+        <section className="container px-4 md:px-6 pb-4">
+          <p className="max-w-3xl text-muted-foreground leading-relaxed">
+            {page.extended_description}
+          </p>
+        </section>
+      )}
 
       {/* FAQ Section */}
       {!activeFacet && page.faq_content.length > 0 && (

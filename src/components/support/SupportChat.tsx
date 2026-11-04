@@ -148,7 +148,7 @@ export function SupportChat() {
             exit={{ scale: 0, opacity: 0 }}
             onClick={() => setOpen(true)}
             aria-label="Open hulp chat"
-            className="fixed z-50 bottom-20 right-4 md:bottom-6 md:right-6 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl flex items-center justify-center transition-shadow"
+            className="support-chat-fab fixed z-50 bottom-20 right-4 md:bottom-6 md:right-6 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl flex items-center justify-center transition-shadow"
           >
             <MessageCircle className="w-6 h-6" />
           </motion.button>
