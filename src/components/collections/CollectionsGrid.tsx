@@ -90,6 +90,7 @@ function CollectionCard({ collection, index }: CollectionCardProps) {
 }
 
 export function CollectionsGrid() {
+  const { t } = useTranslation();
   const { collections, loading } = useCollections();
 
   if (loading) {
@@ -112,7 +113,7 @@ export function CollectionsGrid() {
     return (
       <div className="text-center py-12">
         <Utensils className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-        <p className="text-muted-foreground">Nog geen collecties beschikbaar</p>
+        <p className="text-muted-foreground">{t('home.noCollections', 'Nog geen collecties beschikbaar')}</p>
       </div>
     );
   }

@@ -67,15 +67,8 @@ export function SearchBar({
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const cityButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Rotating placeholder hints — surface intent + examples
-  const placeholderHints = [
-    'Probeer: sushi in Amsterdam',
-    'Probeer: ramen, vegan',
-    'Probeer: halal burger',
-    'Probeer: pizza in Rotterdam',
-    'Probeer: poké bowl',
-    'Probeer: surinaams roti',
-  ];
+  // Rotating placeholder hints — surface intent + examples (translated per locale)
+  const placeholderHints = t('search.placeholderHints', { returnObjects: true }) as string[];
   const [hintIndex, setHintIndex] = useState(0);
   useEffect(() => {
     if (selectedDishes.length > 0 || query.length > 0) return;

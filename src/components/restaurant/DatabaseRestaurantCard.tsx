@@ -269,7 +269,7 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
             const sigTr = isNl ? restaurant.dishTranslations?.[sig.name] : undefined;
             return (
               <div className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3 line-clamp-1">
-                <span className="font-medium text-foreground">Bekend om:</span>{' '}
+                <span className="font-medium text-foreground">{t('restaurant.knownFor', 'Bekend om')}:</span>{' '}
                 <span className="capitalize">{sig.name}</span>
                 {sigTr && <span className="font-normal"> ({sigTr})</span>}
                 {priceNum !== null && <> — {formatEuroNL(priceNum)}</>}

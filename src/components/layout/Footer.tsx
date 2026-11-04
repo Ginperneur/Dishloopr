@@ -152,7 +152,7 @@ export function Footer() {
               )}
               <li><Link to="/about" className="hover:text-foreground transition-colors">{t('footer.about')}</Link></li>
               <li><Link to="/contact" className="hover:text-foreground transition-colors">{t('footer.contact')}</Link></li>
-              <li><Link to="/suggest-restaurant" className="hover:text-foreground transition-colors">Stel een restaurant voor</Link></li>
+              <li><Link to="/suggest-restaurant" className="hover:text-foreground transition-colors">{t('footer.suggestRestaurant', 'Stel een restaurant voor')}</Link></li>
             </ul>
           </div>
 
@@ -161,7 +161,7 @@ export function Footer() {
             <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
               <li><Link to="/for-restaurants" className="hover:text-foreground transition-colors">{t('footer.howItWorks')}</Link></li>
               <li><Link to="/claim" className="hover:text-foreground transition-colors">{t('footer.claimRestaurant')}</Link></li>
-              <li><Link to="/voor-restaurants/pakketten" className="hover:text-foreground transition-colors">Pakketten</Link></li>
+              <li><Link to="/voor-restaurants/pakketten" className="hover:text-foreground transition-colors">{t('footer.packages', 'Pakketten')}</Link></li>
               <li><Link to="/dashboard" className="hover:text-foreground transition-colors">{t('nav.dashboard')}</Link></li>
             </ul>
 
@@ -169,8 +169,8 @@ export function Footer() {
             <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
               <li><Link to="/terms" className="hover:text-foreground transition-colors">{t('footer.terms')}</Link></li>
               <li><Link to="/privacy" className="hover:text-foreground transition-colors">{t('footer.privacy')}</Link></li>
-              <li><Button variant="link" onClick={openCookieSettings} className="h-auto p-0 text-xs md:text-sm text-muted-foreground hover:text-foreground font-normal">Cookie-instellingen</Button></li>
-              <li><Link to="/voor-restaurants/afmelden" className="hover:text-foreground transition-colors">Restaurant aanpassen of verwijderen</Link></li>
+              <li><Button variant="link" onClick={openCookieSettings} className="h-auto p-0 text-xs md:text-sm text-muted-foreground hover:text-foreground font-normal">{t('footer.cookieSettings', 'Cookie-instellingen')}</Button></li>
+              <li><Link to="/voor-restaurants/afmelden" className="hover:text-foreground transition-colors">{t('footer.editOrRemoveRestaurant', 'Restaurant aanpassen of verwijderen')}</Link></li>
             </ul>
           </div>
 

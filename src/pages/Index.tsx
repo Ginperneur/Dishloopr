@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { tTaxonomy } from '@/lib/i18n/taxonomy';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Navigation, Loader2, BookmarkCheck, X, Bell, BellOff } from 'lucide-react';
@@ -30,17 +31,19 @@ const PersonalizedRecommendations = lazy(() => import('@/components/ai/Personali
 import { toast } from 'sonner';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-// Popular cuisines to show as quick links in hero
+// Popular cuisines to show as quick links in hero.
+// `value` is the lowercase DB/search value (unchanged); `dbLabel` is the capitalized
+// Dutch form that CUISINE_I18N_KEYS (src/lib/i18n/taxonomy.ts) maps to a translation key.
 const POPULAR_CUISINES = [
-  { label: 'All you can eat', value: 'all you can eat' },
-  { label: 'Surinaams', value: 'surinaams' },
-  { label: 'Sushi', value: 'sushi' },
-  { label: 'Italiaans', value: 'italiaans' },
-  { label: 'Indiaas', value: 'indiaas' },
-  { label: 'Mexicaans', value: 'mexicaans' },
-  { label: 'Thais', value: 'thais' },
-  { label: 'Grieks', value: 'grieks' },
-];
+  { dbLabel: null, value: 'all you can eat', i18nKey: 'filters.allYouCanEat' },
+  { dbLabel: 'Surinaams', value: 'surinaams' },
+  { dbLabel: 'Sushi', value: 'sushi' },
+  { dbLabel: 'Italiaans', value: 'italiaans' },
+  { dbLabel: 'Indiaas', value: 'indiaas' },
+  { dbLabel: 'Mexicaans', value: 'mexicaans' },
+  { dbLabel: 'Thais', value: 'thais' },
+  { dbLabel: 'Grieks', value: 'grieks' },
+] as const;
 
 const Index = () => {
   const { t } = useTranslation();
@@ -217,7 +220,7 @@ const Index = () => {
                     onClick={() => handleCuisineClick(cuisine.value)}
                     className="shrink-0 snap-start px-3.5 py-2 text-xs font-medium rounded-full bg-card border border-border hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors touch-manipulation min-h-[36px] flex items-center"
                   >
-                    {cuisine.label}
+                    {cuisine.dbLabel ? tTaxonomy(t, 'cuisine', cuisine.dbLabel) : t(cuisine.i18nKey)}
                   </button>
                 ))}
               </div>
@@ -234,7 +237,7 @@ const Index = () => {
                   onClick={() => handleCuisineClick(cuisine.value)}
                   className="px-3 py-1.5 text-sm font-medium rounded-full bg-card border border-border hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors touch-manipulation min-h-[36px] flex items-center"
                 >
-                  {cuisine.label}
+                  {cuisine.dbLabel ? tTaxonomy(t, 'cuisine', cuisine.dbLabel) : t(cuisine.i18nKey)}
                 </button>
               ))}
             </div>

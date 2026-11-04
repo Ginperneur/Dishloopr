@@ -451,7 +451,7 @@ export default function RestaurantPage() {
                       <Button variant="outline" size="sm" onClick={() => trackCTA('website')} asChild>
                         <a href={restaurant.website_url} target="_blank" rel="noopener noreferrer" className="gap-2">
                           <Globe className="h-4 w-4" />
-                          <span className="hidden sm:inline">Website</span>
+                          <span className="hidden sm:inline">{t('restaurant.website', 'Website')}</span>
                         </a>
                       </Button>
                     )}
@@ -604,10 +604,10 @@ export default function RestaurantPage() {
             {canBeClaimed && (
               <div className="rounded-lg border bg-muted/40 p-5 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
                 <div>
-                  <p className="font-semibold">Is dit jouw restaurant?</p>
-                  <p className="text-sm text-muted-foreground">Claim gratis en beheer je menu, openingstijden en foto's.</p>
+                  <p className="font-semibold">{t('restaurant.isYourRestaurant', 'Is dit jouw restaurant?')}</p>
+                  <p className="text-sm text-muted-foreground">{t('restaurant.claimFreeManage', "Claim gratis en beheer je menu, openingstijden en foto's.")}</p>
                 </div>
-                <Button asChild><Link to={`/claim/${restaurant.slug}`}>Claim gratis</Link></Button>
+                <Button asChild><Link to={`/claim/${restaurant.slug}`}>{t('restaurant.claimFree', 'Claim gratis')}</Link></Button>
               </div>
             )}
 
@@ -740,9 +740,9 @@ export default function RestaurantPage() {
         </div>
       )}
       <p className="container text-center text-xs text-muted-foreground py-6">
-        Ben je de eigenaar?{' '}
-        <Link to={`/claim/${restaurant.slug}`} className="underline hover:text-foreground">Claim</Link>{' of '}
-        <Link to={`/voor-restaurants/afmelden?slug=${encodeURIComponent(restaurant.slug)}&naam=${encodeURIComponent(restaurant.name)}`} className="underline hover:text-foreground">laat dit aanpassen</Link>
+        {t('restaurant.areYouOwner', 'Ben je de eigenaar?')}{' '}
+        <Link to={`/claim/${restaurant.slug}`} className="underline hover:text-foreground">{t('restaurant.claimShort', 'Claim')}</Link>{' '}{t('restaurant.or', 'of')}{' '}
+        <Link to={`/voor-restaurants/afmelden?slug=${encodeURIComponent(restaurant.slug)}&naam=${encodeURIComponent(restaurant.name)}`} className="underline hover:text-foreground">{t('restaurant.editListing', 'laat dit aanpassen')}</Link>
       </p>
       </div>
     </Layout>
