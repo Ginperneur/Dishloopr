@@ -439,7 +439,7 @@ export default function RestaurantPage() {
                       className={`gap-2 ${isFavorite(restaurant.id) ? 'text-destructive border-destructive/30' : ''}`}
                     >
                       <Heart className={`h-4 w-4 ${isFavorite(restaurant.id) ? 'fill-current' : ''}`} />
-                      <span className="hidden sm:inline">{isFavorite(restaurant.id) ? t('restaurant.saved', 'Opgeslagen') : t('restaurant.save', 'Opslaan')}</span>
+                      <span className="">{isFavorite(restaurant.id) ? t('restaurant.saved', 'Opgeslagen') : t('restaurant.save', 'Opslaan')}</span>
                     </Button>
                     <SocialShare 
                       title={restaurant.name} 
@@ -453,7 +453,7 @@ export default function RestaurantPage() {
                       <Button variant="outline" size="sm" onClick={() => trackCTA('website')} asChild>
                         <a href={restaurant.website_url} target="_blank" rel="noopener noreferrer" className="gap-2">
                           <Globe className="h-4 w-4" />
-                          <span className="hidden sm:inline">Website</span>
+                          <span className="">Website</span>
                         </a>
                       </Button>
                     )}
