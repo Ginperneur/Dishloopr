@@ -439,6 +439,14 @@ export default function DishCityPage() {
         )}
       </section>
 
+      {!activeFacet && page.extended_description && (
+        <section className="container px-4 md:px-6 pb-4">
+          <p className="max-w-3xl text-muted-foreground leading-relaxed">
+            {page.extended_description}
+          </p>
+        </section>
+      )}
+
       {/* FAQ Section */}
       {!activeFacet && page.faq_content.length > 0 && (
         <section className="container px-4 md:px-6 py-8 md:py-12">
