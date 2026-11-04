@@ -447,6 +447,12 @@
   },
   "events": {
     "title": "Events",
+    "pageTitle": "Specials in your city",
+    "subtitle": "Special deals, events and discounts at restaurants. From ladies nights to seasonal menus — never miss a deal.",
+    "allCities": "All cities",
+    "empty": "No specials yet",
+    "emptyCity": "No specials yet in {{city}}",
+    "emptyDesc": "There are currently no upcoming events or deals. Check back soon!",
     "upcoming": "Upcoming events",
     "spotsLeft": "{{count}} spots left",
     "soldOut": "Sold out",
@@ -493,7 +499,9 @@
     "statusInactive": "Inactive",
     "enabledSuccess": "You will now receive routed demand",
     "disabledSuccess": "Routed demand disabled",
-    "transparencyNote": "Suggestions based on similar characteristics, not payment"
+    "transparencyNote": "Suggestions based on similar characteristics, not payment",
+    "transparencyNoteSponsored": "Suggestions based on similar characteristics; picks marked 'Featured' are paid placements",
+    "sponsored": "Featured"
   },
   "optimization": {
     "title": "Optimization Toolkit",

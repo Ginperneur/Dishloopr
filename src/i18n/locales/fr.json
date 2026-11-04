@@ -446,6 +446,12 @@
   },
   "events": {
     "title": "Événements",
+    "pageTitle": "Offres spéciales dans votre ville",
+    "subtitle": "Offres spéciales, événements et réductions dans les restaurants. Des ladies nights aux menus de saison — ne manquez aucune offre.",
+    "allCities": "Toutes les villes",
+    "empty": "Aucune offre pour le moment",
+    "emptyCity": "Aucune offre à {{city}} pour le moment",
+    "emptyDesc": "Il n'y a actuellement aucun événement ou offre à venir. Revenez bientôt !",
     "upcoming": "Événements à venir",
     "spotsLeft": "{{count}} places restantes",
     "soldOut": "Complet",
@@ -492,7 +498,9 @@
     "statusInactive": "Inactif",
     "enabledSuccess": "Vous recevrez maintenant la demande routée",
     "disabledSuccess": "Demande routée désactivée",
-    "transparencyNote": "Suggestions basées sur des caractéristiques similaires, pas sur le paiement"
+    "transparencyNote": "Suggestions basées sur des caractéristiques similaires, pas sur le paiement",
+    "transparencyNoteSponsored": "Suggestions basées sur des caractéristiques similaires ; les options marquées 'Recommandé' sont des placements payants",
+    "sponsored": "Recommandé"
   },
   "optimization": {
     "title": "Toolkit d'optimisation",

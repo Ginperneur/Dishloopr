@@ -20,6 +20,7 @@ interface AlternativeRestaurant {
   matchScore: number;
   matchReasons: string[];
   cityName?: string;
+  isSponsoredPick?: boolean;
 }
 
 interface AlternativeRestaurantsProps {
@@ -46,6 +47,10 @@ const reasonMessages: Record<RoutingReason, { title: string; subtitle: string }>
   low_availability: {
     title: 'Beperkte beschikbaarheid',
     subtitle: 'Meer opties in de buurt',
+  },
+  similar: {
+    title: 'Vergelijkbare restaurants',
+    subtitle: 'Misschien vind je deze ook leuk',
   },
 };
 
@@ -137,9 +142,16 @@ export function AlternativeRestaurants({
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
-                      <h4 className="font-semibold text-sm truncate">
-                        {restaurant.name}
-                      </h4>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <h4 className="font-semibold text-sm truncate">
+                          {restaurant.name}
+                        </h4>
+                        {restaurant.isSponsoredPick && (
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 shrink-0 border-primary/30 text-primary/80">
+                            {t('routing.sponsored', 'Aanbevolen')}
+                          </Badge>
+                        )}
+                      </div>
                       {Number(restaurant.rating) > 0 ? (
                         <div className="flex items-center gap-1 shrink-0">
                           <Star className="h-3.5 w-3.5 fill-rating text-rating" />
@@ -186,7 +198,9 @@ export function AlternativeRestaurants({
 
           {/* Transparency notice */}
           <p className="text-[11px] text-muted-foreground/70 text-center pt-2">
-            {t('routing.transparencyNote', 'Suggesties gebaseerd op vergelijkbare kenmerken, niet op betaling')}
+            {alternatives.some((a) => a.isSponsoredPick)
+              ? t('routing.transparencyNoteSponsored', "Suggesties gebaseerd op vergelijkbare kenmerken; als 'Aanbevolen' gemarkeerde opties zijn betaald geplaatst")
+              : t('routing.transparencyNote', 'Suggesties gebaseerd op vergelijkbare kenmerken, niet op betaling')}
           </p>
         </CardContent>
       </Card>

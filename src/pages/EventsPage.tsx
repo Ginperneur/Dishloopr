@@ -3,15 +3,16 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
-import { Calendar, Users, ChefHat, Wine, Utensils, Euro, ArrowRight, PartyPopper, Tag } from 'lucide-react';
+import { Calendar, Users, ChefHat, Wine, Utensils, Euro, ArrowRight, PartyPopper, Tag, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Layout } from '@/components/layout/Layout';
 import { SEOHead, createBreadcrumbSchema } from '@/components/seo/SEOHead';
 import { useRestaurantEvents } from '@/hooks/useRestaurantEvents';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { optimizedImage, imgLoadingProps } from '@/lib/imageUrl';
 
@@ -57,6 +58,7 @@ export default function EventsPage() {
   const { t } = useTranslation();
   const [events, setEvents] = useState<EventWithRestaurant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCity, setSelectedCity] = useState<string>('all');
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -103,6 +105,19 @@ export default function EventsPage() {
     return format(date, 'd MMM', { locale: nl });
   };
 
+  const cities = useMemo(() => {
+    const names = new Set<string>();
+    events.forEach((e) => {
+      if (e.restaurant?.city?.name) names.add(e.restaurant.city.name);
+    });
+    return Array.from(names).sort((a, b) => a.localeCompare(b, 'nl'));
+  }, [events]);
+
+  const filteredEvents = useMemo(() => {
+    if (selectedCity === 'all') return events;
+    return events.filter((e) => e.restaurant?.city?.name === selectedCity);
+  }, [events, selectedCity]);
+
   return (
     <Layout>
       <SEOHead
@@ -136,12 +151,25 @@ export default function EventsPage() {
         >
           <h1 className="text-3xl md:text-4xl font-bold mb-3 flex items-center gap-3">
             <PartyPopper className="h-8 w-8 text-primary" />
-            Events & Acties
+            {t('events.pageTitle', 'Specials in jouw stad')}
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl">
-            Speciale acties, evenementen en kortingen bij restaurants in de buurt. 
-            Van ladies nights tot seizoensgebonden menu's — mis geen enkele actie.
+          <p className="text-lg text-muted-foreground max-w-2xl mb-5">
+            {t('events.subtitle', "Speciale acties, evenementen en kortingen bij restaurants. Van ladies nights tot seizoensgebonden menu's — mis geen enkele actie.")}
           </p>
+          {cities.length > 1 && (
+            <Select value={selectedCity} onValueChange={setSelectedCity}>
+              <SelectTrigger className="w-full sm:w-64">
+                <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
+                <SelectValue placeholder={t('events.allCities', 'Alle steden')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('events.allCities', 'Alle steden')}</SelectItem>
+                {cities.map((city) => (
+                  <SelectItem key={city} value={city}>{city}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </motion.div>
 
         {loading ? (
@@ -157,17 +185,21 @@ export default function EventsPage() {
               </Card>
             ))}
           </div>
-        ) : events.length === 0 ? (
+        ) : filteredEvents.length === 0 ? (
           <div className="text-center py-16">
             <Calendar className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Nog geen evenementen</h2>
+            <h2 className="text-xl font-semibold mb-2">
+              {selectedCity === 'all'
+                ? t('events.empty', 'Nog geen specials')
+                : t('events.emptyCity', 'Nog geen specials in {{city}}', { city: selectedCity })}
+            </h2>
             <p className="text-muted-foreground">
-              Er zijn momenteel geen aankomende events of acties. Kom snel terug!
+              {t('events.emptyDesc', 'Er zijn momenteel geen aankomende events of acties. Kom snel terug!')}
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {events.map((event, index) => {
+            {filteredEvents.map((event, index) => {
               const Icon = eventTypeIcons[event.event_type] || Calendar;
               const spotsLeft = event.max_participants
                 ? event.max_participants - event.current_participants

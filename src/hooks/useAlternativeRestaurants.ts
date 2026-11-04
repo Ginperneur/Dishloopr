@@ -9,9 +9,10 @@ interface AlternativeRestaurant extends Restaurant {
   matchScore: number;
   matchReasons: string[];
   cityName?: string;
+  isSponsoredPick?: boolean;
 }
 
-export type RoutingReason = 'closed' | 'busy' | 'fully_booked' | 'low_availability';
+export type RoutingReason = 'closed' | 'busy' | 'fully_booked' | 'low_availability' | 'similar';
 
 interface UseAlternativeRestaurantsReturn {
   alternatives: AlternativeRestaurant[];
@@ -99,8 +100,8 @@ export function useAlternativeRestaurants(): UseAlternativeRestaurantsReturn {
           userLat,
           userLng
         );
-        
-        setAlternatives(scored.slice(0, 5));
+
+        setAlternatives(mixPaidAndOrganic(scored));
         setLoading(false);
         return;
       }
@@ -116,7 +117,7 @@ export function useAlternativeRestaurants(): UseAlternativeRestaurantsReturn {
         userLng
       );
 
-      setAlternatives(scored.slice(0, 5));
+      setAlternatives(mixPaidAndOrganic(scored));
     } catch (err) {
       console.error('Error finding alternatives:', err);
       setError('Kon geen alternatieven vinden');
@@ -124,6 +125,33 @@ export function useAlternativeRestaurants(): UseAlternativeRestaurantsReturn {
       setLoading(false);
     }
   }, []);
+
+  /**
+   * Mix up to 5 results: a few purely organic (best dish/cuisine match) plus a
+   * few paying restaurants (is_featured/is_top_listing) that still score > 0
+   * organically — never a paying restaurant with no real match. Paid picks are
+   * flagged via `isSponsoredPick` so the UI can disclose them honestly.
+   */
+  const mixPaidAndOrganic = (
+    scored: AlternativeRestaurant[],
+    maxTotal = 5,
+    maxPaid = 2
+  ): AlternativeRestaurant[] => {
+    const organic = scored.filter((r) => !r.is_featured && !r.is_top_listing);
+    const paid = scored.filter((r) => r.is_featured || r.is_top_listing);
+
+    const paidPicks = paid.slice(0, Math.min(maxPaid, maxTotal));
+    const organicSlots = maxTotal - paidPicks.length;
+    const organicPicks = organic.slice(0, organicSlots);
+
+    const result = [
+      ...organicPicks,
+      ...paidPicks.map((r) => ({ ...r, isSponsoredPick: true })),
+    ];
+    // Re-sort by matchScore so paid picks don't always trail; they already only
+    // entered the pool because they scored > 0 on real relevance.
+    return result.sort((a, b) => b.matchScore - a.matchScore).slice(0, maxTotal);
+  };
 
   const scoreRestaurants = async (
     restaurants: any[],

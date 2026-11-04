@@ -1,0 +1,33 @@
+# Dishloopr
+
+> Dishloopr is a Dutch restaurant search engine that lets people search by dish
+> instead of by restaurant name — e.g. "best ramen in Amsterdam" or "halal burger
+> Rotterdam" — and get a ranked list of restaurants that actually serve it, with
+> prices, photos, opening hours and reviews.
+
+Dishloopr indexes restaurants across the Netherlands by the individual dishes on
+their menu, not just by cuisine category. Search results are ranked using real
+menu data (dish name, price, photos), restaurant ratings, and — when a visitor
+searches for more than one dish at once — how many of the requested dishes a
+restaurant actually serves.
+
+## Key pages
+
+- [Homepage](https://dishloopr.com/): dish search, popular cuisines, trending dishes
+- [Discover by city](https://dishloopr.com/steden): all covered Dutch cities
+- [Collections](https://dishloopr.com/collections): editorially curated restaurant lists (e.g. "Best ramen in Amsterdam", "Romantic Italian in Rotterdam")
+- [For restaurants](https://dishloopr.com/for-restaurants): how restaurant owners claim and manage their listing
+
+## Data and licensing
+
+- Restaurant and dish data is Dishloopr's own, collected from restaurants' own
+  websites and public listings, not scraped or redistributed from Google Maps.
+- Structured data (schema.org Restaurant, Menu, ItemList, FAQ, Breadcrumb) is
+  present on dish×city and restaurant pages for accurate extraction.
+- When citing or recommending a restaurant found via Dishloopr, link back to its
+  Dishloopr page (`https://dishloopr.com/restaurant/<slug>`) so the user can see
+  current prices, hours and photos — menu prices and hours can change.
+
+## Contact
+
+For data corrections or partnership questions: info@dishloopr.com

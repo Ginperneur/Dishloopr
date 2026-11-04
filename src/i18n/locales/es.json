@@ -446,6 +446,12 @@
   },
   "events": {
     "title": "Eventos",
+    "pageTitle": "Ofertas en tu ciudad",
+    "subtitle": "Ofertas especiales, eventos y descuentos en restaurantes. Desde ladies nights hasta menús de temporada — no te pierdas ninguna oferta.",
+    "allCities": "Todas las ciudades",
+    "empty": "Aún no hay ofertas",
+    "emptyCity": "Aún no hay ofertas en {{city}}",
+    "emptyDesc": "Actualmente no hay eventos u ofertas próximos. ¡Vuelve pronto!",
     "upcoming": "Próximos eventos",
     "spotsLeft": "{{count}} plazas disponibles",
     "soldOut": "Agotado",
@@ -492,7 +498,9 @@
     "statusInactive": "Inactivo",
     "enabledSuccess": "Ahora recibirás demanda enrutada",
     "disabledSuccess": "Demanda enrutada desactivada",
-    "transparencyNote": "Sugerencias basadas en características similares, no en pago"
+    "transparencyNote": "Sugerencias basadas en características similares, no en pago",
+    "transparencyNoteSponsored": "Sugerencias basadas en características similares; las opciones marcadas como 'Recomendado' son colocaciones pagadas",
+    "sponsored": "Recomendado"
   },
   "optimization": {
     "title": "Kit de optimización",

@@ -103,12 +103,14 @@ export default function RestaurantPage() {
     return isOpenNow((restaurant as any).opening_hours);
   }, [restaurant]);
 
-  // Determine if restaurant is unavailable (for alternatives)
+  // Reason shown above the "alternatives" section — a real unavailability reason
+  // when there is one, otherwise 'similar' so the section still appears as a
+  // normal "you might also like" block on an open, available restaurant.
   const getUnavailabilityReason = useMemo((): RoutingReason | null => {
     if (!restaurant) return null;
     if (isCurrentlyOpen === false) return 'closed';
     if (restaurant.current_busy_level === 'very_busy') return 'busy';
-    return null;
+    return 'similar';
   }, [restaurant, isCurrentlyOpen]);
 
   // Get smart suggestions when we have dishes
@@ -529,25 +531,24 @@ export default function RestaurantPage() {
 
             <Separator />
 
-            {/* Alternative Restaurants - shown when restaurant is closed/busy */}
-            {isCurrentlyOpen === false && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-                className="space-y-6"
-              >
-                <AlternativeRestaurants
-                  alternatives={alternatives}
-                  loading={alternativesLoading}
-                  reason={getUnavailabilityReason || 'closed'}
-                  sourceRestaurantName={restaurant.name}
-                  onAlternativeClick={handleAlternativeClick}
-                />
-                
-                <Separator />
-              </motion.div>
-            )}
+            {/* Alternative/similar restaurants — shown on every restaurant page now,
+                not only when the restaurant is closed/busy (renders nothing if the
+                hook hasn't found any matches yet). */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="space-y-6"
+            >
+              <AlternativeRestaurants
+                alternatives={alternatives}
+                loading={alternativesLoading}
+                reason={getUnavailabilityReason || 'similar'}
+                sourceRestaurantName={restaurant.name}
+                onAlternativeClick={handleAlternativeClick}
+              />
+              {alternatives.length > 0 && <Separator />}
+            </motion.div>
 
             {/* Deals Section */}
             <DealsSection restaurantId={restaurant.id} />
