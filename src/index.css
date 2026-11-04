@@ -511,3 +511,6 @@ img:where(:not([width]):not([height]):not(.no-aspect-fallback)) {
   outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
 }
+
+/* Hide the support chat button while the cookie banner is open */
+html[data-cookie-banner] .support-chat-fab { display: none; }

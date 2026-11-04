@@ -228,7 +228,7 @@ const Index = () => {
               <span className="text-sm text-muted-foreground mr-1 self-center">
                 {t('home.popular', 'Populair')}:
               </span>
-              {POPULAR_CUISINES.map((cuisine) => (
+              {POPULAR_CUISINES.slice(0, 6).map((cuisine) => (
                 <button
                   key={cuisine.value}
                   onClick={() => handleCuisineClick(cuisine.value)}
