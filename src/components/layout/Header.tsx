@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
-import logo from '@/assets/dishloopr-logo.png';
+import logo from '@/assets/dishloopr-logo-wordmark.png';
 import { LANGUAGES } from '@/lib/constants';
 import { useContentAvailability } from '@/hooks/useContentAvailability';
 import { useHasFeatured } from '@/hooks/useHasFeatured';
