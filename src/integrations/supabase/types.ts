@@ -2835,6 +2835,78 @@ export type Database = {
           },
         ]
       }
+      restaurant_contacts_backup_20261023: {
+        Row: {
+          afgemeld_op: string | null
+          afmeld_token: string | null
+          alle_emails: string[] | null
+          bron: string | null
+          created_at: string | null
+          email: string | null
+          email_bron: string | null
+          email_kwaliteit: string | null
+          email_op_domein: boolean | null
+          facebook: string | null
+          gedeeld_door: number | null
+          gevonden_op: string | null
+          instagram: string | null
+          kvk: string | null
+          laatst_gemaild_op: string | null
+          mail_golf: number | null
+          rechtsvorm: string | null
+          restaurant_id: string | null
+          status: string | null
+          telefoon_site: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          afgemeld_op?: string | null
+          afmeld_token?: string | null
+          alle_emails?: string[] | null
+          bron?: string | null
+          created_at?: string | null
+          email?: string | null
+          email_bron?: string | null
+          email_kwaliteit?: string | null
+          email_op_domein?: boolean | null
+          facebook?: string | null
+          gedeeld_door?: number | null
+          gevonden_op?: string | null
+          instagram?: string | null
+          kvk?: string | null
+          laatst_gemaild_op?: string | null
+          mail_golf?: number | null
+          rechtsvorm?: string | null
+          restaurant_id?: string | null
+          status?: string | null
+          telefoon_site?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          afgemeld_op?: string | null
+          afmeld_token?: string | null
+          alle_emails?: string[] | null
+          bron?: string | null
+          created_at?: string | null
+          email?: string | null
+          email_bron?: string | null
+          email_kwaliteit?: string | null
+          email_op_domein?: boolean | null
+          facebook?: string | null
+          gedeeld_door?: number | null
+          gevonden_op?: string | null
+          instagram?: string | null
+          kvk?: string | null
+          laatst_gemaild_op?: string | null
+          mail_golf?: number | null
+          rechtsvorm?: string | null
+          restaurant_id?: string | null
+          status?: string | null
+          telefoon_site?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       restaurant_deals: {
         Row: {
           conditions: string | null
@@ -3896,6 +3968,56 @@ export type Database = {
           },
         ]
       }
+      restaurant_geo_pdok: {
+        Row: {
+          afstand_m: number | null
+          created_at: string
+          gecheckt: string | null
+          kwaliteit: string | null
+          opmerking: string | null
+          pdok_adres: string | null
+          pdok_id: string | null
+          pdok_lat: number | null
+          pdok_lng: number | null
+          restaurant_id: string
+          toegepast_op: string | null
+        }
+        Insert: {
+          afstand_m?: number | null
+          created_at?: string
+          gecheckt?: string | null
+          kwaliteit?: string | null
+          opmerking?: string | null
+          pdok_adres?: string | null
+          pdok_id?: string | null
+          pdok_lat?: number | null
+          pdok_lng?: number | null
+          restaurant_id: string
+          toegepast_op?: string | null
+        }
+        Update: {
+          afstand_m?: number | null
+          created_at?: string
+          gecheckt?: string | null
+          kwaliteit?: string | null
+          opmerking?: string | null
+          pdok_adres?: string | null
+          pdok_id?: string | null
+          pdok_lat?: number | null
+          pdok_lng?: number | null
+          restaurant_id?: string
+          toegepast_op?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_geo_pdok_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_managers: {
         Row: {
           accepted_at: string | null
@@ -4857,6 +4979,21 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurants_backup_openingstijden: {
+        Row: {
+          id: string | null
+          opening_hours: Json | null
+        }
+        Insert: {
+          id?: string | null
+          opening_hours?: Json | null
+        }
+        Update: {
+          id?: string | null
+          opening_hours?: Json | null
+        }
+        Relationships: []
+      }
       restaurants_backup_urlherstel: {
         Row: {
           backup_at: string | null
@@ -4884,6 +5021,48 @@ export type Database = {
           is_active?: boolean | null
           updated_at?: string | null
           website_url?: string | null
+        }
+        Relationships: []
+      }
+      restaurants_buitenland_backup_20261023: {
+        Row: {
+          backup_op: string | null
+          id: string | null
+          is_active: boolean | null
+          name: string | null
+        }
+        Insert: {
+          backup_op?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          name?: string | null
+        }
+        Update: {
+          backup_op?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          name?: string | null
+        }
+        Relationships: []
+      }
+      restaurants_geo_backup_20261023: {
+        Row: {
+          backup_op: string | null
+          geo_lat: number | null
+          geo_lng: number | null
+          id: string | null
+        }
+        Insert: {
+          backup_op?: string | null
+          geo_lat?: number | null
+          geo_lng?: number | null
+          id?: string | null
+        }
+        Update: {
+          backup_op?: string | null
+          geo_lat?: number | null
+          geo_lng?: number | null
+          id?: string | null
         }
         Relationships: []
       }
@@ -4926,6 +5105,24 @@ export type Database = {
           id?: string
           reden?: string | null
           was_active?: boolean | null
+        }
+        Relationships: []
+      }
+      restaurants_website_backup_20261023: {
+        Row: {
+          backup_op: string | null
+          id: string | null
+          website_url: string | null
+        }
+        Insert: {
+          backup_op?: string | null
+          id?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          backup_op?: string | null
+          id?: string | null
+          website_url?: string | null
         }
         Relationships: []
       }
@@ -5456,6 +5653,21 @@ export type Database = {
           },
         ]
       }
+      stage_opening_hours: {
+        Row: {
+          opening_hours: Json | null
+          restaurant_id: string | null
+        }
+        Insert: {
+          opening_hours?: Json | null
+          restaurant_id?: string | null
+        }
+        Update: {
+          opening_hours?: Json | null
+          restaurant_id?: string | null
+        }
+        Relationships: []
+      }
       support_conversations: {
         Row: {
           created_at: string
@@ -5941,6 +6153,62 @@ export type Database = {
             foreignKeyName: "verification_credits_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_check_results: {
+        Row: {
+          actie: string | null
+          actie_reden: string | null
+          created_at: string
+          eind_domein: string | null
+          gecheckt: string | null
+          http_status: string | null
+          naam_gevonden: string | null
+          oordeel: string | null
+          opgelost_op: string | null
+          reden: string | null
+          restaurant_id: string
+          titel: string | null
+          website: string | null
+        }
+        Insert: {
+          actie?: string | null
+          actie_reden?: string | null
+          created_at?: string
+          eind_domein?: string | null
+          gecheckt?: string | null
+          http_status?: string | null
+          naam_gevonden?: string | null
+          oordeel?: string | null
+          opgelost_op?: string | null
+          reden?: string | null
+          restaurant_id: string
+          titel?: string | null
+          website?: string | null
+        }
+        Update: {
+          actie?: string | null
+          actie_reden?: string | null
+          created_at?: string
+          eind_domein?: string | null
+          gecheckt?: string | null
+          http_status?: string | null
+          naam_gevonden?: string | null
+          oordeel?: string | null
+          opgelost_op?: string | null
+          reden?: string | null
+          restaurant_id?: string
+          titel?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_check_results_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },

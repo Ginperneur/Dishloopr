@@ -71,6 +71,20 @@
       "when": 1792741713978,
       "tag": "0009_packages_links_pro_waitlist",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793637109255,
+      "tag": "0010_create_stage_opening_hours",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793640534688,
+      "tag": "0011_backup_opening_hours",
+      "breakpoints": true
     }
   ]
 }

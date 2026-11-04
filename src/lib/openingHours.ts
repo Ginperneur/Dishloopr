@@ -19,6 +19,7 @@ const DAY_NAME_TO_KEY: Record<string, string> = {
 function parseWeekdayText(weekdayText: string[]): Record<string, string> {
   const result: Record<string, string> = {};
   for (const line of weekdayText) {
+    if (typeof line !== 'string') continue;
     const colon = line.indexOf(':');
     if (colon === -1) continue;
     const dayName = line.substring(0, colon).toLowerCase().trim();
@@ -62,12 +63,18 @@ function normalize(openingHours: any): Record<string, string> {
   return out;
 }
 
+/** Empty containers and blank day values are not opening-hours data. */
+export function hasOpeningHoursData(openingHours: unknown): boolean {
+  return Object.values(normalize(openingHours)).some(hours => hours.trim().length > 0);
+}
+
 /**
  * Returns true if the restaurant is currently open based on its opening hours.
  * Returns null if we cannot determine (no data / unparsable).
  * Supports a single range like "12:00 - 22:00" — multi-range slots fall back to true.
  */
 export function isOpenNow(openingHours: any, now: Date = new Date()): boolean | null {
+  if (!hasOpeningHoursData(openingHours)) return null;
   const hours = normalize(openingHours);
   if (Object.keys(hours).length === 0) return null;
 

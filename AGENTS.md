@@ -10,6 +10,8 @@
 
 # Restaurant parking
 
+- Gate public opening-status calculations and schedules with hasOpeningHoursData; empty hours must remain unknown rather than imply closure.
+
 - Store parking details in nullable `restaurants.parking_info`; share the parser and editor between admin and owner views so unknown is distinct from unavailable.
 - Save parking through `save_restaurant_parking`, which validates admin or verified-owner access server-side, so this standalone field does not depend on the unrelated pending-profile approval flow.
 

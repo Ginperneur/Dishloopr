@@ -8,6 +8,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
+import { hasOpeningHoursData } from '@/lib/openingHours';
 
 interface OpeningHoursDisplayProps {
   openingHours: { [key: string]: string | string[] };
@@ -111,6 +112,15 @@ function normalizeOpeningHours(openingHours: { [key: string]: string | string[] 
 export function OpeningHoursDisplay({ openingHours: rawOpeningHours, phone, geoLat, geoLng, restaurantName, className }: OpeningHoursDisplayProps) {
   const { t } = useTranslation();
   const now = new Date();
+
+  if (!hasOpeningHoursData(rawOpeningHours)) {
+    return (
+      <p className={cn('flex items-start gap-2 text-sm text-muted-foreground', className)}>
+        <Clock className="h-4 w-4 shrink-0 mt-0.5" />
+        {t('openingHours.notKnown')}
+      </p>
+    );
+  }
   
   // Normalize opening hours from various formats
   const openingHours = normalizeOpeningHours(rawOpeningHours);
