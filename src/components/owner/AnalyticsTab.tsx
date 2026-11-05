@@ -48,6 +48,43 @@ export function AnalyticsTab({ analytics, restaurant, reviews }: AnalyticsTabPro
         <div><p className="text-sm text-muted-foreground">Vertoningen in resultaten</p><p className="text-2xl font-bold">{analytics?.impressions ?? '—'}</p></div>
         <div><p className="text-sm text-muted-foreground">Paginabezoeken</p><p className="text-2xl font-bold">{analytics?.totalViews ?? '—'}</p></div>
       </div>
+
+      {/* Views trend */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <LineChart className="h-4 w-4" />
+            Paginabezoeken per dag
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {chartData.length === 0 ? (
+            <OwnerEmptyState
+              title="Nog geen trend"
+              description="Nog niet genoeg data — kom hier over een paar dagen terug."
+              compact
+            />
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <AreaChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" vertical={false} />
+                <XAxis dataKey="date" tick={{ fontSize: 12 }} className="fill-muted-foreground" />
+                <YAxis allowDecimals={false} tick={{ fontSize: 12 }} className="fill-muted-foreground" width={30} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                    fontSize: 13,
+                  }}
+                />
+                <Area type="monotone" dataKey="views" name="Bezoeken" stroke="hsl(var(--primary))" fill="hsl(var(--primary) / 0.2)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid md:grid-cols-2 gap-6">
         {/* Click Breakdown Bar Chart */}
         <Card>

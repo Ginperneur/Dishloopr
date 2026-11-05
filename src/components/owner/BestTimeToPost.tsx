@@ -43,7 +43,7 @@ export function BestTimeToPost({ restaurantId }: { restaurantId: string }) {
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="h-4 w-4" />
-          Wanneer je publiek het meest actief is. Plan je posts of stories rondom deze tijden.
+          Wanneer gasten jouw Dishloopr-pagina het meest bekijken (laatste 60 dagen).
         </div>
         {best ? (
           <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
