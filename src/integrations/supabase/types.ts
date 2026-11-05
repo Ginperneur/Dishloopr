@@ -4226,6 +4226,56 @@ export type Database = {
           },
         ]
       }
+      restaurant_tag_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          id: string
+          note: string | null
+          requested_by: string
+          restaurant_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          tag_type: string
+          tag_value: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          requested_by: string
+          restaurant_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tag_type: string
+          tag_value: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          requested_by?: string
+          restaurant_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tag_type?: string
+          tag_value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_tag_requests_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_suggestions: {
         Row: {
           address: string | null

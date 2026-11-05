@@ -75,6 +75,7 @@ import { RestaurantDiscovery } from '@/components/admin/RestaurantDiscovery';
 import { AdminToday } from '@/components/admin/AdminToday';
 import { RestaurantSuggestionsQueue } from '@/components/admin/RestaurantSuggestionsQueue';
 import { SupportConversationsManager } from '@/components/admin/SupportConversationsManager';
+import { TagRequestsQueue } from '@/components/admin/TagRequestsQueue';
 import { ErrorLogsViewer } from '@/components/admin/ErrorLogsViewer';
 import { ReservationLinkDetector } from '@/components/admin/ReservationLinkDetector';
 import { RateLimitMonitor } from '@/components/admin/RateLimitMonitor';
@@ -94,6 +95,7 @@ interface Stats {
   pendingReviews: number;
   pendingClaims: number;
   pendingSupport: number;
+  pendingTagRequests: number;
   activeRestaurants: number;
 }
 
@@ -114,6 +116,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'dishes': { title: "Gerechten", description: "Gerecht-taxonomie beheren" },
   'dish-approval': { title: "Goedkeuring", description: "Gerechten goedkeuren of afwijzen" },
   'restaurant-dishes': { title: "Bekend Om", description: "Restaurant-gerecht koppelingen" },
+  'tag-requests': { title: "Tag-aanvragen", description: "Door eigenaren aangevraagde keuken-, sfeer- of conceptlabels" },
   'cities': { title: "Steden", description: "Steden en regio's beheren" },
   'collections': { title: "Collecties", description: "Curated restaurant collecties" },
   'chains': { title: "Ketens", description: "Restaurant ketens beheren" },
@@ -164,7 +167,7 @@ export default function AdminPanel() {
   const { isAdmin, loading: adminLoading } = useAdminCheck();
   const [stats, setStats] = useState<Stats>({
     totalUsers: 0, totalRestaurants: 0, totalReviews: 0, totalCities: 0,
-    totalDishes: 0, pendingReviews: 0, pendingClaims: 0, pendingSupport: 0, activeRestaurants: 0
+    totalDishes: 0, pendingReviews: 0, pendingClaims: 0, pendingSupport: 0, pendingTagRequests: 0, activeRestaurants: 0
   });
   const [users, setUsers] = useState<any[]>([]);
   const [restaurants, setRestaurants] = useState<any[]>([]);
@@ -208,7 +211,7 @@ export default function AdminPanel() {
       { count: userCount }, { count: restaurantCount }, { count: reviewCount },
       { count: cityCount }, { count: dishCount }, { count: pendingCount },
       { count: newClaimsCount }, { count: legacyClaimsCount }, { count: activeCount },
-      { count: supportCount }
+      { count: supportCount }, { count: tagRequestCount }
     ] = await Promise.all([
       supabase.from('profiles').select('*', { count: 'exact', head: true }),
       supabase.from('restaurants').select('*', { count: 'exact', head: true }),
@@ -219,7 +222,8 @@ export default function AdminPanel() {
       supabase.from('restaurant_claims').select('*', { count: 'exact', head: true }).in('status', ['pending', 'email_verified', 'phone_verified']),
       supabase.from('claim_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
       supabase.from('restaurants').select('*', { count: 'exact', head: true }).eq('is_active', true),
-      supabase.from('support_conversations').select('*', { count: 'exact', head: true }).eq('escalated', true).is('resolved_at', null)
+      supabase.from('support_conversations').select('*', { count: 'exact', head: true }).eq('escalated', true).is('resolved_at', null),
+      supabase.from('restaurant_tag_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending')
     ]);
 
     setStats({
@@ -228,6 +232,7 @@ export default function AdminPanel() {
       totalDishes: dishCount || 0, pendingReviews: pendingCount || 0,
       pendingClaims: (newClaimsCount || 0) + (legacyClaimsCount || 0),
       pendingSupport: supportCount || 0,
+      pendingTagRequests: tagRequestCount || 0,
       activeRestaurants: activeCount || 0
     });
     setLoading(false);
@@ -361,6 +366,7 @@ export default function AdminPanel() {
           pendingReviews={stats.pendingReviews}
           pendingClaims={stats.pendingClaims}
           pendingSupport={stats.pendingSupport}
+          pendingTagRequests={stats.pendingTagRequests}
         />
 
         <div className="flex-1 flex flex-col min-w-0">
@@ -414,6 +420,7 @@ export default function AdminPanel() {
               {/* Section content */}
               {activeSection === 'today' && <AdminToday onNavigate={handleNavigateToTab} />}
               {activeSection === 'support' && <SupportConversationsManager />}
+              {activeSection === 'tag-requests' && <TagRequestsQueue />}
               {activeSection === 'suggestions' && <RestaurantSuggestionsQueue />}
               {activeSection === 'optouts' && <OptoutRequestsManager />}
               {activeSection === 'presale' && <PresaleManager />}
