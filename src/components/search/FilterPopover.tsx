@@ -34,14 +34,28 @@ interface FilterPopoverProps {
   availableCuisines: string[];
 }
 
+// Ordered by how often each tag actually occurs on restaurants (checked live,
+// 5 nov 2026) — options below this list were previously unfilterable even
+// though e.g. "Modern" alone sits on 212 restaurants (4th most common tag).
 const AMBIENCE_OPTIONS = [
-  { value: 'romantisch', key: 'filters.romantic' },
+  { value: 'casual', key: 'filters.casual' },
   { value: 'gezellig', key: 'filters.cozy' },
   { value: 'trendy', key: 'filters.trendy' },
-  { value: 'casual', key: 'filters.casual' },
+  { value: 'modern', key: 'filters.modern' },
+  { value: 'traditioneel', key: 'filters.traditional' },
+  { value: 'romantisch', key: 'filters.romantic' },
+  { value: 'industrieel', key: 'filters.industrial' },
+  { value: 'klassiek', key: 'filters.classic' },
+  { value: 'levendig', key: 'filters.lively' },
   { value: 'luxe', key: 'filters.luxury' },
   { value: 'zakelijk', key: 'filters.business' },
   { value: 'kindvriendelijk', key: 'filters.familyFriendly' },
+  { value: 'warm', key: 'filters.warm' },
+  { value: 'intiem', key: 'filters.intimate' },
+  { value: 'fine dining', key: 'filters.fineDining' },
+  { value: 'bruisend', key: 'filters.vibrant' },
+  { value: 'bohemian', key: 'filters.bohemian' },
+  { value: 'minimalistisch', key: 'filters.minimalist' },
 ];
 
 const CONCEPT_OPTIONS = [
