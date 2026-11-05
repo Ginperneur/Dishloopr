@@ -14,6 +14,8 @@ import type { Database } from '@/integrations/supabase/types';
 type Dish = Database['public']['Tables']['dishes']['Row'];
 type City = Database['public']['Tables']['cities']['Row'];
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
+// Narrow shape for the typeahead restaurant list — only what's actually rendered.
+type RestaurantSuggestionRow = Pick<Restaurant, 'id' | 'name' | 'slug' | 'cuisine_primary' | 'cuisines'>;
 
 interface SearchBarProps {
   onSearch?: (query: string, cityId: string) => void;
@@ -56,10 +58,10 @@ export function SearchBar({
   });
   const [cityId, setCityId] = useState(initialCity);
   const [suggestions, setSuggestions] = useState<DishSuggestion[]>([]);
-  const [restaurantSuggestions, setRestaurantSuggestions] = useState<Restaurant[]>([]);
+  const [restaurantSuggestions, setRestaurantSuggestions] = useState<RestaurantSuggestionRow[]>([]);
   const [cuisineSuggestions, setCuisineSuggestions] = useState<string[]>([]);
   const [cities, setCities] = useState<City[]>([]);
-  const [allRestaurants, setAllRestaurants] = useState<Restaurant[]>([]);
+  const [allRestaurants, setAllRestaurants] = useState<RestaurantSuggestionRow[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -83,7 +85,15 @@ export function SearchBar({
     const fetchData = async () => {
       const [citiesRes, restaurantsRes] = await Promise.all([
         supabase.from('cities').select('*').eq('is_active', true).order('name'),
-        supabase.from('restaurants').select('*').eq('is_active', true).order('rating', { ascending: false }).limit(500),
+        // Only id/name/slug/cuisines are ever read from this list (restaurant-name and
+        // cuisine typeahead below) — selecting '*' was pulling images, opening_hours,
+        // descriptions etc. for 500 rows on every page load for no reason.
+        supabase
+          .from('restaurants')
+          .select('id, name, slug, cuisine_primary, cuisines')
+          .eq('is_active', true)
+          .order('rating', { ascending: false })
+          .limit(500),
       ]);
       // Sort: popular cities first (in defined order), then the rest alphabetically
       const POPULAR_SLUGS = ['amsterdam', 'rotterdam', 'den-haag', 'utrecht', 'eindhoven', 'breda'];
