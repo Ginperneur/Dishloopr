@@ -38,6 +38,23 @@ interface DatabaseRestaurantCardProps {
 
 import { PRICE_LABELS, AMBIENCE_TAG_STYLES, AMBIENCE_TAG_I18N_KEYS } from '@/lib/constants';
 
+// Theme tags people actually filter by (family-friendly, romantic, business) should
+// win the limited badge slots over decorative ones (modern, trendy, cozy) when a
+// restaurant has more ambience tags than we can show.
+const PRIORITY_AMBIENCE_TAGS = new Set([
+  'Kindvriendelijk', 'Gezinsvriendelijk', 'family-friendly',
+  'Romantisch', 'romantic',
+  'Zakelijk', 'business',
+]);
+
+function sortAmbienceTagsByPriority(tags: string[]): string[] {
+  return [...tags].sort((a, b) => {
+    const aPriority = PRIORITY_AMBIENCE_TAGS.has(a) ? 0 : 1;
+    const bPriority = PRIORITY_AMBIENCE_TAGS.has(b) ? 0 : 1;
+    return aPriority - bPriority;
+  });
+}
+
 function formatEuroNL(value: number): string {
   return `€${value.toFixed(2).replace('.', ',')}`;
 }
@@ -277,10 +294,10 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
             );
           })()}
 
-          {/* Ambience Tags */}
-          {restaurant.ambience_tags && restaurant.ambience_tags.length > 0 && (
+          {/* Ambience Tags + Terrace */}
+          {((restaurant.ambience_tags && restaurant.ambience_tags.length > 0) || restaurant.has_terrace) && (
             <div className="flex flex-wrap gap-1 sm:gap-1.5">
-              {restaurant.ambience_tags.slice(0, 2).map((tag) => (
+              {restaurant.ambience_tags && sortAmbienceTagsByPriority(restaurant.ambience_tags).slice(0, 2).map((tag) => (
                 <span
                   key={tag}
                   className={`px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-medium rounded-full ${
@@ -290,6 +307,11 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
                   {AMBIENCE_TAG_I18N_KEYS[tag] ? t(AMBIENCE_TAG_I18N_KEYS[tag]) : tag}
                 </span>
               ))}
+              {restaurant.has_terrace && (
+                <span className="px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-medium rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                  🌿 {t('filters.terrace', 'Terras')}
+                </span>
+              )}
             </div>
           )}
         </div>
