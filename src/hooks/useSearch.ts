@@ -45,6 +45,15 @@ interface SearchFilters {
 // Max restaurants to fetch for browse-mode (no dish query)
 const BROWSE_LIMIT = 1000;
 
+// Phrases people search in English/other languages for a concept the DB
+// stores under a different (Dutch) dish/cuisine term — also query the
+// target term so these don't silently return near-zero results.
+const SEARCH_TERM_SYNONYMS: Record<string, string[]> = {
+  'all you can eat': ['buffet'],
+  'all-you-can-eat': ['buffet'],
+  'ayce': ['buffet'],
+};
+
 /**
  * Paginated fetch helper — defeats Supabase's 1000-row default cap.
  * Fetches all rows matching a query by paginating with .range().
@@ -200,13 +209,16 @@ export function useSearch() {
     if (queryTerms.length > 0) {
       const termResults = await Promise.all(
         queryTerms.map(async (term) => {
-          const { data, error } = await supabase.rpc('search_restaurants' as any, {
-            p_term: term,
-            p_city_id: cityId && cityId !== 'all' ? cityId : null,
-            p_limit: 1000,
-          });
-          if (error) console.error('search_restaurants error:', error);
-          return ((data as any[]) || []) as Array<{
+          const termsToQuery = [term, ...(SEARCH_TERM_SYNONYMS[term] || [])];
+          const responses = await Promise.all(
+            termsToQuery.map(t => supabase.rpc('search_restaurants' as any, {
+              p_term: t,
+              p_city_id: cityId && cityId !== 'all' ? cityId : null,
+              p_limit: 1000,
+            }))
+          );
+          responses.forEach(({ error }) => { if (error) console.error('search_restaurants error:', error); });
+          return responses.flatMap(({ data }) => (data as any[]) || []) as Array<{
             restaurant_id: string;
             match_score: number;
             match_type: string | null;
