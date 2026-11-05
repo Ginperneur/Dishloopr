@@ -24,6 +24,7 @@ interface AdminSidebarProps {
   onSectionChange: (section: string) => void;
   pendingReviews?: number;
   pendingClaims?: number;
+  pendingSupport?: number;
 }
 
 const navGroups = [
@@ -65,6 +66,7 @@ const navGroups = [
       { id: 'users', label: 'Gebruikers', icon: Users },
       { id: 'roles', label: 'Rollen', icon: Crown },
       { id: 'claims', label: 'Claims', icon: FileText, badgeKey: 'pendingClaims' as const },
+      { id: 'support', label: 'Support Chat', icon: MessageSquare, badgeKey: 'pendingSupport' as const },
       { id: 'suggestions', label: 'Suggesties', icon: Inbox },
       { id: 'optouts', label: 'Afmeldingen', icon: Inbox },
     ],
@@ -116,13 +118,14 @@ const navGroups = [
   },
 ];
 
-export function AdminSidebar({ activeSection, onSectionChange, pendingReviews = 0, pendingClaims = 0 }: AdminSidebarProps) {
+export function AdminSidebar({ activeSection, onSectionChange, pendingReviews = 0, pendingClaims = 0, pendingSupport = 0 }: AdminSidebarProps) {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
 
   const badges: Record<string, number> = {
     pendingReviews,
     pendingClaims,
+    pendingSupport,
   };
 
   return (

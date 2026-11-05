@@ -74,6 +74,7 @@ import { NotificationManager } from '@/components/admin/NotificationManager';
 import { RestaurantDiscovery } from '@/components/admin/RestaurantDiscovery';
 import { AdminToday } from '@/components/admin/AdminToday';
 import { RestaurantSuggestionsQueue } from '@/components/admin/RestaurantSuggestionsQueue';
+import { SupportConversationsManager } from '@/components/admin/SupportConversationsManager';
 import { ErrorLogsViewer } from '@/components/admin/ErrorLogsViewer';
 import { ReservationLinkDetector } from '@/components/admin/ReservationLinkDetector';
 import { RateLimitMonitor } from '@/components/admin/RateLimitMonitor';
@@ -92,6 +93,7 @@ interface Stats {
   totalDishes: number;
   pendingReviews: number;
   pendingClaims: number;
+  pendingSupport: number;
   activeRestaurants: number;
 }
 
@@ -119,6 +121,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'users': { title: "Gebruikers", description: "Geregistreerde gebruikers" },
   'roles': { title: "Rollen", description: "Gebruikersrollen toewijzen" },
   'claims': { title: "Claims", description: "Restaurant claims verwerken" },
+  'support': { title: "Support Chat", description: "Escalaties van de AI-klantenservice" },
   'optouts': { title: "Afmeldingen", description: "Opt-out- en aanpasverzoeken van restaurants" },
   'suggestions': { title: "Suggesties", description: "Door bezoekers ingediende restaurant-suggesties" },
   'sponsored': { title: "Sponsored", description: "Gesponsorde producten beheren" },
@@ -161,7 +164,7 @@ export default function AdminPanel() {
   const { isAdmin, loading: adminLoading } = useAdminCheck();
   const [stats, setStats] = useState<Stats>({
     totalUsers: 0, totalRestaurants: 0, totalReviews: 0, totalCities: 0,
-    totalDishes: 0, pendingReviews: 0, pendingClaims: 0, activeRestaurants: 0
+    totalDishes: 0, pendingReviews: 0, pendingClaims: 0, pendingSupport: 0, activeRestaurants: 0
   });
   const [users, setUsers] = useState<any[]>([]);
   const [restaurants, setRestaurants] = useState<any[]>([]);
@@ -204,7 +207,8 @@ export default function AdminPanel() {
     const [
       { count: userCount }, { count: restaurantCount }, { count: reviewCount },
       { count: cityCount }, { count: dishCount }, { count: pendingCount },
-      { count: newClaimsCount }, { count: legacyClaimsCount }, { count: activeCount }
+      { count: newClaimsCount }, { count: legacyClaimsCount }, { count: activeCount },
+      { count: supportCount }
     ] = await Promise.all([
       supabase.from('profiles').select('*', { count: 'exact', head: true }),
       supabase.from('restaurants').select('*', { count: 'exact', head: true }),
@@ -214,7 +218,8 @@ export default function AdminPanel() {
       supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
       supabase.from('restaurant_claims').select('*', { count: 'exact', head: true }).in('status', ['pending', 'email_verified', 'phone_verified']),
       supabase.from('claim_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-      supabase.from('restaurants').select('*', { count: 'exact', head: true }).eq('is_active', true)
+      supabase.from('restaurants').select('*', { count: 'exact', head: true }).eq('is_active', true),
+      supabase.from('support_conversations').select('*', { count: 'exact', head: true }).eq('escalated', true).is('resolved_at', null)
     ]);
 
     setStats({
@@ -222,6 +227,7 @@ export default function AdminPanel() {
       totalReviews: reviewCount || 0, totalCities: cityCount || 0,
       totalDishes: dishCount || 0, pendingReviews: pendingCount || 0,
       pendingClaims: (newClaimsCount || 0) + (legacyClaimsCount || 0),
+      pendingSupport: supportCount || 0,
       activeRestaurants: activeCount || 0
     });
     setLoading(false);
@@ -354,6 +360,7 @@ export default function AdminPanel() {
           onSectionChange={setActiveSection}
           pendingReviews={stats.pendingReviews}
           pendingClaims={stats.pendingClaims}
+          pendingSupport={stats.pendingSupport}
         />
 
         <div className="flex-1 flex flex-col min-w-0">
@@ -406,6 +413,7 @@ export default function AdminPanel() {
 
               {/* Section content */}
               {activeSection === 'today' && <AdminToday onNavigate={handleNavigateToTab} />}
+              {activeSection === 'support' && <SupportConversationsManager />}
               {activeSection === 'suggestions' && <RestaurantSuggestionsQueue />}
               {activeSection === 'optouts' && <OptoutRequestsManager />}
               {activeSection === 'presale' && <PresaleManager />}

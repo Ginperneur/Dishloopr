@@ -1,7 +1,54 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
+import { Resend } from "https://esm.sh/resend@2.0.0";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
+
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+
+async function notifyAdminOfEscalation(
+  // deno-lint-ignore no-explicit-any
+  admin: any,
+  convId: string,
+  message: string,
+  reason: string | null,
+  userId: string | null,
+) {
+  try {
+    const { data: setting } = await admin
+      .from("app_settings")
+      .select("value")
+      .eq("key", "admin_email")
+      .maybeSingle();
+    const adminEmail = setting?.value || "admin@dishloopr.com";
+
+    let contact = "Anonieme bezoeker";
+    if (userId) {
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("name, email")
+        .eq("id", userId)
+        .maybeSingle();
+      if (profile) contact = `${profile.name || "?"} (${profile.email || "geen e-mail"})`;
+    }
+
+    await resend.emails.send({
+      from: "Dishloopr <noreply@resend.dev>",
+      to: [adminEmail],
+      subject: "Support-chat escalatie — iemand heeft hulp nodig",
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h1 style="color:#1a1a1a;font-size:20px;">🔔 Support-chat escalatie</h1>
+          <p style="color:#666;"><strong>Van:</strong> ${contact}</p>
+          ${reason ? `<p style="color:#666;"><strong>Reden:</strong> ${reason}</p>` : ""}
+          <div style="background:#f8f9fa;border-radius:8px;padding:16px;margin:16px 0;color:#333;">${message}</div>
+          <p style="color:#999;font-size:13px;">Bekijk en beantwoord dit in Admin &gt; Gebruikers &amp; Claims &gt; Support Chat.</p>
+        </div>`,
+    });
+  } catch (e) {
+    console.error("notifyAdminOfEscalation failed", e);
+  }
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -213,10 +260,19 @@ serve(async (req) => {
     });
 
     if (needsHuman) {
-      await admin
+      // .eq("escalated", false) means this only matches (and returns a row)
+      // on the FIRST escalation of a conversation — later messages in an
+      // already-escalated thread won't re-trigger the admin email below.
+      const { data: justEscalated } = await admin
         .from("support_conversations")
         .update({ escalated: true, escalated_at: new Date().toISOString() })
-        .eq("id", convId);
+        .eq("id", convId)
+        .eq("escalated", false)
+        .select("id")
+        .maybeSingle();
+      if (justEscalated) {
+        await notifyAdminOfEscalation(admin, convId!, message, parsedAnswer.reason ?? null, userId);
+      }
     }
 
     return new Response(

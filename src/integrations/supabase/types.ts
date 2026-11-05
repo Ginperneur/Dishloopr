@@ -5685,6 +5685,7 @@ export type Database = {
           escalated: boolean
           escalated_at: string | null
           id: string
+          resolved_at: string | null
           session_id: string | null
           title: string | null
           updated_at: string
@@ -5695,6 +5696,7 @@ export type Database = {
           escalated?: boolean
           escalated_at?: string | null
           id?: string
+          resolved_at?: string | null
           session_id?: string | null
           title?: string | null
           updated_at?: string
@@ -5705,6 +5707,7 @@ export type Database = {
           escalated?: boolean
           escalated_at?: string | null
           id?: string
+          resolved_at?: string | null
           session_id?: string | null
           title?: string | null
           updated_at?: string
