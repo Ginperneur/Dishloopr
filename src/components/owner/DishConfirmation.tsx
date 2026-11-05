@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { cn, formatDishName } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { COURSE_TYPE_LABELS, COURSE_TYPE_ORDER, type CourseType } from '@/hooks/useMenuItems';
+import { useOwnerTier } from '@/hooks/useOwnerTier';
 
 interface DishConfirmationProps {
   restaurantId: string;
@@ -52,7 +53,9 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
     d.status === 'verified_by_owner' || d.status === 'approved_by_admin'
   );
   const signatureCount = confirmedDishes.filter((d: any) => d.is_signature).length;
-  const SIGNATURE_MAX = 5;
+  const { data: ownerTier } = useOwnerTier(restaurantId);
+  const isPro = ownerTier === 'pro';
+  const SIGNATURE_MAX = isPro ? 5 : 1;
   const existingDishIds = dishes.map((d) => d.dish_id);
 
   const availableToAdd = availableDishes.filter(
@@ -234,8 +237,12 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
   const toggleSignature = async (dishId: string, currentValue: boolean) => {
     if (!currentValue && signatureCount >= SIGNATURE_MAX) {
       toast.error(isNL
-        ? `Maximaal ${SIGNATURE_MAX} "Bekend om" gerechten`
-        : `Maximum ${SIGNATURE_MAX} "Known for" dishes`);
+        ? (isPro
+          ? `Maximaal ${SIGNATURE_MAX} "Bekend om" gerechten`
+          : `Gratis plan: 1 "Bekend om"-gerecht. Upgrade naar Pro voor tot ${5}.`)
+        : (isPro
+          ? `Maximum ${SIGNATURE_MAX} "Known for" dishes`
+          : `Free plan: 1 "Known for" dish. Upgrade to Pro for up to ${5}.`));
       return;
     }
     const { error } = await supabase
@@ -336,8 +343,8 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
             </CardTitle>
             <CardDescription>
               {isNL
-                ? `Beheer gerechten en markeer max ${SIGNATURE_MAX} als "Bekend om" (${signatureCount}/${SIGNATURE_MAX})`
-                : `Manage dishes, mark up to ${SIGNATURE_MAX} as "Known for" (${signatureCount}/${SIGNATURE_MAX})`}
+                ? `Beheer gerechten en markeer max ${SIGNATURE_MAX} als "Bekend om" (${signatureCount}/${SIGNATURE_MAX})${!isPro ? ' — Pro: tot 5' : ''}`
+                : `Manage dishes, mark up to ${SIGNATURE_MAX} as "Known for" (${signatureCount}/${SIGNATURE_MAX})${!isPro ? ' — Pro: up to 5' : ''}`}
             </CardDescription>
           </div>
           <div className="flex gap-2">
