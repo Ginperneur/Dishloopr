@@ -595,13 +595,18 @@ export default function RestaurantPage() {
                     cuisines={restaurant.cuisines || []}
                   />
                 </div>
-                <ReviewList 
-                  reviews={reviews} 
-                  loading={reviewsLoading} 
+                <ReviewList
+                  reviews={reviews}
+                  loading={reviewsLoading}
                   isOwner={user?.id === restaurant?.claimed_by_owner_id}
                   onRefetch={refetch}
                   hideEmpty={!hasOwnScore}
                 />
+                <p className="text-xs text-muted-foreground text-center mt-3">
+                  <Link to={`/feedback/${restaurant.id}`} className="underline hover:text-foreground">
+                    {t('restaurant.privateFeedback', 'Liever privé feedback geven aan de eigenaar?')}
+                  </Link>
+                </p>
               </div>
             </motion.div>
 

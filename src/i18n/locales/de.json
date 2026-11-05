@@ -214,6 +214,7 @@
     "claimShort": "Beanspruchen",
     "or": "oder",
     "editListing": "Änderung anfragen",
+    "privateFeedback": "Lieber private Feedback an den Inhaber geben?",
     "shareDescription": "Schau dir {{name}} auf Dishloopr an",
     "metaTitleSuffix": "Restaurant",
     "metaDescription": "{{name}} in {{city}} ansehen. {{cuisines}}{{reviewSuffix}}.",

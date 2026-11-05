@@ -215,6 +215,7 @@
     "claimShort": "Claim",
     "or": "or",
     "editListing": "request a change",
+    "privateFeedback": "Prefer to give private feedback to the owner?",
     "shareDescription": "Check out {{name}} on Dishloopr",
     "metaTitleSuffix": "Restaurant",
     "metaDescription": "See {{name}} in {{city}}. {{cuisines}}{{reviewSuffix}}.",

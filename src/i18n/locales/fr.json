@@ -214,6 +214,7 @@
     "claimShort": "Revendiquer",
     "or": "ou",
     "editListing": "demander une modification",
+    "privateFeedback": "Vous préférez donner un avis privé au propriétaire ?",
     "shareDescription": "Découvrez {{name}} sur Dishloopr",
     "metaTitleSuffix": "Restaurant",
     "metaDescription": "Voir {{name}} à {{city}}. {{cuisines}}{{reviewSuffix}}.",
