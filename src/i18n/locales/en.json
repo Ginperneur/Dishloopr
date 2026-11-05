@@ -318,6 +318,8 @@
     "newsletterSubtitle": "Get weekly restaurant tips and new dishes delivered to your inbox.",
     "emailPlaceholder": "Your email address",
     "subscribe": "Subscribe",
+    "newsletterScope": "Only updates for:",
+    "newsletterScopeAll": "All of the Netherlands",
     "newsletterSuccess": "Thanks! You've been subscribed to the newsletter.",
     "allRights": "All rights reserved.",
     "madeIn": "Made in the Netherlands",

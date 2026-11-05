@@ -317,6 +317,8 @@
     "newsletterSubtitle": "Recibe semanalmente los mejores consejos de restaurantes y nuevos platos en tu correo.",
     "emailPlaceholder": "Tu correo electrónico",
     "subscribe": "Suscribirse",
+    "newsletterScope": "Solo actualizaciones de:",
+    "newsletterScopeAll": "Todos los Países Bajos",
     "newsletterSuccess": "¡Gracias! Te has suscrito al boletín.",
     "allRights": "Todos los derechos reservados.",
     "madeIn": "Hecho en los Países Bajos",

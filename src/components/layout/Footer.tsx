@@ -5,6 +5,7 @@ import { Instagram, Mail, ArrowRight } from 'lucide-react';
 import { TikTokIcon } from '@/components/icons/TikTokIcon';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import logoLight from '@/assets/dishloopr-logo-wordmark.png';
@@ -24,6 +25,8 @@ export function Footer() {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [seoLinks, setSeoLinks] = useState<{ slug: string; label: string }[]>([]);
+  const [cities, setCities] = useState<{ id: string; name: string }[]>([]);
+  const [newsletterCityId, setNewsletterCityId] = useState<string>('all');
   const { hasCollections, hasEvents } = useContentAvailability();
 
   useEffect(() => {
@@ -33,12 +36,21 @@ export function Footer() {
         .select('slug, h1_title')
         .eq('is_active', true)
         .limit(12);
-      
+
       if (data) {
         setSeoLinks(data.map(p => ({ slug: p.slug, label: p.h1_title })));
       }
     }
+    async function fetchCities() {
+      const { data } = await supabase
+        .from('cities')
+        .select('id, name')
+        .eq('is_active', true)
+        .order('name');
+      if (data) setCities(data);
+    }
     fetchTopPages();
+    fetchCities();
   }, []);
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
@@ -52,7 +64,11 @@ export function Footer() {
     setIsLoading(true);
     const { error } = await supabase
       .from('newsletter_subscribers')
-      .insert({ email: parsed.data, user_id: user?.id ?? null });
+      .insert({
+        email: parsed.data,
+        user_id: user?.id ?? null,
+        city_id: newsletterCityId === 'all' ? null : newsletterCityId,
+      });
     if (!error) {
       sendAnalyticsEvent('newsletter_signup');
       toast.success(t('footer.newsletterOk', 'Gelukt! Je staat op de lijst.'));
@@ -98,6 +114,24 @@ export function Footer() {
               </div>
               {emailError && (
                 <p id="newsletter-error" role="alert" className="mt-2 text-sm text-destructive text-left">{emailError}</p>
+              )}
+              {cities.length > 0 && (
+                <div className="mt-2 flex items-center justify-center gap-2">
+                  <span className="text-xs text-muted-foreground">
+                    {t('footer.newsletterScope', 'Alleen updates voor:')}
+                  </span>
+                  <Select value={newsletterCityId} onValueChange={setNewsletterCityId}>
+                    <SelectTrigger className="h-8 w-auto text-xs border-none bg-transparent shadow-none gap-1 px-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t('footer.newsletterScopeAll', 'Heel Nederland')}</SelectItem>
+                      {cities.map(c => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
             </form>
           </div>

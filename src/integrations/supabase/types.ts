@@ -1955,6 +1955,7 @@ export type Database = {
       }
       newsletter_subscribers: {
         Row: {
+          city_id: string | null
           email: string
           id: string
           is_active: boolean
@@ -1963,6 +1964,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          city_id?: string | null
           email: string
           id?: string
           is_active?: boolean
@@ -1971,6 +1973,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          city_id?: string | null
           email?: string
           id?: string
           is_active?: boolean
@@ -1978,7 +1981,15 @@ export type Database = {
           unsubscribed_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_subscribers_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       nl_provinces: {
         Row: {
