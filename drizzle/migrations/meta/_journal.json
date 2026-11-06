@@ -120,6 +120,13 @@
       "when": 1793997044169,
       "tag": "0016_owner_pro_analytics",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793997101396,
+      "tag": "0017_owner_analytics_live_counters",
+      "breakpoints": true
     }
   ]
 }

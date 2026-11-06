@@ -7009,6 +7009,23 @@ export type Database = {
         Args: { p_restaurant_id: string }
         Returns: boolean
       }
+      owner_daily_metrics: {
+        Args: { p_days?: number; p_restaurant_id: string }
+        Returns: {
+          dag: string
+          metric: string
+          n: number
+        }[]
+      }
+      owner_dish_daily: {
+        Args: { p_days?: number; p_restaurant_id: string }
+        Returns: {
+          dag: string
+          dish_id: string
+          impressions: number
+          views: number
+        }[]
+      }
       owner_event_stats: {
         Args: { p_from?: string; p_restaurant_id: string; p_to?: string }
         Returns: {
@@ -7023,6 +7040,15 @@ export type Database = {
           metric: string
           page_slug: string
           totaal: number
+        }[]
+      }
+      owner_lost_to_competitor: {
+        Args: { p_days?: number; p_restaurant_id: string }
+        Returns: {
+          clicks: number
+          name: string
+          rating: number
+          target_restaurant_id: string
         }[]
       }
       owner_missed_demand: {
@@ -7048,6 +7074,22 @@ export type Database = {
           dish: string
           my_price: number
           restaurants: number
+        }[]
+      }
+      owner_search_hours: {
+        Args: { p_days?: number; p_restaurant_id: string }
+        Returns: {
+          hour: number
+          searches: number
+          weekday: number
+        }[]
+      }
+      owner_stats_between: {
+        Args: { p_from: string; p_restaurant_id: string; p_to: string }
+        Returns: {
+          conversions: number
+          impressions: number
+          views: number
         }[]
       }
       owner_term_funnel: {
@@ -7097,6 +7139,12 @@ export type Database = {
           p_status: string
         }
         Returns: boolean
+      }
+      restaurant_menu_terms: {
+        Args: { p_restaurant_id: string }
+        Returns: {
+          term: string
+        }[]
       }
       restaurant_positions: {
         Args: { p_slug: string }
