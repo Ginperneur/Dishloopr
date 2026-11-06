@@ -106,6 +106,13 @@
       "when": 1793996934087,
       "tag": "0014_pending_small_features",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1793996995490,
+      "tag": "0015_restaurant_event_promotions",
+      "breakpoints": true
     }
   ]
 }

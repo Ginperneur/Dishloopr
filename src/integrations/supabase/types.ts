@@ -2201,6 +2201,7 @@ export type Database = {
           anomaly_alert_severity: string
           anomaly_alerts: boolean
           created_at: string
+          event_report: boolean
           founding_report: boolean
           updated_at: string
           user_id: string
@@ -2211,6 +2212,7 @@ export type Database = {
           anomaly_alert_severity?: string
           anomaly_alerts?: boolean
           created_at?: string
+          event_report?: boolean
           founding_report?: boolean
           updated_at?: string
           user_id: string
@@ -2221,10 +2223,29 @@ export type Database = {
           anomaly_alert_severity?: string
           anomaly_alerts?: boolean
           created_at?: string
+          event_report?: boolean
           founding_report?: boolean
           updated_at?: string
           user_id?: string
           weekly_report?: boolean
+        }
+        Relationships: []
+      }
+      owner_event_report_log: {
+        Row: {
+          month: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          month: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          month?: string
+          sent_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -4045,54 +4066,113 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurant_event_stats_daily: {
+        Row: {
+          dag: string
+          event_id: string
+          metric: string
+          n: number
+        }
+        Insert: {
+          dag?: string
+          event_id: string
+          metric: string
+          n?: number
+        }
+        Update: {
+          dag?: string
+          event_id?: string
+          metric?: string
+          n?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_event_stats_daily_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_events: {
         Row: {
           created_at: string
           current_participants: number | null
           description: string | null
           end_date: string | null
+          end_time: string | null
           event_date: string
           event_type: string
           id: string
           image_url: string | null
           is_active: boolean | null
           max_participants: number | null
+          offer: string | null
+          paid_until: string | null
           price: number | null
+          promotion_status: string
+          recurrence: string
+          released_at: string | null
+          released_by: string | null
           restaurant_id: string
+          start_time: string | null
+          stripe_subscription_id: string | null
           title: string
           updated_at: string
+          weekdays: number[]
         }
         Insert: {
           created_at?: string
           current_participants?: number | null
           description?: string | null
           end_date?: string | null
+          end_time?: string | null
           event_date: string
           event_type: string
           id?: string
           image_url?: string | null
           is_active?: boolean | null
           max_participants?: number | null
+          offer?: string | null
+          paid_until?: string | null
           price?: number | null
+          promotion_status?: string
+          recurrence?: string
+          released_at?: string | null
+          released_by?: string | null
           restaurant_id: string
+          start_time?: string | null
+          stripe_subscription_id?: string | null
           title: string
           updated_at?: string
+          weekdays?: number[]
         }
         Update: {
           created_at?: string
           current_participants?: number | null
           description?: string | null
           end_date?: string | null
+          end_time?: string | null
           event_date?: string
           event_type?: string
           id?: string
           image_url?: string | null
           is_active?: boolean | null
           max_participants?: number | null
+          offer?: string | null
+          paid_until?: string | null
           price?: number | null
+          promotion_status?: string
+          recurrence?: string
+          released_at?: string | null
+          released_by?: string | null
           restaurant_id?: string
+          start_time?: string | null
+          stripe_subscription_id?: string | null
           title?: string
           updated_at?: string
+          weekdays?: number[]
         }
         Relationships: [
           {
@@ -6740,6 +6820,10 @@ export type Database = {
       create_biweekly_newsletter_draft: { Args: never; Returns: string }
       deduplicate_dishes: { Args: never; Returns: Json }
       deduplicate_restaurant_dishes: { Args: never; Returns: Json }
+      delete_restaurant_event: {
+        Args: { p_event_id: string }
+        Returns: undefined
+      }
       dl_norm: { Args: { t: string }; Returns: string }
       founding_partner_live: { Args: { p_status: string }; Returns: boolean }
       founding_partners_for_page: {
@@ -6889,6 +6973,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      owner_event_stats: {
+        Args: { p_from?: string; p_restaurant_id: string; p_to?: string }
+        Returns: {
+          event_id: string
+          metric: string
+          totaal: number
+        }[]
+      }
       owner_founding_stats: {
         Args: { p_from?: string; p_restaurant_id: string; p_to?: string }
         Returns: {
@@ -6925,6 +7017,16 @@ export type Database = {
         Returns: string
       }
       rescan_discovery_duplicates: { Args: { p_rules?: Json }; Returns: Json }
+      restaurant_event_visible: {
+        Args: {
+          p_end_date: string
+          p_event_date: string
+          p_is_active: boolean
+          p_recurrence: string
+          p_status: string
+        }
+        Returns: boolean
+      }
       restaurant_positions: {
         Args: { p_slug: string }
         Returns: {
@@ -6941,6 +7043,25 @@ export type Database = {
           metric: string
           totaal: number
         }[]
+      }
+      save_restaurant_event: {
+        Args: {
+          p_date: string
+          p_description: string
+          p_end_time: string
+          p_event_id: string
+          p_event_type: string
+          p_image_url: string
+          p_offer: string
+          p_price: number
+          p_recurrence: string
+          p_restaurant_id: string
+          p_start_time: string
+          p_title: string
+          p_until: string
+          p_weekdays: number[]
+        }
+        Returns: string
       }
       save_restaurant_parking: {
         Args: {
@@ -7017,6 +7138,10 @@ export type Database = {
           restaurant_count: number
         }[]
       }
+      set_restaurant_event_active: {
+        Args: { p_active: boolean; p_event_id: string }
+        Returns: undefined
+      }
       set_signature_dish: {
         Args: { _rd_id: string; _restaurant_id: string }
         Returns: undefined
@@ -7027,6 +7152,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: undefined
       }
+      track_event_metrics: { Args: { p_items: Json }; Returns: number }
       track_founding_metrics: { Args: { p_items: Json }; Returns: number }
       track_restaurant_metrics: { Args: { p_items: Json }; Returns: number }
       unsubscribe_restaurant_contact: {
