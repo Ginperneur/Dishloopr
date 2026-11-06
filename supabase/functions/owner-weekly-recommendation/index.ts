@@ -71,20 +71,22 @@ Deno.serve(async (req) => {
     }
 
     // Gather context
-    const [{ data: restaurant }, { data: funnel }, { data: heat }, { data: reviews }] = await Promise.all([
+    const [{ data: restaurant }, { data: funnel }, { data: heat }, { data: reviews }, { data: missed }] = await Promise.all([
       admin.from('restaurants').select('name, cuisines, city_id, rating, review_count, ambience_tags').eq('id', restaurantId).maybeSingle(),
       admin.rpc('get_owner_funnel', { p_restaurant_id: restaurantId, p_days: 7 }),
       admin.rpc('get_search_term_heatmap', { p_restaurant_id: restaurantId, p_days: 7, p_limit: 10 }),
       admin.from('reviews').select('rating, content, created_at').eq('restaurant_id', restaurantId).eq('status', 'published').order('created_at', { ascending: false }).limit(10),
+      admin.rpc('owner_missed_demand', { p_restaurant_id: restaurantId, p_days: 7, p_limit: 5 }),
     ]);
 
     const fn = funnel?.[0] ?? { views: 0, clicks: 0, conversions: 0 };
     const topTerms = (heat ?? []).map((h: any) => `${h.search_term} (${h.hits})`).join(', ');
+    const missedDemand = (missed ?? []).map((m: any) => `${m.query} (${m.searches}x gezocht in de stad, niet op het menu)`).join(', ');
     const recentReviews = (reviews ?? []).map((r: any) => `${r.rating}★: ${(r.content ?? '').slice(0, 140)}`).join('\n');
 
     const systemPrompt = `Je bent een growth-consultant voor restaurants op Dishloopr. Geef PRECIES 3 concrete, uitvoerbare acties voor deze week. Antwoord ALLEEN met geldige JSON van vorm: {"summary":"...","actions":[{"title":"...","why":"...","how":"...","impact":"high|medium|low"}]}. Maximaal 1 zin per veld in actions.title/why/how/impact. Geen markdown.`;
 
-    const userPrompt = `Restaurant: ${restaurant?.name}\nKeukens: ${(restaurant?.cuisines ?? []).join(', ')}\nRating: ${restaurant?.rating} (${restaurant?.review_count} reviews)\n\nFunnel (7d): ${fn.views} views → ${fn.clicks} clicks → ${fn.conversions} conversies\nTop zoektermen (7d): ${topTerms || 'geen data'}\n\nRecente reviews:\n${recentReviews || 'geen'}`;
+    const userPrompt = `Restaurant: ${restaurant?.name}\nKeukens: ${(restaurant?.cuisines ?? []).join(', ')}\nRating: ${restaurant?.rating} (${restaurant?.review_count} reviews)\n\nFunnel (7d): ${fn.views} views → ${fn.clicks} clicks → ${fn.conversions} conversies\nTop zoektermen (7d): ${topTerms || 'geen data'}\nGemiste vraag (7d): ${missedDemand || 'geen'}\n\nRecente reviews:\n${recentReviews || 'geen'}`;
 
     const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',

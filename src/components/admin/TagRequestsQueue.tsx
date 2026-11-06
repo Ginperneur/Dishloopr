@@ -77,7 +77,8 @@ export function TagRequestsQueue() {
     if (!current.includes(req.tag_value)) {
       const { error: updateErr } = await supabase
         .from('restaurants')
-        .update({ [column]: [...current, req.tag_value] })
+        // A computed key widens to string; the column is one of three text[] columns.
+        .update({ [column]: [...current, req.tag_value] } as { cuisines: string[] })
         .eq('id', req.restaurant_id);
       if (updateErr) {
         toast.error('Kon tag niet toevoegen aan restaurant');

@@ -26,6 +26,7 @@ interface AdminSidebarProps {
   pendingClaims?: number;
   pendingSupport?: number;
   pendingTagRequests?: number;
+  pendingEventReleases?: number;
 }
 
 const navGroups = [
@@ -40,6 +41,7 @@ const navGroups = [
     items: [
       { id: 'kpi', label: "KPI's", icon: TrendingUp },
       { id: 'revenue', label: 'Omzet', icon: Crown },
+      { id: 'package-orders', label: 'Pakketten & abonnementen', icon: Crown },
       { id: 'user-insights', label: 'Gebruikersinzicht', icon: Users },
       { id: 'search-analytics', label: 'Zoek Analytics', icon: Search },
       { id: 'search-log', label: 'Zoeklog', icon: Search },
@@ -56,6 +58,7 @@ const navGroups = [
       { id: 'dish-approval', label: 'Goedkeuring', icon: Check },
       { id: 'restaurant-dishes', label: 'Bekend Om', icon: UtensilsCrossed },
       { id: 'tag-requests', label: 'Tag-aanvragen', icon: Check, badgeKey: 'pendingTagRequests' as const },
+      { id: 'event-releases', label: 'Evenementen', icon: Sparkles, badgeKey: 'pendingEventReleases' as const },
       { id: 'cities', label: 'Steden', icon: MapPin },
       { id: 'collections', label: 'Collecties', icon: Sparkles },
       { id: 'chains', label: 'Ketens', icon: Store },
@@ -120,7 +123,7 @@ const navGroups = [
   },
 ];
 
-export function AdminSidebar({ activeSection, onSectionChange, pendingReviews = 0, pendingClaims = 0, pendingSupport = 0, pendingTagRequests = 0 }: AdminSidebarProps) {
+export function AdminSidebar({ activeSection, onSectionChange, pendingReviews = 0, pendingClaims = 0, pendingSupport = 0, pendingTagRequests = 0, pendingEventReleases = 0 }: AdminSidebarProps) {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
 
@@ -129,6 +132,7 @@ export function AdminSidebar({ activeSection, onSectionChange, pendingReviews = 
     pendingClaims,
     pendingSupport,
     pendingTagRequests,
+    pendingEventReleases,
   };
 
   return (

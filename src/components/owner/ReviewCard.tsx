@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useOwnerTier } from '@/hooks/useOwnerTier';
+import { useOwnerProCheckout } from '@/hooks/useOwnerProCheckout';
 
 interface ReviewCardProps {
   review: any;
@@ -22,6 +24,9 @@ export function ReviewCard({ review, onRespond, canRespond, restaurantId, restau
   const [submitting, setSubmitting] = useState(false);
   const [templates, setTemplates] = useState<Array<{ id: string; title: string; body: string; sentiment: string | null }>>([]);
   const [aiLoading, setAiLoading] = useState(false);
+  const { data: tier } = useOwnerTier(restaurantId);
+  const { startCheckout } = useOwnerProCheckout();
+  const isPro = tier === 'pro';
 
   useEffect(() => {
     if (!restaurantId || !showResponseForm) return;
@@ -48,6 +53,7 @@ export function ReviewCard({ review, onRespond, canRespond, restaurantId, restau
           reviewText: review.body || review.title || '',
           rating: review.rating,
           restaurantName,
+          restaurantId,
           tone,
         },
       });
@@ -129,6 +135,11 @@ export function ReviewCard({ review, onRespond, canRespond, restaurantId, restau
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}
+                  {!isPro ? (
+                    <Button size="sm" variant="outline" onClick={() => startCheckout('monthly')} title="AI-suggesties zijn onderdeel van Owner Pro">
+                      <Lock className="h-3.5 w-3.5 mr-1" />AI-suggestie (Pro)
+                    </Button>
+                  ) : (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button size="sm" variant="outline" disabled={aiLoading}>
@@ -142,6 +153,7 @@ export function ReviewCard({ review, onRespond, canRespond, restaurantId, restau
                       <DropdownMenuItem onClick={() => generateAI('apologetic')}>Verontschuldigend</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+                  )}
                 </div>
                 <Textarea
                   placeholder="Schrijf een reactie op deze review..."

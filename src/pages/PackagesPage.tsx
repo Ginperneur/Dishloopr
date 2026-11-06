@@ -13,9 +13,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { sendAnalyticsEvent } from '@/lib/cookieConsent';
-import { clientReferenceId, isUsableLink, withReference } from '@/lib/packageLinks';
+import { toast } from 'sonner';
+import { CHECKOUT_ENABLED } from '@/lib/checkoutFlags';
+import { OWNER_PRO_PRICES } from '@/lib/proPricing';
+import { useOwnerProCheckout } from '@/hooks/useOwnerProCheckout';
 
-type LinkKey = 'founding_month_url' | 'founding_year_url' | 'menu_once_url' | 'menu_month_url';
+type PackageOption = 'founding_month' | 'founding_year' | 'menu_once' | 'menu_month';
 
 function track(pkg: string) { sendAnalyticsEvent('click_package', { package: pkg }); }
 
@@ -27,22 +30,14 @@ function Features({ items }: { items: string[] }) {
   );
 }
 
-function Price({ main, sub }: { main: string; sub?: string }) {
+function Price({ main, sub, was }: { main: string; sub?: string; was?: string }) {
   return (
     <div>
+      {was && <p className="text-sm text-muted-foreground line-through decoration-primary">{was}</p>}
       <p className="text-3xl font-bold">{main}</p>
       {sub && <p className="text-sm">{sub}</p>}
       <p className="text-xs text-muted-foreground mt-1">Alle prijzen exclusief btw</p>
     </div>
-  );
-}
-
-function LinkButton({ url, label, pkg, variant = 'default' }: { url?: string; label: string; pkg: string; variant?: 'default' | 'outline' }) {
-  if (!isUsableLink(url)) return <Button disabled variant="outline" className="min-h-11 h-auto w-full whitespace-normal text-xs">{label}: binnenkort beschikbaar</Button>;
-  return (
-    <Button asChild variant={variant} className="min-h-11 w-full">
-      <a href={url} onClick={() => track(pkg)} rel="noopener">{label}</a>
-    </Button>
   );
 }
 
@@ -52,15 +47,6 @@ export default function PackagesPage() {
   const paramSlug = params.get('slug') || '';
 
   useEffect(() => { sendAnalyticsEvent('view_packages', {}); }, []);
-
-  const { data: links = {} } = useQuery({
-    queryKey: ['package-links'],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('public_package_links');
-      if (error) throw error;
-      return Object.fromEntries((data ?? []).map(r => [r.key, r.url])) as Partial<Record<LinkKey, string>>;
-    },
-  });
 
   const { data: restaurant } = useQuery({
     queryKey: ['packages-restaurant', paramSlug, user?.id],
@@ -85,13 +71,38 @@ export default function PackagesPage() {
 
   const [founding, setFounding] = useState<null | 'month' | 'year'>(null);
   const [pageSlug, setPageSlug] = useState('');
-  const foundingUrl = founding === 'month' ? links.founding_month_url : links.founding_year_url;
+  const [busy, setBusy] = useState<PackageOption | null>(null);
 
-  const goFounding = () => {
-    if (!restaurant || !pageSlug || !isUsableLink(foundingUrl)) return;
-    track(founding === 'month' ? 'founding_month' : 'founding_year');
-    window.location.href = withReference(foundingUrl, clientReferenceId(restaurant.id, pageSlug));
+  const { data: placesLeft } = useQuery({
+    queryKey: ['founding-places-left', pageSlug],
+    queryFn: async () => {
+      const { data, error } = await (supabase.rpc as any)('founding_places_left', { p_page_slug: pageSlug });
+      if (error) throw error;
+      return data as number;
+    },
+    enabled: Boolean(pageSlug),
+  });
+
+  // Founding Partner and Menuservice go through create-package-checkout, which
+  // checks verified ownership, the 5-per-page cap and starts billing at launch.
+  const startPackage = async (option: PackageOption, page?: string) => {
+    track(option);
+    if (!restaurant) { toast.info('Claim eerst je restaurant of log in.'); return; }
+    setBusy(option);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-package-checkout', {
+        body: { option, restaurant_id: restaurant.id, page_slug: page },
+      });
+      const message = data?.error ?? (error ? await error.context?.json?.().then((b: any) => b?.error).catch(() => null) : null);
+      if (message || error || !data?.url) throw new Error(message || 'Geen checkout ontvangen');
+      window.location.href = data.url;
+    } catch (e) {
+      toast.error('Afrekenen lukte niet', { description: e instanceof Error ? e.message : undefined });
+      setBusy(null);
+    }
   };
+
+  const { startCheckout: startPro, loading: proLoading } = useOwnerProCheckout();
 
   const [email, setEmail] = useState(user?.email ?? '');
   const [proMsg, setProMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -108,7 +119,7 @@ export default function PackagesPage() {
 
   return (
     <Layout>
-      <SEOHead title="Pakketten voor restaurants | Dishloopr" description="Gratis claimen, Founding Partner, Menuservice en Pro: kies het pakket dat bij je restaurant past." />
+      <SEOHead title="Pakketten voor restaurants | Dishloopr" description="Gratis claimen, Founding Partner, Menuservice, Evenementen en Pro: kies het pakket dat bij je restaurant past." />
       <div className="container py-10 space-y-8">
         <div className="max-w-2xl">
           <h1 className="text-3xl md:text-4xl font-bold">Pakketten</h1>
@@ -125,15 +136,15 @@ export default function PackagesPage() {
 
           <div className="flex flex-col gap-4 rounded-xl border-2 border-primary bg-card p-6">
             <div className="flex items-center justify-between gap-2"><h2 className="text-xl font-semibold">Founding Partner</h2><Badge>Founding Partner</Badge></div>
-            <Price main="€59 per maand" sub="of €590 per jaar" />
-            <p className="text-sm text-muted-foreground">Vaste prijs zolang je klant blijft.</p>
-            <Features items={['Uitgelichte plek op 1 gerechtpagina in je stad, met het label "Uitgelicht"', 'Maximaal 2 per gerechtpagina', 'Badge "Founding Partner"', 'Maandrapport']} />
-            <p className="text-sm">Je betaalt pas vanaf de launchdatum. Gaat de launch niet door, dan krijg je je geld terug.</p>
+            <Price main="€59 per maand" sub="of €590 per jaar" was="Normaal €99 per maand" />
+            <p className="rounded-lg bg-primary/10 p-3 text-sm"><span className="font-semibold">Je bespaart €480 per jaar</span>, of €598 per jaar met het jaarabonnement. Dat is bijna de helft.</p>
+            <p className="text-sm text-muted-foreground">Vaste prijs zolang je klant blijft, dus die besparing krijg je elk jaar opnieuw. Minimale looptijd 6 maanden.</p>
+            <Features items={['Uitgelichte plek op 1 gerechtpagina in je stad', 'Bovenaan de pagina in het blok "Uitgelicht"', 'Maximaal 5 per gerechtpagina']} />
+            <p className="text-sm">Je betaalt pas vanaf de launch op 10 december 2026. Gaat de launch niet door, dan krijg je je geld terug.</p>
             <div className="grid grid-cols-2 gap-2">
               {(['month', 'year'] as const).map(p => {
-                const url = p === 'month' ? links.founding_month_url : links.founding_year_url;
                 const label = p === 'month' ? 'Per maand' : 'Per jaar';
-                return isUsableLink(url)
+                return CHECKOUT_ENABLED.packages
                   ? <Button key={p} className="min-h-11" onClick={() => { setPageSlug(''); setFounding(p); }}>{label}</Button>
                   : <Button key={p} disabled variant="outline" className="min-h-11 h-auto whitespace-normal text-xs">{label}: binnenkort beschikbaar</Button>;
               })}
@@ -145,21 +156,48 @@ export default function PackagesPage() {
             <Price main="€79 eenmalig" sub="of €19 per maand" />
             <Features items={['Je volledige menukaart online', 'Vertaald in het Engels, Duits en Frans', 'Als QR-menu', 'Voor je eigen website']} />
             <div className="grid gap-2">
-              <LinkButton url={links.menu_once_url} label="Eenmalig" pkg="menu_once" />
-              <LinkButton url={links.menu_month_url} label="Per maand" pkg="menu_month" variant="outline" />
+              {(['menu_once', 'menu_month'] as const).map(option => {
+                const label = option === 'menu_once' ? 'Eenmalig' : 'Per maand';
+                return CHECKOUT_ENABLED.packages
+                  ? <Button key={option} variant={option === 'menu_once' ? 'default' : 'outline'} className="min-h-11 w-full" disabled={busy !== null} onClick={() => startPackage(option)}>{busy === option ? 'Even geduld…' : label}</Button>
+                  : <Button key={option} disabled variant="outline" className="min-h-11 h-auto w-full whitespace-normal text-xs">{label}: binnenkort beschikbaar</Button>;
+              })}
             </div>
           </div>
 
-          <div className="flex flex-col gap-4 rounded-xl border bg-muted/40 p-6">
-            <div className="flex items-center justify-between gap-2"><h2 className="text-xl font-semibold">Pro</h2><Badge variant="secondary">Binnenkort</Badge></div>
-            <Price main="vanaf €29" sub="per maand" />
-            <Features items={['Uitgebreide statistieken', 'Reageren op reviews', 'Meertalig menu']} />
+          <div className={`flex flex-col gap-4 rounded-xl border p-6 ${CHECKOUT_ENABLED.pro ? 'bg-card' : 'bg-muted/40'}`}>
+            <div className="flex items-center justify-between gap-2"><h2 className="text-xl font-semibold">Owner Pro</h2>{!CHECKOUT_ENABLED.pro && <Badge variant="secondary">Binnenkort</Badge>}</div>
+            <Price main={`€${OWNER_PRO_PRICES.monthly.amount} per maand`} sub={`of €${OWNER_PRO_PRICES.yearly.amount} per jaar (${OWNER_PRO_PRICES.yearly.savingsLabel})`} />
+            <Features items={['Conversiefunnel: weergaven, kliks en reserveringen', 'Zoektermen waarop gasten je vinden', 'Vergelijking met restaurants in je buurt', 'Hulp van AI bij het beantwoorden van reviews']} />
+            {CHECKOUT_ENABLED.pro ? (
+              <div className="grid grid-cols-2 gap-2">
+                <Button className="min-h-11" disabled={proLoading !== null} onClick={() => user ? startPro('monthly') : toast.info('Log eerst in met je eigenaarsaccount.')}>Per maand</Button>
+                <Button variant="outline" className="min-h-11" disabled={proLoading !== null} onClick={() => user ? startPro('yearly') : toast.info('Log eerst in met je eigenaarsaccount.')}>Per jaar</Button>
+              </div>
+            ) : (
             <div className="space-y-2">
               <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Je e-mailadres" aria-label="E-mailadres" aria-invalid={proMsg?.ok === false} />
               <Button variant="outline" className="min-h-11 w-full" onClick={joinPro}>Houd me op de hoogte</Button>
               {proMsg && <p className={`text-sm ${proMsg.ok ? 'text-primary' : 'text-destructive'}`}>{proMsg.text}</p>}
             </div>
+            )}
           </div>
+        </div>
+
+        <div className="flex flex-col gap-4 rounded-xl border bg-card p-6 md:flex-row md:items-center md:justify-between">
+          <div className="max-w-xl space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-xl font-semibold">Evenementen</h2>
+              {!CHECKOUT_ENABLED.event && <Badge variant="secondary">Online betalen binnenkort</Badge>}
+            </div>
+            <Price main="€5 per maand" sub="per evenement, maandelijks opzegbaar" />
+            <Features items={['Je special of evenement op de evenementenpagina en op je restaurantpagina', 'Eenmalig op een datum of elke week terugkerend', 'Elke maand een mail met hoe vaak het in beeld was en is bekeken']} />
+          </div>
+          <Button asChild variant="outline" className="min-h-11 w-full md:w-auto">
+            <Link to={user ? '/owner-dashboard?section=evenementen' : claimTo} onClick={() => track('event_promotion')}>
+              {user ? 'Evenement toevoegen' : 'Claim eerst je restaurant'}
+            </Link>
+          </Button>
         </div>
       </div>
 
@@ -187,7 +225,16 @@ export default function PackagesPage() {
                   {pages.map(p => <SelectItem key={p.page_slug} value={p.page_slug}>{p.dish_name} (nu #{p.position} van {p.total})</SelectItem>)}
                 </SelectContent>
               </Select>
-              <Button className="min-h-11 w-full" disabled={!pageSlug} onClick={goFounding}>Verder naar betalen</Button>
+              {pageSlug && typeof placesLeft === 'number' && (
+                <p className={`text-sm ${placesLeft > 0 ? 'text-muted-foreground' : 'text-destructive'}`}>
+                  {placesLeft > 0 ? `Nog ${placesLeft} van de 5 plekken vrij op deze pagina.` : 'Alle 5 plekken op deze pagina zijn vergeven.'}
+                </p>
+              )}
+              <Button className="min-h-11 w-full" disabled={!pageSlug || placesLeft === 0 || busy !== null}
+                onClick={() => founding && startPackage(founding === 'month' ? 'founding_month' : 'founding_year', pageSlug)}>
+                {busy ? 'Even geduld…' : 'Verder naar betalen'}
+              </Button>
+              <p className="text-xs text-muted-foreground">Je betaalt pas vanaf de launch op 10 december 2026.</p>
             </div>
           )}
         </DialogContent>

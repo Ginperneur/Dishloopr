@@ -22,7 +22,7 @@ export default function TermsPage() {
           className="max-w-3xl mx-auto"
         >
           <h1 className="text-4xl font-bold mb-2">Algemene Voorwaarden</h1>
-          <p className="text-sm text-muted-foreground mb-6">Laatst bijgewerkt: 22 oktober 2026</p>
+          <p className="text-sm text-muted-foreground mb-6">Laatst bijgewerkt: 6 november 2026</p>
           <address className="not-italic text-muted-foreground mb-8 leading-relaxed">
             <strong className="text-foreground">Dishloopr</strong><br />
             KvK: 82000611<br />
@@ -119,16 +119,27 @@ export default function TermsPage() {
               <ol className="text-muted-foreground space-y-4 leading-relaxed">
                 <li>
                   <strong>Founding Partner.</strong> Een uitgelichte plek op één gerechtpagina, altijd gemarkeerd
-                  als ‘Uitgelicht’. Wij geven geen garantie op aantallen bezoekers. De prijs blijft vast zolang
-                  het abonnement doorloopt. Facturering start op de launchdatum. Gaat de launch niet door vóór
-                  31 maart 2027, dan ontvang je een volledige terugbetaling. Een maandabonnement is maandelijks
-                  opzegbaar; een jaarabonnement loopt het jaar uit. Dishloopr mag misleidende plaatsingen
+                  als ‘Uitgelicht’. Per gerechtpagina zijn maximaal 5 Founding Partner-plekken beschikbaar. Wij
+                  geven geen garantie op aantallen bezoekers. De prijs blijft vast zolang het abonnement
+                  doorloopt. Facturering start op de launchdatum. Gaat de launch niet door vóór 31 maart 2027,
+                  dan ontvang je een volledige terugbetaling. Een maandabonnement heeft een minimale looptijd
+                  van 6 maanden, gerekend vanaf de launchdatum, en is daarna maandelijks opzegbaar; een
+                  jaarabonnement loopt het jaar uit. Dishloopr mag misleidende plaatsingen
                   weigeren of beëindigen.
                 </li>
                 <li>
                   <strong>Menuservice.</strong> Levering vindt plaats binnen 3 werkdagen. Het restaurant controleert
                   de menukaart, prijzen en allergeneninformatie en blijft daarvoor verantwoordelijk.
                   Correcties binnen 14 dagen na levering zijn kosteloos.
+                </li>
+                <li>
+                  <strong>Evenementen.</strong> €5 per maand per evenement. Een evenement of special wordt getoond op
+                  de evenementenpagina en op de pagina van het restaurant zolang het abonnement loopt en het evenement
+                  niet is afgelopen of gestopt. Het abonnement is maandelijks opzegbaar en loopt dan de betaalde maand
+                  uit. Het restaurant is verantwoordelijk voor de juistheid van titel, tijden, prijzen en aanbiedingen.
+                  Maandelijks ontvangt het restaurant een overzicht van hoe vaak het evenement is getoond en bekeken.
+                  Wij geven geen garantie op aantallen bezoekers. Dishloopr mag evenementen die misleidend zijn of
+                  niet over het restaurant gaan weigeren of offline halen.
                 </li>
                 <li>
                   <strong>Betaling en facturen.</strong> Betaling verloopt via Stripe. Facturen worden per e-mail

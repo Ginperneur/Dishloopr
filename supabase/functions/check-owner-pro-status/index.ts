@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
+import { periodEndIso } from "../_shared/stripePeriod.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
@@ -67,7 +68,7 @@ serve(async (req) => {
         stripeSubscriptionId = activeSub.id;
         stripePriceId = activeSub.items.data[0].price.id;
         interval = stripePriceId === PRICE_YEARLY ? "yearly" : "monthly";
-        periodEnd = new Date(activeSub.current_period_end * 1000).toISOString();
+        periodEnd = periodEndIso(activeSub);
         cancelAtPeriodEnd = activeSub.cancel_at_period_end;
       }
     }

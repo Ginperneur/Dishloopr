@@ -17,6 +17,19 @@ interface QueueCounts {
   reviews: number;
   failedScrapes: number;
   emptyDishes: number;
+  claimsOverdue: number;
+  menuService: number;
+}
+
+/** The moment `days` working days (Mon to Fri) before now. */
+function workingDaysAgo(days: number): Date {
+  const d = new Date();
+  let left = days;
+  while (left > 0) {
+    d.setDate(d.getDate() - 1);
+    if (d.getDay() !== 0 && d.getDay() !== 6) left--;
+  }
+  return d;
 }
 
 interface AdminTodayProps {
@@ -31,6 +44,8 @@ const QUEUES: Array<{
   section: string;
   tone: 'urgent' | 'warning' | 'info';
 }> = [
+  { key: 'claimsOverdue', label: 'Claims over de termijn', description: 'Langer dan 2 werkdagen open (belofte aan eigenaren)', icon: AlertTriangle, section: 'claims', tone: 'urgent' },
+  { key: 'menuService', label: 'Menuservice te leveren', description: 'Betaald, binnen 3 werkdagen leveren', icon: UtensilsCrossed, section: 'package-orders', tone: 'urgent' },
   { key: 'claims', label: 'Claim aanvragen', description: 'Eigenaren wachten op goedkeuring', icon: FileText, section: 'claims', tone: 'urgent' },
   { key: 'dishes', label: 'Gerecht-suggesties', description: 'Door bezoekers/eigenaren ingediend', icon: UtensilsCrossed, section: 'dish-approval', tone: 'warning' },
   { key: 'newRestaurants', label: 'Nieuwe restaurants', description: 'Inactief, wacht op review', icon: Store, section: 'restaurants', tone: 'warning' },
@@ -63,6 +78,11 @@ export function AdminToday({ onNavigate }: AdminTodayProps) {
     const newR = await supabase.from('restaurants').select('id', headOpts).eq('is_active', false).not('claimed_by_owner_id', 'is', null);
     const reviews = await supabase.from('reviews').select('id', headOpts).eq('status', 'pending');
     const failedScrapes = await supabase.from('scrape_queue').select('id', headOpts).eq('status', 'failed');
+    const claimsLate = await supabase.from('restaurant_claims').select('id', headOpts)
+      .in('status', ['pending', 'email_verified', 'phone_verified']).lt('created_at', workingDaysAgo(2).toISOString());
+    // package_orders is not in the generated types yet.
+    const menuTodo = await (supabase as any).from('package_orders').select('id', headOpts)
+      .eq('package', 'menu_service').eq('fulfillment_status', 'todo');
     setCounts({
       claims: (c1.count || 0) + (c2.count || 0),
       dishes: dishes.count || 0,
@@ -70,6 +90,8 @@ export function AdminToday({ onNavigate }: AdminTodayProps) {
       reviews: reviews.count || 0,
       failedScrapes: failedScrapes.count || 0,
       emptyDishes: 0,
+      claimsOverdue: claimsLate.count || 0,
+      menuService: menuTodo.count || 0,
     });
     setLoading(false);
   }, []);

@@ -70,10 +70,11 @@ Deno.serve(async (req) => {
 
     // Price is determined server-side. The client can NOT influence what
     // the user pays for an extra tag.
+    // STRIPE_TAG_PRICE_ID wins when set; otherwise the advertised €5/month is created inline.
     const priceId = Deno.env.get("STRIPE_TAG_PRICE_ID");
-    if (!priceId) {
-      throw new Error("STRIPE_TAG_PRICE_ID is not configured");
-    }
+    const lineItem = priceId
+      ? { price: priceId, quantity: 1 }
+      : { quantity: 1, price_data: { currency: "eur", unit_amount: 500, tax_behavior: "exclusive" as const, recurring: { interval: "month" as const }, product_data: { name: "Extra tag" } } };
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
@@ -91,7 +92,7 @@ Deno.serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [lineItem],
       mode: "subscription",
       metadata: {
         type: "extra_tag",

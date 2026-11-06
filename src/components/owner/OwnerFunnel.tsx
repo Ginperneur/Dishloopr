@@ -57,11 +57,11 @@ export function OwnerFunnel({ restaurantId, days = 30 }: { restaurantId: string;
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
-        <Row icon={Eye} label="Profielweergaven" value={data.views} color="bg-primary" />
+        <Row icon={Eye} label="In beeld bij gasten" value={data.views} color="bg-primary" />
         <div className="flex justify-end text-xs text-muted-foreground">↓ klik-ratio: <span className="ml-1 font-medium text-foreground">{ctr}%</span></div>
-        <Row icon={MousePointer} label="Interactie-clicks" value={data.clicks} color="bg-primary/70" />
+        <Row icon={MousePointer} label="Profiel bekeken" value={data.clicks} color="bg-primary/70" />
         <div className="flex justify-end text-xs text-muted-foreground">↓ conversie-ratio: <span className="ml-1 font-medium text-foreground">{cvr}%</span></div>
-        <Row icon={Target} label="Conversies (website/telefoon/reservering)" value={data.conversions} color="bg-green-500" />
+        <Row icon={Target} label="Website, telefoon, route of reservering" value={data.conversions} color="bg-green-500" />
       </CardContent>
     </Card>
   );

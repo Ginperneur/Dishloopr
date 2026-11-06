@@ -76,11 +76,8 @@ Deno.serve(async (req) => {
       // Aggregate stats per restaurant
       const rows = [];
       for (const r of ownerRestaurants) {
-        const { data: events } = await supabase
-          .from('analytics_events')
-          .select('event_type')
-          .eq('restaurant_id', r.id)
-          .gte('created_at', sinceIso);
+        // Live counters (restaurant_stats_daily); analytics_events is no longer written.
+        const { data: funnel } = await supabase.rpc('get_owner_funnel', { p_restaurant_id: r.id, p_days: 7 });
 
         const { count: reviewCount } = await supabase
           .from('reviews')
@@ -88,8 +85,8 @@ Deno.serve(async (req) => {
           .eq('restaurant_id', r.id)
           .gte('created_at', sinceIso);
 
-        const views = (events || []).filter((e: any) => e.event_type === 'view').length;
-        const clicks = (events || []).filter((e: any) => e.event_type === 'click').length;
+        const views = Number(funnel?.[0]?.views ?? 0);
+        const clicks = Number(funnel?.[0]?.clicks ?? 0);
         rows.push({ name: r.name, slug: r.slug, views, clicks, reviews: reviewCount || 0 });
       }
 

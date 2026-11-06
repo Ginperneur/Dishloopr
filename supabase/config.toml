@@ -70,3 +70,13 @@ project_id = "uktafmxojymsojqewzuy"
 
   [functions.public-analytics-config]
     verify_jwt = false
+  [functions.create-event-checkout]
+    verify_jwt = false
+  [functions.send-monthly-event-report]
+    verify_jwt = false
+
+  [functions.create-package-checkout]
+    verify_jwt = false
+
+  [functions.send-monthly-founding-report]
+    verify_jwt = false
