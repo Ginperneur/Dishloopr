@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Dishloopr</string>
+    <string name="title_activity_main">Dishloopr</string>
+    <string name="package_name">com.dishloopr.app</string>
+    <string name="custom_url_scheme">com.dishloopr.app</string>
+</resources>
