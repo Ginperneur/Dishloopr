@@ -1436,7 +1436,7 @@ export default function OwnerDashboard() {
             />
             {selectedRestaurant && (
               <>
-                <MyPackagesCard restaurantId={selectedRestaurant.id} restaurantSlug={selectedRestaurant.slug} />
+                <MyPackagesCard restaurantId={selectedRestaurant.id} restaurantSlug={selectedRestaurant.slug} restaurantName={selectedRestaurant.name} />
                 <VisibilityProgress
                   steps={[
                     {

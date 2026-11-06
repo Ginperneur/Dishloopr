@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Eye, Flag, MousePointer, UtensilsCrossed } from 'lucide-react';
+import { Eye, Flag, MousePointer } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { MenuServiceStatus } from './MenuServiceStatus';
 
 // package_orders and owner_founding_stats are not in the generated types yet.
 const db = supabase as any;
@@ -31,7 +32,7 @@ const date = (v: string | null) => (v ? new Date(v).toLocaleDateString('nl-NL') 
  * "Uitgelicht" block delivered in the last 30 days. Without a package it shows
  * what Founding Partner costs and saves, linking to the packages page.
  */
-export function MyPackagesCard({ restaurantId, restaurantSlug }: { restaurantId: string; restaurantSlug: string }) {
+export function MyPackagesCard({ restaurantId, restaurantSlug, restaurantName }: { restaurantId: string; restaurantSlug: string; restaurantName: string }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -103,17 +104,7 @@ export function MyPackagesCard({ restaurantId, restaurantSlug }: { restaurantId:
       <CardContent className="space-y-4">
         {live.map(o => {
           if (o.package === 'menu_service') {
-            return (
-              <div key={o.id} className="flex items-start gap-3 rounded-lg border p-4">
-                <UtensilsCrossed className="mt-0.5 h-5 w-5 text-primary" />
-                <div className="flex-1">
-                  <p className="font-medium">Menuservice {o.plan === 'once' ? '(eenmalig)' : '(per maand)'}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {o.fulfillment_status === 'done' ? 'Je menukaart staat online.' : 'We zetten je menukaart binnen 3 werkdagen online, vertaald, als QR-code en widget.'}
-                  </p>
-                </div>
-              </div>
-            );
+            return <MenuServiceStatus key={o.id} restaurantId={restaurantId} restaurantSlug={restaurantSlug} restaurantName={restaurantName} />;
           }
           const s = data?.perPage.get(o.page_slug ?? '') ?? { impressie: 0, klik: 0 };
           return (

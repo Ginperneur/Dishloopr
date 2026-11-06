@@ -11,15 +11,18 @@ Draai de migraties (in deze volgorde, via Supabase of Lovable):
 - `20261106170000_owner_pro_analytics.sql`: Pro-funnel en zoektermen op de live tellers, positie door de tijd, gemiste vraag, prijsvergelijking.
 - `20261106180000_owner_analytics_live_counters.sql`: afwijkingsalerts, jaarvergelijking, kanalen, beste tijd, verloren aan concurrenten, gerechten en promotie-ROI op de live tellers en zoeklogs.
 - `20261106190000_launch_date_setting.sql`: launchdatum in `app_settings` (`launch_date`) en de dagelijkse job die proefperiodes van Founding Partners meeschuift.
+- `20261106200000_menu_service_and_claim_reminders.sql`: automatische Menuservice (`restaurant_menus`, publiceren door de eigenaar) en de herinneringsmail voor claims.
 
 Controleer daarna dat de cronjobs bestaan (`select jobname from cron.job;`):
-`send-monthly-event-report`, `send-monthly-founding-report`, `snapshot-restaurant-positions`, `sync-launch-date`.
+`send-monthly-event-report`, `send-monthly-founding-report`, `snapshot-restaurant-positions`, `sync-launch-date`, `remind-pending-claims`.
 
 ## 2. Edge functions deployen
 
 `create-package-checkout`, `create-event-checkout`, `create-tag-checkout`, `create-owner-pro-checkout`,
 `stripe-webhook`, `check-owner-pro-status`, `generate-review-response`, `owner-weekly-recommendation`,
-`send-weekly-owner-report`, `send-monthly-event-report`, `send-monthly-founding-report`, `sync-launch-date`.
+`send-weekly-owner-report`, `send-monthly-event-report`, `send-monthly-founding-report`, `sync-launch-date`, `verify-claim`, `run-menu-service`, `remind-pending-claims`.
+
+De automatische claimcheck en de Menuservice gebruiken `LOVABLE_API_KEY` (AI) en, voor websites met een JavaScript-menu, `FIRECRAWL_API_KEY`. Beide worden al door andere functies gebruikt.
 
 ## 3. Stripe
 
@@ -61,9 +64,10 @@ VITE_ENABLE_SPONSORED_CHECKOUT=true   # alleen als gesponsorde gerechten live ga
 
 ## Testen zonder database
 
-`deno run -A --config supabase/tests/deno.json supabase/tests/sql-functions.ts` draait de migraties van pakketten, analytics en launchdatum in een lokale Postgres (PGlite) en controleert de functies. `supabase/tests/launch.ts` test de tijdzone van de launchdatum.
+`deno run -A --config supabase/tests/deno.json supabase/tests/sql-functions.ts` draait de migraties van pakketten, analytics, launchdatum en Menuservice in een lokale Postgres (PGlite) en controleert de functies. `supabase/tests/launch.ts` test de tijdzone van de launchdatum, `supabase/tests/claim-screening.ts` de regels voor automatisch goedkeuren van claims. Alle drie draai je met `--config supabase/tests/deno.json`.
 
-## 6. Handwerk dat bij beloftes hoort
+## 6. Wat nog handwerk is, en wat automatisch gaat
 
-- Claims via documenten (Route B): binnen 2 werkdagen. Admin, Vandaag toont claims over de termijn.
-- Menuservice: binnen 3 werkdagen leveren, vertaald in het Engels, Duits en Frans. Zet daarna op "Geleverd".
+- **Claims met documenten (Route B):** de AI leest elk bewijsstuk. Een KvK-uittreksel waarop restaurantnaam, postcode en huisnummer kloppen en de aanvrager zelf als eigenaar of bestuurder staat, wordt direct goedgekeurd. De rest komt met de AI-beoordeling in Admin, Claims. Na 1 werkdag krijg je een herinneringsmail; Admin, Vandaag toont claims over de termijn van 2 werkdagen.
+- **Menuservice:** na betaling wordt de menukaart automatisch geïmporteerd (website, PDF of foto) en vertaald naar Engels, Duits en Frans. De eigenaar controleert hem en zet hem live; daarna krijgt hij een QR-code en widget. Lukt de import niet, dan kan de eigenaar een andere link proberen en staat de bestelling weer als "nog leveren" in Admin (belofte: binnen 3 werkdagen).
+- **Launch die niet doorgaat:** zie hierboven; Founding Partners betalen pas vanaf de launch, dus er valt niets terug te betalen.

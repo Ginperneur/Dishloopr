@@ -6,7 +6,7 @@ const repo = Deno.args[0] ?? ".";
 const db = new PGlite();
 const strip = (sql: string) => sql.replace(/CREATE EXTENSION IF NOT EXISTS pg_(cron|net);/g, "");
 await db.exec(await Deno.readTextFile(new URL("./stubs.sql", import.meta.url)));
-for (const m of ["20261106160000_package_orders.sql", "20261106170000_owner_pro_analytics.sql", "20261106180000_owner_analytics_live_counters.sql", "20261106190000_launch_date_setting.sql"]) {
+for (const m of ["20261106160000_package_orders.sql", "20261106170000_owner_pro_analytics.sql", "20261106180000_owner_analytics_live_counters.sql", "20261106190000_launch_date_setting.sql", "20261106200000_menu_service_and_claim_reminders.sql"]) {
   await db.exec(strip(await Deno.readTextFile(`${repo}/supabase/migrations/${m}`)));
   console.log("migrated", m);
 }
@@ -117,5 +117,20 @@ const ld = await q(`SELECT public_launch_date() AS d`);
 check("public_launch_date() = 2026-12-10", String(ld[0].d).startsWith("2026-12-10") || new Date(ld[0].d).toISOString().startsWith("2026-12-"), ld);
 await db.exec(`UPDATE app_settings SET value = 'nonsense' WHERE key = 'launch_date'`);
 check("malformed launch date gives NULL", (await q(`SELECT public_launch_date() AS d`))[0].d === null);
+// Menuservice publish
+await db.exec(`INSERT INTO package_orders (restaurant_id, package, plan, status, fulfillment_status, amount_cents, stripe_session_id) VALUES ('${R(1)}', 'menu_service', 'once', 'active', 'in_progress', 7900, 'cs_menu')`);
+await as(OWNER, "authenticated");
+let noMenu = false; try { await db.query(`SELECT publish_restaurant_menu('${R(1)}')`); } catch (e) { noMenu = String(e).includes("nog geen menukaart"); }
+check("publishing without a generated menu is refused", noMenu);
+await db.exec(`INSERT INTO restaurant_menus (restaurant_id, status, items) VALUES ('${R(1)}', 'awaiting_owner', '[{"category":"Pasta","name":"Carbonara","price":17}]')`);
+await as(STRANGER, "authenticated");
+check("another user cannot publish", await denied(`SELECT publish_restaurant_menu('${R(1)}')`));
+await as(OWNER, "authenticated");
+await db.query(`SELECT publish_restaurant_menu('${R(1)}')`);
+const pm = (await q(`SELECT m.status, o.fulfillment_status FROM restaurant_menus m, package_orders o WHERE m.restaurant_id = '${R(1)}' AND o.stripe_session_id = 'cs_menu'`))[0];
+check("owner publish sets menu live and closes the Menuservice order", pm.status === "published" && pm.fulfillment_status === "done", pm);
+let badStatus = false; try { await db.query(`UPDATE restaurant_menus SET status = 'weird'`); } catch { badStatus = true; }
+check("unknown menu status is rejected", badStatus);
+
 console.log(failures ? `\n${failures} FAILED` : "\nALL PASSED");
 Deno.exit(failures ? 1 : 0);

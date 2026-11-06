@@ -3,6 +3,9 @@ import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { periodEndIso } from "../_shared/stripePeriod.ts";
 import { commitmentEnd } from "../_shared/launch.ts";
+
+// Supabase edge runtime: keep work running after the response is sent.
+declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined;
 import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const logStep = (step: string, details?: any) => {
@@ -448,7 +451,14 @@ serve(async (req) => {
           return new Response(JSON.stringify({ error: orderError.message }), { status: 500 });
         }
         if (type === "menu_service") {
-          // Menuservice is delivered by hand within 3 working days: tell the admin right away.
+          // Start the automatic import and translation; the owner then checks and publishes it.
+          const run = fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/run-menu-service`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ restaurant_id: restaurantId }),
+          }).catch(e => logStep("run-menu-service call failed", { error: String(e) }));
+          if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(run);
+          // The admin hears about it too, in case the import needs a hand.
           try {
             const [{ data: setting }, { data: restaurant }] = await Promise.all([
               supabaseAdmin.from("app_settings").select("value").eq("key", "admin_email").maybeSingle(),
@@ -457,8 +467,8 @@ serve(async (req) => {
             await new Resend(Deno.env.get("RESEND_API_KEY")).emails.send({
               from: "Dishloopr <noreply@resend.dev>",
               to: [setting?.value || "admin@dishloopr.com"],
-              subject: `Nieuwe Menuservice: ${restaurant?.name ?? "restaurant"} (binnen 3 werkdagen leveren)`,
-              html: `<p>${restaurant?.name ?? "Een restaurant"} heeft Menuservice afgenomen (${metadata.plan === "once" ? "eenmalig €79" : "€19 per maand"}).</p><p>Lever de menukaart online, vertaald, als QR-code en widget binnen 3 werkdagen. Zet de bestelling daarna op geleverd in Admin, Pakketten &amp; abonnementen.</p>`,
+              subject: `Nieuwe Menuservice: ${restaurant?.name ?? "restaurant"} (import loopt automatisch)`,
+              html: `<p>${restaurant?.name ?? "Een restaurant"} heeft Menuservice afgenomen (${metadata.plan === "once" ? "eenmalig €79" : "€19 per maand"}).</p><p>De menukaart wordt automatisch geïmporteerd en vertaald; de eigenaar zet hem daarna zelf live. Lukt de import niet, dan staat de bestelling weer als "nog leveren" in Admin, Pakketten &amp; abonnementen (belofte: binnen 3 werkdagen).</p>`,
             });
           } catch (e) {
             logStep("Menuservice admin mail failed", { error: String(e) });

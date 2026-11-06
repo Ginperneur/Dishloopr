@@ -83,3 +83,9 @@ project_id = "uktafmxojymsojqewzuy"
 
   [functions.sync-launch-date]
     verify_jwt = false
+
+  [functions.run-menu-service]
+    verify_jwt = false
+
+  [functions.remind-pending-claims]
+    verify_jwt = false
