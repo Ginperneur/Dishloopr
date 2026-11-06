@@ -4275,6 +4275,47 @@ export type Database = {
           },
         ]
       }
+      restaurant_menus: {
+        Row: {
+          error: string | null
+          generated_at: string | null
+          items: Json
+          published_at: string | null
+          restaurant_id: string
+          source_url: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          error?: string | null
+          generated_at?: string | null
+          items?: Json
+          published_at?: string | null
+          restaurant_id: string
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          error?: string | null
+          generated_at?: string | null
+          items?: Json
+          published_at?: string | null
+          restaurant_id?: string
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_menus_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_merges: {
         Row: {
           dupe_id: string
@@ -7110,12 +7151,17 @@ export type Database = {
           term: string
         }[]
       }
+      public_launch_date: { Args: never; Returns: string }
       public_package_links: {
         Args: never
         Returns: {
           key: string
           url: string
         }[]
+      }
+      publish_restaurant_menu: {
+        Args: { p_restaurant_id: string }
+        Returns: undefined
       }
       request_restaurant_optout: {
         Args: {

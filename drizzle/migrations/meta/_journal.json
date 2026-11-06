@@ -127,6 +127,13 @@
       "when": 1793997101396,
       "tag": "0017_owner_analytics_live_counters",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793997126773,
+      "tag": "0018_launch_date_and_menu_service",
+      "breakpoints": true
     }
   ]
 }
