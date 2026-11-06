@@ -1554,6 +1554,38 @@ export type Database = {
           },
         ]
       }
+      founding_stats_daily: {
+        Row: {
+          dag: string
+          metric: string
+          n: number
+          page_slug: string
+          restaurant_id: string
+        }
+        Insert: {
+          dag?: string
+          metric: string
+          n?: number
+          page_slug: string
+          restaurant_id: string
+        }
+        Update: {
+          dag?: string
+          metric?: string
+          n?: number
+          page_slug?: string
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "founding_stats_daily_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       helpful_votes: {
         Row: {
           created_at: string
@@ -2151,6 +2183,7 @@ export type Database = {
           anomaly_alert_severity: string
           anomaly_alerts: boolean
           created_at: string
+          founding_report: boolean
           updated_at: string
           user_id: string
           weekly_report: boolean
@@ -2160,6 +2193,7 @@ export type Database = {
           anomaly_alert_severity?: string
           anomaly_alerts?: boolean
           created_at?: string
+          founding_report?: boolean
           updated_at?: string
           user_id: string
           weekly_report?: boolean
@@ -2169,9 +2203,28 @@ export type Database = {
           anomaly_alert_severity?: string
           anomaly_alerts?: boolean
           created_at?: string
+          founding_report?: boolean
           updated_at?: string
           user_id?: string
           weekly_report?: boolean
+        }
+        Relationships: []
+      }
+      owner_founding_report_log: {
+        Row: {
+          month: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          month: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          month?: string
+          sent_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -2290,6 +2343,71 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "owner_weekly_recommendations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      package_orders: {
+        Row: {
+          amount_cents: number
+          commitment_until: string | null
+          created_at: string
+          current_period_end: string | null
+          fulfillment_status: string
+          id: string
+          package: string
+          page_slug: string | null
+          plan: string
+          restaurant_id: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_session_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          commitment_until?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          fulfillment_status?: string
+          id?: string
+          package: string
+          page_slug?: string | null
+          plan: string
+          restaurant_id: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_session_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          commitment_until?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          fulfillment_status?: string
+          id?: string
+          package?: string
+          page_slug?: string | null
+          plan?: string
+          restaurant_id?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_session_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_orders_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
@@ -6552,6 +6670,14 @@ export type Database = {
       deduplicate_dishes: { Args: never; Returns: Json }
       deduplicate_restaurant_dishes: { Args: never; Returns: Json }
       dl_norm: { Args: { t: string }; Returns: string }
+      founding_partner_live: { Args: { p_status: string }; Returns: boolean }
+      founding_partners_for_page: {
+        Args: { p_page_slug: string }
+        Returns: {
+          restaurant_id: string
+        }[]
+      }
+      founding_places_left: { Args: { p_page_slug: string }; Returns: number }
       generate_amsterdam_grid: { Args: never; Returns: number }
       generate_city_grid: {
         Args: {
@@ -6692,6 +6818,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      owner_founding_stats: {
+        Args: { p_from?: string; p_restaurant_id: string; p_to?: string }
+        Returns: {
+          metric: string
+          page_slug: string
+          totaal: number
+        }[]
+      }
       parse_search_query: {
         Args: { p_query: string }
         Returns: {
@@ -6822,6 +6956,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: undefined
       }
+      track_founding_metrics: { Args: { p_items: Json }; Returns: number }
       track_restaurant_metrics: { Args: { p_items: Json }; Returns: number }
       unsubscribe_restaurant_contact: {
         Args: { p_token: string }
