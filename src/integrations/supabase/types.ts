@@ -1987,6 +1987,7 @@ export type Database = {
       }
       newsletter_subscribers: {
         Row: {
+          city_id: string | null
           email: string
           id: string
           is_active: boolean
@@ -1995,6 +1996,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          city_id?: string | null
           email: string
           id?: string
           is_active?: boolean
@@ -2003,6 +2005,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          city_id?: string | null
           email?: string
           id?: string
           is_active?: boolean
@@ -2010,7 +2013,22 @@ export type Database = {
           unsubscribed_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_subscribers_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "newsletter_subscribers_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["city_id"]
+          },
+        ]
       }
       nl_provinces: {
         Row: {
@@ -4390,6 +4408,56 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurant_tag_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          id: string
+          note: string | null
+          requested_by: string
+          restaurant_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          tag_type: string
+          tag_value: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          requested_by: string
+          restaurant_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tag_type: string
+          tag_value: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          requested_by?: string
+          restaurant_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tag_type?: string
+          tag_value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_tag_requests_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_tag_subscriptions: {
         Row: {
           created_at: string
@@ -5792,6 +5860,7 @@ export type Database = {
           escalated: boolean
           escalated_at: string | null
           id: string
+          resolved_at: string | null
           session_id: string | null
           title: string | null
           updated_at: string
@@ -5802,6 +5871,7 @@ export type Database = {
           escalated?: boolean
           escalated_at?: string | null
           id?: string
+          resolved_at?: string | null
           session_id?: string | null
           title?: string | null
           updated_at?: string
@@ -5812,6 +5882,7 @@ export type Database = {
           escalated?: boolean
           escalated_at?: string | null
           id?: string
+          resolved_at?: string | null
           session_id?: string | null
           title?: string | null
           updated_at?: string
