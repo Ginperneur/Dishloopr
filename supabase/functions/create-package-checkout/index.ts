@@ -14,6 +14,7 @@ const json = (body: unknown, status = 200) =>
 // Billing for Founding Partner starts on the public launch (app_settings.launch_date),
 // as the packages page and terms promise; sync-launch-date moves open trials when the
 // date changes. Stripe Checkout needs a trial end at least 48 hours ahead.
+// Menuservice "once" is charged immediately (mode payment), Founding Partner on launch.
 const FOUNDING_PLACES_PER_PAGE = 5;
 const MIN_TRIAL_MS = 49 * 60 * 60 * 1000;
 

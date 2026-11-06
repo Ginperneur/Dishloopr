@@ -85,6 +85,20 @@
       "when": 1793640534688,
       "tag": "0011_backup_opening_hours",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793996590668,
+      "tag": "0012_package_orders",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793996626843,
+      "tag": "0013_package_orders_admin_grants",
+      "breakpoints": true
     }
   ]
 }
