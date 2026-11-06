@@ -1987,6 +1987,7 @@ export type Database = {
       }
       newsletter_subscribers: {
         Row: {
+          city_id: string | null
           email: string
           id: string
           is_active: boolean
@@ -1995,6 +1996,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          city_id?: string | null
           email: string
           id?: string
           is_active?: boolean
@@ -2003,6 +2005,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          city_id?: string | null
           email?: string
           id?: string
           is_active?: boolean
@@ -2010,7 +2013,22 @@ export type Database = {
           unsubscribed_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_subscribers_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "newsletter_subscribers_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["city_id"]
+          },
+        ]
       }
       nl_provinces: {
         Row: {
@@ -2183,6 +2201,7 @@ export type Database = {
           anomaly_alert_severity: string
           anomaly_alerts: boolean
           created_at: string
+          event_report: boolean
           founding_report: boolean
           updated_at: string
           user_id: string
@@ -2193,6 +2212,7 @@ export type Database = {
           anomaly_alert_severity?: string
           anomaly_alerts?: boolean
           created_at?: string
+          event_report?: boolean
           founding_report?: boolean
           updated_at?: string
           user_id: string
@@ -2203,10 +2223,29 @@ export type Database = {
           anomaly_alert_severity?: string
           anomaly_alerts?: boolean
           created_at?: string
+          event_report?: boolean
           founding_report?: boolean
           updated_at?: string
           user_id?: string
           weekly_report?: boolean
+        }
+        Relationships: []
+      }
+      owner_event_report_log: {
+        Row: {
+          month: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          month: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          month?: string
+          sent_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -4027,54 +4066,113 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurant_event_stats_daily: {
+        Row: {
+          dag: string
+          event_id: string
+          metric: string
+          n: number
+        }
+        Insert: {
+          dag?: string
+          event_id: string
+          metric: string
+          n?: number
+        }
+        Update: {
+          dag?: string
+          event_id?: string
+          metric?: string
+          n?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_event_stats_daily_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_events: {
         Row: {
           created_at: string
           current_participants: number | null
           description: string | null
           end_date: string | null
+          end_time: string | null
           event_date: string
           event_type: string
           id: string
           image_url: string | null
           is_active: boolean | null
           max_participants: number | null
+          offer: string | null
+          paid_until: string | null
           price: number | null
+          promotion_status: string
+          recurrence: string
+          released_at: string | null
+          released_by: string | null
           restaurant_id: string
+          start_time: string | null
+          stripe_subscription_id: string | null
           title: string
           updated_at: string
+          weekdays: number[]
         }
         Insert: {
           created_at?: string
           current_participants?: number | null
           description?: string | null
           end_date?: string | null
+          end_time?: string | null
           event_date: string
           event_type: string
           id?: string
           image_url?: string | null
           is_active?: boolean | null
           max_participants?: number | null
+          offer?: string | null
+          paid_until?: string | null
           price?: number | null
+          promotion_status?: string
+          recurrence?: string
+          released_at?: string | null
+          released_by?: string | null
           restaurant_id: string
+          start_time?: string | null
+          stripe_subscription_id?: string | null
           title: string
           updated_at?: string
+          weekdays?: number[]
         }
         Update: {
           created_at?: string
           current_participants?: number | null
           description?: string | null
           end_date?: string | null
+          end_time?: string | null
           event_date?: string
           event_type?: string
           id?: string
           image_url?: string | null
           is_active?: boolean | null
           max_participants?: number | null
+          offer?: string | null
+          paid_until?: string | null
           price?: number | null
+          promotion_status?: string
+          recurrence?: string
+          released_at?: string | null
+          released_by?: string | null
           restaurant_id?: string
+          start_time?: string | null
+          stripe_subscription_id?: string | null
           title?: string
           updated_at?: string
+          weekdays?: number[]
         }
         Relationships: [
           {
@@ -4172,6 +4270,47 @@ export type Database = {
             foreignKeyName: "restaurant_managers_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurant_menus: {
+        Row: {
+          error: string | null
+          generated_at: string | null
+          items: Json
+          published_at: string | null
+          restaurant_id: string
+          source_url: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          error?: string | null
+          generated_at?: string | null
+          items?: Json
+          published_at?: string | null
+          restaurant_id: string
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          error?: string | null
+          generated_at?: string | null
+          items?: Json
+          published_at?: string | null
+          restaurant_id?: string
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_menus_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -4301,6 +4440,38 @@ export type Database = {
           },
         ]
       }
+      restaurant_position_history: {
+        Row: {
+          dag: string
+          page_slug: string
+          position: number
+          restaurant_id: string
+          total: number
+        }
+        Insert: {
+          dag: string
+          page_slug: string
+          position: number
+          restaurant_id: string
+          total: number
+        }
+        Update: {
+          dag?: string
+          page_slug?: string
+          position?: number
+          restaurant_id?: string
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_position_history_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_stats_daily: {
         Row: {
           context: string
@@ -4389,6 +4560,56 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      restaurant_tag_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          id: string
+          note: string | null
+          requested_by: string
+          restaurant_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          tag_type: string
+          tag_value: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          requested_by: string
+          restaurant_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tag_type: string
+          tag_value: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          requested_by?: string
+          restaurant_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tag_type?: string
+          tag_value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_tag_requests_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       restaurant_tag_subscriptions: {
         Row: {
@@ -5792,6 +6013,7 @@ export type Database = {
           escalated: boolean
           escalated_at: string | null
           id: string
+          resolved_at: string | null
           session_id: string | null
           title: string | null
           updated_at: string
@@ -5802,6 +6024,7 @@ export type Database = {
           escalated?: boolean
           escalated_at?: string | null
           id?: string
+          resolved_at?: string | null
           session_id?: string | null
           title?: string | null
           updated_at?: string
@@ -5812,6 +6035,7 @@ export type Database = {
           escalated?: boolean
           escalated_at?: string | null
           id?: string
+          resolved_at?: string | null
           session_id?: string | null
           title?: string | null
           updated_at?: string
@@ -6669,6 +6893,10 @@ export type Database = {
       create_biweekly_newsletter_draft: { Args: never; Returns: string }
       deduplicate_dishes: { Args: never; Returns: Json }
       deduplicate_restaurant_dishes: { Args: never; Returns: Json }
+      delete_restaurant_event: {
+        Args: { p_event_id: string }
+        Returns: undefined
+      }
       dl_norm: { Args: { t: string }; Returns: string }
       founding_partner_live: { Args: { p_status: string }; Returns: boolean }
       founding_partners_for_page: {
@@ -6818,12 +7046,101 @@ export type Database = {
         }
         Returns: undefined
       }
+      owner_analytics_allowed: {
+        Args: { p_restaurant_id: string }
+        Returns: boolean
+      }
+      owner_daily_metrics: {
+        Args: { p_days?: number; p_restaurant_id: string }
+        Returns: {
+          dag: string
+          metric: string
+          n: number
+        }[]
+      }
+      owner_dish_daily: {
+        Args: { p_days?: number; p_restaurant_id: string }
+        Returns: {
+          dag: string
+          dish_id: string
+          impressions: number
+          views: number
+        }[]
+      }
+      owner_event_stats: {
+        Args: { p_from?: string; p_restaurant_id: string; p_to?: string }
+        Returns: {
+          event_id: string
+          metric: string
+          totaal: number
+        }[]
+      }
       owner_founding_stats: {
         Args: { p_from?: string; p_restaurant_id: string; p_to?: string }
         Returns: {
           metric: string
           page_slug: string
           totaal: number
+        }[]
+      }
+      owner_lost_to_competitor: {
+        Args: { p_days?: number; p_restaurant_id: string }
+        Returns: {
+          clicks: number
+          name: string
+          rating: number
+          target_restaurant_id: string
+        }[]
+      }
+      owner_missed_demand: {
+        Args: { p_days?: number; p_limit?: number; p_restaurant_id: string }
+        Returns: {
+          query: string
+          searches: number
+        }[]
+      }
+      owner_position_history: {
+        Args: { p_days?: number; p_restaurant_id: string }
+        Returns: {
+          dag: string
+          page_slug: string
+          position: number
+          total: number
+        }[]
+      }
+      owner_price_benchmark: {
+        Args: { p_restaurant_id: string }
+        Returns: {
+          city_avg: number
+          dish: string
+          my_price: number
+          restaurants: number
+        }[]
+      }
+      owner_search_hours: {
+        Args: { p_days?: number; p_restaurant_id: string }
+        Returns: {
+          hour: number
+          searches: number
+          weekday: number
+        }[]
+      }
+      owner_stats_between: {
+        Args: { p_from: string; p_restaurant_id: string; p_to: string }
+        Returns: {
+          conversions: number
+          impressions: number
+          views: number
+        }[]
+      }
+      owner_term_funnel: {
+        Args: { p_days?: number; p_restaurant_id: string }
+        Returns: {
+          conversions: number
+          impressions: number
+          reservations: number
+          term: string
+          views: number
         }[]
       }
       parse_search_query: {
@@ -6834,12 +7151,17 @@ export type Database = {
           term: string
         }[]
       }
+      public_launch_date: { Args: never; Returns: string }
       public_package_links: {
         Args: never
         Returns: {
           key: string
           url: string
         }[]
+      }
+      publish_restaurant_menu: {
+        Args: { p_restaurant_id: string }
+        Returns: undefined
       }
       request_restaurant_optout: {
         Args: {
@@ -6854,6 +7176,22 @@ export type Database = {
         Returns: string
       }
       rescan_discovery_duplicates: { Args: { p_rules?: Json }; Returns: Json }
+      restaurant_event_visible: {
+        Args: {
+          p_end_date: string
+          p_event_date: string
+          p_is_active: boolean
+          p_recurrence: string
+          p_status: string
+        }
+        Returns: boolean
+      }
+      restaurant_menu_terms: {
+        Args: { p_restaurant_id: string }
+        Returns: {
+          term: string
+        }[]
+      }
       restaurant_positions: {
         Args: { p_slug: string }
         Returns: {
@@ -6870,6 +7208,25 @@ export type Database = {
           metric: string
           totaal: number
         }[]
+      }
+      save_restaurant_event: {
+        Args: {
+          p_date: string
+          p_description: string
+          p_end_time: string
+          p_event_id: string
+          p_event_type: string
+          p_image_url: string
+          p_offer: string
+          p_price: number
+          p_recurrence: string
+          p_restaurant_id: string
+          p_start_time: string
+          p_title: string
+          p_until: string
+          p_weekdays: number[]
+        }
+        Returns: string
       }
       save_restaurant_parking: {
         Args: {
@@ -6946,16 +7303,22 @@ export type Database = {
           restaurant_count: number
         }[]
       }
+      set_restaurant_event_active: {
+        Args: { p_active: boolean; p_event_id: string }
+        Returns: undefined
+      }
       set_signature_dish: {
         Args: { _rd_id: string; _restaurant_id: string }
         Returns: undefined
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      snapshot_restaurant_positions: { Args: never; Returns: number }
       sync_owner_pro_restaurants: {
         Args: { _user_id: string }
         Returns: undefined
       }
+      track_event_metrics: { Args: { p_items: Json }; Returns: number }
       track_founding_metrics: { Args: { p_items: Json }; Returns: number }
       track_restaurant_metrics: { Args: { p_items: Json }; Returns: number }
       unsubscribe_restaurant_contact: {
