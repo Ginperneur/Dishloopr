@@ -1,57 +1,55 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { PUBLIC_EVENT_DETAIL_SELECT, PUBLIC_EVENT_SELECT, compareByNextOccurrence, type PublicEvent } from '@/lib/events';
 
-interface RestaurantEvent {
-  id: string;
-  restaurant_id: string;
-  title: string;
-  description: string | null;
-  event_type: string;
-  event_date: string;
-  end_date: string | null;
-  price: number | null;
-  max_participants: number | null;
-  current_participants: number;
-  image_url: string | null;
+const PAGE_SIZE = 500;
+
+function normalize(rows: unknown[]): PublicEvent[] {
+  return (rows as PublicEvent[]).map(e => ({ ...e, price: e.price != null ? Number(e.price) : null }));
 }
 
-export function useRestaurantEvents(restaurantId?: string, cityId?: string) {
-  const [events, setEvents] = useState<RestaurantEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+/** RLS only returns released (paid or admin-approved) events that are still running. */
+async function fetchPublicEvents(restaurantId?: string): Promise<PublicEvent[]> {
+  const all: PublicEvent[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    let q = supabase.from('restaurant_events').select(PUBLIC_EVENT_SELECT).order('event_date').order('id').range(from, from + PAGE_SIZE - 1);
+    if (restaurantId) q = q.eq('restaurant_id', restaurantId);
+    const { data, error } = await q;
+    if (error) throw error;
+    all.push(...normalize(data ?? []));
+    if (!data || data.length < PAGE_SIZE) break;
+  }
+  return all.sort(compareByNextOccurrence);
+}
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      setLoading(true);
-      try {
-        let query = supabase
-          .from('restaurant_events')
-          .select('*')
-          .eq('is_active', true)
-          .gte('event_date', new Date().toISOString())
-          .order('event_date');
+/** All public events, for /evenementen and the homepage teaser. */
+export function usePublicEvents() {
+  return useQuery({ queryKey: ['public-events', 'all'], queryFn: () => fetchPublicEvents(), staleTime: 5 * 60 * 1000 });
+}
 
-        if (restaurantId) {
-          query = query.eq('restaurant_id', restaurantId);
-        }
+/** Active specials of one restaurant, for the restaurant page. */
+export function useRestaurantEvents(restaurantId?: string) {
+  const query = useQuery({
+    queryKey: ['public-events', 'restaurant', restaurantId],
+    queryFn: () => fetchPublicEvents(restaurantId),
+    enabled: Boolean(restaurantId),
+    staleTime: 5 * 60 * 1000,
+  });
+  return { events: query.data ?? [], loading: query.isLoading && Boolean(restaurantId) };
+}
 
-        const { data, error: fetchError } = await query.limit(10);
-
-        if (fetchError) throw fetchError;
-
-        setEvents((data || []).map(e => ({
-          ...e,
-          price: e.price ? Number(e.price) : null,
-        })));
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load events');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEvents();
-  }, [restaurantId, cityId]);
-
-  return { events, loading, error };
+export function usePublicEvent(eventId?: string) {
+  return useQuery({
+    queryKey: ['public-event', eventId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('restaurant_events')
+        .select(PUBLIC_EVENT_DETAIL_SELECT)
+        .eq('id', eventId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data ? normalize([data])[0] : null;
+    },
+    enabled: Boolean(eventId),
+  });
 }

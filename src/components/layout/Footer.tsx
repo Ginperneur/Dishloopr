@@ -186,7 +186,7 @@ export function Footer() {
                 <li><Link to="/collections" className="hover:text-foreground transition-colors">{t('footer.collections', 'Collecties')}</Link></li>
               )}
               {hasEvents && (
-                <li><Link to="/events" className="hover:text-foreground transition-colors">{t('nav.events', 'Events')}</Link></li>
+                <li><Link to="/evenementen" className="hover:text-foreground transition-colors">{t('nav.events', 'Events')}</Link></li>
               )}
               <li><Link to="/about" className="hover:text-foreground transition-colors">{t('footer.about')}</Link></li>
               <li><Link to="/contact" className="hover:text-foreground transition-colors">{t('footer.contact')}</Link></li>

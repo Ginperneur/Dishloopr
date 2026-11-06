@@ -59,6 +59,7 @@ const ForRestaurantsPage = lazy(() => import("./pages/ForRestaurantsPage"));
 const AddRestaurantPage = lazy(() => import("./pages/AddRestaurantPage"));
 const SuggestRestaurantPage = lazy(() => import("./pages/SuggestRestaurantPage"));
 const EventsPage = lazy(() => import("./pages/EventsPage"));
+const EventDetailPage = lazy(() => import("./pages/EventDetailPage"));
 const VotePage = lazy(() => import("./pages/VotePage"));
 
 // Legacy /stad/:citySlug → canonical /steden/:citySlug redirect (preserves slug)
@@ -154,7 +155,9 @@ const App = () => (
                   {/* Legacy /stad/* URLs → 301-style redirect to canonical /steden/* */}
                   <Route path="/stad" element={<Navigate to="/steden" replace />} />
                   <Route path="/stad/:citySlug" element={<RedirectStadToSteden />} />
-                  <Route path="/events" element={<EventsPage />} />
+                  <Route path="/evenementen" element={<EventsPage />} />
+                  <Route path="/evenementen/:eventId" element={<EventDetailPage />} />
+                  <Route path="/events" element={<Navigate to="/evenementen" replace />} />
                   <Route path="/vote/:shareCode" element={<VotePage />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>

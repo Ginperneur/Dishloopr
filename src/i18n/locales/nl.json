@@ -451,7 +451,7 @@
   "events": {
     "title": "Evenementen",
     "pageTitle": "Specials in jouw stad",
-    "subtitle": "Speciale acties, evenementen en kortingen bij restaurants. Van ladies nights tot seizoensgebonden menu's — mis geen enkele actie.",
+    "subtitle": "Speciale acties, evenementen en kortingen bij restaurants. Van ladies nights tot seizoensgebonden menu's: mis geen enkele actie.",
     "allCities": "Alle steden",
     "empty": "Nog geen specials",
     "emptyCity": "Nog geen specials in {{city}}",

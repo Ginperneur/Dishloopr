@@ -1,304 +1,134 @@
-import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
-import { format } from 'date-fns';
-import { nl } from 'date-fns/locale';
-import { Calendar, Users, ChefHat, Wine, Utensils, Euro, ArrowRight, PartyPopper, Tag, MapPin } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useMemo } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { CalendarDays, MapPin, PartyPopper, Tags } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { SEOHead, createBreadcrumbSchema } from '@/components/seo/SEOHead';
-import { useRestaurantEvents } from '@/hooks/useRestaurantEvents';
-import { useEffect, useMemo, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { optimizedImage, imgLoadingProps } from '@/lib/imageUrl';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { EventCard } from '@/components/events/EventCard';
+import { usePublicEvents } from '@/hooks/useRestaurantEvents';
+import { EVENT_TYPES, eventTypeLabel } from '@/lib/events';
 
-interface EventWithRestaurant {
-  id: string;
-  restaurant_id: string;
-  title: string;
-  description: string | null;
-  event_type: string;
-  event_date: string;
-  end_date: string | null;
-  price: number | null;
-  max_participants: number | null;
-  current_participants: number;
-  image_url: string | null;
-  restaurant?: {
-    name: string;
-    slug: string;
-    images: string[] | null;
-    city: { name: string } | null;
-  };
-}
-
-const eventTypeIcons: Record<string, React.ElementType> = {
-  tasting: Wine,
-  chefs_table: ChefHat,
-  special_menu: Utensils,
-  workshop: ChefHat,
-  ladies_night: PartyPopper,
-  discount: Tag,
-};
-
-const eventTypeLabels: Record<string, string> = {
-  tasting: 'Proeverij',
-  chefs_table: "Chef's Table",
-  special_menu: 'Speciaal menu',
-  workshop: 'Workshop',
-  ladies_night: 'Ladies Night',
-  discount: 'Korting',
-};
+const ALL = 'alle';
 
 export default function EventsPage() {
-  const { t } = useTranslation();
-  const [events, setEvents] = useState<EventWithRestaurant[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedCity, setSelectedCity] = useState<string>('all');
-
-  useEffect(() => {
-    const fetchEvents = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('restaurant_events')
-        .select(`
-          *,
-          restaurant:restaurant_id (
-            name,
-            slug,
-            images,
-            city:city_id (name)
-          )
-        `)
-        .eq('is_active', true)
-        .gte('event_date', new Date().toISOString())
-        .order('event_date')
-        .limit(30);
-
-      if (!error && data) {
-        setEvents(data.map((e: any) => ({
-          ...e,
-          price: e.price ? Number(e.price) : null,
-        })));
-      }
-      setLoading(false);
-    };
-    fetchEvents();
-  }, []);
-
-  const breadcrumbData = createBreadcrumbSchema([
-    { name: 'Home', url: 'https://dishloopr.com' },
-    { name: 'Events & Acties', url: 'https://dishloopr.com/events' },
-  ]);
-
-  const formatEventDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return format(date, "EEEE d MMMM 'om' HH:mm", { locale: nl });
-  };
-
-  const formatShortDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return format(date, 'd MMM', { locale: nl });
-  };
+  const [params, setParams] = useSearchParams();
+  const city = params.get('stad') || ALL;
+  const type = params.get('type') || ALL;
+  const { data: events = [], isLoading } = usePublicEvents();
 
   const cities = useMemo(() => {
-    const names = new Set<string>();
-    events.forEach((e) => {
-      if (e.restaurant?.city?.name) names.add(e.restaurant.city.name);
-    });
-    return Array.from(names).sort((a, b) => a.localeCompare(b, 'nl'));
+    const map = new Map<string, string>();
+    for (const e of events) if (e.restaurant?.city) map.set(e.restaurant.city.slug, e.restaurant.city.name);
+    return [...map].sort((a, b) => a[1].localeCompare(b[1], 'nl'));
   }, [events]);
 
-  const filteredEvents = useMemo(() => {
-    if (selectedCity === 'all') return events;
-    return events.filter((e) => e.restaurant?.city?.name === selectedCity);
-  }, [events, selectedCity]);
+  const types = useMemo(() => {
+    const present = new Set(events.filter(e => city === ALL || e.restaurant?.city?.slug === city).map(e => e.event_type));
+    return EVENT_TYPES.filter(t => present.has(t.value));
+  }, [events, city]);
+
+  const filtered = useMemo(
+    () => events.filter(e => (city === ALL || e.restaurant?.city?.slug === city) && (type === ALL || e.event_type === type)),
+    [events, city, type],
+  );
+
+  const setFilter = (key: 'stad' | 'type', value: string) => {
+    const next = new URLSearchParams(params);
+    if (value === ALL) next.delete(key); else next.set(key, value);
+    setParams(next, { replace: true });
+  };
+
+  const cityName = cities.find(([slug]) => slug === city)?.[1];
+  const heading = cityName ? `Specials en evenementen in ${cityName}` : 'Specials en evenementen';
 
   return (
     <Layout>
       <SEOHead
-        title={t('events.seoTitle', 'Restaurant Events & Acties | Dishloopr')}
-        description={t('events.seoDescription', 'Ontdek speciale acties, evenementen en kortingen bij restaurants. Van proeverijen tot seizoensgebonden menu\'s.')}
-        keywords={['restaurant events', 'acties', 'kortingen', 'proeverij', 'speciaal menu', 'evenementen', 'Nederland']}
+        title={`${heading} | Dishloopr`}
+        description="Ladies nights, onbeperkt steak, pubquizzen en wijnproeverijen bij restaurants bij jou in de buurt. Bekijk alle specials per stad."
+        keywords={['restaurant specials', 'evenementen', 'ladies night', 'pubquiz', 'wijnproeverij', 'onbeperkt eten']}
+        canonical="https://dishloopr.com/evenementen"
         structuredData={{
           '@context': 'https://schema.org',
           '@graph': [
-            breadcrumbData,
+            createBreadcrumbSchema([
+              { name: 'Home', url: 'https://dishloopr.com' },
+              { name: 'Evenementen', url: 'https://dishloopr.com/evenementen' },
+            ]),
             ...(events.length > 0 ? [{
-              '@context': 'https://schema.org',
               '@type': 'ItemList',
-              itemListElement: events.slice(0, 10).map((event, i) => ({
-                '@type': 'ListItem',
-                position: i + 1,
-                name: event.title,
-                url: `https://dishloopr.com/restaurant/${event.restaurant?.slug || ''}`,
+              itemListElement: events.slice(0, 20).map((e, i) => ({
+                '@type': 'ListItem', position: i + 1, name: e.title, url: `https://dishloopr.com/evenementen/${e.id}`,
               })),
             }] : []),
           ],
         }}
-        canonical="https://dishloopr.com/events"
       />
 
       <div className="container py-8 md:py-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-3xl md:text-4xl font-bold mb-3 flex items-center gap-3">
-            <PartyPopper className="h-8 w-8 text-primary" />
-            {t('events.pageTitle', 'Specials in jouw stad')}
+        <header className="mb-8 max-w-2xl">
+          <h1 className="flex items-center gap-3 font-display text-3xl font-bold md:text-4xl">
+            <PartyPopper className="h-8 w-8 shrink-0 text-primary" />
+            {heading}
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mb-5">
-            {t('events.subtitle', "Speciale acties, evenementen en kortingen bij restaurants. Van ladies nights tot seizoensgebonden menu's — mis geen enkele actie.")}
+          <p className="mt-3 text-lg text-muted-foreground">
+            Van ladies night tot pubquiz en van onbeperkt steak tot wijnproeverij. Zo zie je in één keer wat er bij restaurants te doen is.
           </p>
-          {cities.length > 1 && (
-            <Select value={selectedCity} onValueChange={setSelectedCity}>
-              <SelectTrigger className="w-full sm:w-64">
-                <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                <SelectValue placeholder={t('events.allCities', 'Alle steden')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('events.allCities', 'Alle steden')}</SelectItem>
-                {cities.map((city) => (
-                  <SelectItem key={city} value={city}>{city}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        </motion.div>
+        </header>
 
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {[1, 2, 3, 4, 5, 6].map(i => (
-              <Card key={i} className="overflow-hidden">
-                <Skeleton className="h-40" />
-                <CardContent className="p-4 space-y-2">
-                  <Skeleton className="h-5 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                  <Skeleton className="h-4 w-full" />
-                </CardContent>
-              </Card>
-            ))}
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row">
+          <Select value={city} onValueChange={v => setFilter('stad', v)}>
+            <SelectTrigger className="min-h-11 w-full sm:w-60" aria-label="Filter op stad">
+              <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>Alle steden</SelectItem>
+              {cities.map(([slug, name]) => <SelectItem key={slug} value={slug}>{name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={type} onValueChange={v => setFilter('type', v)}>
+            <SelectTrigger className="min-h-11 w-full sm:w-60" aria-label="Filter op soort">
+              <Tags className="mr-2 h-4 w-4 text-muted-foreground" />
+              <SelectValue>{type === ALL ? 'Alle soorten' : eventTypeLabel(type)}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>Alle soorten</SelectItem>
+              {types.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {isLoading ? (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {[0, 1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="aspect-[4/3] rounded-xl" />)}
           </div>
-        ) : filteredEvents.length === 0 ? (
-          <div className="text-center py-16">
-            <Calendar className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold mb-2">
-              {selectedCity === 'all'
-                ? t('events.empty', 'Nog geen specials')
-                : t('events.emptyCity', 'Nog geen specials in {{city}}', { city: selectedCity })}
+        ) : filtered.length === 0 ? (
+          <div className="py-16 text-center">
+            <CalendarDays className="mx-auto mb-4 h-14 w-14 text-muted-foreground" />
+            <h2 className="mb-2 font-display text-xl font-semibold">
+              {cityName ? `Nog geen specials in ${cityName}` : 'Nog geen specials'}
             </h2>
-            <p className="text-muted-foreground">
-              {t('events.emptyDesc', 'Er zijn momenteel geen aankomende events of acties. Kom snel terug!')}
-            </p>
+            <p className="text-muted-foreground">Restaurants plaatsen hier hun acties en evenementen. Kom snel terug.</p>
+            {(city !== ALL || type !== ALL) && (
+              <Button variant="outline" className="mt-5 min-h-11" onClick={() => setParams({}, { replace: true })}>Toon alles</Button>
+            )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredEvents.map((event, index) => {
-              const Icon = eventTypeIcons[event.event_type] || Calendar;
-              const spotsLeft = event.max_participants
-                ? event.max_participants - event.current_participants
-                : null;
-              const restaurantImage = event.image_url || event.restaurant?.images?.[0];
-
-              return (
-                <motion.div
-                  key={event.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <Link to={`/restaurant/${event.restaurant?.slug}`}>
-                    <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 h-full">
-                      {/* Image */}
-                      <div className="relative h-40 overflow-hidden bg-muted">
-                        {restaurantImage ? (
-                          <img
-                            src={optimizedImage(restaurantImage, { width: 400 })}
-                            alt={event.title}
-                            width={400}
-                            height={160}
-                            {...imgLoadingProps(false)}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Icon className="h-12 w-12 text-muted-foreground/40" />
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-                        {/* Date badge */}
-                        <div className="absolute top-3 right-3">
-                          <Badge className="bg-primary text-primary-foreground font-semibold">
-                            {formatShortDate(event.event_date)}
-                          </Badge>
-                        </div>
-
-                        {/* Type badge */}
-                        <div className="absolute top-3 left-3">
-                          <Badge variant="secondary" className="bg-white/90 text-foreground gap-1">
-                            <Icon className="h-3 w-3" />
-                            {eventTypeLabels[event.event_type] || event.event_type}
-                          </Badge>
-                        </div>
-
-                        {/* Price */}
-                        {event.price != null && (
-                          <div className="absolute bottom-3 right-3">
-                            <Badge variant="secondary" className="bg-white/90 text-foreground font-semibold">
-                              <Euro className="h-3 w-3 mr-0.5" />
-                              {event.price === 0 ? 'Gratis' : event.price}
-                            </Badge>
-                          </div>
-                        )}
-                      </div>
-
-                      <CardContent className="p-4">
-                        <h3 className="font-bold text-base group-hover:text-primary transition-colors line-clamp-1">
-                          {event.title}
-                        </h3>
-
-                        {event.restaurant && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {event.restaurant.name}
-                            {event.restaurant.city?.name && ` · ${event.restaurant.city.name}`}
-                          </p>
-                        )}
-
-                        {event.description && (
-                          <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                            {event.description}
-                          </p>
-                        )}
-
-                        <div className="flex items-center justify-between mt-3">
-                          <span className="text-xs text-muted-foreground">
-                            {formatEventDate(event.event_date)}
-                          </span>
-                          {spotsLeft !== null && (
-                            <Badge
-                              variant={spotsLeft <= 3 ? 'destructive' : 'secondary'}
-                              className="text-xs"
-                            >
-                              <Users className="h-3 w-3 mr-1" />
-                              {spotsLeft > 0 ? `${spotsLeft} plekken` : 'Vol'}
-                            </Badge>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                </motion.div>
-              );
-            })}
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((event, i) => <EventCard key={event.id} event={event} priority={i < 3} />)}
           </div>
         )}
+
+        <aside className="mt-12 rounded-xl border bg-muted/40 p-6">
+          <h2 className="font-display text-lg font-semibold">Heb je een restaurant?</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Zet je eigen special of evenement op Dishloopr voor €5 per maand. Elke maand zie je hoe vaak het bekeken is.
+          </p>
+          <Button asChild variant="outline" className="mt-4 min-h-11"><Link to="/voor-restaurants/pakketten">Bekijk de pakketten</Link></Button>
+        </aside>
       </div>
     </Layout>
   );

@@ -3,7 +3,7 @@ export const METRIC_INTERVAL_MS = 3000;
 export const IMPRESSION_THRESHOLD = 0.5;
 export type RestaurantMetric = 'impressie' | 'bekeken' | 'website' | 'telefoon' | 'route' | 'reserveren' | 'menu' | 'delen';
 export type MetricItem = { r: string; m: RestaurantMetric; c: string };
-export function metricBatches(items: MetricItem[]): MetricItem[][] {
+export function metricBatches<T = MetricItem>(items: T[]): T[][] {
   return Array.from({ length: Math.ceil(items.length / METRIC_BATCH_SIZE) }, (_, i) => items.slice(i * METRIC_BATCH_SIZE, (i + 1) * METRIC_BATCH_SIZE));
 }
 export function safeSearchTerm(value: string): string {

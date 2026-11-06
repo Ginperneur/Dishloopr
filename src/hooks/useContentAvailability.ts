@@ -22,8 +22,8 @@ async function load() {
       supabase
         .from('restaurant_events')
         .select('id', { count: 'exact', head: true })
-        .eq('is_active', true)
-        .gte('event_date', new Date().toISOString()),
+        // RLS only exposes released events that are still running (weekly ones have a past start date).
+        .eq('is_active', true),
     ]);
     const result = {
       hasCollections: (colRes.count || 0) > 0,
