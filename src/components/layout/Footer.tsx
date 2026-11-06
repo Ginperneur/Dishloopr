@@ -258,7 +258,7 @@ export function Footer() {
           <p>© {new Date().getFullYear()} Dishloopr. {t('footer.allRights', 'Alle rechten voorbehouden.')}</p>
           <p className="text-center md:text-right">
             🇳🇱 {t('footer.madeIn', 'Gemaakt in Nederland')}
-            <span> · KvK 82000611</span>
+            <span> · Ayanne Investments B.V. · KvK 82000611</span>
           </p>
         </div>
       </div>

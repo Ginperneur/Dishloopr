@@ -24,8 +24,9 @@ export default function TermsPage() {
           <h1 className="text-4xl font-bold mb-2">Algemene Voorwaarden</h1>
           <p className="text-sm text-muted-foreground mb-6">Laatst bijgewerkt: 6 november 2026</p>
           <address className="not-italic text-muted-foreground mb-8 leading-relaxed">
-            <strong className="text-foreground">Dishloopr</strong><br />
+            <strong className="text-foreground">Dishloopr is een handelsnaam van Ayanne Investments B.V.</strong><br />
             KvK: 82000611<br />
+            BTW: NL862299706B01<br />
             Vestigingsadres: Hoogstraat 44, Goirle<br />
             <a href="mailto:info@dishloopr.com" className="text-primary hover:underline">info@dishloopr.com</a>
           </address>
