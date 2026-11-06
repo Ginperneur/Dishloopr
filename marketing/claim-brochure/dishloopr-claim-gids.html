@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claim je pagina bij Dishloopr</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=DM+Sans:opsz,wght@9..40,400..700&display=swap">
+<style>
+  :root {
+    --orange: #F26522;
+    --orange-deep: #C9481A;
+    --orange-soft: #FDE6D8;
+    --orange-wash: #FFF4EC;
+    --ink: #1E1916;
+    --ink-2: #4A413B;
+    --ink-3: #8A7F77;
+    --line: #EADFD6;
+    --paper: #FFFBF7;
+    --basil: #2E6B4E;
+    --basil-soft: #E2F0E8;
+    --display: "Bricolage Grotesque", "DM Sans", system-ui, sans-serif;
+    --body: "DM Sans", system-ui, sans-serif;
+  }
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { background: #d9d2cc; font-family: var(--body); color: var(--ink); font-size: 9.6pt; line-height: 1.45; }
+  a { color: inherit; text-decoration: none; }
+
+  .page {
+    width: 210mm; height: 297mm; position: relative; overflow: hidden;
+    margin: 0 auto 10mm; background: var(--paper);
+    padding: 15mm 16mm 0;
+    page-break-after: always; break-after: page;
+  }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+  @media print { body { background: none; } .page { margin: 0; } }
+
+  .ico { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+  /* Shared bits */
+  .brand { display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 2; }
+  .logo { display: flex; align-items: center; gap: 2.2mm; font-family: var(--display); font-weight: 800; font-size: 15pt; letter-spacing: -0.02em; }
+  .logo img { height: 11mm; width: auto; display: block; }
+  .logo span b { color: var(--orange); font-weight: 800; }
+  .kicker { font-size: 7.6pt; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+  .eyebrow { display: inline-flex; align-items: center; gap: 2mm; font-size: 7.8pt; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--orange); }
+  .eyebrow .num { font-family: var(--display); font-size: 9pt; letter-spacing: 0; background: var(--orange); color: #fff; border-radius: 99px; padding: 0.4mm 2.4mm; }
+  h1, h2, h3 { font-family: var(--display); letter-spacing: -0.025em; line-height: 1.02; font-weight: 800; }
+  h2 { font-size: 27pt; margin-top: 3.5mm; }
+  h2 em, h1 em { font-style: normal; color: var(--orange); }
+  .lede { font-size: 11pt; color: var(--ink-2); line-height: 1.5; }
+  .folio { position: absolute; bottom: 8mm; left: 16mm; right: 16mm; display: flex; justify-content: space-between; font-size: 7pt; color: var(--ink-3); letter-spacing: 0.04em; }
+  .tag-illus { position: absolute; font-size: 6.4pt; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+
+  /* ---------- PAGE 1 ---------- */
+  .p1 { background: var(--paper); }
+  .p1::before {
+    content: ""; position: absolute; width: 82mm; height: 82mm; right: -34mm; top: -46mm;
+    background: radial-gradient(circle at 40% 60%, #FF8A4C 0%, var(--orange) 45%, var(--orange-deep) 100%);
+    border-radius: 50%;
+  }
+  .p1::after {
+    content: ""; position: absolute; width: 82mm; height: 82mm; right: -34mm; top: -46mm; border-radius: 50%;
+    background-image: radial-gradient(rgba(255,255,255,0.22) 1px, transparent 1.2px); background-size: 3.2mm 3.2mm;
+  }
+  .p1 .brand .kicker { color: var(--ink); }
+  .launch-row { display: flex; align-items: center; gap: 4mm; margin-top: 15mm; position: relative; z-index: 2; }
+  .launch { display: inline-flex; align-items: center; gap: 2mm; background: var(--ink); color: #fff; font-size: 8pt; font-weight: 600; padding: 1.6mm 3.6mm 1.6mm 2.4mm; border-radius: 99px; position: relative; z-index: 2; }
+  .launch i { width: 2.2mm; height: 2.2mm; border-radius: 50%; background: var(--orange); box-shadow: 0 0 0 1mm rgba(242,101,34,0.35); }
+  .p1 h1 { font-size: 48pt; margin-top: 7mm; max-width: 140mm; position: relative; z-index: 2; }
+  .p1 h1 em { position: relative; white-space: nowrap; }
+  .p1 h1 em svg { position: absolute; left: -1mm; right: -1mm; bottom: -3.2mm; width: calc(100% + 2mm); height: 4.5mm; }
+  .p1 .lede { margin-top: 7mm; max-width: 128mm; position: relative; z-index: 2; }
+  .p1 .lede b { color: var(--ink); }
+
+  .mock { position: relative; margin-top: 12mm; display: grid; grid-template-columns: 1fr 52mm; gap: 6mm; align-items: start; }
+  .browser { background: #fff; border-radius: 4mm; box-shadow: 0 1mm 0 var(--line), 0 6mm 14mm -4mm rgba(80,40,10,0.22); overflow: hidden; border: 0.3mm solid var(--line); }
+  .browser .bar { display: flex; align-items: center; gap: 1.4mm; padding: 2.4mm 3.4mm; background: #F7F1EC; border-bottom: 0.3mm solid var(--line); }
+  .browser .bar i { width: 2mm; height: 2mm; border-radius: 50%; background: #E0D4CA; }
+  .browser .bar .url { margin-left: 3mm; flex: 1; background: #fff; border-radius: 99px; font-size: 6.8pt; color: var(--ink-3); padding: 0.8mm 3mm; }
+  .browser .body { padding: 4mm; }
+  .search { display: flex; align-items: center; gap: 2.4mm; border: 0.5mm solid var(--orange); border-radius: 99px; padding: 2.2mm 3.6mm; font-size: 10pt; font-weight: 600; }
+  .search .ico { color: var(--orange); font-size: 11pt; }
+  .search .caret { width: 0.4mm; height: 4.2mm; background: var(--ink); margin-left: -1.6mm; }
+  .search .count { margin-left: auto; font-size: 7pt; font-weight: 500; color: var(--ink-3); }
+  .res { display: grid; grid-template-columns: 17mm 1fr; gap: 3.4mm; padding: 3.2mm; border-radius: 3mm; margin-top: 3mm; position: relative; }
+  .res.claimed { background: var(--orange-wash); }
+  .res.you { border: 0.45mm dashed #C9BDB3; background: #FCFAF8; }
+  .thumb { width: 17mm; height: 17mm; border-radius: 2.4mm; background: radial-gradient(circle at 30% 30%, #FFD9A8, #F2A65A 40%, #C7652A 75%, #7A3615); position: relative; overflow: hidden; }
+  .thumb::after { content: ""; position: absolute; inset: 3.4mm; border-radius: 50%; border: 0.7mm solid rgba(255,255,255,0.65); }
+  .thumb.photo { background: url("trattoria.jpg") 46% 72% / auto 240% no-repeat; }
+  .thumb.photo::after { display: none; }
+  .thumb.empty { background: repeating-linear-gradient(135deg, #EFE8E2 0 1.4mm, #F7F2EE 1.4mm 2.8mm); }
+  .thumb.empty::after { display: none; }
+  .res h4 { font-family: var(--display); font-size: 11pt; font-weight: 700; letter-spacing: -0.01em; display: flex; align-items: center; gap: 2mm; }
+  .pill { font-family: var(--body); font-size: 6.4pt; font-weight: 700; letter-spacing: 0.04em; padding: 0.5mm 1.8mm; border-radius: 99px; display: inline-flex; align-items: center; gap: 0.8mm; }
+  .pill.ok { background: var(--basil-soft); color: var(--basil); }
+  .pill.no { background: #EFE8E2; color: var(--ink-3); }
+  .meta { margin-top: 1.2mm; display: flex; flex-wrap: wrap; gap: 1mm 3.4mm; font-size: 7.4pt; color: var(--ink-2); }
+  .meta span { display: inline-flex; align-items: center; gap: 1mm; }
+  .meta .ico { color: var(--orange); font-size: 8pt; }
+  .res.you .meta, .res.you .meta .ico { color: var(--ink-3); }
+  .known { display: inline-flex; margin-top: 1.6mm; background: var(--orange); color: #fff; font-size: 7pt; font-weight: 700; padding: 0.6mm 2.2mm; border-radius: 1.4mm; }
+  .known.none { background: none; color: var(--ink-3); border: 0.3mm dashed #C9BDB3; font-weight: 600; }
+  .arrow-note { position: absolute; right: -3mm; top: 50%; transform: translate(100%, -50%); font-family: var(--display); font-weight: 700; color: var(--orange); font-size: 9pt; line-height: 1.1; width: 30mm; }
+
+  .sticker {
+    width: 46mm; height: 46mm; border-radius: 50%; background: var(--basil); color: #fff; margin-top: 4mm;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    transform: rotate(-8deg); box-shadow: 0 4mm 10mm -4mm rgba(20,60,40,0.5); position: relative;
+  }
+  .sticker::before { content: ""; position: absolute; inset: 1.8mm; border-radius: 50%; border: 0.35mm dashed rgba(255,255,255,0.55); }
+  .sticker small { font-size: 6.8pt; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.85; }
+  .sticker strong { font-family: var(--display); font-size: 25pt; line-height: 0.95; letter-spacing: -0.03em; margin: 1mm 0; }
+  .sticker span { font-size: 7.4pt; font-weight: 600; line-height: 1.25; max-width: 32mm; }
+  .side-note { margin-top: 9mm; font-size: 8.2pt; color: var(--ink-2); line-height: 1.45; border-left: 0.8mm solid var(--orange); padding-left: 3mm; }
+  .side-note b { color: var(--ink); }
+
+  .versus { margin-top: 13mm; display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+  .versus > div { border-radius: 3.4mm; padding: 4.2mm 4.6mm; }
+  .versus .without { background: #F3EDE8; }
+  .versus .with { background: var(--ink); color: #fff; }
+  .versus h3 { font-size: 11.5pt; letter-spacing: -0.01em; margin-bottom: 2.4mm; display: flex; align-items: center; gap: 2mm; }
+  .versus ul { list-style: none; display: grid; gap: 1.6mm; }
+  .versus li { display: flex; gap: 2mm; font-size: 8.5pt; line-height: 1.35; }
+  .versus li .ico { font-size: 9.5pt; margin-top: 0.4mm; }
+  .versus .without li { color: var(--ink-2); }
+  .versus .without .ico { color: #B4A79D; }
+  .versus .with .ico { color: var(--orange); }
+  .versus .with h3 em { font-style: normal; color: var(--orange); }
+
+  /* ---------- PAGE 2 ---------- */
+  .honest { margin-top: 5mm; display: grid; grid-template-columns: 11mm 1fr; gap: 3.4mm; align-items: center; background: var(--orange-wash); border-radius: 3.4mm; padding: 3.6mm 4.4mm; }
+  .honest .face { width: 11mm; height: 11mm; border-radius: 50%; background: var(--orange); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 15pt; }
+  .honest p { font-size: 9.2pt; color: var(--ink-2); }
+  .honest b { color: var(--ink); }
+
+  .steps { margin-top: 5.5mm; position: relative; }
+  .step { display: grid; grid-template-columns: 12mm 1fr; gap: 4.4mm; position: relative; padding-bottom: 4.2mm; }
+  .step:not(:last-child)::before { content: ""; position: absolute; left: 6mm; top: 12mm; bottom: 0; border-left: 0.5mm dashed #E5B89D; }
+  .step .n { width: 12mm; height: 12mm; border-radius: 50%; background: var(--ink); color: #fff; font-family: var(--display); font-weight: 800; font-size: 15pt; display: flex; align-items: center; justify-content: center; position: relative; z-index: 1; }
+  .step.last .n { background: var(--orange); }
+  .step h3 { font-size: 14pt; letter-spacing: -0.015em; padding-top: 1.2mm; }
+  .step p { font-size: 9.2pt; color: var(--ink-2); margin-top: 1mm; }
+  .btn-inline { display: inline-flex; align-items: center; gap: 1mm; background: var(--orange); color: #fff; font-weight: 700; font-size: 8pt; padding: 0.5mm 2.4mm; border-radius: 99px; vertical-align: 0.2mm; }
+  .routes { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin-top: 3.4mm; }
+  .route { border: 0.35mm solid var(--line); border-radius: 3.4mm; padding: 3.8mm 4.2mm; background: #fff; position: relative; }
+  .route .lbl { display: flex; align-items: center; justify-content: space-between; }
+  .route .lbl span { font-size: 7pt; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+  .route .lbl em { font-style: normal; font-size: 7pt; font-weight: 700; padding: 0.5mm 2mm; border-radius: 99px; }
+  .route.a .lbl em { background: var(--orange); color: #fff; }
+  .route.b .lbl em { background: #EFE8E2; color: var(--ink-2); }
+  .route h4 { font-family: var(--display); font-size: 11.5pt; font-weight: 700; letter-spacing: -0.01em; margin: 2mm 0 1.2mm; display: flex; align-items: center; gap: 2mm; }
+  .route h4 .ico { color: var(--orange); font-size: 12pt; }
+  .route p { font-size: 8.4pt; color: var(--ink-2); margin: 0; }
+  .route code { font-family: var(--body); font-weight: 700; color: var(--ink); background: var(--orange-wash); padding: 0 1mm; border-radius: 1mm; }
+  .route .docs { display: flex; gap: 1.4mm; margin-top: 2.2mm; flex-wrap: wrap; }
+  .route .docs span { font-size: 7pt; font-weight: 600; background: var(--paper); border: 0.3mm solid var(--line); border-radius: 1.4mm; padding: 0.4mm 1.8mm; }
+
+  .free-head { margin-top: 2mm; display: flex; align-items: flex-end; justify-content: space-between; border-top: 0.35mm solid var(--line); padding-top: 5mm; }
+  .free-head h2 { font-size: 21pt; margin-top: 2.4mm; }
+  .zero { text-align: right; font-family: var(--display); line-height: 0.9; }
+  .zero b { display: block; font-size: 34pt; color: var(--basil); letter-spacing: -0.04em; }
+  .zero span { font-size: 7.6pt; font-weight: 600; font-family: var(--body); color: var(--ink-3); letter-spacing: 0.04em; }
+  .grid6 { margin-top: 4.4mm; display: grid; grid-template-columns: repeat(3, 1fr); gap: 3.6mm; }
+  .tile { background: #fff; border: 0.35mm solid var(--line); border-radius: 3.4mm; padding: 3.6mm; display: grid; grid-template-columns: 9mm 1fr; gap: 0 3mm; align-content: start; }
+  .tile .ic { grid-row: span 2; }
+  .tile .ic { width: 9mm; height: 9mm; border-radius: 2.4mm; background: var(--orange-soft); color: var(--orange-deep); display: flex; align-items: center; justify-content: center; font-size: 12pt; }
+  .tile h4 { font-family: var(--display); font-weight: 700; font-size: 10.4pt; letter-spacing: -0.01em; line-height: 1.15; margin-top: 0.4mm; }
+  .tile p { font-size: 7.9pt; color: var(--ink-2); margin-top: 1mm; line-height: 1.4; }
+
+  /* ---------- PAGE 3 (dark) ---------- */
+  .p3 { background: var(--ink); color: #fff; }
+  .p3::before { content: ""; position: absolute; left: -40mm; bottom: -60mm; width: 160mm; height: 160mm; border-radius: 50%; background: radial-gradient(circle, rgba(242,101,34,0.35), rgba(242,101,34,0) 65%); }
+  .p3 .kicker { color: rgba(255,255,255,0.55); }
+    .p3 .lede { color: rgba(255,255,255,0.75); margin-top: 4mm; max-width: 150mm; }
+  .p3 .lede b { color: #fff; }
+  .p3 .folio { color: rgba(255,255,255,0.45); }
+  .p3 .eyebrow { margin-top: 12mm; }
+  .p3 h2 { font-size: 29pt; max-width: 165mm; }
+
+  .dash { position: relative; z-index: 1; margin-top: 8mm; background: #FBF8F5; color: var(--ink); border-radius: 5mm; padding: 5mm; box-shadow: 0 10mm 24mm -8mm rgba(0,0,0,0.6); }
+  .dash-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4mm; }
+  .dash-top .t { font-family: var(--display); font-weight: 700; font-size: 11pt; display: flex; align-items: center; gap: 2mm; }
+  .dash-top .t small { font-family: var(--body); font-weight: 500; font-size: 7.4pt; color: var(--ink-3); }
+  .pro-badge { display: inline-flex; align-items: center; gap: 1mm; background: var(--ink); color: #fff; font-size: 6.8pt; font-weight: 700; padding: 0.6mm 2.2mm; border-radius: 99px; letter-spacing: 0.04em; }
+  .pro-badge .ico { color: var(--orange); }
+  .example { font-size: 6.6pt; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); border: 0.3mm solid var(--line); padding: 0.5mm 2mm; border-radius: 99px; }
+  .dgrid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 3.6mm; }
+  .card { background: #fff; border: 0.3mm solid var(--line); border-radius: 3.4mm; padding: 3.8mm 4mm; }
+  .card .ct { font-size: 7.2pt; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); display: flex; justify-content: space-between; align-items: center; }
+  .card .big { font-family: var(--display); font-weight: 800; font-size: 20pt; letter-spacing: -0.03em; margin-top: 1mm; display: flex; align-items: baseline; gap: 2mm; }
+  .card .big small { font-family: var(--body); font-size: 7.6pt; font-weight: 700; color: var(--basil); letter-spacing: 0; }
+  .chart { width: 100%; height: 30mm; margin-top: 1.6mm; display: block; }
+  .funnel { display: grid; gap: 2.2mm; margin-top: 2.6mm; }
+  .frow .fl { display: flex; justify-content: space-between; font-size: 7.6pt; color: var(--ink-2); }
+  .frow .fl b { font-variant-numeric: tabular-nums; color: var(--ink); }
+  .frow .bar { height: 2.6mm; background: #F1EAE4; border-radius: 99px; margin-top: 0.8mm; overflow: hidden; }
+  .frow .bar i { display: block; height: 100%; border-radius: 99px; background: var(--orange); }
+  .frow.c .bar i { background: var(--basil); }
+  .ratio { font-size: 6.6pt; color: var(--ink-3); text-align: right; margin-top: -1.2mm; }
+  .ratio b { color: var(--ink); }
+  .terms { list-style: none; display: grid; gap: 1.8mm; margin-top: 2.6mm; }
+  .terms li { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2mm; font-size: 8pt; position: relative; padding: 1mm 2mm; border-radius: 1.6mm; z-index: 0; }
+  .terms li i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 1.6mm; background: var(--orange-soft); z-index: -1; }
+  .terms li b { font-variant-numeric: tabular-nums; }
+  .terms li .ico { color: var(--orange-deep); font-size: 7.4pt; margin-right: 1mm; vertical-align: -0.3mm; }
+  .bench { display: grid; gap: 2.6mm; margin-top: 3mm; }
+  .bench .row { display: grid; grid-template-columns: 22mm 1fr 10mm; align-items: center; gap: 2mm; font-size: 7.6pt; }
+  .bench .row .bar { height: 4.2mm; background: #F1EAE4; border-radius: 1.2mm; overflow: hidden; }
+  .bench .row .bar i { display: block; height: 100%; background: #CDBFB4; }
+  .bench .row.me .bar i { background: var(--orange); }
+  .bench .row b { text-align: right; font-variant-numeric: tabular-nums; }
+  .bench-note { font-size: 7.2pt; color: var(--ink-3); margin-top: 2.4mm; }
+  .ai { grid-column: 1 / -1; background: linear-gradient(120deg, #FFF1E7, #FFE2D0); border: 0.3mm solid #F7C9AC; display: grid; grid-template-columns: 11mm 1fr auto; gap: 3.6mm; align-items: center; }
+  .ai .ic { width: 11mm; height: 11mm; border-radius: 3mm; background: var(--orange); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14pt; }
+  .ai .ct { justify-content: flex-start; gap: 2mm; color: var(--orange-deep); }
+  .ai p { font-family: var(--display); font-weight: 700; font-size: 12.5pt; letter-spacing: -0.015em; line-height: 1.2; margin-top: 1mm; }
+  .ai p span { color: var(--orange-deep); }
+  .ai .sub { font-family: var(--body); font-weight: 500; font-size: 8pt; color: var(--ink-2); margin-top: 1mm; letter-spacing: 0; }
+  .ai .act { font-size: 7.6pt; font-weight: 700; background: var(--ink); color: #fff; padding: 1.6mm 3mm; border-radius: 99px; white-space: nowrap; }
+
+  .p3-foot { position: relative; z-index: 1; margin-top: 7mm; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; }
+  .p3-foot div { border-top: 0.4mm solid rgba(255,255,255,0.18); padding-top: 3mm; }
+  .p3-foot b { font-family: var(--display); font-size: 11pt; display: block; letter-spacing: -0.01em; }
+  .p3-foot span { font-size: 8.2pt; color: rgba(255,255,255,0.65); }
+
+  /* ---------- PAGE 4 ---------- */
+  .p4 { padding-bottom: 0; }
+  .p4 .eyebrow { margin-top: 7mm; }
+  .p4 h2 { max-width: 170mm; }
+  .p4 .lede { margin-top: 3.4mm; max-width: 150mm; font-size: 10pt; }
+  .plans { margin-top: 5mm; display: grid; grid-template-columns: 62mm 1fr; gap: 5mm; align-items: stretch; }
+  .free { background: var(--basil); color: #fff; border-radius: 4.4mm; padding: 5.4mm 5mm; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+  .free::after { content: ""; position: absolute; right: -16mm; bottom: -16mm; width: 50mm; height: 50mm; border-radius: 50%; border: 6mm solid rgba(255,255,255,0.07); }
+  .free .nm { font-size: 7.4pt; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.8; }
+  .free .pr { font-family: var(--display); font-weight: 800; font-size: 44pt; letter-spacing: -0.05em; line-height: 1; margin-top: 2mm; }
+  .free .pr small { font-size: 11pt; letter-spacing: -0.01em; font-weight: 700; opacity: 0.85; }
+  .free .tl { font-family: var(--display); font-weight: 700; font-size: 12pt; margin-top: 1.4mm; line-height: 1.15; }
+  .free ul { list-style: none; margin-top: 4.4mm; display: grid; gap: 2.2mm; }
+  .free li { display: flex; gap: 2mm; font-size: 8.4pt; line-height: 1.35; }
+  .free li .ico { color: #A9E3C4; font-size: 9pt; margin-top: 0.4mm; }
+  .free .promise { margin-top: auto; background: rgba(255,255,255,0.12); border-radius: 2.4mm; padding: 2.6mm 3mm; font-size: 8pt; font-weight: 600; line-height: 1.35; position: relative; z-index: 1; }
+
+  .upgrades { display: grid; gap: 3.4mm; position: relative; }
+  .upgrades .opt { position: absolute; top: -4.2mm; right: 0; font-size: 7pt; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+  .plan { background: #fff; border: 0.35mm solid var(--line); border-radius: 3.6mm; padding: 3.8mm 4.4mm; display: grid; grid-template-columns: 1fr 37mm; gap: 3mm; }
+  .plan h3 { font-size: 13pt; letter-spacing: -0.015em; display: flex; align-items: center; gap: 2mm; }
+  .plan h3 .ico { color: var(--orange); font-size: 12pt; }
+  .plan .for { font-size: 8pt; color: var(--orange-deep); font-weight: 600; margin-top: 0.8mm; }
+  .plan ul { list-style: none; margin-top: 2mm; display: grid; gap: 1mm; }
+  .plan li { display: flex; gap: 1.6mm; font-size: 7.9pt; color: var(--ink-2); line-height: 1.35; }
+  .plan li .ico { color: var(--orange); font-size: 8.4pt; margin-top: 0.3mm; }
+  .price { text-align: right; border-left: 0.35mm dashed var(--line); padding-left: 3mm; display: flex; flex-direction: column; justify-content: center; }
+  .price b { font-family: var(--display); font-size: 17pt; letter-spacing: -0.03em; line-height: 1; white-space: nowrap; }
+  .price b small { font-size: 8pt; font-weight: 600; font-family: var(--body); letter-spacing: 0; color: var(--ink-3); }
+  .price .or { font-size: 7.4pt; color: var(--ink-3); margin: 1mm 0 0.6mm; }
+  .price .alt { font-family: var(--display); font-weight: 700; font-size: 11pt; letter-spacing: -0.02em; }
+  .price .alt small { font-size: 7.4pt; font-weight: 600; font-family: var(--body); color: var(--ink-3); letter-spacing: 0; }
+  .plan.fp { border: 0.5mm solid var(--orange); background: var(--orange-wash); position: relative; }
+  .scarce { display: inline-flex; align-items: center; gap: 1.2mm; margin-top: 2mm; font-size: 7.2pt; font-weight: 700; color: #fff; background: var(--ink); padding: 0.7mm 2.4mm; border-radius: 99px; }
+  .scarce .ico { color: var(--orange); }
+  .save { font-size: 6.8pt; font-weight: 700; color: var(--basil); margin-top: 0.6mm; }
+
+  .path { margin-top: 4.4mm; display: flex; align-items: center; gap: 3mm; font-size: 8.4pt; color: var(--ink-2); }
+  .path .seg { display: flex; align-items: center; gap: 1.6mm; }
+  .path .dot { width: 5.4mm; height: 5.4mm; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 7.6pt; font-weight: 800; font-family: var(--display); }
+  .path .ln { flex: 1; height: 0; border-top: 0.45mm dashed #D9C8BB; }
+
+  .cta { position: absolute; left: 0; right: 0; bottom: 0; height: 63mm; background: var(--orange); color: #fff; padding: 7mm 16mm 0; overflow: hidden; }
+  .cta::before { content: ""; position: absolute; right: -30mm; top: -40mm; width: 110mm; height: 110mm; border-radius: 50%; background: radial-gradient(circle, #FF8F55, rgba(255,143,85,0) 70%); }
+  .cta::after { content: ""; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,0.16) 1px, transparent 1.2px); background-size: 3.2mm 3.2mm; mask-image: linear-gradient(90deg, transparent 30%, #000); -webkit-mask-image: linear-gradient(90deg, transparent 30%, #000); }
+  .cta > * { position: relative; z-index: 1; }
+  .cta h2 { font-size: 34pt; margin: 0; color: #fff; }
+  .cta h2 em { color: var(--ink); }
+  .cta .steps3 { display: flex; align-items: center; gap: 2.6mm; margin-top: 5mm; }
+  .cta .chip { display: flex; align-items: center; gap: 2.2mm; background: #fff; color: var(--ink); border-radius: 99px; padding: 1.8mm 4mm 1.8mm 1.8mm; font-weight: 700; font-size: 9.4pt; white-space: nowrap; }
+  .cta .chip i { font-style: normal; width: 6.4mm; height: 6.4mm; border-radius: 50%; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center; font-family: var(--display); font-size: 9pt; }
+  .cta .chip.go { background: var(--ink); color: #fff; }
+  .cta .chip.go i { background: var(--orange); }
+  .cta .steps3 > .ico { font-size: 11pt; color: rgba(255,255,255,0.85); }
+  .cta .bottom { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 5mm; }
+  .cta .url { font-family: var(--display); font-weight: 800; font-size: 22pt; letter-spacing: -0.03em; display: flex; align-items: center; gap: 2.4mm; }
+  .cta .url .ico { font-size: 16pt; }
+  .cta .reply { font-size: 8.8pt; line-height: 1.45; max-width: 96mm; text-align: right; color: rgba(255,255,255,0.92); }
+  .cta .reply b { color: #fff; }
+  .cta .fine { position: absolute; bottom: 6mm; left: 16mm; right: 16mm; font-size: 6.8pt; color: rgba(255,255,255,0.75); display: flex; justify-content: space-between; }
+
+  /* ---------- PAGE 4 — MEER ZICHTBAARHEID ---------- */
+  .pm { background: var(--orange-wash); }
+  .pm .eyebrow { margin-top: 9mm; }
+  .pm h2 { font-size: 25pt; max-width: 170mm; }
+  .pm .lede { margin-top: 3mm; font-size: 9.8pt; max-width: 160mm; }
+  .box { background: #fff; border: 0.35mm solid var(--line); border-radius: 4mm; }
+  .spot { margin-top: 6mm; padding: 5mm; display: grid; grid-template-columns: 56mm 1fr; gap: 5mm; }
+  .spot h3, .ev h3, .save-card h3 { font-size: 14pt; letter-spacing: -0.015em; display: flex; align-items: center; gap: 2mm; }
+  .spot h3 .ico, .ev h3 .ico { color: var(--orange); font-size: 13pt; }
+  .spot p { font-size: 8.6pt; color: var(--ink-2); margin-top: 2mm; line-height: 1.45; }
+  .spot .feat { margin-top: 3.4mm; display: flex; align-items: center; gap: 2mm; background: var(--orange-wash); border-radius: 2.4mm; padding: 2.2mm 2.8mm; font-size: 8pt; font-weight: 700; }
+  .spot .feat .ico { color: var(--orange); font-size: 10pt; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 2.8mm; }
+  .col { position: relative; height: 31mm; border-radius: 2.8mm; overflow: hidden; background-size: cover; background-position: center; }
+  .col::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,12,8,0) 35%, rgba(20,12,8,0.78) 100%); }
+  .col span { position: absolute; left: 2.6mm; right: 2.6mm; bottom: 2.2mm; z-index: 1; color: #fff; font-family: var(--display); font-weight: 700; font-size: 9.6pt; line-height: 1.1; letter-spacing: -0.01em; }
+  .col small { position: absolute; top: 2mm; left: 2.4mm; z-index: 1; font-size: 6.2pt; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); background: rgba(255,255,255,0.9); padding: 0.4mm 1.6mm; border-radius: 99px; }
+  .spot .tag-illus { position: static; display: block; margin-top: 1.6mm; text-align: right; }
+
+  .duo { margin-top: 5mm; display: grid; grid-template-columns: 1fr 80mm; gap: 5mm; align-items: stretch; }
+  .ev { padding: 5mm; display: flex; flex-direction: column; }
+  .new { font-family: var(--body); font-size: 6.6pt; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; background: var(--orange); color: #fff; padding: 0.5mm 2mm; border-radius: 99px; }
+  .ev p { font-size: 8.6pt; color: var(--ink-2); margin-top: 2mm; line-height: 1.45; }
+  .chips { display: flex; flex-wrap: wrap; gap: 1.6mm; margin-top: 3mm; }
+  .chips span { font-size: 7.8pt; font-weight: 700; background: var(--orange-soft); color: var(--orange-deep); padding: 0.9mm 2.6mm; border-radius: 99px; }
+  .ev-price { margin-top: 4mm; display: flex; align-items: baseline; gap: 2mm; }
+  .ev-price b { font-family: var(--display); font-size: 26pt; letter-spacing: -0.04em; line-height: 1; }
+  .ev-price span { font-size: 8pt; color: var(--ink-3); font-weight: 600; line-height: 1.3; }
+  .ev-price { align-items: center; }
+  .mail { margin-top: auto; border: 0.35mm solid var(--line); border-radius: 3mm; padding: 3mm 3.4mm; background: var(--paper); position: relative; }
+  .mail .mh { display: flex; align-items: center; gap: 1.8mm; font-size: 7.4pt; color: var(--ink-3); font-weight: 600; }
+  .mail .mh .ico { color: var(--orange); font-size: 9pt; }
+  .mail .mh em { margin-left: auto; font-style: normal; font-size: 6.2pt; letter-spacing: 0.12em; text-transform: uppercase; }
+  .mail .mt { font-family: var(--display); font-weight: 700; font-size: 10pt; margin-top: 1.4mm; letter-spacing: -0.01em; }
+  .mail .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 2.4mm; margin-top: 2mm; }
+  .mail .stats div { background: #fff; border-radius: 2mm; padding: 1.8mm 2.4mm; border: 0.3mm solid var(--line); }
+  .mail .stats b { font-family: var(--display); font-size: 15pt; letter-spacing: -0.03em; display: block; line-height: 1.05; }
+  .mail .stats span { font-size: 7pt; color: var(--ink-2); }
+  .ev .mail-note { font-size: 7.8pt; color: var(--ink-2); margin: 3.4mm 0 2mm; }
+
+  .save-card { background: var(--ink); color: #fff; border-radius: 4mm; padding: 5mm; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+  .save-card::after { content: ""; position: absolute; right: -18mm; top: -18mm; width: 46mm; height: 46mm; border-radius: 50%; background: radial-gradient(circle, rgba(242,101,34,0.45), rgba(242,101,34,0) 70%); }
+  .save-card > * { position: relative; z-index: 1; }
+  .save-card h3 .ico { color: var(--orange); font-size: 13pt; }
+  .save-card .sub { font-size: 8pt; color: rgba(255,255,255,0.7); margin-top: 1.6mm; line-height: 1.4; }
+  .sbars { display: grid; gap: 2.6mm; margin-top: 4mm; }
+  .sbar .lb { display: flex; justify-content: space-between; font-size: 7.6pt; color: rgba(255,255,255,0.78); }
+  .sbar .lb b { color: #fff; font-variant-numeric: tabular-nums; }
+  .sbar .tr { height: 4mm; border-radius: 1.2mm; background: rgba(255,255,255,0.08); margin-top: 0.8mm; overflow: hidden; }
+  .sbar .tr i { display: block; height: 100%; border-radius: 1.2mm; }
+  .sbar.norm .tr i { background: repeating-linear-gradient(135deg, rgba(255,255,255,0.35) 0 1.2mm, rgba(255,255,255,0.2) 1.2mm 2.4mm); }
+  .sbar.fpm .tr i { background: var(--orange); }
+  .sbar.fpy .tr i { background: #FF9A62; }
+  .sbar.norm .lb b { text-decoration: line-through; text-decoration-color: var(--orange); text-decoration-thickness: 0.25mm; }
+  .wins { display: grid; grid-template-columns: 1fr 1fr; gap: 2.6mm; margin-top: 4.4mm; }
+  .wins div { background: rgba(255,255,255,0.07); border-radius: 2.6mm; padding: 2.6mm 3mm; }
+  .wins b { font-family: var(--display); font-size: 19pt; letter-spacing: -0.04em; color: var(--orange); display: block; line-height: 1; }
+  .wins span { font-size: 7.2pt; color: rgba(255,255,255,0.78); line-height: 1.3; display: block; margin-top: 1mm; }
+  .long { margin-top: auto; padding-top: 3.4mm; font-size: 7.8pt; color: rgba(255,255,255,0.82); line-height: 1.4; border-top: 0.3mm solid rgba(255,255,255,0.14); }
+  .long b { color: #fff; }
+  .pm .folio { color: var(--ink-3); }
+
+  /* pricing tweaks */
+  .price .was { font-size: 8pt; color: var(--ink-3); text-decoration: line-through; text-decoration-color: var(--orange); margin-bottom: 0.6mm; }
+  .plan.slim { grid-template-columns: 1fr auto; align-items: center; padding: 3mm 4.4mm; }
+  .plan.slim .for { margin-top: 0.4mm; }
+  .plan.slim .price { border-left: 0.35mm dashed var(--line); }
+  .plan.slim .price b { font-size: 15pt; }
+</style>
+</head>
+<body>
+
+<!-- Icon sprite (lucide-style strokes) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.2"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+  <symbol id="i-qr" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 17h4v4h-4"/></symbol>
+  <symbol id="i-crown" viewBox="0 0 24 24"><path d="M2 8l4 11h12l4-11-6 4-4-8-4 8z"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="i-trend" viewBox="0 0 24 24"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/></symbol>
+  <symbol id="i-dash" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></symbol>
+</svg>
+
+<!-- ================= PAGE 1 — HOOK ================= -->
+<section class="page p1">
+  <header class="brand">
+    <div class="logo"><img src="logo-wordmark.png" alt="Dishloopr"></div>
+  </header>
+
+  <div class="launch-row"><div class="launch"><i></i>Live vanaf 10 december 2026</div><span class="kicker">Voor restauranteigenaren</span></div>
+
+  <h1>Iemand zoekt nú naar <em>jouw gerecht.<svg viewBox="0 0 200 12" preserveAspectRatio="none"><path d="M2 8 C 40 2, 90 2, 120 6 S 180 10, 198 4" fill="none" stroke="#1E1916" stroke-width="3.2" stroke-linecap="round"/></svg></em></h1>
+
+  <p class="lede">Op Dishloopr vinden gasten een restaurant op <b>wat ze willen eten</b>, zoals “beste ramen Amsterdam” of “carbonara Utrecht”. Niet alleen op naam. Jouw restaurant heeft er al een pagina. De enige vraag is: <b>wie bepaalt wat erop staat?</b></p>
+
+  <div class="mock">
+    <div style="position:relative">
+      <div class="browser">
+        <div class="bar"><i></i><i></i><i></i><div class="url">dishloopr.com/search</div></div>
+        <div class="body">
+          <div class="search"><svg class="ico"><use href="#i-search"/></svg>beste carbonara Utrecht<span class="caret"></span><span class="count">gerecht · stad</span></div>
+
+          <div class="res claimed">
+            <div class="thumb photo"></div>
+            <div>
+              <h4>Trattoria om de hoek <span class="pill ok"><svg class="ico"><use href="#i-check"/></svg>Geclaimd</span></h4>
+              <div class="meta">
+                <span><svg class="ico"><use href="#i-clock"/></svg>Open tot 22:00</span>
+                <span><svg class="ico"><use href="#i-camera"/></svg>12 eigen foto’s</span>
+                <span><svg class="ico"><use href="#i-msg"/></svg>Reageert op reviews</span>
+              </div>
+              <div class="known">Bekend om: Carbonara</div>
+            </div>
+          </div>
+
+          <div class="res you">
+            <div class="thumb empty"></div>
+            <div>
+              <h4>Jouw restaurant <span class="pill no">Niet geclaimd</span></h4>
+              <div class="meta">
+                <span><svg class="ico"><use href="#i-clock"/></svg>Openingstijden onbekend</span>
+                <span><svg class="ico"><use href="#i-camera"/></svg>Geen eigen foto’s</span>
+                <span><svg class="ico"><use href="#i-msg"/></svg>Reviews onbeantwoord</span>
+              </div>
+              <div class="known none">Bekend om: nog niet gekozen</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tag-illus" style="left:0; bottom:-5mm">Illustratie</div>
+    </div>
+
+    <div>
+      <div class="sticker">
+        <small>Claimen is</small>
+        <strong>gratis</strong>
+        <span>en je basisprofiel blijft dat ook</span>
+      </div>
+      <p class="side-note">Welke van de twee zou <b>jij</b> kiezen als je honger had? Precies. Het verschil kost je geen cent, alleen een paar minuten.</p>
+    </div>
+  </div>
+
+  <div class="versus">
+    <div class="without">
+      <h3>Zonder claim</h3>
+      <ul>
+        <li><svg class="ico"><use href="#i-x"/></svg>Gasten zien informatie die jij nooit hebt gecontroleerd</li>
+        <li><svg class="ico"><use href="#i-x"/></svg>Je kiest niet waar je om bekend staat</li>
+        <li><svg class="ico"><use href="#i-x"/></svg>Reviews blijven zonder antwoord</li>
+        <li><svg class="ico"><use href="#i-x"/></svg>Privéfeedback van gasten bereikt je niet</li>
+      </ul>
+    </div>
+    <div class="with">
+      <h3>Met claim <em>· €0</em></h3>
+      <ul>
+        <li><svg class="ico"><use href="#i-check"/></svg>Jij beheert profiel, openingstijden en foto’s</li>
+        <li><svg class="ico"><use href="#i-check"/></svg>Jouw signature dish onder “Bekend om”</li>
+        <li><svg class="ico"><use href="#i-check"/></svg>Je reageert zelf op reviews</li>
+        <li><svg class="ico"><use href="#i-check"/></svg>Gasten kunnen je privé feedback sturen</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="folio"><span>dishloopr.com</span><span>1 / 5</span></div>
+</section>
+
+<!-- ================= PAGE 2 — CLAIM FLOW + FREE ================= -->
+<section class="page p2">
+  <header class="brand">
+    <div class="logo"><img src="logo-wordmark.png" alt="Dishloopr"></div>
+    <div class="kicker">Zo claim je je pagina</div>
+  </header>
+
+  <div style="margin-top:8mm"><span class="eyebrow"><span class="num">01</span>Claimen</span></div>
+  <h2>Drie stappen. <em>Geen sms.</em> Geen kosten.</h2>
+
+  <div class="honest">
+    <div class="face"><svg class="ico"><use href="#i-msg"/></svg></div>
+    <p><b>Even eerlijk:</b> je krijgt vast vaker mails van “weer een platform”. Daarom vooraf: claimen is gratis, je basisprofiel blijft gratis, en betaalde opties zijn er pas als jíj ziet dat Dishloopr gasten oplevert.</p>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="n">1</div>
+      <div>
+        <h3>Ga naar je restaurantpagina</h3>
+        <p>Zoek je restaurant op <b>dishloopr.com</b> en klik op <span class="btn-inline">Claim gratis</span></p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="n">2</div>
+      <div>
+        <h3>Laat zien dat het jouw zaak is: kies je route</h3>
+        <div class="routes">
+          <div class="route a">
+            <div class="lbl"><span>Route A</span><em>Direct</em></div>
+            <h4><svg class="ico"><use href="#i-mail"/></svg>Code per mail</h4>
+            <p>Heb je een zakelijk adres op het domein van je eigen restaurantwebsite, zoals <code>info@jouwrestaurant.nl</code>? Je ontvangt een code per mail en bent snel geverifieerd.</p>
+          </div>
+          <div class="route b">
+            <div class="lbl"><span>Route B</span><em>Binnen 2 werkdagen</em></div>
+            <h4><svg class="ico"><use href="#i-file"/></svg>Document uploaden</h4>
+            <p>Mail je vanaf Gmail of iets vergelijkbaars? Upload één van deze documenten. Wij controleren binnen 2 werkdagen:</p>
+            <div class="docs"><span>Uittreksel KvK</span><span>Factuur</span><span>Foto menukaart met restaurantnaam</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step last">
+      <div class="n">3</div>
+      <div>
+        <h3>Goedgekeurd? Direct naar je dashboard</h3>
+        <p>Vanaf dat moment beheer jij je pagina. En alles hieronder is gratis.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="free-head">
+    <div>
+      <span class="eyebrow"><svg class="ico"><use href="#i-check"/></svg>Gratis zodra je geclaimd hebt</span>
+      <h2>Wat je daarna gratis kunt</h2>
+    </div>
+    <div class="zero"><b>€0</b><span>vandaag, volgend jaar, altijd</span></div>
+  </div>
+
+  <div class="grid6">
+    <div class="tile"><div class="ic"><svg class="ico"><use href="#i-clock"/></svg></div><h4>Profiel, openingstijden &amp; foto’s</h4><p>Jij bepaalt wat gasten zien en houdt het actueel.</p></div>
+    <div class="tile"><div class="ic"><svg class="ico"><use href="#i-star"/></svg></div><h4>Eén gerecht onder “Bekend om”</h4><p>Zet het gerecht waar je trots op bent in de spotlight.</p></div>
+    <div class="tile"><div class="ic"><svg class="ico"><use href="#i-list"/></svg></div><h4>Je menu bevestigen &amp; aanvullen</h4><p>Zodat gasten zien wat je écht serveert.</p></div>
+    <div class="tile"><div class="ic"><svg class="ico"><use href="#i-msg"/></svg></div><h4>Reageren op reviews</h4><p>Bedank, verduidelijk, laat zien dat je luistert.</p></div>
+    <div class="tile"><div class="ic"><svg class="ico"><use href="#i-tag"/></svg></div><h4>Een nieuwe tag aanvragen</h4><p>Mist er iets dat bij jouw zaak past? Vraag het aan, wij keuren het handmatig goed.</p></div>
+    <div class="tile"><div class="ic"><svg class="ico"><use href="#i-lock"/></svg></div><h4>Privéfeedback van gasten</h4><p>Via een apart, besloten kanaal. Alleen voor jou.</p></div>
+  </div>
+
+  <div class="folio"><span>dishloopr.com</span><span>2 / 5</span></div>
+</section>
+
+<!-- ================= PAGE 3 — ANALYTICS ================= -->
+<section class="page p3">
+  <header class="brand" style="position:relative; z-index:1">
+    <div class="logo"><img src="logo-wordmark-dark.png" alt="Dishloopr"></div>
+    <div class="kicker">Owner Pro · inzichten</div>
+  </header>
+
+  <div style="position:relative; z-index:1">
+    <span class="eyebrow"><span class="num">02</span>Het echte verschil</span>
+    <h2>Weet precies <em>waar gasten op zoeken.</em></h2>
+    <p class="lede">Nog voordat ze binnenlopen. Omdat gasten op Dishloopr zoeken op <b>gerecht</b>, zie jij wat de vraag is in jouw stad: welke zoektermen je pagina opleveren, hoeveel mensen daarna bellen, reserveren of je website bezoeken, en hoe je het doet ten opzichte van de buurt.</p>
+  </div>
+
+  <div class="dash">
+    <div class="dash-top">
+      <div class="t"><svg class="ico" style="color:var(--orange)"><use href="#i-dash"/></svg>Jouw dashboard <small>· laatste 30 dagen</small></div>
+      <div style="display:flex; gap:2mm; align-items:center"><span class="example">Voorbeeldcijfers</span><span class="pro-badge"><svg class="ico"><use href="#i-crown"/></svg>Owner Pro</span></div>
+    </div>
+
+    <div class="dgrid">
+      <div class="card">
+        <div class="ct">Paginabezoeken per week <span style="color:var(--basil); letter-spacing:0; text-transform:none">↑ trend</span></div>
+        <div class="big">1.240 <small>+38% t.o.v. vorige maand</small></div>
+        <svg class="chart" viewBox="0 0 300 100" preserveAspectRatio="none">
+          <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F26522" stop-opacity="0.28"/><stop offset="1" stop-color="#F26522" stop-opacity="0"/></linearGradient></defs>
+          <g stroke="#EFE7E0" stroke-width="1"><line x1="0" y1="25" x2="300" y2="25"/><line x1="0" y1="50" x2="300" y2="50"/><line x1="0" y1="75" x2="300" y2="75"/></g>
+          <path d="M0 82 L37 76 L75 79 L112 64 L150 60 L187 48 L225 40 L262 30 L300 18 L300 100 L0 100 Z" fill="url(#g)"/>
+          <path d="M0 82 L37 76 L75 79 L112 64 L150 60 L187 48 L225 40 L262 30 L300 18" fill="none" stroke="#F26522" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+          <circle cx="300" cy="18" r="4" fill="#F26522"/>
+        </svg>
+      </div>
+
+      <div class="card">
+        <div class="ct">Conversiefunnel</div>
+        <div class="funnel">
+          <div class="frow"><div class="fl"><span>Profielweergaven</span><b>1.240</b></div><div class="bar"><i style="width:100%"></i></div></div>
+          <div class="ratio">↓ klikratio <b>25%</b></div>
+          <div class="frow"><div class="fl"><span>Interacties</span><b>312</b></div><div class="bar"><i style="width:25%"></i></div></div>
+          <div class="ratio">↓ conversieratio <b>28%</b></div>
+          <div class="frow c"><div class="fl"><span>Website / telefoon / reservering</span><b>87</b></div><div class="bar"><i style="width:7%"></i></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ct">Zoektermen die jou vonden</div>
+        <ul class="terms">
+          <li><i style="width:100%"></i><span><svg class="ico"><use href="#i-search"/></svg>carbonara utrecht</span><b>64</b></li>
+          <li><i style="width:64%"></i><span><svg class="ico"><use href="#i-search"/></svg>pasta centrum utrecht</span><b>41</b></li>
+          <li><i style="width:36%"></i><span><svg class="ico"><use href="#i-search"/></svg>italiaans met terras</span><b>23</b></li>
+          <li><i style="width:19%"></i><span><svg class="ico"><use href="#i-search"/></svg>cacio e pepe</span><b>12</b></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="ct">Jij vs. de buurt</div>
+        <div class="bench">
+          <div class="row me"><span><b style="text-align:left">Jij</b></span><div class="bar"><i style="width:83%"></i></div><b>25%</b></div>
+          <div class="row"><span>Vergelijkbare restaurants</span><div class="bar"><i style="width:60%"></i></div><b>18%</b></div>
+        </div>
+        <p class="bench-note">Klikratio vergeleken met vergelijkbare restaurants in de buurt.</p>
+      </div>
+
+      <div class="card ai">
+        <div class="ic"><svg class="ico"><use href="#i-spark"/></svg></div>
+        <div>
+          <div class="ct"><span>Tip van de week, door AI</span></div>
+          <p><span>142 mensen</span> zochten deze week op carbonara in Utrecht.</p>
+          <div class="sub">Jouw carbonara staat nog niet onder “Bekend om”. Zet hem erop en val op in die zoekopdrachten.</div>
+        </div>
+        <div class="act">Pas aan →</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="p3-foot">
+    <div><b>Trend &amp; funnel</b><span>Zie of je pagina groeit en hoeveel kijkers ook echt bellen of reserveren.</span></div>
+    <div><b>Exacte zoektermen</b><span>Weet welke gerechten gasten bij jou brengen. Handig voor je menukaart.</span></div>
+    <div><b>Elke week een tip</b><span>Concrete aanbevelingen van AI op basis van wat er in jouw stad gezocht wordt.</span></div>
+  </div>
+
+  <div class="folio"><span>Cijfers op deze pagina zijn een voorbeeld</span><span>3 / 5</span></div>
+</section>
+
+<!-- ================= PAGE 4 — MEER ZICHTBAARHEID ================= -->
+<section class="page pm">
+  <header class="brand">
+    <div class="logo"><img src="logo-wordmark.png" alt="Dishloopr"></div>
+    <div class="kicker">Meer zichtbaarheid</div>
+  </header>
+
+  <span class="eyebrow"><span class="num">03</span>Meer dan je eigen pagina</span>
+  <h2>Gasten vinden je ook via <em>Uitgelicht, collecties en specials.</em></h2>
+  <p class="lede">Dishloopr is meer dan een zoekbalk. Gasten scrollen ook door uitgelichte restaurants, collecties van onze redactie en de specials van deze week.</p>
+
+  <div class="box spot">
+    <div>
+      <h3><svg class="ico"><use href="#i-star"/></svg>Uitgelicht en collecties</h3>
+      <p>Op de homepage staat de rubriek <b>Uitgelichte restaurants</b>. Daarnaast stelt onze redactie <b>collecties</b> samen voor elke gelegenheid: van de beste ramen tot een romantisch diner of een lunch die weinig kost.</p>
+      <div class="feat"><svg class="ico"><use href="#i-flag"/></svg>Zeker weten dat je uitgelicht staat? Dat is Founding Partner.</div>
+    </div>
+    <div>
+      <div class="cols">
+        <div class="col" style="background-image:url('col-beste-ramen-amsterdam.jpg')"><small>Collectie</small><span>Beste ramen Amsterdam</span></div>
+        <div class="col" style="background-image:url('col-romantisch-italiaans-rotterdam.jpg')"><small>Collectie</small><span>Romantisch Italiaans Rotterdam</span></div>
+        <div class="col" style="background-image:url('col-hidden-gems-nederland.jpg')"><small>Collectie</small><span>Hidden gems Nederland</span></div>
+        <div class="col" style="background-image:url('col-budget-lunch-spots.jpg')"><small>Collectie</small><span>Budget lunch spots</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="duo">
+    <div class="box ev">
+      <h3><svg class="ico"><use href="#i-spark"/></svg>Specials en evenementen <span class="new">Nieuw</span></h3>
+      <p>Ladies night op donderdag? Onbeperkt steak op zondag? Zet je special op de evenementenpagina van Dishloopr én op je eigen restaurantpagina. Eenmalig op een datum, of elke week terugkerend.</p>
+      <div class="chips"><span>Ladies night</span><span>Onbeperkt steak</span><span>Pubquiz</span><span>Wijnproeverij</span><span>Live muziek</span></div>
+      <div class="ev-price"><b>€5</b><span>per maand, per evenement<br>maandelijks opzegbaar</span></div>
+      <p class="mail-note">En elke maand krijg je een mail met hoeveel mensen je special zagen en bekeken. Zo weet je precies of die €5 iets oplevert.</p>
+      <div class="mail">
+        <div class="mh"><svg class="ico"><use href="#i-mail"/></svg>Jouw maandoverzicht van Dishloopr <em>Voorbeeld</em></div>
+        <div class="mt">Ladies night · elke donderdag</div>
+        <div class="stats">
+          <div><b>860</b><span>keer in beeld bij gasten</span></div>
+          <div><b>214</b><span>keer bekeken</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="save-card">
+      <h3><svg class="ico"><use href="#i-flag"/></svg>Founding Partner: zoveel bespaar je</h3>
+      <p class="sub">Een uitgelichte plek kost normaal €99 per maand. Als Founding Partner betaal je dat nooit.</p>
+      <div class="sbars">
+        <div class="sbar norm"><div class="lb"><span>Normale prijs</span><b>€99 / mnd</b></div><div class="tr"><i style="width:100%"></i></div></div>
+        <div class="sbar fpm"><div class="lb"><span>Founding Partner, per maand</span><b>€59 / mnd</b></div><div class="tr"><i style="width:59.6%"></i></div></div>
+        <div class="sbar fpy"><div class="lb"><span>Founding Partner, per jaar (€590)</span><b>€49,17 / mnd</b></div><div class="tr"><i style="width:49.7%"></i></div></div>
+      </div>
+      <div class="wins">
+        <div><b>€480</b><span>minder per jaar met het maandabonnement</span></div>
+        <div><b>€598</b><span>minder per jaar met het jaarabonnement. Bijna de helft.</span></div>
+      </div>
+      <p class="long">Je prijs blijft vast zolang je klant bent. Na 3 jaar heb je dus <b>€1.440 tot €1.794</b> bespaard. In de eerste 6 maanden is dat al <b>€240</b>.</p>
+    </div>
+  </div>
+
+  <div class="folio"><span>dishloopr.com/evenementen</span><span>4 / 5</span></div>
+</section>
+
+<!-- ================= PAGE 4 — PRICING + CTA ================= -->
+<section class="page p4">
+  <header class="brand">
+    <div class="logo"><img src="logo-wordmark.png" alt="Dishloopr"></div>
+    <div class="kicker">Prijzen</div>
+  </header>
+
+  <span class="eyebrow"><span class="num">04</span>Wat kost het?</span>
+  <h2>Gratis beginnen.<br><em>Betalen pas als het werkt.</em></h2>
+
+  <div class="plans">
+    <div class="free">
+      <div class="nm">Basis</div>
+      <div class="pr">€0 <small>/ altijd</small></div>
+      <div class="tl">Claimen en je basisprofiel blijven altijd gratis.</div>
+      <ul>
+        <li><svg class="ico"><use href="#i-check"/></svg>Profiel, openingstijden &amp; foto’s</li>
+        <li><svg class="ico"><use href="#i-check"/></svg>1 gerecht onder “Bekend om”</li>
+        <li><svg class="ico"><use href="#i-check"/></svg>Menu bevestigen &amp; aanvullen</li>
+        <li><svg class="ico"><use href="#i-check"/></svg>Reageren op reviews</li>
+        <li><svg class="ico"><use href="#i-check"/></svg>Nieuwe tag aanvragen</li>
+        <li><svg class="ico"><use href="#i-check"/></svg>Privéfeedback van gasten</li>
+      </ul>
+      <div class="promise">Geen proefperiode die afloopt. Gratis blijft gratis.</div>
+    </div>
+
+    <div class="upgrades">
+      <div class="opt">Optioneel · nooit verplicht</div>
+
+      <div class="plan">
+        <div>
+          <h3><svg class="ico"><use href="#i-chart"/></svg>Owner Pro</h3>
+          <div class="for">Voor als je wilt weten wat werkt</div>
+          <ul>
+            <li><svg class="ico"><use href="#i-check"/></svg>Statistieken: vertoningen, zoektermen, benchmarks</li>
+            <li><svg class="ico"><use href="#i-check"/></svg>Hulp van AI bij het beantwoorden van reviews</li>
+            <li><svg class="ico"><use href="#i-check"/></svg>Meertalig profiel</li>
+            <li><svg class="ico"><use href="#i-check"/></svg>Tot 5 gerechten onder “Bekend om” in plaats van 1</li>
+          </ul>
+        </div>
+        <div class="price"><b>€29 <small>/ mnd</small></b><div class="or">of</div><div class="alt">€290 <small>/ jaar</small></div><div class="save">2 maanden gratis</div></div>
+      </div>
+
+      <div class="plan">
+        <div>
+          <h3><svg class="ico"><use href="#i-qr"/></svg>Menuservice</h3>
+          <div class="for">Voor een menukaart die overal klopt</div>
+          <ul>
+            <li><svg class="ico"><use href="#i-check"/></svg>Je volledige menukaart online</li>
+            <li><svg class="ico"><use href="#i-check"/></svg>Vertaald</li>
+            <li><svg class="ico"><use href="#i-check"/></svg>Als QR code én widget voor je website</li>
+          </ul>
+        </div>
+        <div class="price"><b>€79</b><div class="or">eenmalig, of</div><div class="alt">€19 <small>/ maand</small></div></div>
+      </div>
+
+      <div class="plan fp">
+        <div>
+          <h3><svg class="ico"><use href="#i-flag"/></svg>Founding Partner</h3>
+          <div class="for">Voor wie gegarandeerd uitgelicht wil staan</div>
+          <ul>
+            <li><svg class="ico"><use href="#i-check"/></svg>Gegarandeerde uitgelichte plek</li>
+            <li><svg class="ico"><use href="#i-check"/></svg>De laagste prijs die deze plek ooit zal hebben</li>
+            <li><svg class="ico"><use href="#i-check"/></svg>Je prijs staat vast zolang je klant blijft</li>
+            <li><svg class="ico"><use href="#i-check"/></svg>Looptijd minimaal 6 maanden</li>
+          </ul>
+          <span class="scarce"><svg class="ico"><use href="#i-pin"/></svg>Max. 5 plekken per gerecht, per stad</span>
+        </div>
+        <div class="price"><div class="was">normaal €99 / mnd</div><b>€59 <small>/ mnd</small></b><div class="or">of</div><div class="alt">€590 <small>/ jaar</small></div><div class="save">tot €598 per jaar minder</div></div>
+      </div>
+
+      <div class="plan slim">
+        <div>
+          <h3><svg class="ico"><use href="#i-spark"/></svg>Specials en evenementen</h3>
+          <div class="for">Ladies night, onbeperkt steak, pubquiz: zet ze op de evenementenpagina</div>
+        </div>
+        <div class="price"><b>€5 <small>/ mnd</small></b><div class="or">per evenement</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta">
+    <h2>Claim je pagina. <em>Gratis.</em></h2>
+    <div class="steps3">
+      <div class="chip"><i>1</i>Ga naar dishloopr.com</div>
+      <svg class="ico"><use href="#i-arrow"/></svg>
+      <div class="chip"><i>2</i>Zoek je restaurant</div>
+      <svg class="ico"><use href="#i-arrow"/></svg>
+      <div class="chip go"><i>3</i>Klik “Claim gratis”</div>
+    </div>
+    <div class="bottom">
+      <a class="url" href="https://dishloopr.com"><svg class="ico"><use href="#i-globe"/></svg>dishloopr.com</a>
+      <p class="reply">Hoe eerder je claimt, hoe eerder je pagina klopt.<br><b>Vragen?</b> Beantwoord gewoon de mail waar deze PDF bij zat.</p>
+    </div>
+    <div class="fine"><span>Dishloopr · restaurants vinden op gerecht</span><span>5 / 5</span></div>
+  </div>
+</section>
+
+</body>
+</html>
