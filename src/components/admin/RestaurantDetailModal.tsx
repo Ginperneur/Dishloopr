@@ -280,38 +280,31 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const { data: analyticsData } = await supabase
-      .from('analytics_events')
-      .select('*')
-      .eq('restaurant_id', restaurant.id)
-      .gte('created_at', thirtyDaysAgo.toISOString());
+    // Live counters (restaurant_stats_daily); analytics_events no longer receives restaurant counters.
+    const { data: analyticsData } = await (supabase.rpc as any)('owner_daily_metrics', { p_restaurant_id: restaurant.id, p_days: 30 });
 
     if (analyticsData) {
       const viewsByDay: { [date: string]: number } = {};
-      const uniqueSessions = new Set<string>();
+      let impressions = 0;
       let totalViews = 0;
-      let totalClicks = 0;
       let websiteClicks = 0;
       let phoneClicks = 0;
       let reservationClicks = 0;
       let directionsClicks = 0;
 
-      analyticsData.forEach(event => {
-        const date = event.created_at.split('T')[0];
-        if (event.session_id) uniqueSessions.add(event.session_id);
-        
-        if (event.event_type === 'view') {
-          totalViews++;
-          viewsByDay[date] = (viewsByDay[date] || 0) + 1;
-        } else if (event.event_type === 'click') {
-          totalClicks++;
-          const metadata = event.metadata as { type?: string } | null;
-          if (metadata?.type === 'website') websiteClicks++;
-          if (metadata?.type === 'phone') phoneClicks++;
-          if (metadata?.type === 'reservation') reservationClicks++;
-          if (metadata?.type === 'directions') directionsClicks++;
+      (analyticsData as { dag: string; metric: string; n: number }[]).forEach(row => {
+        const n = Number(row.n);
+        if (row.metric === 'impressie') impressions += n;
+        if (row.metric === 'bekeken') {
+          totalViews += n;
+          viewsByDay[row.dag] = (viewsByDay[row.dag] || 0) + n;
         }
+        if (row.metric === 'website') websiteClicks += n;
+        if (row.metric === 'telefoon') phoneClicks += n;
+        if (row.metric === 'reserveren') reservationClicks += n;
+        if (row.metric === 'route') directionsClicks += n;
       });
+      const totalClicks = websiteClicks + phoneClicks + reservationClicks + directionsClicks;
 
       setAnalytics({
         totalViews,
@@ -320,7 +313,8 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
         phoneClicks,
         reservationClicks,
         directionsClicks,
-        uniqueVisitors: uniqueSessions.size,
+        // No browser identifiers are collected, so this tile shows impressions.
+        uniqueVisitors: impressions,
         viewsByDay: Object.entries(viewsByDay)
           .map(([date, count]) => ({ date, count }))
           .sort((a, b) => a.date.localeCompare(b.date))
@@ -542,7 +536,7 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
                 <CardContent className="p-4 text-center">
                   <Users className="h-6 w-6 mx-auto text-green-500 mb-2" />
                   <p className="text-2xl font-bold">{analytics?.uniqueVisitors || 0}</p>
-                  <p className="text-sm text-muted-foreground">Unieke bezoekers</p>
+                  <p className="text-sm text-muted-foreground">In beeld</p>
                 </CardContent>
               </Card>
               <Card>

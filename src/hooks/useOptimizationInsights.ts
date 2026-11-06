@@ -87,13 +87,6 @@ export function useOptimizationInsights(restaurantId: string | undefined) {
         .neq('id', restaurantId)
         .limit(20);
 
-      // Fetch analytics for click data
-      const { data: analyticsData } = await supabase
-        .from('analytics_events')
-        .select('*')
-        .eq('restaurant_id', restaurantId)
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
-
       // Fetch reviews for tag sentiment
       const { data: reviews } = await supabase
         .from('reviews')

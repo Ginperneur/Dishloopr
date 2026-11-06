@@ -13,18 +13,11 @@ export function BestTimeToPost({ restaurantId }: { restaurantId: string }) {
 
   useEffect(() => {
     (async () => {
-      const since = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
-      const { data } = await supabase
-        .from('analytics_events')
-        .select('created_at')
-        .eq('restaurant_id', restaurantId)
-        .gte('created_at', since)
-        .limit(5000);
+      // Searches in the city for this restaurant's dishes, per weekday (1 = Monday) and hour, Amsterdam time.
+      const { data } = await (supabase.rpc as any)('owner_search_hours', { p_restaurant_id: restaurantId, p_days: 60 });
       const g = Array.from({ length: 7 }, () => Array(24).fill(0));
-      (data || []).forEach((r) => {
-        const d = new Date(r.created_at);
-        const day = (d.getDay() + 6) % 7; // Mon=0
-        g[day][d.getHours()]++;
+      ((data ?? []) as { weekday: number; hour: number; searches: number }[]).forEach((r) => {
+        g[r.weekday - 1][r.hour] += Number(r.searches);
       });
       let max = 0, bestDay = 0, bestHour = 12;
       g.forEach((row, di) => row.forEach((v, hi) => { if (v > max) { max = v; bestDay = di; bestHour = hi; } }));
@@ -43,7 +36,7 @@ export function BestTimeToPost({ restaurantId }: { restaurantId: string }) {
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="h-4 w-4" />
-          Wanneer gasten jouw Dishloopr-pagina het meest bekijken (laatste 60 dagen).
+          Wanneer mensen in jouw stad zoeken naar gerechten die jij serveert (laatste 60 dagen).
         </div>
         {best ? (
           <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">

@@ -9,6 +9,7 @@ Draai de migraties (in deze volgorde, via Supabase of Lovable):
 - `20261106120000_restaurant_event_promotions.sql`: evenementen voor €5 per maand, tellers en maandmail.
 - `20261106160000_package_orders.sql`: Founding Partner en Menuservice, max. 5 plekken per gerechtpagina, Uitgelicht-tellers en de maandmail voor Founding Partners.
 - `20261106170000_owner_pro_analytics.sql`: Pro-funnel en zoektermen op de live tellers, positie door de tijd, gemiste vraag, prijsvergelijking.
+- `20261106180000_owner_analytics_live_counters.sql`: afwijkingsalerts, jaarvergelijking, kanalen, beste tijd, verloren aan concurrenten, gerechten en promotie-ROI op de live tellers en zoeklogs.
 
 Controleer daarna dat de cronjobs bestaan (`select jobname from cron.job;`):
 `send-monthly-event-report`, `send-monthly-founding-report`, `snapshot-restaurant-positions`.

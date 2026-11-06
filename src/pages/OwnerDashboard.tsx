@@ -103,7 +103,6 @@ import { EventReportToggle } from '@/components/owner/EventReportToggle';
 import { ProGate } from '@/components/owner/ProGate';
 import { OwnerFunnel } from '@/components/owner/OwnerFunnel';
 import { SearchTermHeatmap } from '@/components/owner/SearchTermHeatmap';
-import { GuestCohortHeatmap } from '@/components/owner/GuestCohortHeatmap';
 import { ChannelAttribution } from '@/components/owner/ChannelAttribution';
 import { WeeklyRecommendations } from '@/components/owner/WeeklyRecommendations';
 import { HistoricalBenchmark } from '@/components/owner/HistoricalBenchmark';
@@ -126,7 +125,6 @@ import { MultiLanguageProfile } from '@/components/owner/MultiLanguageProfile';
 import { BasicInfoEditor } from '@/components/owner/BasicInfoEditor';
 import { ParkingEditor } from '@/components/restaurant/ParkingEditor';
 import { CrossPromotionManager } from '@/components/owner/CrossPromotionManager';
-import { AudienceDemographics } from '@/components/owner/AudienceDemographics';
 import { BestTimeToPost } from '@/components/owner/BestTimeToPost';
 import { LostToCompetitor } from '@/components/owner/LostToCompetitor';
 import { EventsCalendarView } from '@/components/owner/EventsCalendarView';
@@ -1295,8 +1293,8 @@ export default function OwnerDashboard() {
                   'Live zoekpositie en zoektermen waarop je gevonden wordt',
                   'Conversie-funnel + AI-detectie van plotselinge dalingen',
                   'Wekelijkse AI-aanbevelingen op maat van jouw cijfers',
-                  'Gasten-cohorten, kanaal-attributie en jaar-op-jaar benchmark',
-                  'Publieksdata, beste posting-tijden en "verloren aan concurrenten"',
+                  'Kanaal-attributie en jaar-op-jaar benchmark',
+                  'Positie door de tijd, gemiste zoekvraag, beste posting-tijden en "verloren aan concurrenten"',
                   'Gerechten-analytics en optimalisatie-dashboard',
                   'Exporteer alle inzichten naar CSV/PDF',
                 ]}
@@ -1360,17 +1358,14 @@ export default function OwnerDashboard() {
                   </ProGate>
                 </div>
 
-                {/* Cohort + attribution (Pro) */}
+                {/* Attribution (Pro) */}
                 <div className="border-t pt-8">
                   <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
                     <BarChart3 className="h-5 w-5 text-primary" />
-                    Gasten-cohorten & attributie
+                    Hoe gasten je vinden
                   </h3>
                   <ProGate restaurantId={selectedRestaurant.id} enforced>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <GuestCohortHeatmap restaurantId={selectedRestaurant.id} />
-                      <ChannelAttribution restaurantId={selectedRestaurant.id} />
-                    </div>
+                    <ChannelAttribution restaurantId={selectedRestaurant.id} />
                   </ProGate>
                 </div>
 
@@ -1383,18 +1378,15 @@ export default function OwnerDashboard() {
                   <HistoricalBenchmark restaurantId={selectedRestaurant.id} />
                 </div>
 
-                {/* Audience demographics (Basis) + Best time to post (Pro) */}
+                {/* Best time to post (Pro): when the city searches for this menu */}
                 <div className="border-t pt-8">
                   <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
                     <BarChart3 className="h-5 w-5 text-primary" />
-                    Publiek & Activiteit
+                    Wanneer gasten zoeken
                   </h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <AudienceDemographics restaurantId={selectedRestaurant.id} />
-                    <ProGate restaurantId={selectedRestaurant.id} enforced>
-                      <BestTimeToPost restaurantId={selectedRestaurant.id} />
-                    </ProGate>
-                  </div>
+                  <ProGate restaurantId={selectedRestaurant.id} enforced>
+                    <BestTimeToPost restaurantId={selectedRestaurant.id} />
+                  </ProGate>
                 </div>
 
                 {/* Lost to competitor (Pro) */}

@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
       // Aggregate stats per restaurant
       const rows = [];
       for (const r of ownerRestaurants) {
-        // Live counters (restaurant_stats_daily); analytics_events is no longer written.
+        // Live counters (restaurant_stats_daily); analytics_events no longer receives restaurant counters.
         const { data: funnel } = await supabase.rpc('get_owner_funnel', { p_restaurant_id: r.id, p_days: 7 });
 
         const { count: reviewCount } = await supabase

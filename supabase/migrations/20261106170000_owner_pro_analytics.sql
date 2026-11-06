@@ -1,7 +1,7 @@
 -- Owner Pro analytics on the live counters.
 --
 -- get_owner_funnel and get_search_term_heatmap read analytics_events, which the
--- site no longer writes (counters go through track_restaurant_metrics into
+-- site no longer fills with restaurant counters (those go through track_restaurant_metrics into
 -- restaurant_stats_daily), so Pro owners saw empty numbers. They also had no
 -- access check. Both now read restaurant_stats_daily and require a verified
 -- owner, an admin or the service role. New for Pro: position per dish×city page
