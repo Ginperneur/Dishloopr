@@ -2,6 +2,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
 import { escapeHtml } from "../_shared/auth.ts";
 import { sendTemplateEmail } from "../_shared/transactional-email-templates/send-email.ts";
+import { screenClaimDocuments } from "../_shared/claimScreening.ts";
+
+// Supabase edge runtime: keep work running after the response is sent.
+declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined;
 import { deliverDomainCode } from "./domainDelivery.ts";
 import {
   extractDomain, domainMatches, codeExpiry, isExpired, attemptsExhausted, canSendAnotherCode, canStartClaim,
@@ -120,12 +124,13 @@ Deno.serve(async (req) => {
       }
       const { data: pendingReq } = await admin.from("claim_requests").select("id")
         .eq("restaurant_id", claim.restaurant_id).eq("user_id", claim.user_id).eq("status", "pending").maybeSingle();
+      const reviewer = actorRole === "system" ? null : user.id;
       if (pendingReq) {
-        await admin.from("claim_requests").update({ status: "approved", reviewed_by: user.id, reviewed_at: ts, updated_at: ts }).eq("id", pendingReq.id);
+        await admin.from("claim_requests").update({ status: "approved", reviewed_by: reviewer, reviewed_at: ts, updated_at: ts }).eq("id", pendingReq.id);
       } else {
         await admin.from("claim_requests").insert({
           restaurant_id: claim.restaurant_id, user_id: claim.user_id, status: "approved",
-          notes: `Geverifieerd via ${method}`, reviewed_by: user.id, reviewed_at: ts,
+          notes: `Geverifieerd via ${method}`, reviewed_by: reviewer, reviewed_at: ts,
         });
       }
       const { data: role } = await admin.from("user_roles").select("id").eq("user_id", claim.user_id).eq("role", "owner").maybeSingle();
@@ -230,7 +235,7 @@ Deno.serve(async (req) => {
 
     const { data: restaurant } = await admin
       .from("restaurants")
-      .select("id, name, slug, website_url, claim_status")
+      .select("id, name, slug, website_url, claim_status, address")
       .eq("id", claim.restaurant_id)
       .maybeSingle();
     if (!restaurant) return json({ error: "Restaurant niet gevonden" }, 404);
@@ -265,6 +270,30 @@ Deno.serve(async (req) => {
       else await admin.from("claim_requests").insert({ ...reqRow, restaurant_id: restaurant.id, user_id: user.id, status: "pending" });
       await admin.from("restaurants").update({ claim_status: "claimed_unverified" }).eq("id", restaurant.id);
       await log(restaurant.id, claimId, "MANUAL_PROOF_SUBMITTED", { files: files.length, job_title: jobTitle });
+
+      // AI pre-check after the response: approve a strong KvK match right away,
+      // otherwise attach the summary for the admin queue.
+      const screen = async () => {
+        try {
+          const screening = await screenClaimDocuments(admin, files, { name: restaurant.name, address: restaurant.address }, fullName);
+          if (!screening) return;
+          await admin.from("restaurant_claims").update({ verification_proof: { ...proof, ai_screening: screening } }).eq("id", claimId);
+          await log(restaurant.id, claimId, "AI_SCREENED", { verdict: screening.verdict, reasons: screening.reasons, doc_type: screening.doc_type }, "system");
+          if (screening.verdict !== "auto_approve") return;
+          const { data: fresh } = await admin.from("restaurant_claims").select("status").eq("id", claimId).maybeSingle();
+          const { data: r } = await admin.from("restaurants").select("claim_status").eq("id", restaurant.id).maybeSingle();
+          if (!fresh || !OPEN_CLAIM_STATUSES.includes(fresh.status) || r?.claim_status === "verified_owner") return;
+          const email = await promote({ id: claimId, user_id: user.id, restaurant_id: restaurant.id }, "manual_proof",
+            { ...proof, ai_screening: screening, auto_approved: true }, "system");
+          if (email) await sendMail(email, `Je claim voor ${restaurant.name} is goedgekeurd`,
+            mailShell("Claim goedgekeurd", `<p>Je KvK-uittreksel is gecontroleerd: je bent nu de geverifieerde eigenaar van <b>${escapeHtml(restaurant.name)}</b> op Dishloopr.</p><p><a href="https://dishloopr.com/owner-dashboard?welcome=1" style="color:#F26522">Ga naar je dashboard</a></p>`));
+        } catch (e) {
+          console.error("[verify-claim] AI screening failed", e);
+        }
+      };
+      if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(screen());
+      else await screen();
+
       return json({ success: true, status: "pending_admin_review" });
     }
 

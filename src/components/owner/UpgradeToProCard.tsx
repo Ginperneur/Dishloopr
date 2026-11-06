@@ -10,7 +10,6 @@ const PRO_BENEFITS = [
   'Conversie-funnel & zoektermen-heatmap',
   'AI antwoord-assistent voor reviews',
   'Team-beheer & medewerker-rollen',
-  'Interne gast-feedback via QR',
   'Concurrent benchmark & marktinzicht',
   'AI Social-post Generator',
   'Loyalty stempelkaart',

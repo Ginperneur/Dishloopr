@@ -22,13 +22,24 @@ import { FACET_GROUPS, getFacet, matchesFacet, buildFacetFAQ } from '@/lib/dishC
 import { getHubDisplayName, getHubChipHeading, HUB_CHIP_CAP } from '@/lib/dishGroups';
 import { isDutchLocale } from '@/lib/utils';
 import NotFound from './NotFound';
+import { trackFoundingMetric, useFoundingImpression } from '@/lib/foundingMetrics';
+
+/** A Founding Partner card in the "Uitgelicht" block; counts impressions and clicks for the owner's report. */
+function FeaturedCard({ restaurant, pageSlug }: { restaurant: { id: string }; pageSlug: string }) {
+  const ref = useFoundingImpression<HTMLDivElement>(restaurant.id, pageSlug);
+  return (
+    <div ref={ref} onClickCapture={() => trackFoundingMetric(restaurant.id, pageSlug, 'klik')}>
+      <DatabaseRestaurantCard restaurant={restaurant as any} />
+    </div>
+  );
+}
 
 export default function DishCityPage() {
   const { slug, facet: facetSlug } = useParams<{ slug: string; facet?: string }>();
   const location = useLocation();
   const { t, i18n } = useTranslation();
   const isNl = isDutchLocale(i18n.language);
-  const { page, restaurants, loading, resultsLoading, navigationLoading, error, redirectTo, isHub, groupMembers, parentHub, synthesized } = useSeoLandingPage(slug);
+  const { page, restaurants, foundingIds, loading, resultsLoading, navigationLoading, error, redirectTo, isHub, groupMembers, parentHub, synthesized } = useSeoLandingPage(slug);
 
   const activeFacet = getFacet(facetSlug);
   const isFacetRoute = !!facetSlug;
@@ -40,6 +51,12 @@ export default function DishCityPage() {
     if (!activeFacet) return restaurants;
     return restaurants.filter(r => matchesFacet(r as any, activeFacet));
   }, [restaurants, activeFacet]);
+
+  // Shown in a separate block so the ranked list (and restaurant_positions) keeps its order.
+  const featuredRestaurants = useMemo(
+    () => visibleRestaurants.filter(r => foundingIds.includes(r.id)),
+    [visibleRestaurants, foundingIds],
+  );
 
   // Count per facet (across meal + ambience + price) for chip rendering.
   const facetCounts = useMemo(() => {
@@ -392,6 +409,20 @@ export default function DishCityPage() {
             </div>
           )}
         </div>
+
+        {!resultsLoading && featuredRestaurants.length > 0 && (
+          <div className="mb-8 rounded-xl border border-primary/30 bg-primary/5 p-4 md:p-6">
+            <div className="mb-4 flex items-center gap-2">
+              <Badge>Uitgelicht</Badge>
+              <span className="text-sm text-muted-foreground">Founding Partners van deze pagina</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {featuredRestaurants.map(restaurant => (
+                <FeaturedCard key={restaurant.id} restaurant={restaurant} pageSlug={slug ?? ''} />
+              ))}
+            </div>
+          </div>
+        )}
 
         {resultsLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">

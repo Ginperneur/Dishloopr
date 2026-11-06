@@ -60,6 +60,7 @@ import { BrokenImageChecker } from '@/components/admin/BrokenImageChecker';
 import { DuplicateMerger } from '@/components/admin/DuplicateMerger';
 import { CompletenessScore } from '@/components/admin/CompletenessScore';
 import { RevenueDashboard } from '@/components/admin/RevenueDashboard';
+import { PackageOrdersManager } from '@/components/admin/PackageOrdersManager';
 import { UserInsights } from '@/components/admin/UserInsights';
 import { SearchAnalytics } from '@/components/admin/SearchAnalytics';
 import { GeographicCoverage } from '@/components/admin/GeographicCoverage';
@@ -76,6 +77,7 @@ import { AdminToday } from '@/components/admin/AdminToday';
 import { RestaurantSuggestionsQueue } from '@/components/admin/RestaurantSuggestionsQueue';
 import { SupportConversationsManager } from '@/components/admin/SupportConversationsManager';
 import { TagRequestsQueue } from '@/components/admin/TagRequestsQueue';
+import { EventReleaseQueue } from '@/components/admin/EventReleaseQueue';
 import { ErrorLogsViewer } from '@/components/admin/ErrorLogsViewer';
 import { ReservationLinkDetector } from '@/components/admin/ReservationLinkDetector';
 import { RateLimitMonitor } from '@/components/admin/RateLimitMonitor';
@@ -96,6 +98,7 @@ interface Stats {
   pendingClaims: number;
   pendingSupport: number;
   pendingTagRequests: number;
+  pendingEventReleases: number;
   activeRestaurants: number;
 }
 
@@ -106,6 +109,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'today': { title: 'Vandaag', description: 'Centrale wachtrij — alles wat aandacht nodig heeft' },
   'kpi': { title: "KPI Dashboard", description: "Platform groei en kerncijfers" },
   'revenue': { title: "Omzet Dashboard", description: "MRR, betalingen en top-spenders" },
+  'package-orders': { title: "Pakketten & abonnementen", description: "Omzet per product, Founding Partners en Menuservice die nog geleverd moet worden" },
   'user-insights': { title: "User Insights", description: "Gebruikersactiviteit en retentie" },
   'search-analytics': { title: "Zoek Analytics", description: "Populaire zoekopdrachten en zero results" },
   'search-log': { title: "Zoeklog", description: "Alle zoekopdrachten, zonder resultaat en klikken" },
@@ -117,6 +121,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'dish-approval': { title: "Goedkeuring", description: "Gerechten goedkeuren of afwijzen" },
   'restaurant-dishes': { title: "Bekend Om", description: "Restaurant-gerecht koppelingen" },
   'tag-requests': { title: "Tag-aanvragen", description: "Door eigenaren aangevraagde keuken-, sfeer- of conceptlabels" },
+  'event-releases': { title: "Evenementen", description: "Specials en evenementen van eigenaren vrijgeven" },
   'cities': { title: "Steden", description: "Steden en regio's beheren" },
   'collections': { title: "Collecties", description: "Curated restaurant collecties" },
   'chains': { title: "Ketens", description: "Restaurant ketens beheren" },
@@ -167,7 +172,7 @@ export default function AdminPanel() {
   const { isAdmin, loading: adminLoading } = useAdminCheck();
   const [stats, setStats] = useState<Stats>({
     totalUsers: 0, totalRestaurants: 0, totalReviews: 0, totalCities: 0,
-    totalDishes: 0, pendingReviews: 0, pendingClaims: 0, pendingSupport: 0, pendingTagRequests: 0, activeRestaurants: 0
+    totalDishes: 0, pendingReviews: 0, pendingClaims: 0, pendingSupport: 0, pendingTagRequests: 0, pendingEventReleases: 0, activeRestaurants: 0
   });
   const [users, setUsers] = useState<any[]>([]);
   const [restaurants, setRestaurants] = useState<any[]>([]);
@@ -211,7 +216,7 @@ export default function AdminPanel() {
       { count: userCount }, { count: restaurantCount }, { count: reviewCount },
       { count: cityCount }, { count: dishCount }, { count: pendingCount },
       { count: newClaimsCount }, { count: legacyClaimsCount }, { count: activeCount },
-      { count: supportCount }, { count: tagRequestCount }
+      { count: supportCount }, { count: tagRequestCount }, { count: eventReleaseCount }
     ] = await Promise.all([
       supabase.from('profiles').select('*', { count: 'exact', head: true }),
       supabase.from('restaurants').select('*', { count: 'exact', head: true }),
@@ -223,7 +228,8 @@ export default function AdminPanel() {
       supabase.from('claim_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
       supabase.from('restaurants').select('*', { count: 'exact', head: true }).eq('is_active', true),
       supabase.from('support_conversations').select('*', { count: 'exact', head: true }).eq('escalated', true).is('resolved_at', null),
-      supabase.from('restaurant_tag_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending')
+      supabase.from('restaurant_tag_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabase.from('restaurant_events').select('*', { count: 'exact', head: true }).eq('promotion_status', 'unpaid').eq('is_active', true)
     ]);
 
     setStats({
@@ -233,6 +239,7 @@ export default function AdminPanel() {
       pendingClaims: (newClaimsCount || 0) + (legacyClaimsCount || 0),
       pendingSupport: supportCount || 0,
       pendingTagRequests: tagRequestCount || 0,
+      pendingEventReleases: eventReleaseCount || 0,
       activeRestaurants: activeCount || 0
     });
     setLoading(false);
@@ -367,6 +374,7 @@ export default function AdminPanel() {
           pendingClaims={stats.pendingClaims}
           pendingSupport={stats.pendingSupport}
           pendingTagRequests={stats.pendingTagRequests}
+          pendingEventReleases={stats.pendingEventReleases}
         />
 
         <div className="flex-1 flex flex-col min-w-0">
@@ -421,11 +429,13 @@ export default function AdminPanel() {
               {activeSection === 'today' && <AdminToday onNavigate={handleNavigateToTab} />}
               {activeSection === 'support' && <SupportConversationsManager />}
               {activeSection === 'tag-requests' && <TagRequestsQueue />}
+              {activeSection === 'event-releases' && <EventReleaseQueue />}
               {activeSection === 'suggestions' && <RestaurantSuggestionsQueue />}
               {activeSection === 'optouts' && <OptoutRequestsManager />}
               {activeSection === 'presale' && <PresaleManager />}
               {activeSection === 'kpi' && <KpiDashboard />}
               {activeSection === 'revenue' && <RevenueDashboard />}
+              {activeSection === 'package-orders' && <PackageOrdersManager />}
               {activeSection === 'user-insights' && <UserInsights />}
               {activeSection === 'search-analytics' && <SearchAnalytics />}
               {activeSection === 'search-log' && <SearchLogReport />}

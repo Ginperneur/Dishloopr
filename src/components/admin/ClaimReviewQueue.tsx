@@ -87,6 +87,21 @@ export function ClaimReviewQueue({ onUpdate }: { onUpdate?: () => void }) {
                 <div><span className="text-muted-foreground">Functie: </span>{p.job_title}</div>
                 <div><span className="text-muted-foreground">Telefoon: </span>{p.phone}</div>
               </div>
+              {p.ai_screening && (
+                <div className={`rounded-md border p-3 text-sm ${p.ai_screening.verdict === 'auto_approve' ? 'border-green-500/40 bg-green-500/5' : 'border-orange-500/30 bg-orange-500/5'}`}>
+                  <p className="font-medium">
+                    AI-check: {({ kvk_extract: 'KvK-uittreksel', invoice: 'factuur', menu: 'menukaart', other: 'ander document' } as Record<string, string>)[p.ai_screening.doc_type] ?? p.ai_screening.doc_type}
+                    {' '}({Math.round((p.ai_screening.confidence ?? 0) * 100)}% zeker)
+                  </p>
+                  <ul className="mt-1 grid gap-0.5 sm:grid-cols-2">
+                    {([['name', 'Bedrijfsnaam'], ['postal_code', 'Postcode'], ['house_number', 'Huisnummer'], ['claimant_listed', 'Aanvrager op document']] as const).map(([k, label]) => (
+                      <li key={k}>{p.ai_screening.checks?.[k] ? '✓' : '✗'} {label}</li>
+                    ))}
+                  </ul>
+                  {p.ai_screening.business_names?.length > 0 && <p className="mt-1 text-xs text-muted-foreground">Op document: {p.ai_screening.business_names.join(', ')}{p.ai_screening.persons?.length ? ` · ${p.ai_screening.persons.join(', ')}` : ''}{p.ai_screening.kvk_number ? ` · KvK ${p.ai_screening.kvk_number}` : ''}</p>}
+                  {p.ai_screening.notes && <p className="mt-1 text-xs text-muted-foreground">{p.ai_screening.notes}</p>}
+                </div>
+              )}
               <div className="flex flex-wrap gap-2">
                 {c.fileUrls.map((f, i) => (
                   <a key={f.path} href={f.url ?? '#'} target="_blank" rel="noreferrer"

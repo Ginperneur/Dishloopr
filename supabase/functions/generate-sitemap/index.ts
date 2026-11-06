@@ -90,12 +90,15 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Parallel fetch all data
-    const [restaurantsRes, citiesRes, dishesRes, seoRes, collectionsRes] = await Promise.all([
+    const [restaurantsRes, citiesRes, dishesRes, seoRes, collectionsRes, eventsRes] = await Promise.all([
       supabase.from('restaurants').select('slug, updated_at').eq('is_active', true).order('updated_at', { ascending: false }),
       supabase.from('cities').select('slug, updated_at').eq('is_active', true),
       supabase.from('dishes').select('slug, updated_at').eq('is_active', true).order('search_count', { ascending: false }).limit(100),
       supabase.from('seo_landing_pages').select('slug, updated_at, dishes:dish_id(slug, canonical_slug)').eq('is_active', true),
       supabase.from('collections').select('slug, updated_at').eq('is_active', true).order('sort_order'),
+      // Same rule as restaurant_event_visible(): switched on, paid or released, not ended.
+      supabase.from('restaurant_events').select('id, updated_at, recurrence, event_date, end_date, restaurant:restaurant_id(is_active)')
+        .eq('is_active', true).in('promotion_status', ['paid', 'comped']),
     ]);
 
     const restaurants = restaurantsRes.data || [];
@@ -110,6 +113,12 @@ serve(async (req) => {
       return d.canonical_slug === d.slug;
     });
     const collections = collectionsRes.data || [];
+    const nowMs = Date.now();
+    const events = (eventsRes.data || []).filter((e: any) => {
+      if (e.restaurant && e.restaurant.is_active === false) return false;
+      const until = e.end_date ?? (e.recurrence === 'weekly' ? null : e.event_date);
+      return until === null || new Date(until).getTime() >= nowMs;
+    });
 
     const now = new Date().toISOString().split('T')[0];
 
@@ -130,7 +139,7 @@ serve(async (req) => {
     addUrl(`${SITE_URL}/eten`, now, 'daily', '0.9');
     addUrl(`${SITE_URL}/steden`, now, 'daily', '0.9');
     addUrl(`${SITE_URL}/collections`, now, 'weekly', '0.8');
-    addUrl(`${SITE_URL}/events`, now, 'daily', '0.8');
+    addUrl(`${SITE_URL}/evenementen`, now, 'daily', '0.8');
     addUrl(`${SITE_URL}/for-restaurants`, now, 'monthly', '0.7');
     addUrl(`${SITE_URL}/about`, now, 'monthly', '0.5');
     addUrl(`${SITE_URL}/contact`, now, 'monthly', '0.5');
@@ -145,6 +154,11 @@ serve(async (req) => {
     // Collection pages
     for (const c of collections) {
       addUrl(`${SITE_URL}/collection/${c.slug}`, c.updated_at?.split('T')[0] || now, 'weekly', '0.8');
+    }
+
+    // Event pages (/evenementen/[id])
+    for (const e of events) {
+      addUrl(`${SITE_URL}/evenementen/${e.id}`, e.updated_at?.split('T')[0] || now, 'daily', '0.6');
     }
 
     // City detail pages (/steden/[slug])

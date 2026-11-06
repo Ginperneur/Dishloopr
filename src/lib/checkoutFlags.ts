@@ -19,6 +19,18 @@ export const CHECKOUT_ENABLED = {
   sponsored: flag(import.meta.env.VITE_ENABLE_SPONSORED_CHECKOUT as string | undefined),
   /** Extra paid profile tags (recurring per-tag subscription) */
   tag: flag(import.meta.env.VITE_ENABLE_TAG_CHECKOUT as string | undefined),
+  /**
+   * Event/special promotions (€5 per month per event, recurring per-event
+   * subscription). While off, owners can create events and an admin releases
+   * them by hand (promotion_status 'comped'); see the events migration.
+   */
+  event: flag(import.meta.env.VITE_ENABLE_EVENT_CHECKOUT as string | undefined),
+  /**
+   * Founding Partner and Menuservice (create-package-checkout). Needs only
+   * STRIPE_SECRET_KEY and the stripe-webhook secret; prices are created inline
+   * unless STRIPE_FOUNDING_* / STRIPE_MENU_* price IDs are set.
+   */
+  packages: flag(import.meta.env.VITE_ENABLE_PACKAGE_CHECKOUT as string | undefined),
 } as const;
 
 export const COMING_SOON_LABEL = 'Binnenkort beschikbaar';

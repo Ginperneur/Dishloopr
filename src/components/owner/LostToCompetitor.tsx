@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 
 interface Row {
   target_restaurant_id: string;
-  count: number;
   clicks: number;
   name: string;
   rating: number;
@@ -18,29 +17,10 @@ export function LostToCompetitor({ restaurantId }: { restaurantId: string }) {
 
   useEffect(() => {
     (async () => {
-      const since = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
-      const { data } = await supabase
-        .from('demand_routing_events')
-        .select('target_restaurant_id, was_clicked, target:restaurants!demand_routing_events_target_restaurant_id_fkey(name, rating)')
-        .eq('source_restaurant_id', restaurantId)
-        .gte('created_at', since)
-        .limit(1000);
-
-      const agg = new Map<string, Row>();
-      (data || []).forEach((r: any) => {
-        const id = r.target_restaurant_id;
-        const existing = agg.get(id) || {
-          target_restaurant_id: id,
-          count: 0,
-          clicks: 0,
-          name: r.target?.name || 'Onbekend',
-          rating: r.target?.rating || 0,
-        };
-        existing.count++;
-        if (r.was_clicked) existing.clicks++;
-        agg.set(id, existing);
-      });
-      setRows([...agg.values()].sort((a, b) => b.clicks - a.clicks).slice(0, 10));
+      // Searches in the city for dishes on this menu that ended in a click on another restaurant.
+      const { data } = await (supabase.rpc as any)('owner_lost_to_competitor', { p_restaurant_id: restaurantId, p_days: 60 });
+      setRows(((data ?? []) as { target_restaurant_id: string; name: string; rating: number | null; clicks: number }[])
+        .map(r => ({ target_restaurant_id: r.target_restaurant_id, name: r.name, rating: Number(r.rating ?? 0), clicks: Number(r.clicks) })));
       setLoading(false);
     })();
   }, [restaurantId]);
@@ -52,10 +32,10 @@ export function LostToCompetitor({ restaurantId }: { restaurantId: string }) {
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <TrendingDown className="h-4 w-4" />
-          Restaurants waar gasten naartoe gaan als jij gerechten niet aanbiedt.
+          Restaurants waar gasten op klikten na een zoekopdracht naar een gerecht dat jij ook serveert (laatste 60 dagen).
         </div>
         {rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-3">Nog geen routing-events.</p>
+          <p className="text-sm text-muted-foreground text-center py-3">Nog geen gasten verloren aan andere restaurants.</p>
         ) : (
           <div className="space-y-1.5">
             {rows.map((r, i) => (
@@ -68,8 +48,7 @@ export function LostToCompetitor({ restaurantId }: { restaurantId: string }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-xs">{r.clicks} klikken</Badge>
-                  <Badge variant="outline" className="text-xs">{r.count} weergaven</Badge>
+                  <Badge variant="secondary" className="text-xs">{r.clicks} gasten</Badge>
                 </div>
               </div>
             ))}

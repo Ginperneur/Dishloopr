@@ -38,6 +38,8 @@ import {
 } from 'lucide-react';
 import { HelpCircle } from 'lucide-react';
 import { Calendar } from 'lucide-react';
+import { MyPackagesCard } from '@/components/owner/MyPackagesCard';
+import { ProGrowthInsights } from '@/components/owner/ProGrowthInsights';
 import { Layout } from '@/components/layout/Layout';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { Card, CardContent } from '@/components/ui/card';
@@ -97,10 +99,10 @@ import { QuickShareMenu } from '@/components/owner/QuickShareMenu';
 import { ProfileCompletenessCard } from '@/components/owner/ProfileCompletenessCard';
 import { WeeklyReportToggle } from '@/components/owner/WeeklyReportToggle';
 import { AnomalyAlertToggle } from '@/components/owner/AnomalyAlertToggle';
+import { EventReportToggle } from '@/components/owner/EventReportToggle';
 import { ProGate } from '@/components/owner/ProGate';
 import { OwnerFunnel } from '@/components/owner/OwnerFunnel';
 import { SearchTermHeatmap } from '@/components/owner/SearchTermHeatmap';
-import { GuestCohortHeatmap } from '@/components/owner/GuestCohortHeatmap';
 import { ChannelAttribution } from '@/components/owner/ChannelAttribution';
 import { WeeklyRecommendations } from '@/components/owner/WeeklyRecommendations';
 import { HistoricalBenchmark } from '@/components/owner/HistoricalBenchmark';
@@ -123,7 +125,6 @@ import { MultiLanguageProfile } from '@/components/owner/MultiLanguageProfile';
 import { BasicInfoEditor } from '@/components/owner/BasicInfoEditor';
 import { ParkingEditor } from '@/components/restaurant/ParkingEditor';
 import { CrossPromotionManager } from '@/components/owner/CrossPromotionManager';
-import { AudienceDemographics } from '@/components/owner/AudienceDemographics';
 import { BestTimeToPost } from '@/components/owner/BestTimeToPost';
 import { LostToCompetitor } from '@/components/owner/LostToCompetitor';
 import { EventsCalendarView } from '@/components/owner/EventsCalendarView';
@@ -284,6 +285,26 @@ export default function OwnerDashboard() {
         duration: 10000,
         action: { label: 'Bekijk looptijd', onClick: () => setActiveTab('promotions') },
       });
+      setActiveTab('promotions');
+      window.history.replaceState({}, '', '/owner-dashboard');
+    }
+
+    // Checkout return and links in the monthly event report open the content tab.
+    const eventCheckout = searchParams.get('event_checkout');
+    if (eventCheckout || searchParams.get('section') === 'evenementen') {
+      if (eventCheckout === 'success') {
+        toast.success('Betaling ontvangen', { description: 'Je evenement staat binnen een paar minuten online.', duration: 10000 });
+      }
+      setActiveTab('content');
+      window.history.replaceState({}, '', '/owner-dashboard');
+    }
+
+    // Founding Partner / Menuservice checkout return and the monthly Founding Partner report.
+    const packageCheckout = searchParams.get('package_checkout');
+    if (packageCheckout || searchParams.get('section') === 'promotions') {
+      if (packageCheckout === 'success') {
+        toast.success('Betaling geregeld', { description: 'Je pakket staat hieronder bij Promoties. Founding Partner betaal je pas vanaf de launch.', duration: 10000 });
+      }
       setActiveTab('promotions');
       window.history.replaceState({}, '', '/owner-dashboard');
     }
@@ -1049,6 +1070,7 @@ export default function OwnerDashboard() {
             {/* Email Preferences */}
             <WeeklyReportToggle />
             <AnomalyAlertToggle />
+            <EventReportToggle />
 
             {/* Dishes Confirmation */}
             <div>
@@ -1122,13 +1144,19 @@ export default function OwnerDashboard() {
             <div className="border-t pt-8">
               <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
                 <PartyPopper className="h-5 w-5 text-primary" />
-                Events & Acties
+                Evenementen en specials
               </h3>
-              {selectedRestaurant ? (
+              {isVerified && selectedRestaurant ? (
                 <div className="space-y-6">
-                  <EventsCalendarView restaurantId={selectedRestaurant.id} />
                   <OwnerEventsManager restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
+                  <EventsCalendarView restaurantId={selectedRestaurant.id} />
                 </div>
+              ) : selectedRestaurant ? (
+                <LockedFeatureOverlay
+                  featureName="Evenementen"
+                  description="Zet specials en evenementen op Dishloopr voor €5 per maand per evenement."
+                  onRequestVerification={() => setVerificationDialogOpen(true)}
+                />
               ) : (
                 <Card><CardContent className="py-8 text-center"><p className="text-muted-foreground text-sm">Selecteer een restaurant</p></CardContent></Card>
               )}
@@ -1152,7 +1180,7 @@ export default function OwnerDashboard() {
                   <Sparkles className="h-5 w-5 text-primary" />
                   Meertalig profiel
                 </h3>
-                <ProGate restaurantId={selectedRestaurant.id}>
+                <ProGate restaurantId={selectedRestaurant.id} enforced>
                   <MultiLanguageProfile restaurantId={selectedRestaurant.id} defaultName={selectedRestaurant.name} />
                 </ProGate>
               </div>
@@ -1220,7 +1248,7 @@ export default function OwnerDashboard() {
                   <MessageSquare className="h-5 w-5 text-primary" />
                   Interne gast-feedback (QR)
                 </h3>
-                <ProGate restaurantId={selectedRestaurant.id}>
+                <ProGate restaurantId={selectedRestaurant.id} showBadge={false}>
                   <InternalFeedbackInbox restaurantId={selectedRestaurant.id} />
                 </ProGate>
               </div>
@@ -1265,8 +1293,8 @@ export default function OwnerDashboard() {
                   'Live zoekpositie en zoektermen waarop je gevonden wordt',
                   'Conversie-funnel + AI-detectie van plotselinge dalingen',
                   'Wekelijkse AI-aanbevelingen op maat van jouw cijfers',
-                  'Gasten-cohorten, kanaal-attributie en jaar-op-jaar benchmark',
-                  'Publieksdata, beste posting-tijden en "verloren aan concurrenten"',
+                  'Kanaal-attributie en jaar-op-jaar benchmark',
+                  'Positie door de tijd, gemiste zoekvraag, beste posting-tijden en "verloren aan concurrenten"',
                   'Gerechten-analytics en optimalisatie-dashboard',
                   'Exporteer alle inzichten naar CSV/PDF',
                 ]}
@@ -1305,6 +1333,17 @@ export default function OwnerDashboard() {
                   </ProGate>
                 </div>
 
+                {/* Growth insights (Pro): position over time, funnel per term, missed demand, prices */}
+                <div className="border-t pt-8">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                    Groei-inzichten
+                  </h3>
+                  <ProGate restaurantId={selectedRestaurant.id} enforced>
+                    <ProGrowthInsights restaurantId={selectedRestaurant.id} />
+                  </ProGate>
+                </div>
+
                 {/* Weekly AI recommendations (Pro) */}
                 <div className="border-t pt-8">
                   <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
@@ -1319,17 +1358,14 @@ export default function OwnerDashboard() {
                   </ProGate>
                 </div>
 
-                {/* Cohort + attribution (Pro) */}
+                {/* Attribution (Pro) */}
                 <div className="border-t pt-8">
                   <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
                     <BarChart3 className="h-5 w-5 text-primary" />
-                    Gasten-cohorten & attributie
+                    Hoe gasten je vinden
                   </h3>
                   <ProGate restaurantId={selectedRestaurant.id} enforced>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <GuestCohortHeatmap restaurantId={selectedRestaurant.id} />
-                      <ChannelAttribution restaurantId={selectedRestaurant.id} />
-                    </div>
+                    <ChannelAttribution restaurantId={selectedRestaurant.id} />
                   </ProGate>
                 </div>
 
@@ -1342,18 +1378,15 @@ export default function OwnerDashboard() {
                   <HistoricalBenchmark restaurantId={selectedRestaurant.id} />
                 </div>
 
-                {/* Audience demographics (Basis) + Best time to post (Pro) */}
+                {/* Best time to post (Pro): when the city searches for this menu */}
                 <div className="border-t pt-8">
                   <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
                     <BarChart3 className="h-5 w-5 text-primary" />
-                    Publiek & Activiteit
+                    Wanneer gasten zoeken
                   </h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <AudienceDemographics restaurantId={selectedRestaurant.id} />
-                    <ProGate restaurantId={selectedRestaurant.id}>
-                      <BestTimeToPost restaurantId={selectedRestaurant.id} />
-                    </ProGate>
-                  </div>
+                  <ProGate restaurantId={selectedRestaurant.id} enforced>
+                    <BestTimeToPost restaurantId={selectedRestaurant.id} />
+                  </ProGate>
                 </div>
 
                 {/* Lost to competitor (Pro) */}
@@ -1362,7 +1395,7 @@ export default function OwnerDashboard() {
                     <TrendingUp className="h-5 w-5 text-primary" />
                     Verloren aan concurrenten
                   </h3>
-                  <ProGate restaurantId={selectedRestaurant.id}>
+                  <ProGate restaurantId={selectedRestaurant.id} enforced>
                     <LostToCompetitor restaurantId={selectedRestaurant.id} />
                   </ProGate>
                 </div>
@@ -1403,6 +1436,7 @@ export default function OwnerDashboard() {
             />
             {selectedRestaurant && (
               <>
+                <MyPackagesCard restaurantId={selectedRestaurant.id} restaurantSlug={selectedRestaurant.slug} restaurantName={selectedRestaurant.name} />
                 <VisibilityProgress
                   steps={[
                     {
@@ -1486,7 +1520,7 @@ export default function OwnerDashboard() {
                     <Sparkles className="h-5 w-5 text-primary" />
                     AI Social-post Generator
                   </h3>
-                  <ProGate restaurantId={selectedRestaurant.id}>
+                  <ProGate restaurantId={selectedRestaurant.id} enforced>
                     <SocialPostGenerator restaurantName={selectedRestaurant.name} />
                   </ProGate>
                 </div>
@@ -1497,7 +1531,7 @@ export default function OwnerDashboard() {
                     <Crown className="h-5 w-5 text-primary" />
                     Stempelkaart & Loyalty
                   </h3>
-                  <ProGate restaurantId={selectedRestaurant.id}>
+                  <ProGate restaurantId={selectedRestaurant.id} enforced>
                     <LoyaltyProgramManager restaurantId={selectedRestaurant.id} />
                   </ProGate>
                 </div>
@@ -1508,7 +1542,7 @@ export default function OwnerDashboard() {
                     <Crown className="h-5 w-5 text-primary" />
                     Cross-promotie
                   </h3>
-                  <ProGate restaurantId={selectedRestaurant.id}>
+                  <ProGate restaurantId={selectedRestaurant.id} enforced>
                     <CrossPromotionManager restaurantId={selectedRestaurant.id} />
                   </ProGate>
                 </div>

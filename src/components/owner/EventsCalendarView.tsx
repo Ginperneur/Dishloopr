@@ -14,6 +14,9 @@ interface Item {
   event_type: string;
   event_date: string;
   end_date: string | null;
+  recurrence: string;
+  weekdays: number[];
+  is_active: boolean | null;
 }
 interface Exception {
   id: string;
@@ -32,7 +35,9 @@ export function EventsCalendarView({ restaurantId }: { restaurantId: string }) {
       const from = startOfMonth(cursor).toISOString();
       const to = endOfMonth(cursor).toISOString();
       const [{ data: ev }, { data: ex }] = await Promise.all([
-        supabase.from('restaurant_events').select('id, title, event_type, event_date, end_date').eq('restaurant_id', restaurantId).gte('event_date', from).lte('event_date', to),
+        // Weekly events start before the month, so only filter one-off events by date.
+        supabase.from('restaurant_events').select('id, title, event_type, event_date, end_date, recurrence, weekdays, is_active').eq('restaurant_id', restaurantId)
+          .lte('event_date', to).or(`recurrence.eq.weekly,event_date.gte.${from}`),
         (supabase as any).from('opening_hours_exceptions').select('id, exception_date, is_closed, reason').eq('restaurant_id', restaurantId).gte('exception_date', from.slice(0, 10)).lte('exception_date', to.slice(0, 10)),
       ]);
       setEvents((ev as Item[]) || []);
@@ -46,7 +51,12 @@ export function EventsCalendarView({ restaurantId }: { restaurantId: string }) {
     return eachDayOfInterval({ start, end });
   }, [cursor]);
 
-  const eventsByDay = (d: Date) => events.filter((e) => isSameDay(new Date(e.event_date), d));
+  const eventsByDay = (d: Date) => events.filter((e) => {
+    if (!e.is_active) return false;
+    if (e.recurrence !== 'weekly') return isSameDay(new Date(e.event_date), d);
+    const dayEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+    return e.weekdays.includes(((d.getDay() + 6) % 7) + 1) && new Date(e.event_date) < dayEnd && (!e.end_date || new Date(e.end_date) >= d);
+  });
   const exceptionByDay = (d: Date) => exceptions.find((e) => isSameDay(new Date(e.exception_date + 'T00:00:00'), d));
 
   return (

@@ -36,8 +36,6 @@ export function useDishAnalytics(restaurantId: string) {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - periodDays);
       
-      const previousStartDate = new Date(startDate);
-      previousStartDate.setDate(previousStartDate.getDate() - periodDays);
 
       // Fetch restaurant dishes with their dish info
       const { data: restaurantDishes } = await supabase
@@ -64,30 +62,14 @@ export function useDishAnalytics(restaurantId: string) {
         return;
       }
 
-      // Fetch analytics events for this restaurant's dishes
+      // Profile views that came through each dish (live counters, both periods at once).
+      const { data: dishRows } = await (supabase.rpc as any)('owner_dish_daily', {
+        p_restaurant_id: restaurantId,
+        p_days: periodDays * 2,
+      });
+      const startDay = startDate.toISOString().split('T')[0];
+      const rows = (dishRows ?? []) as { dish_id: string; dag: string; views: number }[];
       const dishIds = restaurantDishes.map(rd => rd.dish_id);
-      
-      const { data: currentEvents } = await supabase
-        .from('analytics_events')
-        .select('*')
-        .eq('restaurant_id', restaurantId)
-        .in('dish_id', dishIds)
-        .gte('created_at', startDate.toISOString());
-
-      const { data: previousEvents } = await supabase
-        .from('analytics_events')
-        .select('*')
-        .eq('restaurant_id', restaurantId)
-        .in('dish_id', dishIds)
-        .gte('created_at', previousStartDate.toISOString())
-        .lt('created_at', startDate.toISOString());
-
-      // Also get all dish clicks (search-based)
-      const { data: allDishEvents } = await supabase
-        .from('analytics_events')
-        .select('dish_id, event_type, created_at')
-        .in('dish_id', dishIds)
-        .gte('created_at', startDate.toISOString());
 
       // Process data per dish
       const analytics: DishAnalyticsData[] = restaurantDishes.map((rd, index) => {
@@ -96,12 +78,12 @@ export function useDishAnalytics(restaurantId: string) {
           return null;
         }
 
-        // Count clicks for this dish (from analytics events + stored clicks)
-        const dishCurrentEvents = (currentEvents || []).filter(e => e.dish_id === rd.dish_id);
-        const dishPreviousEvents = (previousEvents || []).filter(e => e.dish_id === rd.dish_id);
-        
-        const currentClicks = dishCurrentEvents.filter(e => e.event_type === 'click').length + (rd.clicks || 0);
-        const previousClicks = dishPreviousEvents.filter(e => e.event_type === 'click').length;
+        // Profile views through this dish, plus stored clicks
+        const dishRowsCurrent = rows.filter(r => r.dish_id === rd.dish_id && r.dag >= startDay);
+        const dishRowsPrevious = rows.filter(r => r.dish_id === rd.dish_id && r.dag < startDay);
+
+        const currentClicks = dishRowsCurrent.reduce((n, r) => n + Number(r.views), 0) + (rd.clicks || 0);
+        const previousClicks = dishRowsPrevious.reduce((n, r) => n + Number(r.views), 0);
 
         // Calculate trend
         let trend: 'up' | 'down' | 'stable' = 'stable';
@@ -117,12 +99,9 @@ export function useDishAnalytics(restaurantId: string) {
 
         // Group clicks by day
         const clicksByDay: { [date: string]: number } = {};
-        dishCurrentEvents
-          .filter(e => e.event_type === 'click')
-          .forEach(e => {
-            const date = e.created_at.split('T')[0];
-            clicksByDay[date] = (clicksByDay[date] || 0) + 1;
-          });
+        dishRowsCurrent.forEach(r => {
+          clicksByDay[r.dag] = (clicksByDay[r.dag] || 0) + Number(r.views);
+        });
 
         // Fill in missing days
         const clicksByPeriod: { date: string; clicks: number }[] = [];
@@ -135,11 +114,6 @@ export function useDishAnalytics(restaurantId: string) {
             clicks: clicksByDay[dateStr] || 0
           });
         }
-
-        // Get total search volume for this dish across all restaurants
-        const totalDishClicks = (allDishEvents || []).filter(e => 
-          e.dish_id === rd.dish_id && e.event_type === 'click'
-        ).length;
 
         // Calculate conversion rate (clicks on this restaurant / total dish searches)
         const conversionRate = dish.search_count > 0 

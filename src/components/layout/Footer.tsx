@@ -186,7 +186,7 @@ export function Footer() {
                 <li><Link to="/collections" className="hover:text-foreground transition-colors">{t('footer.collections', 'Collecties')}</Link></li>
               )}
               {hasEvents && (
-                <li><Link to="/events" className="hover:text-foreground transition-colors">{t('nav.events', 'Events')}</Link></li>
+                <li><Link to="/evenementen" className="hover:text-foreground transition-colors">{t('nav.events', 'Events')}</Link></li>
               )}
               <li><Link to="/about" className="hover:text-foreground transition-colors">{t('footer.about')}</Link></li>
               <li><Link to="/contact" className="hover:text-foreground transition-colors">{t('footer.contact')}</Link></li>
@@ -258,7 +258,7 @@ export function Footer() {
           <p>© {new Date().getFullYear()} Dishloopr. {t('footer.allRights', 'Alle rechten voorbehouden.')}</p>
           <p className="text-center md:text-right">
             🇳🇱 {t('footer.madeIn', 'Gemaakt in Nederland')}
-            <span> · KvK 82000611</span>
+            <span> · Ayanne Investments B.V. · KvK 82000611</span>
           </p>
         </div>
       </div>

@@ -21,13 +21,16 @@ export function SearchAnalytics() {
   const fetchAnalytics = async () => {
     setLoading(true);
     try {
-      // Fetch search events from analytics_events
-      const { data: searchEvents } = await supabase
-        .from('analytics_events')
-        .select('metadata, created_at')
-        .eq('event_type', 'search')
+      // Searches are logged in search_logs (analytics_events no longer receives restaurant counters).
+      const { data: logs } = await supabase
+        .from('search_logs')
+        .select('query_norm, results_count, created_at')
         .order('created_at', { ascending: false })
         .limit(1000);
+      const searchEvents = (logs ?? []).map(l => ({
+        metadata: { query: l.query_norm, result_count: l.results_count },
+        created_at: l.created_at,
+      }));
 
       if (!searchEvents || searchEvents.length === 0) {
         // Try dish search_count as fallback for popular terms

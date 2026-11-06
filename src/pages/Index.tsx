@@ -220,7 +220,7 @@ const Index = () => {
                     onClick={() => handleCuisineClick(cuisine.value)}
                     className="shrink-0 snap-start px-3.5 py-2 text-xs font-medium rounded-full bg-card border border-border hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors touch-manipulation min-h-[36px] flex items-center"
                   >
-                    {cuisine.dbLabel ? tTaxonomy(t, 'cuisine', cuisine.dbLabel) : t(cuisine.i18nKey)}
+                    {cuisine.dbLabel ? tTaxonomy(t, 'cuisine', cuisine.dbLabel) : 'i18nKey' in cuisine ? t(cuisine.i18nKey) : cuisine.value}
                   </button>
                 ))}
               </div>
@@ -237,7 +237,7 @@ const Index = () => {
                   onClick={() => handleCuisineClick(cuisine.value)}
                   className="px-3 py-1.5 text-sm font-medium rounded-full bg-card border border-border hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors touch-manipulation min-h-[36px] flex items-center"
                 >
-                  {cuisine.dbLabel ? tTaxonomy(t, 'cuisine', cuisine.dbLabel) : t(cuisine.i18nKey)}
+                  {cuisine.dbLabel ? tTaxonomy(t, 'cuisine', cuisine.dbLabel) : 'i18nKey' in cuisine ? t(cuisine.i18nKey) : cuisine.value}
                 </button>
               ))}
             </div>

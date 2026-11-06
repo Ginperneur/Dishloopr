@@ -38,7 +38,7 @@ export function RevenueDashboard() {
       { data: newsletterPlacements },
     ] = await Promise.all([
       supabase.from('featured_subscriptions').select('*, restaurants:restaurant_id(name)'),
-      supabase.from('newsletter_placements').select('*').limit(0).then(() => ({ data: [] as any[] })),
+      supabase.from('sponsored_purchases').select('*, restaurants:restaurant_id(name)'),
       supabase.from('newsletter_placements').select('*, restaurants:restaurant_id(name)').eq('status', 'paid'),
     ]);
 
@@ -68,7 +68,11 @@ export function RevenueDashboard() {
         .filter((n: any) => { const c = new Date(n.created_at); return c >= mStart && c < mEnd; })
         .reduce((sum: number, n: any) => sum + Number(n.price_paid || 0), 0);
 
-      months.push({ month: label, featured: fRev, sponsored: 0, newsletter: nlRev });
+      const sRev = sponsored
+        .filter((p: any) => { const c = new Date(p.created_at); return c >= mStart && c < mEnd; })
+        .reduce((sum: number, p: any) => sum + Number(p.price_paid || 0), 0);
+
+      months.push({ month: label, featured: fRev, sponsored: sRev, newsletter: nlRev });
     }
 
     // Top spending restaurants
@@ -84,6 +88,13 @@ export function RevenueDashboard() {
       const existing = spendMap.get(n.restaurant_id) || { name, total: 0, type: 'newsletter' };
       existing.total += Number(n.price_paid || 0);
       spendMap.set(n.restaurant_id, existing);
+    });
+
+    sponsored.forEach((p: any) => {
+      const name = (p.restaurants as any)?.name || 'Onbekend';
+      const existing = spendMap.get(p.restaurant_id) || { name, total: 0, type: 'sponsored' };
+      existing.total += Number(p.price_paid || 0);
+      spendMap.set(p.restaurant_id, existing);
     });
 
     const topRestaurants = [...spendMap.values()].sort((a, b) => b.total - a.total).slice(0, 10);
@@ -117,6 +128,7 @@ export function RevenueDashboard() {
   const pieData = [
     { name: 'Featured Spots', value: data.featuredRevenue },
     { name: 'Nieuwsbrief', value: data.newsletterRevenue },
+    { name: 'Gesponsorde gerechten', value: data.sponsoredRevenue },
   ].filter(d => d.value > 0);
 
   return (
@@ -181,6 +193,7 @@ export function RevenueDashboard() {
                     formatter={(value: number) => [`€${value.toFixed(2)}`, '']}
                   />
                   <Bar dataKey="featured" stackId="a" fill="hsl(var(--primary))" name="Featured" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="sponsored" stackId="a" fill="#f59e0b" name="Gesponsord" radius={[0, 0, 0, 0]} />
                   <Bar dataKey="newsletter" stackId="a" fill="#10b981" name="Nieuwsbrief" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>

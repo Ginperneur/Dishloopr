@@ -63,12 +63,22 @@ export function useSeoLandingPage(slug: string | undefined) {
     },
     enabled: Boolean(page && !context.data?.redirectTo), staleTime: 60_000,
   });
+  // Founding Partners (max 5) get a guaranteed "Uitgelicht" place on this page.
+  const founding = useQuery({
+    queryKey: ['seo-landing-founding', slug],
+    queryFn: async () => {
+      const { data, error } = await (supabase.rpc as any)('founding_partners_for_page', { p_page_slug: slug });
+      if (error) throw error;
+      return ((data ?? []) as { restaurant_id: string }[]).map(r => r.restaurant_id);
+    },
+    enabled: Boolean(page && !context.data?.redirectTo), staleTime: 60_000,
+  });
   const synthesized = context.data?.synthesized ?? false;
   const resultsLoading = Boolean(page && result.isPending);
   const notFound = context.isSuccess && !context.data.page && !context.data.redirectTo;
   const emptySynthesized = synthesized && result.isSuccess && !result.data.restaurants.length;
   return {
-    page, restaurants: result.data?.restaurants ?? [],
+    page, restaurants: result.data?.restaurants ?? [], foundingIds: founding.data ?? [],
     loading: Boolean(slug && context.isPending), resultsLoading,
     error: notFound || emptySynthesized ? 'Page not found' : context.error || result.error ? 'Failed to load page' : null,
     redirectTo: context.data?.redirectTo ?? null,

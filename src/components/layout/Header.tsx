@@ -136,7 +136,7 @@ export function Header() {
             </Link>
           )}
           {hasEvents && (
-            <Link to="/events" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1.5">
+            <Link to="/evenementen" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1.5">
               <PartyPopper className="h-4 w-4" />
               {t('nav.events', 'Events & Acties')}
             </Link>
@@ -293,7 +293,7 @@ export function Header() {
                 </Link>
               )}
               {hasEvents && (
-                <Link to="/events" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                <Link to="/evenementen" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors" onClick={() => setMobileMenuOpen(false)}>
                   <PartyPopper className="h-5 w-5 text-muted-foreground" />
                   <span className="font-medium">{t('nav.events', 'Events & Acties')}</span>
                 </Link>

@@ -1,6 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { periodEndIso } from "../_shared/stripePeriod.ts";
+import { commitmentEnd } from "../_shared/launch.ts";
+
+// Supabase edge runtime: keep work running after the response is sent.
+declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined;
+import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -229,6 +235,25 @@ serve(async (req) => {
         }
         logStep("Extra tag subscription activated");
       }
+      // Handle event promotion (€5/month per event)
+      else if (type === "event_promotion" && metadata.event_id && restaurantId) {
+        const subscriptionId = (session.subscription as string) || null;
+        let paidUntil: string | null = null;
+        if (subscriptionId) {
+          const sub = await stripe.subscriptions.retrieve(subscriptionId);
+          paidUntil = periodEndIso(sub);
+        }
+        const { error: eventError } = await supabaseAdmin
+          .from("restaurant_events")
+          .update({ promotion_status: "paid", stripe_subscription_id: subscriptionId, paid_until: paidUntil })
+          .eq("id", metadata.event_id)
+          .eq("restaurant_id", restaurantId);
+        if (eventError) {
+          logStep("Event promotion update error", { error: eventError.message });
+          return new Response(JSON.stringify({ error: eventError.message }), { status: 500 });
+        }
+        logStep("Event promotion activated", { eventId: metadata.event_id });
+      }
       // Handle featured subscription purchase
       else if (type === "featured_subscription" && metadata.slot_id && restaurantId) {
         const durationMonths = parseInt(metadata.duration_months || "1");
@@ -391,6 +416,66 @@ serve(async (req) => {
         logStep("Newsletter placement paid successfully", { placementId: metadata.placement_id });
       }
       // Handle Owner Pro subscription checkout
+      // Founding Partner and Menuservice (create-package-checkout)
+      else if ((type === "founding_partner" || type === "menu_service") && restaurantId && metadata.plan) {
+        const subscriptionId = (session.subscription as string) || null;
+        let status = "active";
+        let periodEnd: string | null = null;
+        let commitmentUntil: string | null = null;
+        if (subscriptionId) {
+          const sub = await stripe.subscriptions.retrieve(subscriptionId);
+          status = sub.status === "trialing" ? "trialing" : "active";
+          periodEnd = periodEndIso(sub);
+          if (type === "founding_partner" && metadata.plan === "month") {
+            // Minimum term of 6 months, counted from the first paid day (launch).
+            commitmentUntil = commitmentEnd((sub.trial_end ?? sub.start_date) * 1000);
+          }
+        }
+        const { error: orderError } = await supabaseAdmin.from("package_orders").upsert({
+          restaurant_id: restaurantId,
+          user_id: userId ?? null,
+          package: type,
+          plan: metadata.plan,
+          page_slug: metadata.page_slug ?? null,
+          status,
+          fulfillment_status: type === "menu_service" ? "todo" : "n_a",
+          amount_cents: parseInt(metadata.amount_cents || "0") || session.amount_total || 0,
+          stripe_session_id: session.id,
+          stripe_subscription_id: subscriptionId,
+          stripe_customer_id: (session.customer as string) || null,
+          commitment_until: commitmentUntil,
+          current_period_end: periodEnd,
+        }, { onConflict: "stripe_session_id" });
+        if (orderError) {
+          logStep("Package order insert error", { error: orderError.message });
+          return new Response(JSON.stringify({ error: orderError.message }), { status: 500 });
+        }
+        if (type === "menu_service") {
+          // Start the automatic import and translation; the owner then checks and publishes it.
+          const run = fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/run-menu-service`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ restaurant_id: restaurantId }),
+          }).catch(e => logStep("run-menu-service call failed", { error: String(e) }));
+          if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(run);
+          // The admin hears about it too, in case the import needs a hand.
+          try {
+            const [{ data: setting }, { data: restaurant }] = await Promise.all([
+              supabaseAdmin.from("app_settings").select("value").eq("key", "admin_email").maybeSingle(),
+              supabaseAdmin.from("restaurants").select("name").eq("id", restaurantId).maybeSingle(),
+            ]);
+            await new Resend(Deno.env.get("RESEND_API_KEY")).emails.send({
+              from: "Dishloopr <noreply@resend.dev>",
+              to: [setting?.value || "admin@dishloopr.com"],
+              subject: `Nieuwe Menuservice: ${restaurant?.name ?? "restaurant"} (import loopt automatisch)`,
+              html: `<p>${restaurant?.name ?? "Een restaurant"} heeft Menuservice afgenomen (${metadata.plan === "once" ? "eenmalig €79" : "€19 per maand"}).</p><p>De menukaart wordt automatisch geïmporteerd en vertaald; de eigenaar zet hem daarna zelf live. Lukt de import niet, dan staat de bestelling weer als "nog leveren" in Admin, Pakketten &amp; abonnementen (belofte: binnen 3 werkdagen).</p>`,
+            });
+          } catch (e) {
+            logStep("Menuservice admin mail failed", { error: String(e) });
+          }
+        }
+        logStep("Package order recorded", { type, plan: metadata.plan, restaurantId });
+      }
       else if (type === "owner_pro" && metadata.user_id) {
         logStep("Processing owner_pro checkout", { userId: metadata.user_id });
         const subscriptionId = session.subscription as string | null;
@@ -403,7 +488,7 @@ serve(async (req) => {
         if (subscriptionId) {
           const sub = await stripe.subscriptions.retrieve(subscriptionId);
           priceId = sub.items.data[0]?.price?.id ?? null;
-          periodEnd = new Date(sub.current_period_end * 1000).toISOString();
+          periodEnd = periodEndIso(sub);
           cancelAtPeriodEnd = sub.cancel_at_period_end;
           if (!interval) {
             interval = sub.items.data[0]?.price?.recurring?.interval === "year" ? "yearly" : "monthly";
@@ -454,13 +539,43 @@ serve(async (req) => {
               stripe_price_id: priceId,
               status: isActive ? "active" : "inactive",
               billing_interval: interval,
-              current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+              current_period_end: periodEndIso(sub),
               cancel_at_period_end: sub.cancel_at_period_end,
             },
             { onConflict: "stripe_subscription_id" }
           );
         await supabaseAdmin.rpc("sync_owner_pro_restaurants", { _user_id: userId });
         logStep("Owner Pro subscription synced", { userId, status: sub.status });
+      }
+      if (sub.metadata?.type === "founding_partner" || sub.metadata?.type === "menu_service") {
+        const live = ["active", "trialing", "past_due"].includes(sub.status);
+        const { data: order } = await supabaseAdmin.from("package_orders")
+          .select("id, commitment_until").eq("stripe_subscription_id", sub.id).maybeSingle();
+        // Enforce the 6-month minimum term: a cancellation before it ends is moved to the end of the term.
+        const commitment = order?.commitment_until ? Date.parse(order.commitment_until) : 0;
+        const cancelsAt = sub.cancel_at ? sub.cancel_at * 1000 : (sub.cancel_at_period_end ? Date.parse(periodEndIso(sub) ?? "") : 0);
+        if (live && commitment && cancelsAt && cancelsAt < commitment) {
+          await stripe.subscriptions.update(sub.id, { cancel_at_period_end: false, cancel_at: Math.floor(commitment / 1000) });
+          logStep("Cancellation moved to end of minimum term", { subscriptionId: sub.id });
+        }
+        await supabaseAdmin.from("package_orders").update({
+          status: !live ? "cancelled" : sub.status === "trialing" ? "trialing" : sub.status === "past_due" ? "past_due" : "active",
+          current_period_end: periodEndIso(sub),
+          updated_at: new Date().toISOString(),
+        }).eq("stripe_subscription_id", sub.id);
+        logStep("Package order synced", { subscriptionId: sub.id, status: sub.status });
+      }
+      if (sub.metadata?.type === "event_promotion" && sub.metadata?.event_id) {
+        const isActive = sub.status === "active" || sub.status === "trialing";
+        await supabaseAdmin
+          .from("restaurant_events")
+          .update({
+            promotion_status: isActive ? "paid" : "lapsed",
+            stripe_subscription_id: sub.id,
+            paid_until: periodEndIso(sub),
+          })
+          .eq("id", sub.metadata.event_id);
+        logStep("Event promotion synced", { eventId: sub.metadata.event_id, status: sub.status });
       }
     }
 

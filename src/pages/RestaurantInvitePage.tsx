@@ -118,7 +118,7 @@ export default function RestaurantInvitePage() {
 
             <section className="rounded-xl border bg-muted/40 p-5 space-y-3">
               <h2 className="flex items-center gap-2 text-xl font-semibold"><Star className="h-5 w-5 text-primary" />Extra zichtbaarheid</h2>
-              <p>Word Founding Partner: een uitgelichte plek op een gerechtpagina voor €59 per maand excl. btw. Maximaal 2 plekken per gerechtpagina. Je betaalt pas vanaf de launchdatum.</p>
+              <p>Word Founding Partner: een uitgelichte plek op een gerechtpagina voor €59 per maand excl. btw, met een looptijd van minimaal 6 maanden. Maximaal 5 plekken per gerechtpagina. Je betaalt pas vanaf de launchdatum.</p>
               <Button asChild variant="outline" className="min-h-11"><Link to={`/voor-restaurants/pakketten?slug=${encodeURIComponent(r.slug)}`}>Bekijk pakketten <ArrowRight className="ml-1 h-4 w-4" /></Link></Button>
             </section>
 

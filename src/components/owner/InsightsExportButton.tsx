@@ -43,22 +43,13 @@ function download(content: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-type DatasetKey = 'cohorts' | 'attribution' | 'benchmark' | 'search_terms' | 'all';
+type DatasetKey = 'attribution' | 'benchmark' | 'search_terms' | 'all';
 
 export function InsightsExportButton({ restaurantId, restaurantName }: Props) {
   const [busy, setBusy] = useState<DatasetKey | null>(null);
 
   const slug = restaurantName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   const stamp = new Date().toISOString().slice(0, 10);
-
-  const fetchCohorts = async () => {
-    const { data, error } = await supabase.rpc('get_guest_cohorts', {
-      p_restaurant_id: restaurantId,
-      p_weeks: 8,
-    });
-    if (error) throw error;
-    return (data ?? []) as Record<string, unknown>[];
-  };
 
   const fetchAttribution = async () => {
     const { data, error } = await supabase.rpc('get_owner_attribution', {
@@ -79,30 +70,19 @@ export function InsightsExportButton({ restaurantId, restaurantName }: Props) {
   };
 
   const fetchSearchTerms = async () => {
-    const { data, error } = await (supabase as any)
-      .from('analytics_events')
-      .select('metadata, created_at')
-      .eq('restaurant_id', restaurantId)
-      .eq('event_type', 'search_term_match')
-      .gte('created_at', new Date(Date.now() - 30 * 86400000).toISOString())
-      .limit(1000);
+    const { data, error } = await supabase.rpc('get_search_term_heatmap', {
+      p_restaurant_id: restaurantId,
+      p_days: 30,
+      p_limit: 200,
+    });
     if (error) throw error;
-    const counts = new Map<string, number>();
-    for (const row of data ?? []) {
-      const term = String((row as any).metadata?.term ?? '').trim().toLowerCase();
-      if (!term) continue;
-      counts.set(term, (counts.get(term) ?? 0) + 1);
-    }
-    return Array.from(counts.entries())
-      .map(([term, count]) => ({ term, count }))
-      .sort((a, b) => b.count - a.count);
+    return (data ?? []).map(r => ({ term: r.search_term, count: Number(r.hits) }));
   };
 
   const run = async (key: DatasetKey) => {
     setBusy(key);
     try {
       const tasks: Array<{ name: string; rows: Record<string, unknown>[] }> = [];
-      if (key === 'cohorts' || key === 'all') tasks.push({ name: 'cohorts', rows: await fetchCohorts() });
       if (key === 'attribution' || key === 'all') tasks.push({ name: 'attribution', rows: await fetchAttribution() });
       if (key === 'benchmark' || key === 'all') tasks.push({ name: 'benchmark', rows: await fetchBenchmark() });
       if (key === 'search_terms' || key === 'all') tasks.push({ name: 'search-terms', rows: await fetchSearchTerms() });
@@ -139,7 +119,6 @@ export function InsightsExportButton({ restaurantId, restaurantName }: Props) {
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => run('all')}>Alles (alle datasets)</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => run('cohorts')}>Gasten-cohorten (8 wkn)</DropdownMenuItem>
         <DropdownMenuItem onClick={() => run('attribution')}>Kanaal-attributie (30d)</DropdownMenuItem>
         <DropdownMenuItem onClick={() => run('benchmark')}>Jaar-op-jaar benchmark</DropdownMenuItem>
         <DropdownMenuItem onClick={() => run('search_terms')}>Zoektermen (30d)</DropdownMenuItem>

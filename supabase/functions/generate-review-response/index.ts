@@ -22,7 +22,21 @@ Deno.serve(async (req) => {
     const { data: { user } } = await authClient.auth.getUser(authHeader.replace('Bearer ', ''));
     if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-    const { reviewText, rating, restaurantName, tone = 'warm' } = await req.json();
+    const { reviewText, rating, restaurantName, restaurantId, tone = 'warm' } = await req.json();
+
+    // AI review replies are an Owner Pro feature: verified owner (or admin) of a Pro restaurant.
+    if (typeof restaurantId !== 'string') {
+      return new Response(JSON.stringify({ error: 'restaurantId required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    const [{ data: restaurant }, { data: verified }, { data: isAdmin }] = await Promise.all([
+      admin.from('restaurants').select('owner_tier').eq('id', restaurantId).maybeSingle(),
+      admin.rpc('is_verified_owner', { _user_id: user.id, _restaurant_id: restaurantId }),
+      admin.rpc('has_role', { _user_id: user.id, _role: 'admin' }),
+    ]);
+    if (isAdmin !== true && (verified !== true || restaurant?.owner_tier !== 'pro')) {
+      return new Response(JSON.stringify({ error: 'AI-suggesties zijn onderdeel van Owner Pro' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     if (!reviewText || typeof reviewText !== 'string') {
       return new Response(JSON.stringify({ error: 'reviewText required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },

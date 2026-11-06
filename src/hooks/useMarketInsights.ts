@@ -72,37 +72,21 @@ export function useMarketInsights(restaurantId?: string, cityId?: string, cuisin
   const fetchPeakHours = useCallback(async () => {
     if (!restaurantId) return;
 
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    const { data } = await supabase
-      .from('analytics_events')
-      .select('event_type, created_at')
-      .eq('restaurant_id', restaurantId)
-      .in('event_type', ['view', 'click'])
-      .gte('created_at', thirtyDaysAgo.toISOString());
+    // When the city searches for this restaurant's dishes (search_logs); the
+    // live counters are daily, so hours come from searches. "clicks" stays 0.
+    const { data } = await (supabase.rpc as any)('owner_search_hours', { p_restaurant_id: restaurantId, p_days: 30 });
 
     if (data) {
-      // Group by hour
       const hourMap: Record<number, { views: number; clicks: number }> = {};
       const dayMap: Record<number, { views: number; clicks: number }> = {};
 
       for (let h = 0; h < 24; h++) hourMap[h] = { views: 0, clicks: 0 };
       for (let d = 0; d < 7; d++) dayMap[d] = { views: 0, clicks: 0 };
 
-      data.forEach(event => {
-        const date = new Date(event.created_at);
-        const hour = date.getHours();
-        const day = date.getDay();
-        const isView = event.event_type === 'view';
-
-        if (isView) {
-          hourMap[hour].views++;
-          dayMap[day].views++;
-        } else {
-          hourMap[hour].clicks++;
-          dayMap[day].clicks++;
-        }
+      (data as { weekday: number; hour: number; searches: number }[]).forEach(r => {
+        const searches = Number(r.searches);
+        hourMap[r.hour].views += searches;
+        dayMap[r.weekday % 7].views += searches; // ISO 7 = Sunday = getDay() 0
       });
 
       setPeakHours(
@@ -168,25 +152,14 @@ export function useMarketInsights(restaurantId?: string, cityId?: string, cuisin
           const startsAt = purchase.starts_at || purchase.created_at;
           const expiresAt = purchase.expires_at || new Date().toISOString();
 
-          const [viewsRes, clicksRes] = await Promise.all([
-            supabase
-              .from('analytics_events')
-              .select('id', { count: 'exact', head: true })
-              .eq('restaurant_id', restaurantId)
-              .eq('event_type', 'view')
-              .gte('created_at', startsAt)
-              .lte('created_at', expiresAt),
-            supabase
-              .from('analytics_events')
-              .select('id', { count: 'exact', head: true })
-              .eq('restaurant_id', restaurantId)
-              .eq('event_type', 'click')
-              .gte('created_at', startsAt)
-              .lte('created_at', expiresAt),
-          ]);
+          const { data: totals } = await (supabase.rpc as any)('owner_stats_between', {
+            p_restaurant_id: restaurantId,
+            p_from: startsAt.slice(0, 10),
+            p_to: expiresAt.slice(0, 10),
+          });
 
-          const totalViews = viewsRes.count || 0;
-          const totalClicks = clicksRes.count || 0;
+          const totalViews = Number(totals?.[0]?.views ?? 0);
+          const totalClicks = Number(totals?.[0]?.conversions ?? 0);
           const ctr = totalViews > 0 ? (totalClicks / totalViews) * 100 : 0;
           const totalSpent = purchase.price_paid || 0;
           const costPerClick = totalClicks > 0 ? totalSpent / totalClicks : 0;
