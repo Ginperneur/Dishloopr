@@ -141,7 +141,9 @@ export function ProGrowthInsights({ restaurantId }: { restaurantId: string }) {
                       <TableCell className="text-right tabular-nums">{euro(p.my_price)}</TableCell>
                       <TableCell className="text-right tabular-nums">
                         {euro(p.city_avg)}
-                        <span className={`ml-1 text-xs ${diff > 0 ? 'text-destructive' : 'text-primary'}`}>({diff > 0 ? '+' : ''}{euro(diff)})</span>
+                        {Math.abs(diff) >= 0.01 && (
+                          <span className={`ml-1 text-xs ${diff > 0 ? 'text-destructive' : 'text-primary'}`}>({euro(Math.abs(diff))} {diff > 0 ? 'duurder' : 'goedkoper'})</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   );

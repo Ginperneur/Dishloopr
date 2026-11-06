@@ -393,7 +393,7 @@
     <div class="logo"><img src="logo-wordmark.png" alt="Dishloopr"></div>
   </header>
 
-  <div class="launch-row"><div class="launch"><i></i>Live vanaf 10 december 2026</div><span class="kicker">Voor restauranteigenaren</span></div>
+  <div class="launch-row"><div class="launch" data-launch="2026-12-10"><i></i><span>Live vanaf 10 december 2026</span></div><span class="kicker">Voor restauranteigenaren</span></div>
 
   <h1>Iemand zoekt nú naar <em>jouw gerecht.<svg viewBox="0 0 200 12" preserveAspectRatio="none"><path d="M2 8 C 40 2, 90 2, 120 6 S 180 10, 198 4" fill="none" stroke="#1E1916" stroke-width="3.2" stroke-linecap="round"/></svg></em></h1>
 
@@ -787,5 +787,13 @@
   </div>
 </section>
 
+<script>
+  // After the launch the cover says "Live sinds" instead of "Live vanaf"; re-render to update the PDF.
+  document.querySelectorAll('[data-launch]').forEach(el => {
+    const launch = new Date(el.dataset.launch + 'T00:00:00');
+    const label = launch.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+    el.querySelector('span').textContent = (Date.now() >= launch.getTime() ? 'Live sinds ' : 'Live vanaf ') + label;
+  });
+</script>
 </body>
 </html>

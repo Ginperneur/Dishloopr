@@ -80,3 +80,6 @@ project_id = "uktafmxojymsojqewzuy"
 
   [functions.send-monthly-founding-report]
     verify_jwt = false
+
+  [functions.sync-launch-date]
+    verify_jwt = false

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { OWNER_PRO_PRICES } from '@/lib/proPricing';
 
 // package_orders is not in the generated types yet (migration 20261106160000).
@@ -27,6 +28,7 @@ interface PackageOrder {
 }
 
 const LIVE = ['active', 'trialing', 'past_due'];
+const STATUS_LABEL: Record<string, string> = { active: 'actief', trialing: 'start bij launch', past_due: 'betaling mislukt', cancelled: 'opgezegd' };
 const euro = (n: number) => `€${n.toLocaleString('nl-NL', { maximumFractionDigits: 0 })}`;
 
 /** Monthly recurring value of an order; yearly plans count as a twelfth. */
@@ -42,7 +44,25 @@ function monthlyValue(o: Pick<PackageOrder, 'plan' | 'amount_cents'>) {
  */
 export function PackageOrdersManager() {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  // Launch is off: cancel every Founding Partner still in its free period, so nobody is charged.
+  const cancelUnpaid = async (count: number) => {
+    const ok = await confirm({
+      title: 'Launch gaat niet door?',
+      description: `Dit annuleert ${count} Founding Partner-abonnement(en) die nog niet betaald hebben. Er wordt niets afgeschreven. Dit kun je niet terugdraaien.`,
+      confirmLabel: 'Annuleer alle onbetaalde',
+      destructive: true,
+    });
+    if (!ok) return;
+    setBusyId('cancel-unpaid');
+    const { data, error } = await supabase.functions.invoke('sync-launch-date', { body: { cancel_unpaid: true } });
+    setBusyId(null);
+    if (error || data?.error) { toast.error('Annuleren mislukt', { description: data?.error ?? error?.message }); return; }
+    toast.success(`${data.cancelled} abonnement(en) geannuleerd`);
+    queryClient.invalidateQueries({ queryKey: ['admin-package-orders'] });
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-package-orders'],
@@ -96,7 +116,15 @@ export function PackageOrdersManager() {
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-3">
         <Card><CardContent className="pt-6"><p className="text-2xl font-bold">{euro(mrr)}</p><p className="text-xs text-muted-foreground">Terugkerende omzet per maand (excl. btw)</p></CardContent></Card>
-        <Card><CardContent className="pt-6"><p className="text-2xl font-bold">{euro(rows[2].mrr)}</p><p className="text-xs text-muted-foreground">Extra per maand zodra de launch-trials betalen</p></CardContent></Card>
+        <Card><CardContent className="pt-6">
+          <p className="text-2xl font-bold">{euro(rows[2].mrr)}</p>
+          <p className="text-xs text-muted-foreground">Extra per maand zodra de proefperiodes na de launch aflopen. De launchdatum stel je in bij Instellingen; proefperiodes schuiven dan mee.</p>
+          {rows[2].count > 0 && (
+            <Button size="sm" variant="outline" className="mt-3" disabled={busyId === 'cancel-unpaid'} onClick={() => cancelUnpaid(rows[2].count)}>
+              Launch gaat niet door
+            </Button>
+          )}
+        </CardContent></Card>
         <Card className={openMenu.length ? 'border-primary' : undefined}><CardContent className="pt-6"><p className="text-2xl font-bold">{openMenu.length}</p><p className="text-xs text-muted-foreground">Menuservice nog te leveren (binnen 3 werkdagen)</p></CardContent></Card>
       </div>
 
@@ -145,7 +173,7 @@ export function PackageOrdersManager() {
                       {o.commitment_until && <div className="text-xs text-muted-foreground">Vast tot {new Date(o.commitment_until).toLocaleDateString('nl-NL')}</div>}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={LIVE.includes(o.status) ? 'default' : 'secondary'}>{o.status === 'trialing' ? 'start bij launch' : o.status}</Badge>
+                      <Badge variant={o.status === 'past_due' ? 'destructive' : LIVE.includes(o.status) ? 'default' : 'secondary'}>{STATUS_LABEL[o.status] ?? o.status}</Badge>
                       {o.package === 'menu_service' && <div className="mt-1 text-xs">{o.fulfillment_status === 'done' ? 'Geleverd' : 'Nog leveren'}</div>}
                     </TableCell>
                     <TableCell className="text-right">

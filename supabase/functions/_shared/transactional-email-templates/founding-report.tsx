@@ -16,12 +16,12 @@ const FoundingReport = ({
 }: { ownerName?: string; monthLabel?: string; rows?: FoundingReportRow[]; dashboardUrl?: string; preferencesUrl?: string }) => {
   const totals = rows.reduce((t, r) => ({ impressions: t.impressions + r.impressions, clicks: t.clicks + r.clicks }), { impressions: 0, clicks: 0 })
   return (
-    <Html lang="nl"><Head /><Preview>{`Je Uitgelicht-plek in ${monthLabel}: ${nf.format(totals.impressions)} keer in beeld, ${nf.format(totals.clicks)} keer aangeklikt`}</Preview>
+    <Html lang="nl"><Head /><Preview>{`Je plek in Uitgelicht in ${monthLabel}: ${nf.format(totals.impressions)} keer in beeld, ${nf.format(totals.clicks)} keer aangeklikt`}</Preview>
       <Body style={{ backgroundColor: '#ffffff', fontFamily: '"DM Sans", Arial, sans-serif', color: '#202938' }}>
         <Container style={{ maxWidth: '560px', padding: '32px 24px' }}>
           <Text style={{ color: '#F26522', fontWeight: 'bold', fontSize: '18px', margin: 0 }}>Dishloopr</Text>
           <Heading style={{ fontFamily: '"Bricolage Grotesque", Arial, sans-serif', fontSize: '24px', margin: '16px 0 8px' }}>
-            Je Founding Partner-plek in {monthLabel}
+            Je plek als Founding Partner in {monthLabel}
           </Heading>
           <Text>{ownerName ? `Hoi ${ownerName},` : 'Hoi,'}</Text>
           <Text>
@@ -65,7 +65,7 @@ const FoundingReport = ({
 
 export const template = {
   component: FoundingReport,
-  subject: (data: Record<string, any>) => `Je Uitgelicht-plek op Dishloopr in ${data.monthLabel || 'de afgelopen maand'}`,
+  subject: (data: Record<string, any>) => `Je plek in Uitgelicht op Dishloopr in ${data.monthLabel || 'de afgelopen maand'}`,
   displayName: 'Maandrapport Founding Partner',
   previewData: {
     ownerName: 'Sanne',

@@ -1,5 +1,6 @@
 import { safeOrigin, serviceClient, getCaller, isAdmin } from "../_shared/auth.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
+import { launchAt } from "../_shared/launch.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,9 +10,9 @@ const corsHeaders = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-// Billing for Founding Partner starts on the public launch, as the packages page
-// and terms promise. Stripe Checkout needs a trial end at least 48 hours ahead.
-const LAUNCH_AT = Date.parse("2026-12-10T00:00:00+01:00");
+// Billing for Founding Partner starts on the public launch (app_settings.launch_date),
+// as the packages page and terms promise; sync-launch-date moves open trials when the
+// date changes. Stripe Checkout needs a trial end at least 48 hours ahead.
 const FOUNDING_PLACES_PER_PAGE = 5;
 const MIN_TRIAL_MS = 49 * 60 * 60 * 1000;
 
@@ -100,9 +101,9 @@ Deno.serve(async (req) => {
       ...(pageSlug ? { page_slug: pageSlug } : {}),
     };
 
-    const now = Date.now();
-    const trialEnd = option.package === "founding_partner" && LAUNCH_AT - now > MIN_TRIAL_MS
-      ? Math.floor(LAUNCH_AT / 1000)
+    const launch = await launchAt(admin);
+    const trialEnd = option.package === "founding_partner" && launch.ms - Date.now() > MIN_TRIAL_MS
+      ? Math.floor(launch.ms / 1000)
       : undefined;
 
     const origin = safeOrigin(req);

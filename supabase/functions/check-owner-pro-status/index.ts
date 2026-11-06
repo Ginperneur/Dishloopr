@@ -56,7 +56,7 @@ serve(async (req) => {
         status: "all",
         limit: 10,
       });
-      const activeSub = subs.data.find((s) => {
+      const activeSub = subs.data.find((s: Stripe.Subscription) => {
         const priceId = s.items.data[0]?.price?.id;
         return (
           (s.status === "active" || s.status === "trialing") &&

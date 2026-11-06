@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { CHECKOUT_ENABLED } from '@/lib/checkoutFlags';
 import { OWNER_PRO_PRICES } from '@/lib/proPricing';
 import { useOwnerProCheckout } from '@/hooks/useOwnerProCheckout';
+import { useLaunchDate } from '@/hooks/useLaunchDate';
 
 type PackageOption = 'founding_month' | 'founding_year' | 'menu_once' | 'menu_month';
 
@@ -103,6 +104,7 @@ export default function PackagesPage() {
   };
 
   const { startCheckout: startPro, loading: proLoading } = useOwnerProCheckout();
+  const launch = useLaunchDate();
 
   const [email, setEmail] = useState(user?.email ?? '');
   const [proMsg, setProMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -140,7 +142,7 @@ export default function PackagesPage() {
             <p className="rounded-lg bg-primary/10 p-3 text-sm"><span className="font-semibold">Je bespaart €480 per jaar</span>, of €598 per jaar met het jaarabonnement. Dat is bijna de helft.</p>
             <p className="text-sm text-muted-foreground">Vaste prijs zolang je klant blijft, dus die besparing krijg je elk jaar opnieuw. Minimale looptijd 6 maanden.</p>
             <Features items={['Uitgelichte plek op 1 gerechtpagina in je stad', 'Bovenaan de pagina in het blok "Uitgelicht"', 'Maximaal 5 per gerechtpagina']} />
-            <p className="text-sm">Je betaalt pas vanaf de launch op 10 december 2026. Gaat de launch niet door, dan krijg je je geld terug.</p>
+            <p className="text-sm">Je betaalt pas vanaf de launch op {launch.label}. Gaat de launch niet door, dan betaal je niets.</p>
             <div className="grid grid-cols-2 gap-2">
               {(['month', 'year'] as const).map(p => {
                 const label = p === 'month' ? 'Per maand' : 'Per jaar';
@@ -234,7 +236,7 @@ export default function PackagesPage() {
                 onClick={() => founding && startPackage(founding === 'month' ? 'founding_month' : 'founding_year', pageSlug)}>
                 {busy ? 'Even geduld…' : 'Verder naar betalen'}
               </Button>
-              <p className="text-xs text-muted-foreground">Je betaalt pas vanaf de launch op 10 december 2026.</p>
+              <p className="text-xs text-muted-foreground">Je betaalt pas vanaf de launch op {launch.label}.</p>
             </div>
           )}
         </DialogContent>

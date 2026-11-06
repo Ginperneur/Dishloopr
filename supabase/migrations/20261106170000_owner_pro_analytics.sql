@@ -109,7 +109,7 @@ $$;
 REVOKE ALL ON FUNCTION public.snapshot_restaurant_positions() FROM PUBLIC, anon, authenticated;
 
 CREATE OR REPLACE FUNCTION public.owner_position_history(p_restaurant_id uuid, p_days integer DEFAULT 90)
-RETURNS TABLE (page_slug text, dag date, position integer, total integer)
+RETURNS TABLE (page_slug text, dag date, "position" integer, total integer)
 LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public AS $$
 BEGIN
   IF NOT public.owner_analytics_allowed(p_restaurant_id) THEN

@@ -74,6 +74,13 @@ export function SettingsManager() {
       ));
 
       toast.success('Instelling opgeslagen');
+
+      // Founding Partners pay from the launch date: move their Stripe trials along.
+      if (setting.key === 'launch_date') {
+        const { data, error: syncError } = await supabase.functions.invoke('sync-launch-date', { body: {} });
+        if (syncError || data?.error) toast.error('Proefperiodes in Stripe niet verschoven', { description: data?.error ?? syncError?.message });
+        else toast.success(`Launch ${data.launch_date}: ${data.moved} proefperiode(s) verschoven`);
+      }
     } catch (error) {
       console.error('Error saving setting:', error);
       toast.error('Kon instelling niet opslaan');

@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { periodEndIso } from "../_shared/stripePeriod.ts";
+import { commitmentEnd } from "../_shared/launch.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const logStep = (step: string, details?: any) => {
@@ -424,9 +425,7 @@ serve(async (req) => {
           periodEnd = periodEndIso(sub);
           if (type === "founding_partner" && metadata.plan === "month") {
             // Minimum term of 6 months, counted from the first paid day (launch).
-            const start = new Date((sub.trial_end ?? sub.start_date) * 1000);
-            start.setMonth(start.getMonth() + 6);
-            commitmentUntil = start.toISOString();
+            commitmentUntil = commitmentEnd((sub.trial_end ?? sub.start_date) * 1000);
           }
         }
         const { error: orderError } = await supabaseAdmin.from("package_orders").upsert({

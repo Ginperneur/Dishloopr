@@ -10,15 +10,16 @@ Draai de migraties (in deze volgorde, via Supabase of Lovable):
 - `20261106160000_package_orders.sql`: Founding Partner en Menuservice, max. 5 plekken per gerechtpagina, Uitgelicht-tellers en de maandmail voor Founding Partners.
 - `20261106170000_owner_pro_analytics.sql`: Pro-funnel en zoektermen op de live tellers, positie door de tijd, gemiste vraag, prijsvergelijking.
 - `20261106180000_owner_analytics_live_counters.sql`: afwijkingsalerts, jaarvergelijking, kanalen, beste tijd, verloren aan concurrenten, gerechten en promotie-ROI op de live tellers en zoeklogs.
+- `20261106190000_launch_date_setting.sql`: launchdatum in `app_settings` (`launch_date`) en de dagelijkse job die proefperiodes van Founding Partners meeschuift.
 
 Controleer daarna dat de cronjobs bestaan (`select jobname from cron.job;`):
-`send-monthly-event-report`, `send-monthly-founding-report`, `snapshot-restaurant-positions`.
+`send-monthly-event-report`, `send-monthly-founding-report`, `snapshot-restaurant-positions`, `sync-launch-date`.
 
 ## 2. Edge functions deployen
 
 `create-package-checkout`, `create-event-checkout`, `create-tag-checkout`, `create-owner-pro-checkout`,
 `stripe-webhook`, `check-owner-pro-status`, `generate-review-response`, `owner-weekly-recommendation`,
-`send-weekly-owner-report`, `send-monthly-event-report`, `send-monthly-founding-report`.
+`send-weekly-owner-report`, `send-monthly-event-report`, `send-monthly-founding-report`, `sync-launch-date`.
 
 ## 3. Stripe
 
@@ -53,8 +54,16 @@ VITE_ENABLE_SPONSORED_CHECKOUT=true   # alleen als gesponsorde gerechten live ga
 - Owner Pro kopen: `restaurants.owner_tier` wordt `pro`; Pro-functies gaan open; AI-suggestie bij reviews werkt.
 - Evenement betalen: status wordt `paid` en het evenement staat op /evenementen.
 
+## Launch verschuiven of afblazen
+
+- Verschuiven: pas `launch_date` aan in Admin, Instellingen. De proefperiodes van Founding Partners in Stripe schuiven direct mee (en elke ochtend nog eens ter controle), net als hun minimale looptijd.
+- Afblazen: Admin, Pakketten & abonnementen, knop "Launch gaat niet door". Dat annuleert alle Founding Partners die nog niet betaald hebben; er wordt niets afgeschreven, dus er valt ook niets terug te betalen.
+
+## Testen zonder database
+
+`deno run -A --config supabase/tests/deno.json supabase/tests/sql-functions.ts` draait de migraties van pakketten, analytics en launchdatum in een lokale Postgres (PGlite) en controleert de functies. `supabase/tests/launch.ts` test de tijdzone van de launchdatum.
+
 ## 6. Handwerk dat bij beloftes hoort
 
 - Claims via documenten (Route B): binnen 2 werkdagen. Admin, Vandaag toont claims over de termijn.
 - Menuservice: binnen 3 werkdagen leveren, vertaald in het Engels, Duits en Frans. Zet daarna op "Geleverd".
-- Gaat de launch niet door vóór 31 maart 2027: Founding Partners volledig terugbetalen (voorwaarden, artikel 7c).

@@ -1,9 +1,12 @@
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Eye, Flag, MousePointer, UtensilsCrossed } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 // package_orders and owner_founding_stats are not in the generated types yet.
@@ -29,6 +32,30 @@ const date = (v: string | null) => (v ? new Date(v).toLocaleDateString('nl-NL') 
  * what Founding Partner costs and saves, linking to the packages page.
  */
 export function MyPackagesCard({ restaurantId, restaurantSlug }: { restaurantId: string; restaurantSlug: string }) {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  // Opt-out for send-monthly-founding-report (owner_email_preferences.founding_report).
+  const { data: reportOn = true } = useQuery({
+    queryKey: ['founding-report-pref', user?.id],
+    enabled: Boolean(user),
+    queryFn: async () => {
+      const { data } = await db.from('owner_email_preferences').select('founding_report').eq('user_id', user!.id).maybeSingle();
+      return (data?.founding_report as boolean | undefined) ?? true;
+    },
+  });
+  const setReport = async (next: boolean) => {
+    if (!user) return;
+    queryClient.setQueryData(['founding-report-pref', user.id], next);
+    const { error } = await db.from('owner_email_preferences').upsert({ user_id: user.id, founding_report: next }, { onConflict: 'user_id' });
+    if (error) {
+      toast.error('Kon voorkeur niet opslaan');
+      queryClient.setQueryData(['founding-report-pref', user.id], !next);
+    } else {
+      toast.success(next ? 'Maandrapport Founding Partner ingeschakeld' : 'Maandrapport Founding Partner uitgeschakeld');
+    }
+  };
+
   const { data } = useQuery({
     queryKey: ['owner-packages', restaurantId],
     queryFn: async () => {
@@ -108,6 +135,15 @@ export function MyPackagesCard({ restaurantId, restaurantSlug }: { restaurantId:
             </div>
           );
         })}
+        {live.some(o => o.package === 'founding_partner') && (
+          <div className="flex items-center justify-between gap-4 border-t pt-4">
+            <div>
+              <p className="text-sm font-medium">Maandrapport Founding Partner</p>
+              <p className="text-xs text-muted-foreground">Op de 1e van de maand: hoe vaak je in het blok Uitgelicht in beeld was en werd aangeklikt.</p>
+            </div>
+            <Switch checked={reportOn} onCheckedChange={setReport} disabled={!user} aria-label="Maandrapport Founding Partner" />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
