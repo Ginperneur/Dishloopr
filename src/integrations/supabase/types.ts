@@ -4399,6 +4399,38 @@ export type Database = {
           },
         ]
       }
+      restaurant_position_history: {
+        Row: {
+          dag: string
+          page_slug: string
+          position: number
+          restaurant_id: string
+          total: number
+        }
+        Insert: {
+          dag: string
+          page_slug: string
+          position: number
+          restaurant_id: string
+          total: number
+        }
+        Update: {
+          dag?: string
+          page_slug?: string
+          position?: number
+          restaurant_id?: string
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_position_history_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_stats_daily: {
         Row: {
           context: string
@@ -6973,6 +7005,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      owner_analytics_allowed: {
+        Args: { p_restaurant_id: string }
+        Returns: boolean
+      }
       owner_event_stats: {
         Args: { p_from?: string; p_restaurant_id: string; p_to?: string }
         Returns: {
@@ -6987,6 +7023,41 @@ export type Database = {
           metric: string
           page_slug: string
           totaal: number
+        }[]
+      }
+      owner_missed_demand: {
+        Args: { p_days?: number; p_limit?: number; p_restaurant_id: string }
+        Returns: {
+          query: string
+          searches: number
+        }[]
+      }
+      owner_position_history: {
+        Args: { p_days?: number; p_restaurant_id: string }
+        Returns: {
+          dag: string
+          page_slug: string
+          position: number
+          total: number
+        }[]
+      }
+      owner_price_benchmark: {
+        Args: { p_restaurant_id: string }
+        Returns: {
+          city_avg: number
+          dish: string
+          my_price: number
+          restaurants: number
+        }[]
+      }
+      owner_term_funnel: {
+        Args: { p_days?: number; p_restaurant_id: string }
+        Returns: {
+          conversions: number
+          impressions: number
+          reservations: number
+          term: string
+          views: number
         }[]
       }
       parse_search_query: {
@@ -7148,6 +7219,7 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      snapshot_restaurant_positions: { Args: never; Returns: number }
       sync_owner_pro_restaurants: {
         Args: { _user_id: string }
         Returns: undefined

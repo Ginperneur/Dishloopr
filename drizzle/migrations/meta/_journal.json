@@ -113,6 +113,13 @@
       "when": 1793996995490,
       "tag": "0015_restaurant_event_promotions",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1793997044169,
+      "tag": "0016_owner_pro_analytics",
+      "breakpoints": true
     }
   ]
 }
