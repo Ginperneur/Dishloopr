@@ -1,4 +1,5 @@
 import { safeOrigin } from "../_shared/auth.ts";
+import { billingParams } from "../_shared/billing.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
@@ -94,6 +95,7 @@ Deno.serve(async (req) => {
       customer_email: customerId ? undefined : user.email,
       line_items: [lineItem],
       mode: "subscription",
+      ...billingParams({ mode: "subscription", customerId }),
       metadata: {
         type: "extra_tag",
         restaurant_id,

@@ -1,6 +1,7 @@
 import { safeOrigin, serviceClient, getCaller, isAdmin } from "../_shared/auth.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { launchAt } from "../_shared/launch.ts";
+import { billingParams } from "../_shared/billing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -112,6 +113,11 @@ Deno.serve(async (req) => {
       customer_email: customerId ? undefined : user.email,
       line_items: [lineItem],
       mode: option.interval ? "subscription" : "payment",
+      ...billingParams({
+        mode: option.interval ? "subscription" : "payment",
+        customerId,
+        description: `${option.name}: ${restaurant.name}`,
+      }),
       metadata,
       ...(option.interval
         ? { subscription_data: { metadata, ...(trialEnd ? { trial_end: trialEnd } : {}), description: `${option.name}: ${restaurant.name}`.slice(0, 500) } }

@@ -1,14 +1,17 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { billingParams } from "../_shared/billing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const PRICE_MONTHLY = "price_1TdPdO3EXkDnjHC3dK2LdvFT";
-const PRICE_YEARLY = "price_1TdPeD3EXkDnjHC3J5T79Qe7";
+// The defaults are the live prices. In Stripe test mode set STRIPE_PRO_MONTH_PRICE_ID and
+// STRIPE_PRO_YEAR_PRICE_ID to the test prices, which have other IDs.
+const PRICE_MONTHLY = Deno.env.get("STRIPE_PRO_MONTH_PRICE_ID") || "price_1TdPdO3EXkDnjHC3dK2LdvFT";
+const PRICE_YEARLY = Deno.env.get("STRIPE_PRO_YEAR_PRICE_ID") || "price_1TdPeD3EXkDnjHC3J5T79Qe7";
 
 const log = (step: string, details?: unknown) =>
   console.log(`[CREATE-OWNER-PRO-CHECKOUT] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
@@ -50,6 +53,7 @@ serve(async (req) => {
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
       allow_promotion_codes: true,
+      ...billingParams({ mode: "subscription", customerId }),
       success_url: `${origin}/owner?pro_checkout=success`,
       cancel_url: `${origin}/owner?pro_checkout=cancelled`,
       subscription_data: {

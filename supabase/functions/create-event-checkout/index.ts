@@ -1,5 +1,6 @@
 import { safeOrigin, serviceClient, getCaller, isAdmin } from "../_shared/auth.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
+import { billingParams } from "../_shared/billing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -49,6 +50,7 @@ Deno.serve(async (req) => {
       customer_email: customerId ? undefined : user.email,
       line_items: [lineItem],
       mode: "subscription",
+      ...billingParams({ mode: "subscription", customerId }),
       metadata,
       subscription_data: { metadata, description: `Evenement: ${event.title}`.slice(0, 500) },
       success_url: `${origin}/owner-dashboard?event_checkout=success`,
