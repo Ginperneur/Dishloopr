@@ -82,9 +82,10 @@ export function MyPackagesCard({ restaurantId, restaurantSlug, restaurantName }:
     return (
       <Card className="border-primary/30">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base"><Flag className="h-5 w-5 text-primary" />Founding Partner</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-base"><Flag className="h-5 w-5 text-primary" />Uitgelicht</CardTitle>
           <CardDescription>
-            Sta gegarandeerd bovenaan je gerechtpagina in het blok "Uitgelicht". Normaal €99 per maand, als Founding Partner €59:
+            Sta gegarandeerd bovenaan je gerechtpagina in het blok "Uitgelicht". Normaal €99 per maand; koop je 'm tussen
+            1 december 2026 en 5 januari 2027, dan word je Founding Partner en betaal je €59 tot en met 31 december 2027:
             je bespaart €480 per jaar, of €598 met het jaarabonnement. Max. 5 plekken per gerechtpagina.
           </CardDescription>
         </CardHeader>
