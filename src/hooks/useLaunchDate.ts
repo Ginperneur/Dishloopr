@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-const FALLBACK = '2026-12-10';
+const FALLBACK = '2026-12-01';
 
 /** Public launch date from app_settings.launch_date, formatted as "10 december 2026". */
 export function useLaunchDate() {
