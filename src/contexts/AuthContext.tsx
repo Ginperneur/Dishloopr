@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { publicOrigin } from '@/lib/native';
 
 const REMEMBER_ME_KEY = 'auth-remember-me';
 
@@ -127,7 +128,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, name: string, accountType: 'user' | 'restaurant' = 'user') => {
-    const redirectUrl = `${window.location.origin}/email-confirm`;
+    // In the native app the local origin is not reachable from an e-mail client.
+    const redirectUrl = `${publicOrigin()}/email-confirm`;
     
     const { error } = await supabase.auth.signUp({
       email,
@@ -152,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const resetPassword = async (email: string) => {
-    const redirectUrl = `${window.location.origin}/reset-password`;
+    const redirectUrl = `${publicOrigin()}/reset-password`;
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,

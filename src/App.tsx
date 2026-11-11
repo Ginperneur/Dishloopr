@@ -15,6 +15,7 @@ const OnboardingDialog = lazy(() => import("@/components/onboarding/OnboardingDi
 import { CookieConsent } from "@/components/legal/CookieConsent";
 import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 import { RestaurantMetricsObserver } from '@/components/analytics/RestaurantMetricsObserver';
+import { NativeBridge } from '@/components/native/NativeBridge';
 
 // Eagerly load critical routes
 import Index from "./pages/Index";
@@ -104,6 +105,7 @@ const App = () => (
               <Sonner />
               <BrowserRouter>
                 <RestaurantMetricsObserver />
+                <NativeBridge />
                 <Suspense fallback={<PageLoader />}>
                   <CookieConsent />
                   <AfterIdle><OnboardingDialog /></AfterIdle>
