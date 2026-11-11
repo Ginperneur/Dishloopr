@@ -134,6 +134,13 @@
       "when": 1793997126773,
       "tag": "0018_launch_date_and_menu_service",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794411557316,
+      "tag": "0019_create_city_aliases",
+      "breakpoints": true
     }
   ]
 }

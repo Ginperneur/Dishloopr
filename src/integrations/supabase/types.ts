@@ -206,6 +206,36 @@ export type Database = {
         }
         Relationships: []
       }
+      city_aliases: {
+        Row: {
+          alias_name: string
+          city_id: string
+        }
+        Insert: {
+          alias_name: string
+          city_id: string
+        }
+        Update: {
+          alias_name?: string
+          city_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_aliases_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_aliases_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["city_id"]
+          },
+        ]
+      }
       claim_activity_logs: {
         Row: {
           action_category: string
