@@ -7,6 +7,7 @@ import {
   Receipt,
   Lock,
   Rocket,
+  Plug,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -34,6 +35,7 @@ const sections = [
   { id: 'promotions', label: 'Promoties', icon: Rocket, requiresVerified: false },
   { id: 'marketing', label: 'Marketing', icon: Megaphone, requiresVerified: false },
   { id: 'market', label: 'Markt', icon: TrendingUp, requiresVerified: true },
+  { id: 'integrations', label: 'Integraties', icon: Plug, requiresVerified: true },
   { id: 'invoices', label: 'Facturen', icon: Receipt, requiresVerified: false },
 ];
 

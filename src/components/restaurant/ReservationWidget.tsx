@@ -1,9 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, Calendar, Phone } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { ReserveButton } from './ReserveButton';
+import { reservationMode, type PublicReservationOption } from '@/lib/reservationIntegration';
+import { NATIVE_RESERVATIONS_ENABLED } from '@/hooks/useReservationOptions';
+import { isZenchefId, zenchefBookingUrl, zenchefPartnerId } from '@/lib/zenchef';
+import { useZenchefSdk } from '@/hooks/useZenchefSdk';
 
 interface ReservationWidgetProps {
+  restaurantId: string;
   zenchefId?: string | null;
   reservationUrl?: string | null;
   restaurantName: string;
@@ -11,70 +16,33 @@ interface ReservationWidgetProps {
   phone?: string | null;
   googleMapsUrl?: string | null;
   googlePlaceId?: string | null;
+  option?: PublicReservationOption | null;
+  metricContext?: string;
   onClickTrack?: (type: string) => void;
 }
 
-declare global {
-  interface Window {
-    zenchefWidget?: {
-      init: (options: { restaurantId: string; container: HTMLElement }) => void;
-    };
-  }
-}
-
-export function ReservationWidget({ 
-  zenchefId, 
-  reservationUrl, 
+export function ReservationWidget({
+  restaurantId,
+  zenchefId,
+  reservationUrl,
   restaurantName,
   variant = 'full',
   phone,
   googleMapsUrl,
   googlePlaceId,
+  option,
+  metricContext = 'zoek',
   onClickTrack
 }: ReservationWidgetProps) {
   const { t } = useTranslation();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [widgetLoaded, setWidgetLoaded] = useState(false);
-  const [widgetError, setWidgetError] = useState(false);
-
-  useEffect(() => {
-    if (!zenchefId || !containerRef.current) return;
-
-    // Load Zenchef SDK script
-    const script = document.createElement('script');
-    script.src = 'https://sdk.zenchef.com/sdk/zenchef-sdk.min.js';
-    script.async = true;
-    script.onload = () => {
-      if (window.zenchefWidget && containerRef.current) {
-        try {
-          window.zenchefWidget.init({
-            restaurantId: zenchefId,
-            container: containerRef.current
-          });
-          setWidgetLoaded(true);
-        } catch (error) {
-          console.error('Zenchef widget init error:', error);
-          setWidgetError(true);
-        }
-      }
-    };
-    script.onerror = () => {
-      console.error('Failed to load Zenchef SDK');
-      setWidgetError(true);
-    };
-
-    document.body.appendChild(script);
-
-    return () => {
-      // Cleanup script on unmount
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
-    };
-  }, [zenchefId]);
+  const providerId = option?.external_restaurant_id ?? (isZenchefId(zenchefId) ? zenchefId : null);
+  const mode = reservationMode({ option, zenchefId: providerId, reservationUrl, nativeEnabled: NATIVE_RESERVATIONS_ENABLED });
+  // Shared, load-once SDK state: lets the card hide Zenchef hints when Zenchef refuses the widget.
+  const sdk = useZenchefSdk(mode === 'widget' ? providerId : null, option?.lang);
+  const zenchefUnavailable = sdk === 'unavailable';
 
   // No digital reservation — show phone or Google Maps fallback
-  if (!zenchefId && !reservationUrl) {
+  if (mode === 'none' || (zenchefUnavailable && !reservationUrl)) {
     // Google Reserve fallback: opens the GBP profile where the Reserve button is shown
     const googleReserveUrl = googlePlaceId
       ? `https://www.google.com/maps/place/?q=place_id:${googlePlaceId}`
@@ -153,86 +121,61 @@ export function ReservationWidget({
     return null;
   }
 
-  // Button-only variant for mobile/compact views
-  if (variant === 'button') {
-    if (zenchefId && !widgetError) {
-      return (
-        <Button className="flex-1" size="default" onClick={() => onClickTrack?.('reservation')} asChild>
-          <a 
-            href={`https://widget.zenchef.com/reservation/${zenchefId}`} 
-            target="_blank" 
-            rel="noopener noreferrer"
-          >
-            <Calendar className="h-4 w-4 mr-2" />
-            {t('restaurant.reserve')}
-          </a>
-        </Button>
-      );
-    }
-    
-    if (reservationUrl) {
-      return (
-        <Button className="flex-1" size="default" onClick={() => onClickTrack?.('reservation')} asChild>
-          <a href={reservationUrl} target="_blank" rel="noopener noreferrer">
-            <Calendar className="h-4 w-4 mr-2" />
-            {t('restaurant.reserve')}
-          </a>
-        </Button>
-      );
-    }
-    
-    return null;
-  }
+  const reserve = (className: string) => (
+    <ReserveButton
+      restaurantId={restaurantId}
+      restaurantName={restaurantName}
+      mode={mode}
+      zenchefId={providerId}
+      lang={option?.lang}
+      timezone={option?.timezone}
+      reservationUrl={reservationUrl}
+      metricContext={metricContext}
+      onClickTrack={onClickTrack}
+      className={className}
+      size={variant === 'button' ? 'default' : 'lg'}
+    >
+      <Calendar className="h-4 w-4" />
+      {t('restaurant.reserve')}
+    </ReserveButton>
+  );
 
-  // Full widget variant for sidebar
+  // Button-only variant for mobile/compact views
+  if (variant === 'button') return reserve('flex-1');
+
+  // Full variant for the sidebar: the official Zenchef widget opens as an overlay.
   return (
     <div className="p-6 rounded-2xl border border-border bg-card">
       <h3 className="font-semibold mb-4 flex items-center gap-2">
         <Calendar className="h-4 w-4" />
         Reserveren
       </h3>
-
-      {/* Zenchef embedded widget */}
-      {zenchefId && !widgetError && (
-        <div 
-          ref={containerRef}
-          className="min-h-[300px] rounded-lg overflow-hidden"
-          aria-label={`Reserveer bij ${restaurantName}`}
-        >
-          {!widgetLoaded && (
-            <div className="flex items-center justify-center h-[300px] bg-muted/50 rounded-lg animate-pulse">
-              <span className="text-sm text-muted-foreground">Widget laden...</span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Fallback to external reservation link */}
-      {(widgetError || !zenchefId) && reservationUrl && (
-        <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Reserveer direct bij {restaurantName}
-          </p>
-          <Button className="w-full" size="lg" asChild>
-            <a href={reservationUrl} target="_blank" rel="noopener noreferrer" onClick={() => onClickTrack?.('reservation')}>
-              <ExternalLink className="h-4 w-4 mr-2" />
-              {t('restaurant.reserve')}
-            </a>
-          </Button>
-        </div>
-      )}
-
-      {/* Show both options if Zenchef widget loaded but also has fallback */}
-      {zenchefId && widgetLoaded && reservationUrl && (
-        <div className="mt-4 pt-4 border-t border-border">
+      <div className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          {mode === 'link' || zenchefUnavailable ? `Reserveer direct bij ${restaurantName}` : `Kies datum, tijd en aantal personen in het reserveringssysteem van ${restaurantName}.`}
+        </p>
+        {reserve('w-full')}
+        {mode === 'widget' && providerId && !zenchefUnavailable && (
+          <a
+            href={zenchefBookingUrl(providerId, { lang: option?.lang, partnerId: zenchefPartnerId() })}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            onClick={() => onClickTrack?.('reservation')}
+          >
+            <ExternalLink className="h-3 w-3" />
+            Opent het niet? Reserveer in een nieuw tabblad
+          </a>
+        )}
+        {mode === 'widget' && !zenchefUnavailable && reservationUrl && (
           <Button variant="outline" size="sm" className="w-full" asChild>
             <a href={reservationUrl} target="_blank" rel="noopener noreferrer" onClick={() => onClickTrack?.('reservation')}>
               <ExternalLink className="h-3 w-3 mr-2" />
               Reserveer via website
             </a>
           </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

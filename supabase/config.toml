@@ -89,3 +89,9 @@ project_id = "uktafmxojymsojqewzuy"
 
   [functions.remind-pending-claims]
     verify_jwt = false
+
+  [functions.reservations]
+  verify_jwt = false
+
+  [functions.reservation-webhook]
+  verify_jwt = false
