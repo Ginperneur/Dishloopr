@@ -49,7 +49,7 @@ Per golf krijgt een restaurant maximaal één mail (database slot op restaurant 
 
 ## Flyer
 
-De flyer staat in Supabase Storage (publieke bucket `marketing`, bestand `outreach/dishloopr-flyer.pdf`), los van de website, dus hij werkt meteen en hoeft niet te wachten op een deploy.
+De flyer staat in Supabase Storage (privé bucket `marketing`, bestand `outreach/dishloopr-flyer.pdf`), los van de website. De agent maakt per batch een tijdelijke, ondertekende link: voor een bijlage 6 uur geldig (Resend haalt hem op tijdens het versturen), voor de linkvariant 1 jaar.
 
 - **Uploaden of vervangen:** Admin > Outreach > Mail en instellingen > "Flyer uploaden (pdf)". Een nieuwe upload vervangt de oude; volgende mails krijgen meteen de nieuwe.
 - **Bijlage, link of uit:** in hetzelfde blok. Bijlage = pdf mee in de mail ("In de bijlage vind je onze flyer…"). Link = geen bijlage maar een link "Download onze flyer (pdf)", lichter en beter voor de spamscore. Uit = geen flyer en geen flyerzin.
@@ -61,7 +61,7 @@ Admin > Outreach > "Database downloaden (CSV)": alle restaurants met segment, ma
 
 ## Eenmalig instellen (jij)
 
-1. **Migratie draaien**: `drizzle/migrations/0025_outreach_agent.sql` (ook in `supabase/migrations/20261112150000_outreach_agent.sql`). Maakt de tabellen, de view, de afmeldfunctie en de cronjob. De cron doet niets zolang "Automatisch versturen" uit staat.
+1. **Migratie draaien**: `drizzle/migrations/0026_outreach_agent.sql` (ook in `supabase/migrations/20261112150000_outreach_agent.sql`). Maakt de tabellen, de view, de afmeldfunctie en de cronjob. De cron doet niets zolang "Automatisch versturen" uit staat.
 2. **Edge functions deployen**: `outreach-send-wave`, `outreach-inbound`, `outreach-reply`, `outreach-unsubscribe`.
 3. **Inbound mail bij Resend**: voeg een ontvangstdomein toe, bijvoorbeeld `reply.dishloopr.com` (MX record naar Resend), en maak een webhook voor `email.received` naar `https://uktafmxojymsojqewzuy.supabase.co/functions/v1/outreach-inbound`.
 4. **Secrets in Supabase**:

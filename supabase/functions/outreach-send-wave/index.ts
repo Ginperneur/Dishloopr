@@ -23,9 +23,12 @@ const SENDER_NAME = Deno.env.get("OUTREACH_SENDER_NAME") ?? "Ginuwine Ayanne";
 // Inbound domain routed to Resend (MX). Replies to antwoord+<restaurant id>@domain reach outreach-inbound.
 const REPLY_DOMAIN = Deno.env.get("OUTREACH_REPLY_DOMAIN") ?? "";
 const REPLY_TO = Deno.env.get("OUTREACH_REPLY_TO") ?? "";
-// Owner flyer in the public "marketing" bucket (uploaded in Admin > Outreach). Independent of site deploys.
-const FLYER_URL = Deno.env.get("OUTREACH_FLYER_URL") ||
-  `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/marketing/outreach/dishloopr-flyer.pdf`;
+// Owner flyer in the private "marketing" bucket (uploaded in Admin > Outreach); the workspace blocks
+// public buckets, so every batch signs a fresh link. OUTREACH_FLYER_URL overrides it with a fixed URL.
+const FLYER_URL_OVERRIDE = Deno.env.get("OUTREACH_FLYER_URL") || "";
+const FLYER_PATH = "outreach/dishloopr-flyer.pdf";
+// Attachments are fetched by Resend while sending; a link in a mail must keep working for months.
+const SIGNED_TTL = { attachment: 60 * 60 * 6, link: 60 * 60 * 24 * 365 };
 const FLYER_NAME = "Dishloopr flyer voor restauranteigenaren.pdf";
 type Flyer = { mode: "attachment" | "link"; url: string } | null;
 
@@ -37,10 +40,17 @@ async function resolveFlyer(db: SupabaseClient, mode: string): Promise<{ flyer: 
   let warning: string | null = null;
   let flyer: Flyer = null;
   if (mode !== "uit") {
+    const flyerMode = mode === "link" ? "link" : "attachment";
     try {
-      const r = await fetch(FLYER_URL, { method: "HEAD" });
+      let url = FLYER_URL_OVERRIDE;
+      if (!url) {
+        const { data, error } = await db.storage.from("marketing").createSignedUrl(FLYER_PATH, SIGNED_TTL[flyerMode]);
+        if (error || !data?.signedUrl) throw new Error(error?.message ?? "geen flyer gevonden, upload hem in Admin > Outreach");
+        url = data.signedUrl;
+      }
+      const r = await fetch(url, { method: "HEAD" });
       if (r.ok && (r.headers.get("content-type") ?? "").includes("pdf")) {
-        flyer = { mode: mode === "link" ? "link" : "attachment", url: FLYER_URL };
+        flyer = { mode: flyerMode, url };
       } else {
         warning = `Flyer niet bereikbaar (${r.status}); mails gaan zonder flyer. Upload de flyer opnieuw.`;
       }
