@@ -141,6 +141,13 @@ export type Database = {
             foreignKeyName: "analytics_events_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "analytics_events_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -294,6 +301,13 @@ export type Database = {
             foreignKeyName: "claim_activity_logs_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "claim_activity_logs_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -340,6 +354,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "claim_requests_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
           {
             foreignKeyName: "claim_requests_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -422,6 +443,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "collections"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collection_restaurants_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
           },
           {
             foreignKeyName: "collection_restaurants_restaurant_id_fkey"
@@ -602,8 +630,22 @@ export type Database = {
             foreignKeyName: "cross_promotions_initiator_restaurant_id_fkey"
             columns: ["initiator_restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "cross_promotions_initiator_restaurant_id_fkey"
+            columns: ["initiator_restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cross_promotions_partner_restaurant_id_fkey"
+            columns: ["partner_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
           },
           {
             foreignKeyName: "cross_promotions_partner_restaurant_id_fkey"
@@ -667,8 +709,22 @@ export type Database = {
             foreignKeyName: "demand_routing_events_source_restaurant_id_fkey"
             columns: ["source_restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "demand_routing_events_source_restaurant_id_fkey"
+            columns: ["source_restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demand_routing_events_target_restaurant_id_fkey"
+            columns: ["target_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
           },
           {
             foreignKeyName: "demand_routing_events_target_restaurant_id_fkey"
@@ -826,6 +882,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "seo_page_kandidaten"
             referencedColumns: ["city_id"]
+          },
+          {
+            foreignKeyName: "discovery_results_matched_restaurant_id_fkey"
+            columns: ["matched_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
           },
           {
             foreignKeyName: "discovery_results_matched_restaurant_id_fkey"
@@ -1349,6 +1412,13 @@ export type Database = {
             foreignKeyName: "favorites_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "favorites_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -1521,6 +1591,13 @@ export type Database = {
             foreignKeyName: "featured_subscriptions_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "featured_subscriptions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -1572,6 +1649,13 @@ export type Database = {
             foreignKeyName: "featured_waitlist_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "featured_waitlist_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -1607,6 +1691,13 @@ export type Database = {
           restaurant_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "founding_stats_daily_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
           {
             foreignKeyName: "founding_stats_daily_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -1683,6 +1774,13 @@ export type Database = {
           restaurant_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "integration_events_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
           {
             foreignKeyName: "integration_events_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -1890,6 +1988,13 @@ export type Database = {
             foreignKeyName: "menu_items_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "menu_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -1939,6 +2044,13 @@ export type Database = {
           status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "menu_scrape_runs_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
           {
             foreignKeyName: "menu_scrape_runs_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -2057,6 +2169,13 @@ export type Database = {
             foreignKeyName: "newsletter_placements_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "newsletter_placements_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -2155,6 +2274,13 @@ export type Database = {
             foreignKeyName: "notification_queue_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "notification_queue_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -2199,6 +2325,13 @@ export type Database = {
             foreignKeyName: "opening_hours_exceptions_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "opening_hours_exceptions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -2228,6 +2361,192 @@ export type Database = {
           id?: number
           oude_waarde?: string | null
           soort?: string
+        }
+        Relationships: []
+      }
+      outreach_messages: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          provider_id: string | null
+          restaurant_id: string
+          segment: string
+          sent_at: string | null
+          status: string
+          subject: string
+          to_email: string
+          wave: number
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          provider_id?: string | null
+          restaurant_id: string
+          segment: string
+          sent_at?: string | null
+          status?: string
+          subject: string
+          to_email: string
+          wave: number
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          provider_id?: string | null
+          restaurant_id?: string
+          segment?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          to_email?: string
+          wave?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_messages_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "outreach_messages_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outreach_replies: {
+        Row: {
+          aanbevolen_actie: string | null
+          answer_text: string | null
+          answered_at: string | null
+          attachments: Json
+          body_text: string | null
+          categorie: string | null
+          classified_at: string | null
+          classify_error: string | null
+          concept_antwoord: string | null
+          deal_kans: number | null
+          from_email: string
+          from_name: string | null
+          id: string
+          message_id: string | null
+          prioriteit: string | null
+          provider_email_id: string | null
+          received_at: string
+          restaurant_id: string | null
+          samenvatting: string | null
+          status: string
+          subject: string | null
+        }
+        Insert: {
+          aanbevolen_actie?: string | null
+          answer_text?: string | null
+          answered_at?: string | null
+          attachments?: Json
+          body_text?: string | null
+          categorie?: string | null
+          classified_at?: string | null
+          classify_error?: string | null
+          concept_antwoord?: string | null
+          deal_kans?: number | null
+          from_email: string
+          from_name?: string | null
+          id?: string
+          message_id?: string | null
+          prioriteit?: string | null
+          provider_email_id?: string | null
+          received_at?: string
+          restaurant_id?: string | null
+          samenvatting?: string | null
+          status?: string
+          subject?: string | null
+        }
+        Update: {
+          aanbevolen_actie?: string | null
+          answer_text?: string | null
+          answered_at?: string | null
+          attachments?: Json
+          body_text?: string | null
+          categorie?: string | null
+          classified_at?: string | null
+          classify_error?: string | null
+          concept_antwoord?: string | null
+          deal_kans?: number | null
+          from_email?: string
+          from_name?: string | null
+          id?: string
+          message_id?: string | null
+          prioriteit?: string | null
+          provider_email_id?: string | null
+          received_at?: string
+          restaurant_id?: string | null
+          samenvatting?: string | null
+          status?: string
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_replies_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "outreach_replies_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outreach_settings: {
+        Row: {
+          batch_size: number
+          daily_cap: number
+          enabled: boolean
+          flyer_checked_at: string | null
+          flyer_mode: string
+          flyer_warning: string | null
+          id: boolean
+          menu_minimum: number
+          skip_natural_persons: boolean
+          updated_at: string
+          wave: number
+        }
+        Insert: {
+          batch_size?: number
+          daily_cap?: number
+          enabled?: boolean
+          flyer_checked_at?: string | null
+          flyer_mode?: string
+          flyer_warning?: string | null
+          id?: boolean
+          menu_minimum?: number
+          skip_natural_persons?: boolean
+          updated_at?: string
+          wave?: number
+        }
+        Update: {
+          batch_size?: number
+          daily_cap?: number
+          enabled?: boolean
+          flyer_checked_at?: string | null
+          flyer_mode?: string
+          flyer_warning?: string | null
+          id?: boolean
+          menu_minimum?: number
+          skip_natural_persons?: boolean
+          updated_at?: string
+          wave?: number
         }
         Relationships: []
       }
@@ -2263,6 +2582,13 @@ export type Database = {
           week_start?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "owner_anomaly_alerts_log_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
           {
             foreignKeyName: "owner_anomaly_alerts_log_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -2461,6 +2787,13 @@ export type Database = {
             foreignKeyName: "owner_weekly_recommendations_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "owner_weekly_recommendations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -2522,6 +2855,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "package_orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
           {
             foreignKeyName: "package_orders_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -2605,6 +2945,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "presale_targets_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
           {
             foreignKeyName: "presale_targets_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -2859,6 +3206,13 @@ export type Database = {
             foreignKeyName: "reservation_funnel_daily_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "reservation_funnel_daily_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -2890,6 +3244,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "reservation_intents_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
           {
             foreignKeyName: "reservation_intents_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -2958,6 +3319,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "reservations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
           {
             foreignKeyName: "reservations_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -3126,6 +3494,13 @@ export type Database = {
             foreignKeyName: "restaurant_claims_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "restaurant_claims_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -3202,6 +3577,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "restaurant_contacts_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
           {
             foreignKeyName: "restaurant_contacts_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -3331,6 +3713,13 @@ export type Database = {
             foreignKeyName: "restaurant_deals_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "restaurant_deals_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -3450,6 +3839,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "seo_page_kandidaten"
             referencedColumns: ["dish_id"]
+          },
+          {
+            foreignKeyName: "restaurant_dishes_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
           },
           {
             foreignKeyName: "restaurant_dishes_restaurant_id_fkey"
@@ -4398,6 +4794,13 @@ export type Database = {
             foreignKeyName: "restaurant_events_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "restaurant_events_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -4444,6 +4847,13 @@ export type Database = {
           toegepast_op?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "restaurant_geo_pdok_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
           {
             foreignKeyName: "restaurant_geo_pdok_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -4510,6 +4920,13 @@ export type Database = {
             foreignKeyName: "restaurant_integrations_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "restaurant_integrations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -4551,6 +4968,13 @@ export type Database = {
             foreignKeyName: "restaurant_managers_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "restaurant_managers_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -4588,6 +5012,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "restaurant_menus_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
           {
             foreignKeyName: "restaurant_menus_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -4669,6 +5100,13 @@ export type Database = {
             foreignKeyName: "restaurant_optout_requests_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "restaurant_optout_requests_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -4716,6 +5154,13 @@ export type Database = {
             foreignKeyName: "restaurant_pending_edits_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "restaurant_pending_edits_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -4748,6 +5193,13 @@ export type Database = {
             foreignKeyName: "restaurant_position_history_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "restaurant_position_history_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -4776,6 +5228,13 @@ export type Database = {
           restaurant_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "restaurant_stats_daily_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
           {
             foreignKeyName: "restaurant_stats_daily_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -4887,6 +5346,13 @@ export type Database = {
             foreignKeyName: "restaurant_tag_requests_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "restaurant_tag_requests_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -4930,6 +5396,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "restaurant_tag_subscriptions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
           {
             foreignKeyName: "restaurant_tag_subscriptions_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -5010,6 +5483,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "restaurant_translations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
           {
             foreignKeyName: "restaurant_translations_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -5806,6 +6286,13 @@ export type Database = {
             foreignKeyName: "reviews_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "reviews_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -5858,6 +6345,13 @@ export type Database = {
           website_url?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "scrape_queue_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
           {
             foreignKeyName: "scrape_queue_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -6065,6 +6559,13 @@ export type Database = {
             foreignKeyName: "shared_list_restaurants_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "shared_list_restaurants_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -6102,6 +6603,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "shared_lists"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shared_list_votes_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
           },
           {
             foreignKeyName: "shared_list_votes_restaurant_id_fkey"
@@ -6268,6 +6776,13 @@ export type Database = {
             foreignKeyName: "sponsored_purchases_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "sponsored_purchases_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -6388,6 +6903,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "tag_confirmations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
           {
             foreignKeyName: "tag_confirmations_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -6519,6 +7041,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "user_lists"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_list_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
           },
           {
             foreignKeyName: "user_list_items_restaurant_id_fkey"
@@ -6776,6 +7305,13 @@ export type Database = {
             foreignKeyName: "verification_credits_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "verification_credits_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -6828,6 +7364,13 @@ export type Database = {
           website?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "website_check_results_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
           {
             foreignKeyName: "website_check_results_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -6887,6 +7430,13 @@ export type Database = {
           year?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "yearly_wrapped_top_restaurant_id_fkey"
+            columns: ["top_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
           {
             foreignKeyName: "yearly_wrapped_top_restaurant_id_fkey"
             columns: ["top_restaurant_id"]
@@ -6969,6 +7519,13 @@ export type Database = {
             foreignKeyName: "featured_subscriptions_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "featured_subscriptions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -6980,6 +7537,38 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      outreach_targets: {
+        Row: {
+          address: string | null
+          afgemeld_op: string | null
+          claim_status: string | null
+          contact_status: string | null
+          email: string | null
+          email_bron: string | null
+          email_kwaliteit: string | null
+          facebook: string | null
+          goedgekeurde_gerechten: number | null
+          hidden_at: string | null
+          instagram: string | null
+          is_active: boolean | null
+          kvk: string | null
+          laatst_gemaild_op: string | null
+          mail_golf: number | null
+          mail_status: string | null
+          menu_minimum: number | null
+          name: string | null
+          phone: string | null
+          rechtsvorm: string | null
+          restaurant_id: string | null
+          segment: string | null
+          slug: string | null
+          stad: string | null
+          telefoon_site: string | null
+          verborgen_reden: string | null
+          website_url: string | null
+        }
+        Relationships: []
       }
       public_profiles: {
         Row: {
@@ -7042,6 +7631,13 @@ export type Database = {
             foreignKeyName: "restaurant_dishes_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "restaurant_dishes_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -7058,6 +7654,13 @@ export type Database = {
           total_votes: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "tag_confirmations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
           {
             foreignKeyName: "tag_confirmations_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -7119,6 +7722,13 @@ export type Database = {
             foreignKeyName: "sponsored_purchases_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "sponsored_purchases_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -7166,6 +7776,17 @@ export type Database = {
           dish_name: string
           dish_slug: string
           restaurant_count: number
+        }[]
+      }
+      claimable_restaurant: {
+        Args: { p_slug: string }
+        Returns: {
+          id: string
+          is_active: boolean
+          menu_count: number
+          menu_minimum: number
+          name: string
+          slug: string
         }[]
       }
       clean_reservation_config: { Args: { p_config: Json }; Returns: Json }
@@ -7329,6 +7950,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      hidden_for_menu: { Args: { p_restaurant_id: string }; Returns: boolean }
       is_in_cooling_off: {
         Args: { p_restaurant_id: string; p_slot_id: string }
         Returns: boolean
@@ -7362,6 +7984,8 @@ export type Database = {
         }
         Returns: undefined
       }
+      menu_dish_count: { Args: { p_restaurant_id: string }; Returns: number }
+      outreach_unsubscribe: { Args: { p_token: string }; Returns: string }
       owner_analytics_allowed: {
         Args: { p_restaurant_id: string }
         Returns: boolean
@@ -7729,6 +8353,7 @@ export type Database = {
       }
       update_user_badges: { Args: { p_user_id: string }; Returns: undefined }
       verify_cron_secret: { Args: { p_secret: string }; Returns: boolean }
+      visibility_menu_minimum: { Args: never; Returns: number }
     }
     Enums: {
       app_role: "user" | "owner" | "admin" | "moderator"
