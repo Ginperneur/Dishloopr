@@ -306,7 +306,7 @@ export default function OwnerDashboard() {
     const packageCheckout = searchParams.get('package_checkout');
     if (packageCheckout || searchParams.get('section') === 'promotions') {
       if (packageCheckout === 'success') {
-        toast.success('Betaling geregeld', { description: 'Je pakket staat hieronder bij Promoties. Founding Partner betaal je pas vanaf de launch.', duration: 10000 });
+        toast.success('Betaling geregeld', { description: 'Je pakket staat hieronder bij Promoties. Je betaalt pas vanaf de soft launch op 1 december.', duration: 10000 });
       }
       setActiveTab('promotions');
       window.history.replaceState({}, '', '/owner-dashboard');

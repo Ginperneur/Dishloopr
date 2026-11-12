@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local debug output (curl dumps, test prints) and Supabase CLI temp files
+.debug/
+supabase/.temp/

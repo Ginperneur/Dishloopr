@@ -15,12 +15,13 @@ const OnboardingDialog = lazy(() => import("@/components/onboarding/OnboardingDi
 import { CookieConsent } from "@/components/legal/CookieConsent";
 import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 import { RestaurantMetricsObserver } from '@/components/analytics/RestaurantMetricsObserver';
+import { NativeBridge } from '@/components/native/NativeBridge';
 
-// Eagerly load critical routes
+// Eagerly load the landing route only; search loads on first use.
 import Index from "./pages/Index";
-import SearchPage from "./pages/SearchPage";
 
 // Lazy load all other routes
+const SearchPage = lazy(() => import("./pages/SearchPage"));
 const RestaurantPage = lazy(() => import("./pages/RestaurantPage"));
 const RestaurantOptoutPage = lazy(() => import("./pages/RestaurantOptoutPage"));
 const PackagesPage = lazy(() => import("./pages/PackagesPage"));
@@ -104,6 +105,7 @@ const App = () => (
               <Sonner />
               <BrowserRouter>
                 <RestaurantMetricsObserver />
+                <NativeBridge />
                 <Suspense fallback={<PageLoader />}>
                   <CookieConsent />
                   <AfterIdle><OnboardingDialog /></AfterIdle>

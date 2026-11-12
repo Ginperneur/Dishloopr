@@ -21,6 +21,12 @@ import { useLaunchDate } from '@/hooks/useLaunchDate';
 
 type PackageOption = 'founding_month' | 'founding_year' | 'menu_once' | 'menu_month';
 
+// Founding Partner-actie: wie Uitgelicht koopt tussen de soft launch (1 dec 2026)
+// en dit einde van de actie wordt Founding Partner. Zelfde datum als
+// create-package-checkout's FOUNDING_WINDOW_END, hier alleen voor de copy.
+const FOUNDING_WINDOW_END = new Date('2027-01-05T23:59:59+01:00');
+function foundingWindowOpen() { return new Date() <= FOUNDING_WINDOW_END; }
+
 function track(pkg: string) { sendAnalyticsEvent('click_package', { package: pkg }); }
 
 function Features({ items }: { items: string[] }) {
@@ -121,7 +127,7 @@ export default function PackagesPage() {
 
   return (
     <Layout>
-      <SEOHead title="Pakketten voor restaurants | Dishloopr" description="Gratis claimen, Founding Partner, Menuservice, Evenementen en Pro: kies het pakket dat bij je restaurant past." />
+      <SEOHead title="Pakketten voor restaurants | Dishloopr" description="Gratis claimen, Uitgelicht, Menuservice, Evenementen en Pro: kies het pakket dat bij je restaurant past." />
       <div className="container py-10 space-y-8">
         <div className="max-w-2xl">
           <h1 className="text-3xl md:text-4xl font-bold">Pakketten</h1>
@@ -137,12 +143,25 @@ export default function PackagesPage() {
           </div>
 
           <div className="flex flex-col gap-4 rounded-xl border-2 border-primary bg-card p-6">
-            <div className="flex items-center justify-between gap-2"><h2 className="text-xl font-semibold">Founding Partner</h2><Badge>Founding Partner</Badge></div>
-            <Price main="€59 per maand" sub="of €590 per jaar" was="Normaal €99 per maand" />
-            <p className="rounded-lg bg-primary/10 p-3 text-sm"><span className="font-semibold">Je bespaart €480 per jaar</span>, of €598 per jaar met het jaarabonnement. Dat is bijna de helft.</p>
-            <p className="text-sm text-muted-foreground">Vaste prijs zolang je klant blijft, dus die besparing krijg je elk jaar opnieuw. Minimale looptijd 6 maanden.</p>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-xl font-semibold">Uitgelicht</h2>
+              {foundingWindowOpen() && <Badge>Wordt Founding Partner</Badge>}
+            </div>
+            {foundingWindowOpen() ? (
+              <Price main="€59 per maand" sub="of €590 per jaar" was="Normaal €99 per maand" />
+            ) : (
+              <Price main="€99 per maand" sub="of €990 per jaar" />
+            )}
+            {foundingWindowOpen() && (
+              <>
+                <p className="rounded-lg bg-primary/10 p-3 text-sm">
+                  <span className="font-semibold">Dishloopr heeft op 1 december een soft launch.</span> Koop je Uitgelicht tussen 1 december 2026 en 5 januari 2027? Dan word je Founding Partner: <span className="font-semibold">je bespaart €480 per jaar</span> (of €598 per jaar met het jaarabonnement) tot en met 31 december 2027.
+                </p>
+                <p className="text-sm text-muted-foreground">Na 31 december 2027 geldt de normale prijs, maar je Founding Partner-badge blijft voor altijd op je pagina staan, ook als je dan stopt met betalen. Minimale looptijd 6 maanden.</p>
+              </>
+            )}
             <Features items={['Uitgelichte plek op 1 gerechtpagina in je stad', 'Bovenaan de pagina in het blok "Uitgelicht"', 'Maximaal 5 per gerechtpagina']} />
-            <p className="text-sm">Je betaalt pas vanaf de launch op {launch.label}. Gaat de launch niet door, dan betaal je niets.</p>
+            <p className="text-sm">Je betaalt pas vanaf de soft launch op {launch.label}. Gaat de launch niet door, dan betaal je niets.</p>
             <div className="grid grid-cols-2 gap-2">
               {(['month', 'year'] as const).map(p => {
                 const label = p === 'month' ? 'Per maand' : 'Per jaar';
@@ -236,7 +255,7 @@ export default function PackagesPage() {
                 onClick={() => founding && startPackage(founding === 'month' ? 'founding_month' : 'founding_year', pageSlug)}>
                 {busy ? 'Even geduld…' : 'Verder naar betalen'}
               </Button>
-              <p className="text-xs text-muted-foreground">Je betaalt pas vanaf de launch op {launch.label}.</p>
+              <p className="text-xs text-muted-foreground">Je betaalt pas vanaf de soft launch op {launch.label}.</p>
             </div>
           )}
         </DialogContent>
