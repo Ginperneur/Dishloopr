@@ -58,7 +58,7 @@ const freeBullets = [
 ];
 
 const paidBullets = [
-  "<b>Uitgelicht</b>: een vaste plek bovenaan bij jouw gerecht in jouw stad, met maximaal 5 restaurants per gerecht per stad. Stap je in tussen 1 december en 5 januari, dan word je Founding Partner: je betaalt €59 per maand in plaats van €99 (of €590 per jaar in plaats van €990), tot en met 31 december 2027. Je Founding Partner badge blijft voor altijd op je pagina staan.",
+  "<b>Uitgelicht</b>: een vaste plek bovenaan bij jouw gerecht in jouw stad, met maximaal 5 restaurants per gerecht per stad. Stap je nu of uiterlijk 5 januari in, dan word je Founding Partner: je betaalt €59 per maand in plaats van €99 (of €590 per jaar in plaats van €990), tot en met 31 december 2027. Je plek staat direct live en je Founding Partner badge blijft voor altijd op je pagina staan.",
   "<b>Owner Pro</b> (€29 per maand): zie welke zoektermen gasten naar jou brengen, hoeveel mensen bellen, reserveren of je website bezoeken, en hoe je het doet ten opzichte van de buurt. Met een wekelijkse tip op basis van wat er in jouw stad gezocht wordt.",
   "<b>Specials en evenementen</b> (€5 per maand per evenement): zet je ladies night, pubquiz of wijnproeverij op Dishloopr en op je eigen pagina.",
 ];
