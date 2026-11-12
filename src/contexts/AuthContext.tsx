@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { publicOrigin } from '@/lib/native';
+import { isNativeApp, publicOrigin } from '@/lib/native';
 
 const REMEMBER_ME_KEY = 'auth-remember-me';
 
@@ -150,6 +150,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem(REMEMBER_ME_KEY);
       sessionStorage.removeItem('auth-session-active');
     } catch { /* ignore */ }
+    // Native app: drop this device's push token while still signed in (RLS needs the session).
+    if (isNativeApp()) {
+      await import('@/lib/nativePush').then((m) => m.unregisterPush()).catch(() => {});
+    }
     await supabase.auth.signOut();
   };
 
