@@ -169,6 +169,13 @@
       "when": 1794473959437,
       "tag": "0023_create_push_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794502234794,
+      "tag": "0024_register_push_token_function",
+      "breakpoints": true
     }
   ]
 }

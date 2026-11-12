@@ -7490,6 +7490,10 @@ export type Database = {
         Returns: undefined
       }
       purge_old_integration_events: { Args: never; Returns: number }
+      register_push_token: {
+        Args: { p_platform: string; p_token: string }
+        Returns: undefined
+      }
       request_restaurant_optout: {
         Args: {
           p_email: string
