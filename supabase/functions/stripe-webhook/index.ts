@@ -45,7 +45,9 @@ serve(async (req) => {
     }
 
     try {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      // Deno only has async (SubtleCrypto) HMAC: the sync constructEvent throws on every
+      // request, which made Stripe see all live webhooks as failed.
+      event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret, undefined, Stripe.createSubtleCryptoProvider());
       logStep("Webhook signature verified");
     } catch (err) {
       logStep("Webhook signature verification failed", { error: String(err) });
