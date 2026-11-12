@@ -1645,6 +1645,53 @@ export type Database = {
           },
         ]
       }
+      integration_events: {
+        Row: {
+          attempts: number
+          error_code: string | null
+          event_id: string
+          event_type: string
+          id: string
+          processed_at: string | null
+          processing_status: string
+          provider: string
+          received_at: string
+          restaurant_id: string | null
+        }
+        Insert: {
+          attempts?: number
+          error_code?: string | null
+          event_id: string
+          event_type: string
+          id?: string
+          processed_at?: string | null
+          processing_status?: string
+          provider: string
+          received_at?: string
+          restaurant_id?: string | null
+        }
+        Update: {
+          attempts?: number
+          error_code?: string | null
+          event_id?: string
+          event_type?: string
+          id?: string
+          processed_at?: string | null
+          processing_status?: string
+          provider?: string
+          received_at?: string
+          restaurant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_events_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       internal_feedback: {
         Row: {
           category: string | null
@@ -2743,6 +2790,38 @@ export type Database = {
         }
         Relationships: []
       }
+      reservation_funnel_daily: {
+        Row: {
+          context: string
+          dag: string
+          n: number
+          restaurant_id: string
+          stage: string
+        }
+        Insert: {
+          context?: string
+          dag: string
+          n?: number
+          restaurant_id: string
+          stage: string
+        }
+        Update: {
+          context?: string
+          dag?: string
+          n?: number
+          restaurant_id?: string
+          stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservation_funnel_daily_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reservation_intents: {
         Row: {
           clicked_at: string
@@ -2771,6 +2850,74 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "reservation_intents_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reservations: {
+        Row: {
+          campaign_id: string | null
+          created_at: string
+          dish_context: string | null
+          error_code: string | null
+          evidence: string | null
+          external_reservation_id: string | null
+          id: string
+          idempotency_key: string
+          manage_token_hash: string | null
+          party_size: number
+          provider: string
+          provider_updated_at: string | null
+          restaurant_id: string
+          source: string
+          starts_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          created_at?: string
+          dish_context?: string | null
+          error_code?: string | null
+          evidence?: string | null
+          external_reservation_id?: string | null
+          id?: string
+          idempotency_key: string
+          manage_token_hash?: string | null
+          party_size: number
+          provider: string
+          provider_updated_at?: string | null
+          restaurant_id: string
+          source?: string
+          starts_at: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string
+          dish_context?: string | null
+          error_code?: string | null
+          evidence?: string | null
+          external_reservation_id?: string | null
+          id?: string
+          idempotency_key?: string
+          manage_token_hash?: string | null
+          party_size?: number
+          provider?: string
+          provider_updated_at?: string | null
+          restaurant_id?: string
+          source?: string
+          starts_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservations_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
@@ -4259,6 +4406,68 @@ export type Database = {
             foreignKeyName: "restaurant_geo_pdok_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurant_integrations: {
+        Row: {
+          config: Json
+          created_at: string
+          enabled: boolean
+          external_restaurant_id: string
+          id: string
+          last_error_at: string | null
+          last_error_code: string | null
+          last_synced_at: string | null
+          method: string
+          provider: string
+          restaurant_id: string
+          status: string
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          enabled?: boolean
+          external_restaurant_id: string
+          id?: string
+          last_error_at?: string | null
+          last_error_code?: string | null
+          last_synced_at?: string | null
+          method?: string
+          provider: string
+          restaurant_id: string
+          status?: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          enabled?: boolean
+          external_restaurant_id?: string
+          id?: string
+          last_error_at?: string | null
+          last_error_code?: string | null
+          last_synced_at?: string | null
+          method?: string
+          provider?: string
+          restaurant_id?: string
+          status?: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_integrations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -6894,6 +7103,10 @@ export type Database = {
         Returns: number
       }
       can_create_claim: { Args: { _user_id: string }; Returns: boolean }
+      can_manage_reservation_integration: {
+        Args: { p_restaurant_id: string }
+        Returns: boolean
+      }
       check_and_log_rate_limit: {
         Args: {
           p_function: string
@@ -6913,6 +7126,7 @@ export type Database = {
           restaurant_count: number
         }[]
       }
+      clean_reservation_config: { Args: { p_config: Json }; Returns: Json }
       cleanup_discovery_duplicates: { Args: { p_rules?: Json }; Returns: Json }
       cleanup_rate_limit_log: { Args: never; Returns: number }
       clear_expired_verification_codes: { Args: never; Returns: undefined }
@@ -6920,12 +7134,42 @@ export type Database = {
         Args: { _restaurant_id: string }
         Returns: undefined
       }
+      confirm_reservation_integration: {
+        Args: { p_provider: string; p_restaurant_id: string }
+        Returns: {
+          config: Json
+          created_at: string
+          enabled: boolean
+          external_restaurant_id: string
+          id: string
+          last_error_at: string | null
+          last_error_code: string | null
+          last_synced_at: string | null
+          method: string
+          provider: string
+          restaurant_id: string
+          status: string
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "restaurant_integrations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_biweekly_newsletter_draft: { Args: never; Returns: string }
       deduplicate_dishes: { Args: never; Returns: Json }
       deduplicate_restaurant_dishes: { Args: never; Returns: Json }
       delete_restaurant_event: {
         Args: { p_event_id: string }
         Returns: undefined
+      }
+      disconnect_reservation_integration: {
+        Args: { p_provider: string; p_restaurant_id: string }
+        Returns: boolean
       }
       dl_norm: { Args: { t: string }; Returns: string }
       founding_partner_live: { Args: { p_status: string }; Returns: boolean }
@@ -7189,10 +7433,21 @@ export type Database = {
           url: string
         }[]
       }
+      public_reservation_options: {
+        Args: { p_restaurant_id: string }
+        Returns: {
+          external_restaurant_id: string
+          lang: string
+          method: string
+          provider: string
+          timezone: string
+        }[]
+      }
       publish_restaurant_menu: {
         Args: { p_restaurant_id: string }
         Returns: undefined
       }
+      purge_old_integration_events: { Args: never; Returns: number }
       request_restaurant_optout: {
         Args: {
           p_email: string
@@ -7206,6 +7461,14 @@ export type Database = {
         Returns: string
       }
       rescan_discovery_duplicates: { Args: { p_rules?: Json }; Returns: Json }
+      reservation_stats_summary: {
+        Args: { p_days?: number; p_restaurant_id: string }
+        Returns: {
+          context: string
+          metric: string
+          n: number
+        }[]
+      }
       restaurant_event_visible: {
         Args: {
           p_end_date: string
@@ -7238,6 +7501,38 @@ export type Database = {
           metric: string
           totaal: number
         }[]
+      }
+      save_reservation_integration: {
+        Args: {
+          p_config?: Json
+          p_external_id: string
+          p_method?: string
+          p_provider: string
+          p_restaurant_id: string
+        }
+        Returns: {
+          config: Json
+          created_at: string
+          enabled: boolean
+          external_restaurant_id: string
+          id: string
+          last_error_at: string | null
+          last_error_code: string | null
+          last_synced_at: string | null
+          method: string
+          provider: string
+          restaurant_id: string
+          status: string
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "restaurant_integrations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       save_restaurant_event: {
         Args: {
@@ -7333,6 +7628,36 @@ export type Database = {
           restaurant_count: number
         }[]
       }
+      set_reservation_integration_enabled: {
+        Args: {
+          p_enabled: boolean
+          p_provider: string
+          p_restaurant_id: string
+        }
+        Returns: {
+          config: Json
+          created_at: string
+          enabled: boolean
+          external_restaurant_id: string
+          id: string
+          last_error_at: string | null
+          last_error_code: string | null
+          last_synced_at: string | null
+          method: string
+          provider: string
+          restaurant_id: string
+          status: string
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "restaurant_integrations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       set_restaurant_event_active: {
         Args: { p_active: boolean; p_event_id: string }
         Returns: undefined
@@ -7350,6 +7675,7 @@ export type Database = {
       }
       track_event_metrics: { Args: { p_items: Json }; Returns: number }
       track_founding_metrics: { Args: { p_items: Json }; Returns: number }
+      track_reservation_funnel: { Args: { p_items: Json }; Returns: number }
       track_restaurant_metrics: { Args: { p_items: Json }; Returns: number }
       unsubscribe_restaurant_contact: {
         Args: { p_token: string }
