@@ -162,6 +162,13 @@
       "when": 1794473842584,
       "tag": "0022_dishes_dish_group_index",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1794473959437,
+      "tag": "0023_create_push_tokens",
+      "breakpoints": true
     }
   ]
 }
