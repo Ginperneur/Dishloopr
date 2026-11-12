@@ -10,6 +10,8 @@ const corsHeaders = {
 
 // The defaults are the live prices. In Stripe test mode set STRIPE_PRO_MONTH_PRICE_ID and
 // STRIPE_PRO_YEAR_PRICE_ID to the test prices, which have other IDs.
+// Recognise Owner Pro by subscription metadata (inline prices have no fixed id); the price
+// ids remain a fallback for subscriptions created before the metadata was set.
 const PRICE_MONTHLY = Deno.env.get("STRIPE_PRO_MONTH_PRICE_ID") || "price_1TdPdO3EXkDnjHC3dK2LdvFT";
 const PRICE_YEARLY = Deno.env.get("STRIPE_PRO_YEAR_PRICE_ID") || "price_1TdPeD3EXkDnjHC3J5T79Qe7";
 
@@ -62,14 +64,14 @@ serve(async (req) => {
         const priceId = s.items.data[0]?.price?.id;
         return (
           (s.status === "active" || s.status === "trialing") &&
-          (priceId === PRICE_MONTHLY || priceId === PRICE_YEARLY)
+          (s.metadata?.type === "owner_pro" || priceId === PRICE_MONTHLY || priceId === PRICE_YEARLY)
         );
       });
       if (activeSub) {
         isActive = true;
         stripeSubscriptionId = activeSub.id;
         stripePriceId = activeSub.items.data[0].price.id;
-        interval = stripePriceId === PRICE_YEARLY ? "yearly" : "monthly";
+        interval = activeSub.items.data[0].price?.recurring?.interval === "year" || stripePriceId === PRICE_YEARLY ? "yearly" : "monthly";
         periodEnd = periodEndIso(activeSub);
         cancelAtPeriodEnd = activeSub.cancel_at_period_end;
       }

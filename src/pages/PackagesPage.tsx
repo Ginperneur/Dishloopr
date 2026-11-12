@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Check } from 'lucide-react';
-import { z } from 'zod';
+import { BarChart3, BookOpen, CalendarDays, Check, Crown, Store } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,24 +27,68 @@ function foundingWindowOpen() { return new Date() <= FOUNDING_WINDOW_END; }
 
 function track(pkg: string) { sendAnalyticsEvent('click_package', { package: pkg }); }
 
-function Features({ items }: { items: string[] }) {
+type Billing = 'month' | 'year';
+
+function Features({ items, inverted }: { items: string[]; inverted?: boolean }) {
   return (
-    <ul className="space-y-2 text-sm flex-1">
-      {items.map(i => <li key={i} className="flex gap-2"><Check className="h-4 w-4 mt-0.5 text-primary shrink-0" />{i}</li>)}
+    <ul className="space-y-3 text-sm flex-1">
+      {items.map(i => (
+        <li key={i} className="flex gap-2.5">
+          <Check className={`h-4 w-4 mt-0.5 shrink-0 ${inverted ? 'text-primary-foreground' : 'text-primary'}`} aria-hidden="true" />
+          <span>{i}</span>
+        </li>
+      ))}
     </ul>
   );
 }
 
-function Price({ main, sub, was }: { main: string; sub?: string; was?: string }) {
+/** Pantrics-style per-card switch; both labels are clickable and the switch is labelled for screen readers. */
+function BillingToggle({ value, onChange, left = 'Maandelijks', right = 'Jaarlijks', hint, inverted, id }: {
+  value: Billing; onChange: (v: Billing) => void; left?: string; right?: string; hint?: string; inverted?: boolean; id: string;
+}) {
+  const label = (active: boolean) => `text-sm font-medium transition-colors ${active ? '' : inverted ? 'text-primary-foreground/70' : 'text-muted-foreground'}`;
   return (
-    <div>
-      {was && <p className="text-sm text-muted-foreground line-through decoration-primary">{was}</p>}
-      <p className="text-3xl font-bold">{main}</p>
-      {sub && <p className="text-sm">{sub}</p>}
-      <p className="text-xs text-muted-foreground mt-1">Alle prijzen exclusief btw</p>
+    <div className="flex flex-wrap items-center gap-3">
+      <button type="button" className={`min-h-11 ${label(value === 'month')}`} onClick={() => onChange('month')}>{left}</button>
+      <Switch id={id} checked={value === 'year'} onCheckedChange={c => onChange(c ? 'year' : 'month')} aria-label={`${right} betalen`}
+        className={inverted ? 'data-[state=checked]:bg-primary-foreground/30 data-[state=unchecked]:bg-primary-foreground/20' : ''} />
+      <button type="button" className={`min-h-11 ${label(value === 'year')}`} onClick={() => onChange('year')}>{right}</button>
+      {hint && <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${inverted ? 'bg-primary-foreground/20' : 'bg-primary/15 text-primary'}`}>{hint}</span>}
     </div>
   );
 }
+
+function BigPrice({ amount, per, was, note, inverted }: { amount: string; per: string; was?: string; note?: string; inverted?: boolean }) {
+  return (
+    <div className="min-h-[104px]">
+      {was && <p className={`text-sm line-through ${inverted ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>{was}</p>}
+      <p className="flex items-baseline gap-1.5">
+        <span className="font-display text-5xl font-bold tracking-tight">{amount}</span>
+        <span className={`text-sm ${inverted ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>{per}</span>
+      </p>
+      {note && <p className={`mt-1 text-sm ${inverted ? 'text-primary-foreground/90' : 'text-muted-foreground'}`}>{note}</p>}
+    </div>
+  );
+}
+
+function Card({ highlight, badge, children }: { highlight?: boolean; badge?: string; children: React.ReactNode }) {
+  return (
+    <div className={`relative flex flex-col gap-6 rounded-3xl p-7 ${highlight
+      ? 'bg-gradient-to-br from-primary via-primary to-amber-500 text-primary-foreground shadow-xl shadow-primary/20 xl:-my-4 xl:py-11'
+      : 'border bg-card'}`}>
+      {badge && (
+        <span className="absolute -top-3 right-6 rounded-full bg-amber-300 px-3 py-1 text-xs font-bold uppercase tracking-wide text-amber-950 shadow">{badge}</span>
+      )}
+      {children}
+    </div>
+  );
+}
+
+const CardLabel = ({ icon: Icon, children }: { icon: typeof Check; children: React.ReactNode }) => (
+  <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.12em]"><Icon className="h-5 w-5" aria-hidden="true" />{children}</h2>
+);
+
+const euro = (n: number) => `€${n.toLocaleString('nl-NL', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
 
 export default function PackagesPage() {
   const [params] = useSearchParams();
@@ -75,7 +118,7 @@ export default function PackagesPage() {
     enabled: Boolean(restaurant?.slug),
   });
 
-  const [founding, setFounding] = useState<null | 'month' | 'year'>(null);
+  const [founding, setFounding] = useState<null | Billing>(null);
   const [pageSlug, setPageSlug] = useState('');
   const [busy, setBusy] = useState<PackageOption | null>(null);
 
@@ -110,109 +153,99 @@ export default function PackagesPage() {
 
   const { startCheckout: startPro, loading: proLoading } = useOwnerProCheckout();
 
-  const [email, setEmail] = useState(user?.email ?? '');
-  const [proMsg, setProMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const joinPro = async () => {
-    const parsed = z.string().trim().toLowerCase().email().max(255).safeParse(email);
-    if (!parsed.success) { setProMsg({ ok: false, text: 'Vul een geldig e-mailadres in.' }); return; }
-    track('pro_waitlist');
-    const { error } = await supabase.from('pro_waitlist').insert({ email: parsed.data, restaurant_id: restaurant?.id ?? null });
-    if (error && error.code !== '23505') { setProMsg({ ok: false, text: 'Aanmelden lukte niet. Probeer het later opnieuw.' }); return; }
-    setProMsg({ ok: true, text: error ? 'Je staat al op de lijst.' : 'Gelukt! We laten het je weten zodra Pro er is.' });
-  };
+  const [uitBilling, setUitBilling] = useState<Billing>('month');
+  const [proBilling, setProBilling] = useState<Billing>('month');
+  const [menuBilling, setMenuBilling] = useState<Billing>('month');
+  const promo = foundingWindowOpen();
+  const uit = promo
+    ? (uitBilling === 'month'
+      ? { amount: '€59', per: 'per maand', was: 'Normaal €99 per maand', note: 'Je bespaart €480 per jaar.' }
+      : { amount: '€590', per: 'per jaar', was: 'Normaal €990 per jaar', note: `Dat is ${euro(590 / 12)} per maand, je bespaart €400 per jaar.` })
+    : (uitBilling === 'month'
+      ? { amount: '€99', per: 'per maand', note: 'Of €990 per jaar.' }
+      : { amount: '€990', per: 'per jaar', note: `Dat is ${euro(990 / 12)} per maand.` });
+  const pro = proBilling === 'month'
+    ? { amount: `€${OWNER_PRO_PRICES.monthly.amount}`, per: 'per maand', note: `Of €${OWNER_PRO_PRICES.yearly.amount} per jaar, 2 maanden gratis.` }
+    : { amount: `€${OWNER_PRO_PRICES.yearly.amount}`, per: 'per jaar', was: `${euro(OWNER_PRO_PRICES.monthly.amount * 12)} per jaar`, note: `Dat is ${euro(OWNER_PRO_PRICES.yearly.amount / 12)} per maand, 2 maanden gratis.` };
+  const needLogin = () => toast.info('Log eerst in met je eigenaarsaccount.');
 
   const claimTo = restaurant ? `/claim/${restaurant.slug}` : '/claim';
 
   return (
     <Layout>
       <SEOHead title="Pakketten voor restaurants | Dishloopr" description="Gratis claimen, Uitgelicht, Menuservice, Evenementen en Pro: kies het pakket dat bij je restaurant past." />
-      <div className="container py-10 space-y-8">
-        <div className="max-w-2xl">
-          <h1 className="text-3xl md:text-4xl font-bold">Pakketten</h1>
-          <p className="text-muted-foreground mt-2">{restaurant ? `Voor ${restaurant.name}. ` : ''}Kies wat bij je restaurant past. Claimen is altijd gratis.</p>
-        </div>
+      <div className="container py-12 md:py-16 space-y-14">
+        <header className="mx-auto max-w-3xl text-center">
+          <h1 className="font-display text-4xl font-bold leading-[1.05] tracking-tight md:text-6xl">Begin gratis, groei wanneer jij wilt.</h1>
+          <p className="mt-4 text-lg text-muted-foreground">
+            {restaurant ? `Voor ${restaurant.name}. ` : ''}Claimen is altijd gratis. Geen verborgen kosten, alle prijzen exclusief btw.
+          </p>
+        </header>
 
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-          <div className="flex flex-col gap-4 rounded-xl border bg-card p-6">
-            <h2 className="text-xl font-semibold">Gratis</h2>
-            <Price main="€0" />
-            <Features items={['Je pagina claimen', 'Menukaart, openingstijden en foto\'s beheren', 'Basisstatistieken']} />
-            <Button asChild className="min-h-11 w-full"><Link to={claimTo} onClick={() => track('free')}>Claim gratis</Link></Button>
-          </div>
+        <div className="grid items-stretch gap-6 md:grid-cols-2 xl:grid-cols-4">
+          <Card>
+            <CardLabel icon={Store}>Gratis</CardLabel>
+            <BigPrice amount="€0" per="altijd" note="Je basisprofiel blijft gratis." />
+            <Features items={['Je pagina claimen', 'Menukaart, openingstijden en foto\'s beheren', 'Reageren op reviews', 'Basisstatistieken']} />
+            <Button asChild size="lg" className="min-h-12 w-full rounded-full"><Link to={claimTo} onClick={() => track('free')}>Begin gratis</Link></Button>
+          </Card>
 
-          <div className="flex flex-col gap-4 rounded-xl border-2 border-primary bg-card p-6">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="text-xl font-semibold">Uitgelicht</h2>
-              {foundingWindowOpen() && <Badge>Wordt Founding Partner</Badge>}
-            </div>
-            {foundingWindowOpen() ? (
-              <Price main="€59 per maand" sub="of €590 per jaar" was="Normaal €99 per maand" />
+          <Card highlight badge={promo ? 'Founding Partner actie' : 'Populair'}>
+            <CardLabel icon={Crown}>Uitgelicht</CardLabel>
+            <BillingToggle id="uit-billing" value={uitBilling} onChange={setUitBilling} hint={promo ? 'Tot 40% korting' : undefined} inverted />
+            <BigPrice {...uit} inverted />
+            <Features inverted items={[
+              'Vaste plek bovenaan je gerechtpagina in je stad',
+              'Maximaal 5 restaurants per gerechtpagina',
+              'Je plek staat direct live',
+              ...(promo ? ['Founding Partner badge voor altijd op je pagina', 'Actieprijs tot en met 31 december 2027'] : []),
+            ]} />
+            {promo && <p className="text-xs text-primary-foreground/85">Instappen kan tot en met 5 januari 2027. Minimale looptijd 6 maanden.</p>}
+            {CHECKOUT_ENABLED.packages ? (
+              <Button size="lg" variant="secondary" className="min-h-12 w-full rounded-full bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+                onClick={() => { setPageSlug(''); setFounding(uitBilling); }}>Kies Uitgelicht</Button>
             ) : (
-              <Price main="€99 per maand" sub="of €990 per jaar" />
+              <Button size="lg" disabled variant="secondary" className="min-h-12 w-full rounded-full">Binnenkort beschikbaar</Button>
             )}
-            {foundingWindowOpen() && (
-              <>
-                <p className="rounded-lg bg-primary/10 p-3 text-sm">
-                  <span className="font-semibold">Founding Partner actie, nu al open.</span> Koop je Uitgelicht nu of uiterlijk 5 januari 2027? Dan word je Founding Partner: <span className="font-semibold">je bespaart €480 per jaar</span> (of €400 met het jaarabonnement) tot en met 31 december 2027.
-                </p>
-                <p className="text-sm text-muted-foreground">Na 31 december 2027 geldt de normale prijs, maar je Founding Partner-badge blijft voor altijd op je pagina staan, ook als je dan stopt met betalen. Minimale looptijd 6 maanden.</p>
-              </>
-            )}
-            <Features items={['Uitgelichte plek op 1 gerechtpagina in je stad', 'Bovenaan de pagina in het blok "Uitgelicht"', 'Maximaal 5 per gerechtpagina']} />
-            <p className="text-sm">Je plek staat direct live en je betaalt vanaf de dag dat je afrekent.</p>
-            <div className="grid grid-cols-2 gap-2">
-              {(['month', 'year'] as const).map(p => {
-                const label = p === 'month' ? 'Per maand' : 'Per jaar';
-                return CHECKOUT_ENABLED.packages
-                  ? <Button key={p} className="min-h-11" onClick={() => { setPageSlug(''); setFounding(p); }}>{label}</Button>
-                  : <Button key={p} disabled variant="outline" className="min-h-11 h-auto whitespace-normal text-xs">{label}: binnenkort beschikbaar</Button>;
-              })}
-            </div>
-          </div>
+          </Card>
 
-          <div className="flex flex-col gap-4 rounded-xl border bg-card p-6">
-            <h2 className="text-xl font-semibold">Menuservice</h2>
-            <Price main="€79 eenmalig" sub="of €19 per maand" />
-            <Features items={['Je volledige menukaart online', 'Vertaald in het Engels, Duits en Frans', 'Als QR-menu', 'Voor je eigen website']} />
-            <div className="grid gap-2">
-              {(['menu_once', 'menu_month'] as const).map(option => {
-                const label = option === 'menu_once' ? 'Eenmalig' : 'Per maand';
-                return CHECKOUT_ENABLED.packages
-                  ? <Button key={option} variant={option === 'menu_once' ? 'default' : 'outline'} className="min-h-11 w-full" disabled={busy !== null} onClick={() => startPackage(option)}>{busy === option ? 'Even geduld…' : label}</Button>
-                  : <Button key={option} disabled variant="outline" className="min-h-11 h-auto w-full whitespace-normal text-xs">{label}: binnenkort beschikbaar</Button>;
-              })}
-            </div>
-          </div>
-
-          <div className={`flex flex-col gap-4 rounded-xl border p-6 ${CHECKOUT_ENABLED.pro ? 'bg-card' : 'bg-muted/40'}`}>
-            <div className="flex items-center justify-between gap-2"><h2 className="text-xl font-semibold">Owner Pro</h2>{!CHECKOUT_ENABLED.pro && <Badge variant="secondary">Binnenkort</Badge>}</div>
-            <Price main={`€${OWNER_PRO_PRICES.monthly.amount} per maand`} sub={`of €${OWNER_PRO_PRICES.yearly.amount} per jaar (${OWNER_PRO_PRICES.yearly.savingsLabel})`} />
+          <Card>
+            <CardLabel icon={BarChart3}>Owner Pro</CardLabel>
+            <BillingToggle id="pro-billing" value={proBilling} onChange={setProBilling} hint="2 maanden gratis" />
+            <BigPrice {...pro} />
             <Features items={['Conversiefunnel: weergaven, kliks en reserveringen', 'Zoektermen waarop gasten je vinden', 'Vergelijking met restaurants in je buurt', 'Hulp van AI bij het beantwoorden van reviews']} />
-            {CHECKOUT_ENABLED.pro ? (
-              <div className="grid grid-cols-2 gap-2">
-                <Button className="min-h-11" disabled={proLoading !== null} onClick={() => user ? startPro('monthly') : toast.info('Log eerst in met je eigenaarsaccount.')}>Per maand</Button>
-                <Button variant="outline" className="min-h-11" disabled={proLoading !== null} onClick={() => user ? startPro('yearly') : toast.info('Log eerst in met je eigenaarsaccount.')}>Per jaar</Button>
-              </div>
+            <Button size="lg" className="min-h-12 w-full rounded-full" disabled={!CHECKOUT_ENABLED.pro || proLoading !== null}
+              onClick={() => user ? startPro(proBilling === 'month' ? 'monthly' : 'yearly') : needLogin()}>
+              {proLoading ? 'Even geduld…' : 'Kies Owner Pro'}
+            </Button>
+          </Card>
+
+          <Card>
+            <CardLabel icon={BookOpen}>Menuservice</CardLabel>
+            <BillingToggle id="menu-billing" value={menuBilling} onChange={setMenuBilling} left="Per maand" right="Eenmalig" />
+            <BigPrice {...(menuBilling === 'month' ? { amount: '€19', per: 'per maand', note: 'Altijd actueel, wij houden hem bij.' } : { amount: '€79', per: 'eenmalig', note: 'Wij zetten je kaart één keer online.' })} />
+            <Features items={['Je volledige menukaart online', 'Vertaald in het Engels, Duits en Frans', 'Als QR-menu', 'Voor je eigen website']} />
+            {CHECKOUT_ENABLED.packages ? (
+              <Button size="lg" variant="outline" className="min-h-12 w-full rounded-full" disabled={busy !== null}
+                onClick={() => startPackage(menuBilling === 'month' ? 'menu_month' : 'menu_once')}>
+                {busy === 'menu_month' || busy === 'menu_once' ? 'Even geduld…' : 'Kies Menuservice'}
+              </Button>
             ) : (
-            <div className="space-y-2">
-              <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Je e-mailadres" aria-label="E-mailadres" aria-invalid={proMsg?.ok === false} />
-              <Button variant="outline" className="min-h-11 w-full" onClick={joinPro}>Houd me op de hoogte</Button>
-              {proMsg && <p className={`text-sm ${proMsg.ok ? 'text-primary' : 'text-destructive'}`}>{proMsg.text}</p>}
-            </div>
+              <Button size="lg" disabled variant="outline" className="min-h-12 w-full rounded-full">Binnenkort beschikbaar</Button>
             )}
-          </div>
+          </Card>
         </div>
 
-        <div className="flex flex-col gap-4 rounded-xl border bg-card p-6 md:flex-row md:items-center md:justify-between">
-          <div className="max-w-xl space-y-2">
+        <div className="flex flex-col gap-5 rounded-3xl border bg-card p-7 md:flex-row md:items-center md:justify-between">
+          <div className="max-w-xl space-y-3">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-xl font-semibold">Evenementen</h2>
+              <CardLabel icon={CalendarDays}>Specials en evenementen</CardLabel>
               {!CHECKOUT_ENABLED.event && <Badge variant="secondary">Online betalen binnenkort</Badge>}
             </div>
-            <Price main="€5 per maand" sub="per evenement, maandelijks opzegbaar" />
+            <p className="flex items-baseline gap-1.5"><span className="font-display text-4xl font-bold">€5</span><span className="text-sm text-muted-foreground">per maand per evenement, maandelijks opzegbaar</span></p>
             <Features items={['Je special of evenement op de evenementenpagina en op je restaurantpagina', 'Eenmalig op een datum of elke week terugkerend', 'Elke maand een mail met hoe vaak het in beeld was en is bekeken']} />
           </div>
-          <Button asChild variant="outline" className="min-h-11 w-full md:w-auto">
+          <Button asChild size="lg" variant="outline" className="min-h-12 w-full rounded-full md:w-auto">
             <Link to={user ? '/owner-dashboard?section=evenementen' : claimTo} onClick={() => track('event_promotion')}>
               {user ? 'Evenement toevoegen' : 'Claim eerst je restaurant'}
             </Link>
