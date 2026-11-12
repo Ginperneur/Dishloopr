@@ -17,12 +17,11 @@ import { toast } from 'sonner';
 import { CHECKOUT_ENABLED } from '@/lib/checkoutFlags';
 import { OWNER_PRO_PRICES } from '@/lib/proPricing';
 import { useOwnerProCheckout } from '@/hooks/useOwnerProCheckout';
-import { useLaunchDate } from '@/hooks/useLaunchDate';
 
 type PackageOption = 'founding_month' | 'founding_year' | 'menu_once' | 'menu_month';
 
-// Founding Partner-actie: wie Uitgelicht koopt tussen de soft launch (1 dec 2026)
-// en dit einde van de actie wordt Founding Partner. Zelfde datum als
+// Founding Partner-actie: wie Uitgelicht koopt van nu tot en met dit einde van
+// de actie wordt Founding Partner. Zelfde datum als
 // create-package-checkout's FOUNDING_WINDOW_END, hier alleen voor de copy.
 const FOUNDING_WINDOW_END = new Date('2027-01-05T23:59:59+01:00');
 function foundingWindowOpen() { return new Date() <= FOUNDING_WINDOW_END; }
@@ -91,7 +90,7 @@ export default function PackagesPage() {
   });
 
   // Founding Partner and Menuservice go through create-package-checkout, which
-  // checks verified ownership, the 5-per-page cap and starts billing at launch.
+  // checks verified ownership and the 5-per-page cap; payment is taken at checkout.
   const startPackage = async (option: PackageOption, page?: string) => {
     track(option);
     if (!restaurant) { toast.info('Claim eerst je restaurant of log in.'); return; }
@@ -110,7 +109,6 @@ export default function PackagesPage() {
   };
 
   const { startCheckout: startPro, loading: proLoading } = useOwnerProCheckout();
-  const launch = useLaunchDate();
 
   const [email, setEmail] = useState(user?.email ?? '');
   const [proMsg, setProMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -155,13 +153,13 @@ export default function PackagesPage() {
             {foundingWindowOpen() && (
               <>
                 <p className="rounded-lg bg-primary/10 p-3 text-sm">
-                  <span className="font-semibold">Dishloopr heeft op 1 december een soft launch.</span> Koop je Uitgelicht tussen 1 december 2026 en 5 januari 2027? Dan word je Founding Partner: <span className="font-semibold">je bespaart €480 per jaar</span> (of €598 per jaar met het jaarabonnement) tot en met 31 december 2027.
+                  <span className="font-semibold">Founding Partner actie, nu al open.</span> Koop je Uitgelicht nu of uiterlijk 5 januari 2027? Dan word je Founding Partner: <span className="font-semibold">je bespaart €480 per jaar</span> (of €400 met het jaarabonnement) tot en met 31 december 2027.
                 </p>
                 <p className="text-sm text-muted-foreground">Na 31 december 2027 geldt de normale prijs, maar je Founding Partner-badge blijft voor altijd op je pagina staan, ook als je dan stopt met betalen. Minimale looptijd 6 maanden.</p>
               </>
             )}
             <Features items={['Uitgelichte plek op 1 gerechtpagina in je stad', 'Bovenaan de pagina in het blok "Uitgelicht"', 'Maximaal 5 per gerechtpagina']} />
-            <p className="text-sm">Je betaalt pas vanaf de soft launch op {launch.label}. Gaat de launch niet door, dan betaal je niets.</p>
+            <p className="text-sm">Je plek staat direct live en je betaalt vanaf de dag dat je afrekent.</p>
             <div className="grid grid-cols-2 gap-2">
               {(['month', 'year'] as const).map(p => {
                 const label = p === 'month' ? 'Per maand' : 'Per jaar';
@@ -255,7 +253,7 @@ export default function PackagesPage() {
                 onClick={() => founding && startPackage(founding === 'month' ? 'founding_month' : 'founding_year', pageSlug)}>
                 {busy ? 'Even geduld…' : 'Verder naar betalen'}
               </Button>
-              <p className="text-xs text-muted-foreground">Je betaalt pas vanaf de soft launch op {launch.label}.</p>
+              <p className="text-xs text-muted-foreground">Je betaalt direct bij het afrekenen; je plek staat meteen live.</p>
             </div>
           )}
         </DialogContent>

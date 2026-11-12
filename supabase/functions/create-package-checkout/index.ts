@@ -1,6 +1,5 @@
 import { safeOrigin, serviceClient, getCaller, isAdmin } from "../_shared/auth.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
-import { launchAt } from "../_shared/launch.ts";
 import { billingParams } from "../_shared/billing.ts";
 
 const corsHeaders = {
@@ -14,10 +13,9 @@ const json = (body: unknown, status = 200) =>
 // Uitgelicht is charged at checkout, like Menuservice "once": the spot goes live right away,
 // so billing starts right away and the minimum term counts from the purchase date.
 const FOUNDING_PLACES_PER_PAGE = 5;
-const MIN_TRIAL_MS = 49 * 60 * 60 * 1000;
 
-// Founding Partner promo: anyone who buys Uitgelicht between the soft launch
-// (1 dec 2026) and this date keeps the discounted price AND the Founding
+// Founding Partner promo: anyone who buys Uitgelicht from now (sales open before
+// the 1 dec 2026 soft launch) through this date keeps the discounted price AND the Founding
 // Partner badge (forever, even if they later stop paying). After this date,
 // Uitgelicht is still for sale, just at the normal price and without the
 // Founding Partner status. The discounted price itself is only guaranteed
@@ -40,6 +38,7 @@ type Option = {
   plan: "month" | "year" | "once";
   cents: number;
   normalCents?: number; // prijs buiten het Founding Partner-venster (alleen voor het Uitgelicht-pakket)
+  normalPriceEnv?: string; // optionele vaste Stripe-prijs voor die normale prijs
   interval?: "month" | "year";
   name: string;
   priceEnv: string;
@@ -48,8 +47,8 @@ type Option = {
 // A STRIPE_*_PRICE_ID secret wins when set; otherwise the price is created inline,
 // so checkout works with only STRIPE_SECRET_KEY configured.
 const OPTIONS: Record<string, Option> = {
-  founding_month: { package: "founding_partner", plan: "month", cents: 5900, normalCents: 9900, interval: "month", name: "Uitgelicht (per maand)", priceEnv: "STRIPE_FOUNDING_MONTH_PRICE_ID" },
-  founding_year: { package: "founding_partner", plan: "year", cents: 59000, normalCents: 118800, interval: "year", name: "Uitgelicht (per jaar)", priceEnv: "STRIPE_FOUNDING_YEAR_PRICE_ID" },
+  founding_month: { package: "founding_partner", plan: "month", cents: 5900, normalCents: 9900, interval: "month", name: "Uitgelicht (per maand)", priceEnv: "STRIPE_FOUNDING_MONTH_PRICE_ID", normalPriceEnv: "STRIPE_UITGELICHT_MONTH_PRICE_ID" },
+  founding_year: { package: "founding_partner", plan: "year", cents: 59000, normalCents: 99000, interval: "year", name: "Uitgelicht (per jaar)", priceEnv: "STRIPE_FOUNDING_YEAR_PRICE_ID", normalPriceEnv: "STRIPE_UITGELICHT_YEAR_PRICE_ID" },
   menu_once: { package: "menu_service", plan: "once", cents: 7900, name: "Menuservice (eenmalig)", priceEnv: "STRIPE_MENU_ONCE_PRICE_ID" },
   menu_month: { package: "menu_service", plan: "month", cents: 1900, interval: "month", name: "Menuservice (per maand)", priceEnv: "STRIPE_MENU_MONTH_PRICE_ID" },
 };
@@ -106,7 +105,12 @@ Deno.serve(async (req) => {
       ? option.normalCents
       : option.cents;
 
-    const priceId = Deno.env.get(option.priceEnv);
+    // The STRIPE_FOUNDING_* price ids hold the €59/€590 promo price, so they may only be used
+    // inside the window; after it, a normal-price id (or the inline normal price) applies.
+    const usesNormalPrice = option.package === "founding_partner" && !isFoundingDeal;
+    const priceId = usesNormalPrice
+      ? (option.normalPriceEnv ? Deno.env.get(option.normalPriceEnv) : undefined)
+      : Deno.env.get(option.priceEnv);
     const lineItem = priceId
       ? { price: priceId, quantity: 1 }
       : {
@@ -132,11 +136,6 @@ Deno.serve(async (req) => {
         : {}),
     };
 
-    const launch = await launchAt(admin);
-    const trialEnd = option.package === "founding_partner" && launch.ms - Date.now() > MIN_TRIAL_MS
-      ? Math.floor(launch.ms / 1000)
-      : undefined;
-
     const origin = safeOrigin(req);
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -150,7 +149,7 @@ Deno.serve(async (req) => {
       }),
       metadata,
       ...(option.interval
-        ? { subscription_data: { metadata, ...(trialEnd ? { trial_end: trialEnd } : {}), description: `${option.name}: ${restaurant.name}`.slice(0, 500) } }
+        ? { subscription_data: { metadata, description: `${option.name}: ${restaurant.name}`.slice(0, 500) } }
         : { payment_intent_data: { metadata, description: `${option.name}: ${restaurant.name}`.slice(0, 500) } }),
       success_url: `${origin}/owner-dashboard?package_checkout=success`,
       cancel_url: `${origin}/voor-restaurants/pakketten?slug=${encodeURIComponent(restaurant.slug)}`,
