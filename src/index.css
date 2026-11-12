@@ -346,12 +346,17 @@
      * area WITHOUT changing the visual design.
      * Opt out per element with `data-no-hitbox` when needed.
      * ============================================================ */
-    button:not([data-no-hitbox]),
-    a[role="button"]:not([data-no-hitbox]),
-    [role="tab"]:not([data-no-hitbox]),
-    [role="switch"]:not([data-no-hitbox]),
-    [role="checkbox"]:not([data-no-hitbox]),
-    [role="menuitem"]:not([data-no-hitbox]) {
+    /* Skip controls that are already positioned (e.g. the show-password toggle
+       inside an input): forcing them to relative pulls them out of place, and
+       absolute/fixed/sticky already anchor the ::after hitbox. */
+    :is(
+      button,
+      a[role="button"],
+      [role="tab"],
+      [role="switch"],
+      [role="checkbox"],
+      [role="menuitem"]
+    ):not([data-no-hitbox]):not(.absolute):not(.fixed):not(.sticky) {
       position: relative;
     }
 
