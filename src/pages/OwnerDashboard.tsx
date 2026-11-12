@@ -34,7 +34,8 @@ import {
   PartyPopper,
   Instagram,
   Receipt,
-  ChevronsUpDown
+  ChevronsUpDown,
+  Plug
 } from 'lucide-react';
 import { HelpCircle } from 'lucide-react';
 import { Calendar } from 'lucide-react';
@@ -89,6 +90,8 @@ import { PromotionROI } from '@/components/owner/PromotionROI';
 import { OwnerEventsManager } from '@/components/owner/OwnerEventsManager';
 import { SocialLinksManager } from '@/components/owner/SocialLinksManager';
 import { ReservationLinkManager } from '@/components/owner/ReservationLinkManager';
+import { ReservationIntegrations } from '@/components/owner/ReservationIntegrations';
+import { ReservationStatsCard } from '@/components/owner/ReservationStatsCard';
 import { NewsletterPlacement } from '@/components/owner/NewsletterPlacement';
 import { InvoicesTab } from '@/components/owner/InvoicesTab';
 import { QRCodeGenerator } from '@/components/owner/QRCodeGenerator';
@@ -796,6 +799,7 @@ export default function OwnerDashboard() {
             <TabsTrigger value="promotions">Promoties</TabsTrigger>
             <TabsTrigger value="marketing">Marketing</TabsTrigger>
             <TabsTrigger value="market">Markt</TabsTrigger>
+            <TabsTrigger value="integrations">Integraties</TabsTrigger>
             <TabsTrigger value="invoices">Facturen</TabsTrigger>
           </TabsList>
 
@@ -1638,6 +1642,28 @@ export default function OwnerDashboard() {
                 onRequestVerification={() => setVerificationDialogOpen(true)}
               />
             )}
+          </TabsContent>
+
+          {/* ===== INTEGRATIES TAB ===== */}
+          <TabsContent value="integrations">
+            <OwnerTabHeader
+              icon={Plug}
+              title="Integraties"
+              description="Reserveringssystemen koppelen en zien wat Dishloopr aan reserveringen oplevert."
+            />
+            {selectedRestaurant && isVerified ? (
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold">Reserveringssystemen</h3>
+                <ReservationIntegrations restaurantId={selectedRestaurant.id} />
+                <ReservationStatsCard restaurantId={selectedRestaurant.id} />
+              </div>
+            ) : selectedRestaurant ? (
+              <LockedFeatureOverlay
+                featureName="Reserveringssystemen koppelen"
+                description="Koppel je Zenchef zodat gasten direct vanaf je Dishloopr-pagina reserveren."
+                onRequestVerification={() => setVerificationDialogOpen(true)}
+              />
+            ) : null}
           </TabsContent>
 
           {/* ===== FACTUREN TAB ===== */}

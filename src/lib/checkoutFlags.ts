@@ -30,7 +30,7 @@ export const CHECKOUT_ENABLED = {
    * STRIPE_SECRET_KEY and the stripe-webhook secret; prices are created inline
    * unless STRIPE_FOUNDING_* / STRIPE_MENU_* price IDs are set.
    */
-  packages: flag(import.meta.env.VITE_ENABLE_PACKAGE_CHECKOUT as string | undefined),
+  packages: true,
 } as const;
 
 export const COMING_SOON_LABEL = 'Binnenkort beschikbaar';

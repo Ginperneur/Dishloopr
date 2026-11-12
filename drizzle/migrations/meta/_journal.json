@@ -85,6 +85,69 @@
       "when": 1793640534688,
       "tag": "0011_backup_opening_hours",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793996590668,
+      "tag": "0012_package_orders",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793996626843,
+      "tag": "0013_package_orders_admin_grants",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1793996934087,
+      "tag": "0014_pending_small_features",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1793996995490,
+      "tag": "0015_restaurant_event_promotions",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1793997044169,
+      "tag": "0016_owner_pro_analytics",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793997101396,
+      "tag": "0017_owner_analytics_live_counters",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793997126773,
+      "tag": "0018_launch_date_and_menu_service",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794411557316,
+      "tag": "0019_create_city_aliases",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1794463494191,
+      "tag": "0020_reservation_integrations",
+      "breakpoints": true
     }
   ]
 }

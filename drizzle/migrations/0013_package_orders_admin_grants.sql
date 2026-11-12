@@ -1,0 +1,1 @@
+GRANT INSERT, UPDATE, DELETE ON public.package_orders TO authenticated;

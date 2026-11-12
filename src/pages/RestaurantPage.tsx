@@ -55,6 +55,9 @@ import { RatingSummary } from '@/components/restaurant/RatingSummary';
 import { OWN_REVIEW_THRESHOLD } from '@/lib/ratingDisplay';
 import { trackRestaurantMetric } from '@/lib/restaurantMetrics';
 import { sendAnalyticsEvent } from '@/lib/cookieConsent';
+import { ReserveButton } from '@/components/restaurant/ReserveButton';
+import { NATIVE_RESERVATIONS_ENABLED, useReservationOptions } from '@/hooks/useReservationOptions';
+import { reservationMode } from '@/lib/reservationIntegration';
 
 export default function RestaurantPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -139,6 +142,7 @@ export default function RestaurantPage() {
 
   const stateContext = (location.state as { metricContext?: unknown } | null)?.metricContext;
   const metricContext = typeof stateContext === 'string' && stateContext ? stateContext : 'zoek';
+  const { data: reservationOption } = useReservationOptions(restaurant?.id);
   // Phone and route links are counted once by the shared click observer.
   const trackCTA = (type: string) => {
     trackCTAClick(type as Parameters<typeof trackCTAClick>[0]);
@@ -230,9 +234,27 @@ export default function RestaurantPage() {
     { name: restaurant.name, url: `https://dishloopr.com/restaurant/${restaurant.slug}` }
   ]);
 
-  const hasDigitalReservation = !!(restaurant.reservation_url || restaurant.zenchef_id);
+  // Zenchef (official widget) wins over a plain reservation link once it is connected.
+  const reservationKind = reservationMode({ option: reservationOption, zenchefId: restaurant.zenchef_id, reservationUrl: restaurant.reservation_url, nativeEnabled: NATIVE_RESERVATIONS_ENABLED });
+  const hasDigitalReservation = reservationKind !== 'none';
   const hasReservation = hasDigitalReservation || !!restaurant.phone;
-  const reservationHref = restaurant.reservation_url || (restaurant.zenchef_id ? `https://widget.zenchef.com/reservation/${restaurant.zenchef_id}` : undefined);
+  const reserveButton = (className: string) => (
+    <ReserveButton
+      restaurantId={restaurant.id}
+      restaurantName={restaurant.name}
+      mode={reservationKind}
+      zenchefId={reservationOption?.external_restaurant_id ?? restaurant.zenchef_id}
+      lang={reservationOption?.lang}
+      timezone={reservationOption?.timezone}
+      reservationUrl={restaurant.reservation_url}
+      metricContext={metricContext}
+      onClickTrack={trackCTA}
+      className={className}
+    >
+      <Calendar className="h-5 w-5" />
+      {t('restaurant.reserve')}
+    </ReserveButton>
+  );
   const googleMapsUrl = restaurant.geo_lat && restaurant.geo_lng 
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.name + ' ' + restaurant.address)}`
     : null;
@@ -483,14 +505,7 @@ export default function RestaurantPage() {
             <div className="lg:hidden space-y-3">
               {/* CTA Buttons */}
               <div className="grid grid-cols-2 gap-2">
-                {hasDigitalReservation && reservationHref && (
-                  <Button className="col-span-2 bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" onClick={() => trackCTA('reservation')} asChild>
-                    <a href={reservationHref} target="_blank" rel="noopener noreferrer" className="gap-2">
-                      <Calendar className="h-5 w-5" />
-                      {t('restaurant.reserve')}
-                    </a>
-                  </Button>
-                )}
+                {hasDigitalReservation && reserveButton('col-span-2 bg-primary text-primary-foreground font-semibold text-base h-12')}
                 {restaurant.phone && (
                   <Button variant="outline" size="default" onClick={() => trackCTA('phone')} asChild>
                     <a href={`tel:${restaurant.phone}`}>
@@ -640,6 +655,9 @@ export default function RestaurantPage() {
             >
               {/* Reservation Widget */}
               <ReservationWidget 
+                restaurantId={restaurant.id}
+                option={reservationOption}
+                metricContext={metricContext}
                 zenchefId={restaurant.zenchef_id}
                 reservationUrl={restaurant.reservation_url}
                 restaurantName={restaurant.name}
@@ -731,13 +749,8 @@ export default function RestaurantPage() {
       {/* Sticky mobile reservation bar */}
       {hasReservation && (
         <div className="fixed left-0 right-0 z-40 lg:hidden bg-background/95 backdrop-blur border-t border-border p-3 safe-area-bottom" style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))' }}>
-          {hasDigitalReservation && reservationHref ? (
-            <Button className="w-full bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" onClick={() => trackCTA('reservation')} asChild>
-              <a href={reservationHref} target="_blank" rel="noopener noreferrer" className="gap-2">
-                <Calendar className="h-5 w-5" />
-                {t('restaurant.reserve')}
-              </a>
-            </Button>
+          {hasDigitalReservation ? (
+            reserveButton('w-full bg-primary text-primary-foreground font-semibold text-base h-12')
           ) : restaurant.phone ? (
             <Button className="w-full bg-primary text-primary-foreground font-semibold text-base h-12" size="lg" onClick={() => trackCTA('phone')} asChild>
               <a href={`tel:${restaurant.phone}`} className="gap-2">
