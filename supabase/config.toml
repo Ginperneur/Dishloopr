@@ -95,3 +95,11 @@ project_id = "uktafmxojymsojqewzuy"
 
   [functions.reservation-webhook]
   verify_jwt = false
+  [functions.outreach-send-wave]
+    verify_jwt = false
+  [functions.outreach-inbound]
+    verify_jwt = false
+  [functions.outreach-unsubscribe]
+    verify_jwt = false
+  [functions.outreach-reply]
+    verify_jwt = false
