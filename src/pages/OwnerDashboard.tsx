@@ -75,6 +75,7 @@ import { SearchRanking } from '@/components/owner/SearchRanking';
 import { ClaimStatusBadge } from '@/components/claims/ClaimStatusBadge';
 import { MenuItemsManager } from '@/components/admin/MenuItemsManager';
 import { OwnerMenuUpload } from '@/components/owner/OwnerMenuUpload';
+import { OwnerHiddenNotice } from '@/components/owner/OwnerHiddenNotice';
 import { LockedFeatureOverlay } from '@/components/claims/LockedFeatureOverlay';
 import { VerificationRequiredDialog } from '@/components/claims/VerificationRequiredDialog';
 import { DishConfirmation } from '@/components/owner/DishConfirmation';
@@ -762,6 +763,9 @@ export default function OwnerDashboard() {
           </ol>
           {analytics && !analytics.topDishes.length && <p className="text-sm text-muted-foreground">Nog geen vertoningen op gerecht.</p>}
         </section>
+        {selectedRestaurant && !selectedRestaurant.is_active && (
+          <OwnerHiddenNotice slug={selectedRestaurant.slug} onAddMenu={() => setActiveTab('content')} />
+        )}
         {/* Profile completeness ring (after KPIs) */}
         {selectedRestaurant && (
           <ProfileCompletenessCard

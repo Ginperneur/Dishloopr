@@ -27,6 +27,7 @@ import { BulkRestaurantUpload } from '@/components/admin/BulkRestaurantUpload';
 import { ClaimRequestsQueue } from '@/components/admin/ClaimRequestsQueue';
 import { OptoutRequestsManager } from '@/components/admin/OptoutRequestsManager';
 import { PresaleManager } from '@/components/admin/PresaleManager';
+import { OutreachManager } from '@/components/admin/OutreachManager';
 import { ClaimsVerificationManager } from '@/components/admin/ClaimsVerificationManager';
 import { ClaimReviewQueue } from '@/components/admin/ClaimReviewQueue';
 import { DishesManager } from '@/components/admin/DishesManager';
@@ -134,6 +135,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'suggestions': { title: "Suggesties", description: "Door bezoekers ingediende restaurant-suggesties" },
   'sponsored': { title: "Sponsored", description: "Gesponsorde producten beheren" },
   'presale': { title: 'Presale', description: '' },
+  'outreach': { title: 'Outreach', description: 'Mailgolf naar eigenaren, database en gekwalificeerde antwoorden' },
   'featured-slots': { title: "Featured Spots", description: "Featured slots en sfeer-pricing" },
   'newsletter': { title: "Nieuwsbrief", description: "Edities en plaatsingen" },
   'seo': { title: "SEO Pages", description: "City×dish landing pages" },
@@ -433,6 +435,7 @@ export default function AdminPanel() {
               {activeSection === 'suggestions' && <RestaurantSuggestionsQueue />}
               {activeSection === 'optouts' && <OptoutRequestsManager />}
               {activeSection === 'presale' && <PresaleManager />}
+              {activeSection === 'outreach' && <OutreachManager />}
               {activeSection === 'kpi' && <KpiDashboard />}
               {activeSection === 'revenue' && <RevenueDashboard />}
               {activeSection === 'package-orders' && <PackageOrdersManager />}

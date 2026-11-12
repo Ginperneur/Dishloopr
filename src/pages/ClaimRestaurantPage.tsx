@@ -37,7 +37,7 @@ export default function ClaimRestaurantPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [codeState, setCodeState] = useState<ClaimCodeState | null>(null);
-  const [restaurant, setRestaurant] = useState<{ id: string; name: string; slug: string } | null>(null);
+  const [restaurant, setRestaurant] = useState<{ id: string; name: string; slug: string; is_active: boolean; menu_count: number; menu_minimum: number } | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [status, setStatus] = useState<Status | null>(null);
   const [route, setRoute] = useState<'choose' | 'email' | 'manual' | 'pending' | 'done'>('choose');
@@ -59,8 +59,10 @@ export default function ClaimRestaurantPage() {
 
   useEffect(() => {
     if (!slug) return;
-    supabase.from('restaurants').select('id, name, slug').eq('slug', slug).maybeSingle().then(({ data }) => {
-      if (!data) setNotFound(true); else setRestaurant(data);
+    // RPC instead of a table read: restaurants hidden for an incomplete menu are claimable too.
+    supabase.rpc('claimable_restaurant' as never, { p_slug: slug } as never).then(({ data }) => {
+      const row = (data as unknown as { id: string; name: string; slug: string; is_active: boolean; menu_count: number; menu_minimum: number }[] | null)?.[0];
+      if (!row) setNotFound(true); else setRestaurant(row);
     });
   }, [slug]);
 
@@ -132,7 +134,7 @@ export default function ClaimRestaurantPage() {
     <Layout>
       <SEOHead title="Restaurant claimen | Dishloopr" description="Claim je restaurant gratis op Dishloopr." noindex />
       <div className="container max-w-xl py-8 px-4 space-y-6">
-        <Link to={restaurant ? `/restaurant/${restaurant.slug}` : '/'} className="inline-flex items-center gap-1 min-h-11 text-sm text-muted-foreground hover:text-foreground">
+        <Link to={restaurant?.is_active ? `/restaurant/${restaurant.slug}` : '/'} className="inline-flex items-center gap-1 min-h-11 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Terug naar restaurant
         </Link>
 
@@ -145,6 +147,11 @@ export default function ClaimRestaurantPage() {
             <div>
               <h1 className="text-2xl md:text-3xl font-bold">{restaurant.name} claimen</h1>
               <p className="text-muted-foreground mt-1">Gratis. Kies hoe je laat zien dat dit jouw restaurant is.</p>
+              {!restaurant.is_active && (
+                <p className="mt-3 rounded-lg border border-border bg-muted/40 p-3 text-sm">
+                  {restaurant.name} is nog niet zichtbaar voor gasten: daarvoor zijn minimaal {restaurant.menu_minimum} gerechten nodig en we kennen er nu {restaurant.menu_count}. Na het claimen vul je je menu aan in je dashboard. Zodra je op {restaurant.menu_minimum} gerechten staat, ben je automatisch zichtbaar.
+                </p>
+              )}
             </div>
 
             {status.isOwner ? (
