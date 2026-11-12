@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.57.2";
 
 // Fallback when app_settings.launch_date is missing or malformed.
-const DEFAULT_LAUNCH = "2026-12-10";
+const DEFAULT_LAUNCH = "2026-12-01";
 
 /** Launch moment as epoch ms: midnight Amsterdam time on app_settings.launch_date. */
 export async function launchAt(admin: SupabaseClient): Promise<{ date: string; ms: number }> {

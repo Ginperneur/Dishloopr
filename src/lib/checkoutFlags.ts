@@ -13,8 +13,8 @@
 const flag = (v: string | undefined) => (v ?? '').toLowerCase() === 'true';
 
 export const CHECKOUT_ENABLED = {
-  /** Owner Pro (monthly / yearly recurring subscription) */
-  pro: flag(import.meta.env.VITE_ENABLE_PRO_CHECKOUT as string | undefined),
+  /** Owner Pro (monthly / yearly). Prices are created inline in create-owner-pro-checkout. */
+  pro: true,
   /** Sponsored dish×city listings */
   sponsored: flag(import.meta.env.VITE_ENABLE_SPONSORED_CHECKOUT as string | undefined),
   /** Extra paid profile tags (recurring per-tag subscription) */

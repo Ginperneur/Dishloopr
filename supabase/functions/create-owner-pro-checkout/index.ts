@@ -8,10 +8,15 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// The defaults are the live prices. In Stripe test mode set STRIPE_PRO_MONTH_PRICE_ID and
-// STRIPE_PRO_YEAR_PRICE_ID to the test prices, which have other IDs.
-const PRICE_MONTHLY = Deno.env.get("STRIPE_PRO_MONTH_PRICE_ID") || "price_1TdPdO3EXkDnjHC3dK2LdvFT";
-const PRICE_YEARLY = Deno.env.get("STRIPE_PRO_YEAR_PRICE_ID") || "price_1TdPeD3EXkDnjHC3J5T79Qe7";
+// Owner Pro: €29 per month or €290 per year, excl. VAT. A STRIPE_PRO_*_PRICE_ID secret wins when
+// set; otherwise the price is created inline, so checkout works with only STRIPE_SECRET_KEY.
+// The subscription is recognised by metadata.type = "owner_pro", never by price id.
+const PRICE_MONTHLY = Deno.env.get("STRIPE_PRO_MONTH_PRICE_ID") || "";
+const PRICE_YEARLY = Deno.env.get("STRIPE_PRO_YEAR_PRICE_ID") || "";
+const INLINE = {
+  monthly: { cents: 2900, interval: "month" as const },
+  yearly: { cents: 29000, interval: "year" as const },
+};
 
 const log = (step: string, details?: unknown) =>
   console.log(`[CREATE-OWNER-PRO-CHECKOUT] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
@@ -50,14 +55,25 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [priceId
+        ? { price: priceId, quantity: 1 }
+        : {
+            quantity: 1,
+            price_data: {
+              currency: "eur",
+              unit_amount: INLINE[interval].cents,
+              tax_behavior: "exclusive" as const,
+              product_data: { name: interval === "yearly" ? "Owner Pro (per jaar)" : "Owner Pro (per maand)" },
+              recurring: { interval: INLINE[interval].interval },
+            },
+          }],
       mode: "subscription",
       allow_promotion_codes: true,
       ...billingParams({ mode: "subscription", customerId }),
       success_url: `${origin}/owner?pro_checkout=success`,
       cancel_url: `${origin}/owner?pro_checkout=cancelled`,
       subscription_data: {
-        metadata: { user_id: user.id, type: "owner_pro" },
+        metadata: { user_id: user.id, type: "owner_pro", billing_interval: interval },
       },
       metadata: { user_id: user.id, type: "owner_pro", billing_interval: interval },
     });

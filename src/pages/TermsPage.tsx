@@ -100,7 +100,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-semibold mb-4">7a. Herroepingsrecht (consumenten)</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Claimen is gratis. Betaalde pakketten, zoals Founding Partner en Menuservice, worden aan
+                Claimen is gratis. Betaalde pakketten, zoals Uitgelicht en Menuservice, worden aan
                 restaurants aangeboden als zakelijke overeenkomsten. Voor deze zakelijke overeenkomsten
                 geldt geen herroepingsrecht. Het wettelijke herroepingsrecht geldt uitsluitend voor consumenten;
                 zij hebben bij overeenkomsten op afstand in beginsel 14 dagen bedenktijd, behoudens wettelijke uitzonderingen.
@@ -119,13 +119,16 @@ export default function TermsPage() {
               <h2 className="text-2xl font-semibold mb-4">7c. Betaalde diensten voor restaurants</h2>
               <ol className="text-muted-foreground space-y-4 leading-relaxed">
                 <li>
-                  <strong>Founding Partner.</strong> Een uitgelichte plek op één gerechtpagina, altijd gemarkeerd
-                  als ‘Uitgelicht’. Per gerechtpagina zijn maximaal 5 Founding Partner-plekken beschikbaar. Wij
-                  geven geen garantie op aantallen bezoekers. De prijs blijft vast zolang het abonnement
-                  doorloopt. Facturering start op de launchdatum. Gaat de launch niet door vóór 31 maart 2027,
-                  dan ontvang je een volledige terugbetaling. Een maandabonnement heeft een minimale looptijd
-                  van 6 maanden, gerekend vanaf de launchdatum, en is daarna maandelijks opzegbaar; een
-                  jaarabonnement loopt het jaar uit. Dishloopr mag misleidende plaatsingen
+                  <strong>Uitgelicht.</strong> Een uitgelichte plek op één gerechtpagina, altijd gemarkeerd
+                  als ‘Uitgelicht’. Per gerechtpagina zijn maximaal 5 plekken beschikbaar. Wij
+                  geven geen garantie op aantallen bezoekers. Dishloopr heeft op 1 december 2026 een soft launch;
+                  wie Uitgelicht afneemt uiterlijk op 5 januari 2027 wordt Founding Partner en
+                  betaalt de actieprijs tot en met 31 december 2027, waarna automatisch de normale prijs gaat
+                  gelden. De Founding Partner-badge blijft daarna op de pagina staan, ook als het abonnement
+                  eindigt. Facturering start op de dag van afname en de plek gaat direct live. Gaat de soft launch
+                  niet door vóór 31 maart 2027, dan ontvang je een volledige terugbetaling. Een maandabonnement heeft een
+                  minimale looptijd van 6 maanden, gerekend vanaf de dag van afname, en is daarna maandelijks
+                  opzegbaar; een jaarabonnement loopt het jaar uit. Dishloopr mag misleidende plaatsingen
                   weigeren of beëindigen.
                 </li>
                 <li>
