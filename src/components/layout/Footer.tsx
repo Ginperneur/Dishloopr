@@ -13,7 +13,6 @@ import logoDark from '@/assets/dishloopr-logo-wordmark-dark.png';
 import { useContentAvailability } from '@/hooks/useContentAvailability';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/components/theme/ThemeProvider';
-import { newsletterEmailSchema } from '@/lib/validations';
 import { openCookieSettings, sendAnalyticsEvent } from '@/lib/cookieConsent';
 
 export function Footer() {
@@ -55,6 +54,8 @@ export function Footer() {
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Loaded on submit so zod stays out of the startup bundle (the footer is on every page).
+    const { newsletterEmailSchema } = await import('@/lib/validations');
     const parsed = newsletterEmailSchema.safeParse(email);
     if (!parsed.success) {
       setEmailError(t('footer.newsletterInvalid', 'Vul een geldig e-mailadres in.'));
