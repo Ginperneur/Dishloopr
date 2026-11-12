@@ -101,14 +101,49 @@ export function useSearch() {
   const [parsedQuery, setParsedQueryState] = useState(() => lastSnapshot?.parsedQuery ?? '');
   const parseCacheRef = useRef(new Map<string, ParsedTerm>());
   const lastSearchRef = useRef<{ key: string; running: boolean; doneAt: number } | null>(null);
+  // city_aliases: plaatsnamen zonder eigen stadspagina (bijv. "Nieuwegein", na
+  // samenvoeging bij Utrecht) die bij een zoekopdracht toch naar hun stad
+  // moeten verwijzen. Eén keer per sessie geladen, langste alias wint.
+  const cityAliasesRef = useRef<{ alias: string; city_id: string; city_name: string }[] | null>(null);
 
   useEffect(() => {
     fetchCities();
+    fetchCityAliases();
   }, []);
 
   const fetchCities = async () => {
     const { data } = await supabase.from('cities').select('*').eq('is_active', true).order('name');
     if (data) setCities(data);
+  };
+
+  const fetchCityAliases = async () => {
+    const { data, error } = await supabase
+      .from('city_aliases' as any)
+      .select('alias_name, city_id, cities(name)');
+    if (error || !data) return;
+    cityAliasesRef.current = (data as any[])
+      .map(r => ({ alias: r.alias_name as string, city_id: r.city_id as string, city_name: (r.cities?.name ?? '') as string }))
+      .sort((a, b) => b.alias.length - a.alias.length); // langste alias eerst (bijv. "Den Bosch" vóór "Bosch")
+  };
+
+  // Herkent een niet-stadspagina-plaatsnaam (bijv. "Nieuwegein") in de resttekst
+  // en levert de stad waar die plaats nu onder valt, met de alias uit de tekst
+  // gestript — zelfde vorm als een parse_search_query-match.
+  const matchCityAlias = (term: string): ParsedTerm | null => {
+    const aliases = cityAliasesRef.current;
+    if (!aliases || !term) return null;
+    const lower = term.toLowerCase();
+    for (const a of aliases) {
+      const needle = a.alias.toLowerCase();
+      const idx = lower.indexOf(needle);
+      if (idx === -1) continue;
+      const before = idx === 0 ? ' ' : lower[idx - 1];
+      const after = idx + needle.length >= lower.length ? ' ' : lower[idx + needle.length];
+      if (/[a-z0-9]/.test(before) || /[a-z0-9]/.test(after)) continue; // alleen hele woorden
+      const stripped = (term.slice(0, idx) + term.slice(idx + needle.length)).replace(/\s+/g, ' ').trim();
+      return { term: stripped, city_id: a.city_id, city_name: a.city_name };
+    }
+    return null;
   };
 
   const search = useCallback(async (query: string, cityIdInput?: string, filters?: SearchFilters, featuredOnly?: boolean) => {
@@ -150,7 +185,13 @@ export function useSearch() {
         if (cached) return cached;
         const { data, error } = await supabase.rpc('parse_search_query' as any, { p_query: term });
         if (error) console.error('parse_search_query error:', error);
-        const row = ((Array.isArray(data) ? data[0] : data) as ParsedTerm | undefined) ?? { term, city_id: null, city_name: null };
+        let row = ((Array.isArray(data) ? data[0] : data) as ParsedTerm | undefined) ?? { term, city_id: null, city_name: null };
+        // parse_search_query kent alleen stadsnamen met een eigen pagina; val terug
+        // op de alias-tabel voor plaatsen die bij een stad zijn samengevoegd.
+        if (!row.city_id) {
+          const aliasHit = matchCityAlias(row.term ?? term);
+          if (aliasHit) row = aliasHit;
+        }
         parseCacheRef.current.set(term, row);
         // The stripped term contains no city anymore → cache it so a URL rewrite doesn't re-parse.
         const stripped = (row.term ?? '').toLowerCase().trim();
