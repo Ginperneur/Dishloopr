@@ -29,3 +29,6 @@
 # Reservations
 
 - Reservation providers sit behind `ReservationProvider` in `supabase/functions/_shared/reservations/`; Zenchef runs widget-only (official SDK, ID-only config) until Zenchef grants API access, and a booking counts as confirmed only with provider evidence. See `docs/zenchef-integratie.md`.
+
+# Owner Pro
+- Complimentary Pro is a restaurant-scoped override changed through an admin-validated RPC and guarded by the owner-tier trigger; Stripe synchronization preserves it so paid subscriptions remain independent.
