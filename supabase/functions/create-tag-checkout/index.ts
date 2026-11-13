@@ -69,6 +69,18 @@ Deno.serve(async (req) => {
       throw new Error(`Ongeldige tag-waarde voor ${tag_category}`);
     }
 
+    // Only the verified owner (or an admin) may buy a tag for this restaurant.
+    const admin = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+    const [{ data: owns }, { data: isAdmin }] = await Promise.all([
+      admin.rpc("is_verified_owner", { _user_id: user.id, _restaurant_id: restaurant_id }),
+      admin.rpc("has_role", { _user_id: user.id, _role: "admin" }),
+    ]);
+    if (owns !== true && isAdmin !== true) {
+      return new Response(JSON.stringify({ error: "Alleen de geverifieerde eigenaar kan tags voor dit restaurant kopen" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Price is determined server-side. The client can NOT influence what
     // the user pays for an extra tag.
     // STRIPE_TAG_PRICE_ID wins when set; otherwise the advertised €5/month is created inline.
@@ -103,7 +115,13 @@ Deno.serve(async (req) => {
         tag_category,
         tag_value,
       },
-      success_url: `${origin}/owner-dashboard?tag_added=${tag_value}`,
+      subscription_data: {
+        metadata: { type: "extra_tag", restaurant_id, user_id: user.id, tag_category, tag_value },
+        description: `Extra tag: ${tag_value}`.slice(0, 500),
+      },
+      // Encode: values like "Luxe avond uit" or "Vis & Zeevruchten" made this an invalid URL,
+      // which Stripe refused, so the owner only saw a generic error.
+      success_url: `${origin}/owner-dashboard?tag_added=${encodeURIComponent(tag_value)}`,
       cancel_url: `${origin}/owner-dashboard`,
     });
 
@@ -111,6 +129,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
+    console.error("create-tag-checkout", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
