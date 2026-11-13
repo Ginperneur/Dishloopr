@@ -106,10 +106,11 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
         },
       });
 
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
+      // Show the function's own message instead of "Edge Function returned a non-2xx status code".
+      const reason = data?.error ?? (error ? await (error as { context?: Response }).context?.json?.().then((b: { error?: string }) => b?.error).catch(() => null) : null);
+      if (reason || error) throw new Error(reason || 'Kon de betaling niet starten');
+      // Same tab: a window.open after an await is often blocked as a pop-up.
+      if (data?.url) window.location.href = data.url;
     } catch (e: any) {
       toast.error(e.message || 'Kon checkout niet starten');
     } finally {
