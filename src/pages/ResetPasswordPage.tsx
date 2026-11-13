@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import logo from '@/assets/dishloopr-logo.png';
+import { PasswordStrengthMeter, type PasswordCheck } from '@/components/auth/PasswordStrengthMeter';
 
 const passwordSchema = z.object({
   password: z.string().min(6, 'Wachtwoord moet minimaal 6 tekens bevatten'),
@@ -29,6 +30,7 @@ export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [password, setPassword] = useState('');
+  const [check, setCheck] = useState<PasswordCheck | null>(null);
   const [confirmPassword, setConfirmPassword] = useState('');
 
   // Check if user came from password reset email
@@ -54,6 +56,14 @@ export default function ResetPasswordPage() {
         variant: 'destructive',
         title: 'Validatiefout',
         description: validation.error.errors[0].message,
+      });
+      return;
+    }
+    if (check?.pwned) {
+      toast({
+        variant: 'destructive',
+        title: 'Kies een ander wachtwoord',
+        description: 'Dit wachtwoord komt voor in gelekte wachtwoordlijsten en wordt geweigerd.',
       });
       return;
     }
@@ -137,6 +147,7 @@ export default function ResetPasswordPage() {
                       className="pl-10 pr-10 h-11 text-base"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      aria-describedby="new-password-strength"
                       required
                     />
                     <button
@@ -147,6 +158,7 @@ export default function ResetPasswordPage() {
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                  <PasswordStrengthMeter id="new-password-strength" password={password} onCheck={setCheck} />
                 </div>
 
                 <div className="space-y-2">

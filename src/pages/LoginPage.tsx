@@ -16,6 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { lovable } from '@/integrations/lovable/index';
 import logo from '@/assets/dishloopr-logo.png';
 import { signupErrorMessage } from '@/lib/authErrors';
+import { PasswordStrengthMeter, type PasswordCheck } from '@/components/auth/PasswordStrengthMeter';
 
 const loginSchema = z.object({
   email: z.string().email('Ongeldig e-mailadres'),
@@ -55,6 +56,7 @@ export default function LoginPage() {
   const [signupName, setSignupName] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
+  const [signupCheck, setSignupCheck] = useState<PasswordCheck | null>(null);
   const [accountType, setAccountType] = useState<'user' | 'restaurant'>('user');
 
   const handleGoogleLogin = async () => {
@@ -137,6 +139,15 @@ export default function LoginPage() {
         variant: 'destructive',
         title: 'Validatiefout',
         description: validation.error.errors[0].message,
+      });
+      return;
+    }
+
+    if (signupCheck?.pwned) {
+      toast({
+        variant: 'destructive',
+        title: 'Kies een ander wachtwoord',
+        description: 'Dit wachtwoord komt voor in gelekte wachtwoordlijsten en wordt geweigerd.',
       });
       return;
     }
@@ -388,6 +399,8 @@ export default function LoginPage() {
                         className="pl-10 pr-10 h-11 text-base"
                         value={signupPassword}
                         onChange={(e) => setSignupPassword(e.target.value)}
+                        autoComplete="new-password"
+                        aria-describedby="signup-password-strength"
                         required
                       />
                       <button
@@ -402,6 +415,8 @@ export default function LoginPage() {
                         )}
                       </button>
                     </div>
+                    <PasswordStrengthMeter id="signup-password-strength" password={signupPassword}
+                      context={[signupName, signupEmail.split('@')[0]]} onCheck={setSignupCheck} />
                   </div>
 
                   <Button type="submit" className="w-full h-11" size="lg" disabled={isLoading}>
