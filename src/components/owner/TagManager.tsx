@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Tag, Plus, Crown, Loader2, X, ShoppingCart } from 'lucide-react';
+import { Tag, Plus, Crown, Loader2, X, ShoppingCart, Pencil } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -60,6 +60,10 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
   const [loading, setLoading] = useState(true);
   const [addingTag, setAddingTag] = useState<{ category: string; value: string } | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  // The free tag (first in each list) is the owner's own choice, saved through
+  // set_free_restaurant_tag so only one tag from the fixed lists can be set this way.
+  const [picking, setPicking] = useState<{ category: string; value: string } | null>(null);
+  const [savingFree, setSavingFree] = useState(false);
 
   useEffect(() => {
     if (restaurant?.id) fetchPaidTags();
@@ -111,6 +115,18 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
     }
   };
 
+  const saveFreeTag = async (categoryKey: string, dbField: string, value: string) => {
+    setSavingFree(true);
+    const { data, error } = await supabase.rpc('set_free_restaurant_tag' as never, {
+      p_restaurant_id: restaurant.id, p_category: categoryKey, p_value: value,
+    } as never);
+    setSavingFree(false);
+    if (error) { toast.error(error.message || 'Opslaan lukte niet'); return; }
+    onUpdate({ ...restaurant, [dbField]: data as unknown as string[] });
+    setPicking(null);
+    toast.success('Tag opgeslagen');
+  };
+
   const getAvailableOptions = (categoryKey: string, dbField: string, options: readonly string[]) => {
     const current = getCurrentTags(dbField);
     return options.filter(o => !current.includes(o));
@@ -134,7 +150,7 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
           Profiel Tags
         </CardTitle>
         <CardDescription>
-          Je hebt 1 gratis tag per categorie. Voeg extra tags toe voor €5/maand per tag (max 3), of neem Owner Pro (€29/maand) voor dezelfde limiet zonder losse kosten.
+          Kies per categorie zelf 1 gratis tag die het best bij je zaak past. Extra tags kosten €5 per maand per tag (max 3), of zitten bij Owner Pro (€29 per maand) inbegrepen.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -161,18 +177,45 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
                     variant={idx === 0 ? 'default' : 'secondary'}
                     className="text-xs"
                   >
-                    {idx === 0 && <span className="mr-1">🆓</span>}
                     {idx > 0 && <Crown className="h-3 w-3 mr-1" />}
                     {tag}
+                    {idx === 0 && <span className="ml-1 opacity-80">(gratis)</span>}
                   </Badge>
                 ))}
-                
-                {currentTags.length === 0 && (
-                  <span className="text-xs text-muted-foreground italic">
-                    Nog geen tags — wordt automatisch ingevuld door AI
-                  </span>
+                {currentTags.length > 0 && picking?.category !== key && (
+                  <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setPicking({ category: key, value: '' })}>
+                    <Pencil className="h-3 w-3 mr-1" /> Wijzigen
+                  </Button>
                 )}
               </div>
+
+              {(currentTags.length === 0 || picking?.category === key) && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Select
+                    value={picking?.category === key ? picking.value : ''}
+                    onValueChange={(v) => setPicking({ category: key, value: v })}
+                  >
+                    <SelectTrigger className="h-9 w-56 text-sm" aria-label={`Gratis tag voor ${label}`}>
+                      <SelectValue placeholder={currentTags.length ? 'Kies een andere tag' : 'Kies je gratis tag'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {options.filter(o => o !== currentTags[0]).map(opt => (
+                        <SelectItem key={opt} value={opt} className="text-sm">{opt}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button size="sm" className="h-9" disabled={picking?.category !== key || !picking.value || savingFree}
+                    onClick={() => picking && saveFreeTag(key, dbField, picking.value)}>
+                    {savingFree && picking?.category === key ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+                    Opslaan
+                  </Button>
+                  {currentTags.length > 0 && (
+                    <Button size="sm" variant="ghost" className="h-9 w-9 p-0" aria-label="Annuleren" onClick={() => setPicking(null)}>
+                      <X className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+              )}
 
               {canAddMore && currentTags.length > 0 && (
                 <div className="flex items-center gap-2 mt-1">
