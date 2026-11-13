@@ -8298,6 +8298,10 @@ export type Database = {
           restaurant_count: number
         }[]
       }
+      set_free_restaurant_tag: {
+        Args: { p_category: string; p_restaurant_id: string; p_value: string }
+        Returns: string[]
+      }
       set_reservation_integration_enabled: {
         Args: {
           p_enabled: boolean
