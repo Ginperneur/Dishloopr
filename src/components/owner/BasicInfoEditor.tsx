@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Save, Clock } from 'lucide-react';
 import { toast } from 'sonner';
+import { checkHoursInput } from '@/lib/openingHoursInput';
 
 const DAYS: { key: string; label: string }[] = [
   { key: 'mon', label: 'Maandag' },
@@ -24,6 +25,8 @@ interface Props {
   restaurantId: string;
   currentName: string;
   currentOpeningHours: any;
+  /** Called after opening hours were saved directly, so the dashboard shows them right away. */
+  onHoursSaved?: (hours: Record<string, string>) => void;
 }
 
 type Pending = {
@@ -34,10 +37,11 @@ type Pending = {
   review_notes: string | null;
 };
 
-export function BasicInfoEditor({ restaurantId, currentName, currentOpeningHours }: Props) {
+export function BasicInfoEditor({ restaurantId, currentName, currentOpeningHours, onHoursSaved }: Props) {
   const { user } = useAuth();
   const [name, setName] = useState(currentName || '');
   const [descriptionNl, setDescriptionNl] = useState('');
+  const [descriptionOriginal, setDescriptionOriginal] = useState('');
   const [hours, setHours] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [pending, setPending] = useState<Pending[]>([]);
@@ -65,6 +69,7 @@ export function BasicInfoEditor({ restaurantId, currentName, currentOpeningHours
       .eq('language_code', 'nl')
       .maybeSingle();
     setDescriptionNl(data?.description || '');
+    setDescriptionOriginal(data?.description || '');
   };
 
   const loadPending = async () => {
@@ -78,40 +83,91 @@ export function BasicInfoEditor({ restaurantId, currentName, currentOpeningHours
     setPending((data as Pending[]) || []);
   };
 
+  // Per-day check: only a time range or "gesloten" (see src/lib/openingHoursInput.ts).
+  const hourErrors = Object.fromEntries(DAYS.map((d) => {
+    const v = hours[d.key];
+    if (v === undefined || (!v.trim() && DAYS.every((x) => !hours[x.key]?.trim()))) return [d.key, null];
+    const r = checkHoursInput(v);
+    return [d.key, "error" in r ? r.error : null];
+  })) as Record<string, string | null>;
+  const hoursValid = DAYS.every((d) => !hourErrors[d.key]);
+  const anyHours = DAYS.some((d) => hours[d.key]?.trim());
+  const allHours = DAYS.every((d) => hours[d.key]?.trim());
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const tidy = (key: string) => {
+    setTouched((t) => ({ ...t, [key]: true }));
+    const r = checkHoursInput(hours[key] ?? '');
+    if (r.ok) setHours((h) => ({ ...h, [key]: r.value }));
+  };
+
   const submit = async () => {
     if (!user) return;
+    if (anyHours && (!allHours || !hoursValid)) {
+      setTouched(Object.fromEntries(DAYS.map((d) => [d.key, true])));
+      toast.error('Vul elke dag in met een tijd zoals 11:00 - 22:00, of kies Gesloten.');
+      return;
+    }
     setSaving(true);
+
+    // Opening hours in the required format go live directly (checked again by the database).
+    const tidyHours = Object.fromEntries(DAYS.map((d) => {
+      const r = checkHoursInput(hours[d.key] ?? '');
+      return [d.key, r.ok ? r.value : ''];
+    })) as Record<string, string>;
+    const currentHours = Object.fromEntries(DAYS.map((d) => [d.key, (currentOpeningHours as Record<string, unknown> | null)?.[d.key] ?? ''])) as Record<string, unknown>;
+    const hoursChanged = anyHours && JSON.stringify(tidyHours) !== JSON.stringify(currentHours);
+    let hoursSaved = false;
+    if (hoursChanged) {
+      const { error } = await supabase.rpc('set_restaurant_opening_hours' as never, {
+        p_restaurant_id: restaurantId, p_hours: tidyHours,
+      } as never);
+      if (error) {
+        setSaving(false);
+        toast.error('Openingstijden opslaan mislukt: ' + error.message);
+        return;
+      }
+      hoursSaved = true;
+      setHours(tidyHours);
+      onHoursSaved?.(tidyHours);
+    }
+
+    // Name and description still go to an admin first.
     const proposed: Record<string, any> = {};
     if (name.trim() && name.trim() !== currentName) proposed.name = name.trim();
-    if (Object.keys(hours).length > 0) proposed.opening_hours = hours;
-    if (descriptionNl.trim()) proposed.description_nl = descriptionNl.trim();
+    if (descriptionNl.trim() && descriptionNl.trim() !== descriptionOriginal.trim()) proposed.description_nl = descriptionNl.trim();
 
-    if (Object.keys(proposed).length === 0) {
-      toast.info('Geen wijzigingen om in te dienen');
-      setSaving(false);
-      return;
+    if (Object.keys(proposed).length > 0) {
+      const { error } = await supabase.from('restaurant_pending_edits').insert({
+        restaurant_id: restaurantId,
+        submitted_by: user.id,
+        proposed_changes: proposed,
+        status: 'pending',
+      });
+      if (error) {
+        setSaving(false);
+        toast.error((hoursSaved ? 'Openingstijden zijn opgeslagen, maar het indienen van naam of beschrijving mislukte: ' : 'Indienen mislukt: ') + error.message);
+        return;
+      }
+      loadPending();
     }
-
-    const { error } = await supabase.from('restaurant_pending_edits').insert({
-      restaurant_id: restaurantId,
-      submitted_by: user.id,
-      proposed_changes: proposed,
-      status: 'pending',
-    });
     setSaving(false);
-    if (error) {
-      toast.error('Indienen mislukt: ' + error.message);
-      return;
+
+    if (hoursSaved && Object.keys(proposed).length > 0) {
+      toast.success('Openingstijden staan direct live. Naam of beschrijving beoordeelt een admin meestal binnen 1 werkdag.');
+    } else if (hoursSaved) {
+      toast.success('Openingstijden opgeslagen en direct zichtbaar voor gasten.');
+    } else if (Object.keys(proposed).length > 0) {
+      toast.success('Ingediend. Een admin beoordeelt je wijziging meestal binnen 1 werkdag.');
+    } else {
+      toast.info('Geen wijzigingen om op te slaan');
     }
-    toast.success('Wijzigingen ingediend — een admin beoordeelt ze meestal binnen 1 werkdag.');
-    loadPending();
   };
 
   return (
     <Card>
       <CardContent className="p-4 space-y-4">
         <p className="text-sm text-muted-foreground">
-          Wijzigingen aan naam, beschrijving en openingstijden worden ter goedkeuring aan een admin voorgelegd.
+          Openingstijden staan direct live zodra ze kloppen. Een nieuwe naam of beschrijving bekijkt eerst een admin.
         </p>
 
         {DAYS.every((d) => !hours[d.key]?.trim()) && (
@@ -125,18 +181,31 @@ export function BasicInfoEditor({ restaurantId, currentName, currentOpeningHours
 
         <div>
           <Label className="text-xs flex items-center gap-2 mb-2">
-            <Clock className="h-3.5 w-3.5" /> Openingstijden (per dag, bv. "12:00 - 22:00" of "gesloten")
+            <Clock className="h-3.5 w-3.5" /> Openingstijden: per dag een tijd (bv. 12:00 - 22:00, of 12:00 - 14:30, 17:00 - 22:00) of Gesloten
           </Label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {DAYS.map((d) => (
-              <div key={d.key} className="flex items-center gap-2">
-                <span className="text-xs w-24 text-muted-foreground">{d.label}</span>
-                <Input
-                  className="flex-1"
-                  value={hours[d.key] || ''}
-                  onChange={(e) => setHours({ ...hours, [d.key]: e.target.value })}
-                  placeholder="12:00 - 22:00"
-                />
+              <div key={d.key} className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <label htmlFor={`hours-${d.key}`} className="text-xs w-24 text-muted-foreground">{d.label}</label>
+                  <Input
+                    id={`hours-${d.key}`}
+                    className={`flex-1 ${touched[d.key] && hourErrors[d.key] ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                    value={hours[d.key] || ''}
+                    onChange={(e) => setHours({ ...hours, [d.key]: e.target.value })}
+                    onBlur={() => tidy(d.key)}
+                    placeholder="12:00 - 22:00"
+                    aria-invalid={Boolean(touched[d.key] && hourErrors[d.key])}
+                    aria-describedby={`hours-${d.key}-error`}
+                  />
+                  <Button type="button" size="sm" variant={hours[d.key] === 'gesloten' ? 'secondary' : 'outline'} className="h-9 shrink-0 text-xs"
+                    onClick={() => { setHours({ ...hours, [d.key]: 'gesloten' }); setTouched((t) => ({ ...t, [d.key]: true })); }}>
+                    Gesloten
+                  </Button>
+                </div>
+                {touched[d.key] && hourErrors[d.key] && (
+                  <p id={`hours-${d.key}-error`} className="pl-[104px] text-xs text-destructive">{hourErrors[d.key]}</p>
+                )}
               </div>
             ))}
           </div>
@@ -158,7 +227,7 @@ export function BasicInfoEditor({ restaurantId, currentName, currentOpeningHours
         </div>
 
         <Button size="sm" onClick={submit} disabled={saving}>
-          <Save className="h-4 w-4 mr-1" /> {saving ? 'Indienen…' : 'Wijzigingen indienen'}
+          <Save className="h-4 w-4 mr-1" /> {saving ? 'Opslaan…' : 'Opslaan'}
         </Button>
 
         {pending.length > 0 && (

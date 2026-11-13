@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRestaurantDishes, RestaurantDish, Dish } from '@/hooks/useRestaurantDishes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,9 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Check, X, Plus, Loader2, ChefHat, AlertCircle, Search, Leaf, Wheat, Star, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
@@ -30,6 +28,7 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
   const {
     dishes,
     availableDishes,
+    searchDishes,
     loading,
     verifyDish,
     rejectDish,
@@ -39,9 +38,9 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
   } = useRestaurantDishes({ restaurantId });
 
   const [addDishOpen, setAddDishOpen] = useState(false);
-  const [selectedDishId, setSelectedDishId] = useState<string>('');
-  const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [addedIds, setAddedIds] = useState<string[]>([]);
+  const [addingId, setAddingId] = useState<string | null>(null);
   const [showNewDishForm, setShowNewDishForm] = useState(false);
   const [newDishName, setNewDishName] = useState('');
   const [newDishNameEn, setNewDishNameEn] = useState('');
@@ -58,22 +57,27 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
   const SIGNATURE_MAX = isPro ? 5 : 1;
   const existingDishIds = dishes.map((d) => d.dish_id);
 
-  const availableToAdd = availableDishes.filter(
-    (d) => !existingDishIds.includes(d.id)
-  );
+  // Search in the database as the owner types (debounced).
+  useEffect(() => {
+    if (!addDishOpen) return;
+    const t = setTimeout(() => { void searchDishes(searchQuery); }, 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, addDishOpen]);
 
-  const filteredDishes = availableToAdd.filter((d) => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      d.name.toLowerCase().includes(query) ||
-      d.name_en?.toLowerCase().includes(query) ||
-      d.synonyms?.some((s) => s.toLowerCase().includes(query))
-    );
-  });
+  // Results stay in the list after adding (marked "Toegevoegd") so owners can add several in a row.
+  const pickList = availableDishes.filter((d) => addedIds.includes(d.id) || !existingDishIds.includes(d.id)).slice(0, 60);
+  const quickAdd = async (dishId: string) => {
+    setAddingId(dishId);
+    const ok = await addOwnerDish(restaurantId, dishId);
+    setAddingId(null);
+    if (ok) setAddedIds((ids) => [...ids, dishId]);
+  };
+
 
   const getDishName = (dish: Dish | RestaurantDish['dish']) => {
-    if (!dish) return '';
+    // A dish that was deactivated in the catalogue is hidden from owners by RLS, so it arrives empty.
+    if (!dish?.name) return isNL ? 'Gerecht niet meer beschikbaar, verwijder het of voeg het opnieuw toe' : 'Dish no longer available';
     const name = isNL ? dish.name : (dish.name_en || dish.name);
     return formatDishName(name);
   };
@@ -157,17 +161,34 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
         .select()
         .single();
 
-      if (error) {
-        if (error.code === '23505') {
-          toast.error(isNL ? 'Dit gerecht bestaat al' : 'This dish already exists');
-        } else {
-          toast.error(isNL ? 'Kon gerecht niet aanmaken' : 'Could not create dish');
+      let dishId = newDish?.id as string | undefined;
+      if (error?.code === '23505') {
+        // The dish already exists in Dishloopr (it just was not in the list): use that one,
+        // or the main dish when it is an alias. Only a dish already on this menu is refused.
+        const bySlug = await supabase.from('dishes')
+          .select('id, slug, canonical_slug').eq('slug', slug).maybeSingle();
+        const existing = bySlug.data ?? (await supabase.from('dishes')
+          .select('id, slug, canonical_slug').ilike('name', newDishName.trim()).limit(1).maybeSingle()).data;
+        dishId = existing?.id;
+        if (existing?.canonical_slug && existing.canonical_slug !== existing.slug) {
+          const { data: main } = await supabase.from('dishes').select('id').eq('slug', existing.canonical_slug).maybeSingle();
+          dishId = main?.id ?? dishId;
         }
+        if (dishId && dishes.some((d) => d.dish_id === dishId && (d.status === 'verified_by_owner' || d.status === 'approved_by_admin'))) {
+          toast.info(isNL ? 'Dit gerecht staat al op je kaart' : 'This dish is already on your menu');
+          return;
+        }
+      } else if (error) {
+        toast.error(isNL ? 'Kon gerecht niet aanmaken' : 'Could not create dish');
+        return;
+      }
+      if (!dishId) {
+        toast.error(isNL ? 'Dit gerecht bestaat al maar is niet beschikbaar. Mail info@dishloopr.com, dan zetten wij het erbij.' : 'This dish exists but is not available. Email info@dishloopr.com.');
         return;
       }
 
-      await addOwnerDish(restaurantId, newDish.id);
-      setAddDishOpen(false);
+      const ok = await addOwnerDish(restaurantId, dishId);
+      if (ok) setAddedIds((ids) => [...ids, dishId as string]);
       setNewDishName('');
       setNewDishNameEn('');
       setShowNewDishForm(false);
@@ -178,17 +199,7 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
     }
   };
 
-  const handleAddDish = async () => {
-    if (!selectedDishId) {
-      toast.error('Selecteer een gerecht');
-      return;
-    }
 
-    await addOwnerDish(restaurantId, selectedDishId);
-
-    setAddDishOpen(false);
-    setSelectedDishId('');
-  };
 
   const toggleDietaryOption = async (dishId: string, field: string, currentValue: boolean) => {
     const { error } = await supabase
@@ -515,49 +526,55 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
       {/* Add Dish Dialog */}
       <Dialog open={addDishOpen} onOpenChange={(open) => {
         setAddDishOpen(open);
-        if (!open) { setShowNewDishForm(false); setNewDishName(''); setNewDishNameEn(''); setSelectedDishId(''); }
+        if (!open) { setShowNewDishForm(false); setNewDishName(''); setNewDishNameEn(''); setSearchQuery(''); setAddedIds([]); }
       }}>
-        <DialogContent>
+        <DialogContent className="flex h-[85vh] max-w-3xl flex-col gap-4">
           <DialogHeader>
-            <DialogTitle>{isNL ? 'Gerecht Toevoegen' : 'Add Dish'}</DialogTitle>
+            <DialogTitle>{isNL ? 'Gerechten toevoegen' : 'Add dishes'}</DialogTitle>
+            <DialogDescription>
+              {isNL
+                ? 'Zoek een gerecht en klik op Toevoegen. Je kunt er meerdere achter elkaar toevoegen; wat je toevoegt is meteen bevestigd.'
+                : 'Search a dish and click Add. You can add several in a row; dishes you add are confirmed right away.'}
+            </DialogDescription>
           </DialogHeader>
 
           {!showNewDishForm ? (
-            <div className="space-y-4">
-              <Popover open={searchOpen} onOpenChange={setSearchOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" role="combobox" aria-expanded={searchOpen} className="w-full justify-between">
-                    {selectedDishId
-                      ? getDishName(availableDishes.find((d) => d.id === selectedDishId))
-                      : isNL ? 'Selecteer gerecht...' : 'Select dish...'}
-                    <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0" align="start">
-                  <Command>
-                    <CommandInput placeholder={isNL ? 'Zoek gerecht...' : 'Search dish...'} value={searchQuery} onValueChange={setSearchQuery} />
-                    <CommandList>
-                      <CommandEmpty>{isNL ? 'Geen gerechten gevonden' : 'No dishes found'}</CommandEmpty>
-                      <CommandGroup>
-                        {filteredDishes.slice(0, 50).map((dish) => (
-                          <CommandItem key={dish.id} value={dish.id} onSelect={() => { setSelectedDishId(dish.id); setSearchOpen(false); }}>
-                            <Check className={cn('mr-2 h-4 w-4', selectedDishId === dish.id ? 'opacity-100' : 'opacity-0')} />
-                            <div>
-                              <div className="text-sm">{getDishName(dish)}</div>
-                              {dish.name_en && isNL && <div className="text-xs text-muted-foreground">{dish.name_en}</div>}
-                            </div>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              <Button variant="ghost" className="w-full text-primary" onClick={() => setShowNewDishForm(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                {isNL ? 'Nieuw gerecht aanmaken' : 'Create new dish'}
+            <>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                <Input autoFocus value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={isNL ? 'Zoek gerecht, bijvoorbeeld rendang' : 'Search dish, e.g. rendang'}
+                  className="h-11 pl-9 text-base" aria-label={isNL ? 'Zoek gerecht' : 'Search dish'} />
+              </div>
+              <div className="min-h-0 flex-1 divide-y overflow-y-auto rounded-md border" role="list">
+                {pickList.length === 0 ? (
+                  <div className="p-6 text-center text-sm text-muted-foreground">
+                    {isNL ? 'Geen gerechten gevonden.' : 'No dishes found.'}
+                  </div>
+                ) : pickList.map((dish) => {
+                  const added = addedIds.includes(dish.id);
+                  return (
+                    <div key={dish.id} role="listitem" className="flex items-center justify-between gap-3 px-4 py-2.5">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-medium">{getDishName(dish)}</div>
+                        {dish.name_en && isNL && <div className="truncate text-xs text-muted-foreground">{dish.name_en}</div>}
+                      </div>
+                      {added ? (
+                        <span className="flex shrink-0 items-center gap-1 text-sm text-primary"><Check className="h-4 w-4" />{isNL ? 'Toegevoegd' : 'Added'}</span>
+                      ) : (
+                        <Button size="sm" variant="outline" className="min-h-9 shrink-0" disabled={addingId === dish.id} onClick={() => quickAdd(dish.id)}>
+                          {addingId === dish.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="mr-1 h-4 w-4" />{isNL ? 'Toevoegen' : 'Add'}</>}
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <Button variant="ghost" className="text-primary" onClick={() => { setNewDishName(searchQuery.trim()); setShowNewDishForm(true); }}>
+                <Plus className="mr-2 h-4 w-4" />
+                {isNL ? 'Staat je gerecht er niet tussen? Nieuw gerecht aanmaken' : 'Not in the list? Create a new dish'}
               </Button>
-            </div>
+            </>
           ) : (
             <div className="space-y-4">
               <div className="space-y-2">
@@ -574,19 +591,17 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
             </div>
           )}
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAddDishOpen(false)}>
-              {isNL ? 'Annuleren' : 'Cancel'}
-            </Button>
+          <DialogFooter className="items-center gap-2 sm:justify-between">
+            <span className="text-sm text-muted-foreground">
+              {addedIds.length > 0 ? (isNL ? `${addedIds.length} toegevoegd` : `${addedIds.length} added`) : ''}
+            </span>
             {showNewDishForm ? (
               <Button onClick={handleCreateAndAddDish} disabled={!newDishName.trim() || isCreating}>
-                {isCreating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isNL ? 'Aanmaken & Toevoegen' : 'Create & Add'}
               </Button>
             ) : (
-              <Button onClick={handleAddDish} disabled={!selectedDishId}>
-                {isNL ? 'Toevoegen' : 'Add'}
-              </Button>
+              <Button onClick={() => setAddDishOpen(false)}>{isNL ? 'Klaar' : 'Done'}</Button>
             )}
           </DialogFooter>
         </DialogContent>

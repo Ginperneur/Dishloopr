@@ -18,13 +18,14 @@ export const CHECKOUT_ENABLED = {
   /** Sponsored dish×city listings */
   sponsored: flag(import.meta.env.VITE_ENABLE_SPONSORED_CHECKOUT as string | undefined),
   /** Extra paid profile tags (recurring per-tag subscription) */
-  tag: flag(import.meta.env.VITE_ENABLE_TAG_CHECKOUT as string | undefined),
+  /** Prices are created inline in create-tag-checkout (€5/month) unless STRIPE_TAG_PRICE_ID is set. */
+  tag: true,
   /**
    * Event/special promotions (€5 per month per event, recurring per-event
    * subscription). While off, owners can create events and an admin releases
    * them by hand (promotion_status 'comped'); see the events migration.
    */
-  event: flag(import.meta.env.VITE_ENABLE_EVENT_CHECKOUT as string | undefined),
+  event: true,
   /**
    * Founding Partner and Menuservice (create-package-checkout). Needs only
    * STRIPE_SECRET_KEY and the stripe-webhook secret; prices are created inline

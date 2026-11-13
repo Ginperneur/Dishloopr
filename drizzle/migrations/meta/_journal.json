@@ -185,20 +185,6 @@
       "breakpoints": true
     },
     {
-      "idx": 27,
-      "version": "7",
-      "when": 1794560000000,
-      "tag": "0027_owner_free_tag",
-      "breakpoints": true
-    },
-    {
-      "idx": 28,
-      "version": "7",
-      "when": 1794563000000,
-      "tag": "0028_alert_frequency_monthly",
-      "breakpoints": true
-    },
-    {
       "idx": 29,
       "version": "7",
       "when": 1794574825064,
@@ -210,6 +196,27 @@
       "version": "7",
       "when": 1794574832174,
       "tag": "0030_alert_frequency_monthly",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1794574833174,
+      "tag": "0031_paid_tag_sync",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1794574834174,
+      "tag": "0032_owner_opening_hours",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794574835174,
+      "tag": "0033_owner_delete_dishes",
       "breakpoints": true
     }
   ]
