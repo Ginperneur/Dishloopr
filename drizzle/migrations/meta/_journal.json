@@ -218,6 +218,27 @@
       "when": 1794574835174,
       "tag": "0033_owner_delete_dishes",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794578808650,
+      "tag": "0034_0031_paid_tag_sync",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1794578819868,
+      "tag": "0035_0032_owner_opening_hours",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1794578824635,
+      "tag": "0036_0033_owner_delete_dishes",
+      "breakpoints": true
     }
   ]
 }
