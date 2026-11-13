@@ -1077,7 +1077,7 @@ export default function OwnerDashboard() {
 
             {/* Email Preferences */}
             <WeeklyReportToggle />
-            <AnomalyAlertToggle />
+            <AnomalyAlertToggle isPro={isPro} />
             <EventReportToggle />
 
             {/* Dishes Confirmation */}

@@ -62,10 +62,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    // For weekly mode we only send on Mondays (UTC)
+    // Weekly mode sends on Mondays, monthly mode on the 1st (UTC).
     const isMonday = new Date().getUTCDay() === 1;
+    const isFirstOfMonth = new Date().getUTCDate() === 1;
 
-    // Pro subscribers only — anomalies are a Pro feature
+    // Owner Pro chooses daily, weekly or monthly; free owners always get the monthly alert.
     const { data: proRows } = await supabase
       .from('owner_pro_subscriptions')
       .select('user_id, status, current_period_end');
@@ -88,10 +89,13 @@ Deno.serve(async (req) => {
 
     for (const r of (restaurants || []) as any[]) {
       const ownerId: string = r.claimed_by_owner_id;
-      if (!ownerId || !proUsers.has(ownerId)) continue;
-      const p = prefs.get(ownerId) ?? { enabled: true, freq: 'daily', sev: 'critical' };
+      if (!ownerId) continue;
+      const isPro = proUsers.has(ownerId);
+      const p = prefs.get(ownerId) ?? { enabled: true, freq: isPro ? 'daily' : 'monthly', sev: 'critical' };
       if (!p.enabled) continue;
-      if (p.freq === 'weekly' && !isMonday) continue;
+      const freq = isPro ? p.freq : 'monthly';
+      if (freq === 'weekly' && !isMonday) continue;
+      if (freq === 'monthly' && !isFirstOfMonth) continue;
       owners_checked++;
 
       const { data: rows, error } = await supabase.rpc('get_owner_funnel_anomalies' as any, {

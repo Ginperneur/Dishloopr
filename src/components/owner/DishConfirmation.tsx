@@ -33,7 +33,7 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
     loading,
     verifyDish,
     rejectDish,
-    suggestDish,
+    addOwnerDish,
     deleteDish,
     refetch,
   } = useRestaurantDishes({ restaurantId });
@@ -166,12 +166,11 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
         return;
       }
 
-      await suggestDish(restaurantId, newDish.id, 1.0, 'owner');
+      await addOwnerDish(restaurantId, newDish.id);
       setAddDishOpen(false);
       setNewDishName('');
       setNewDishNameEn('');
       setShowNewDishForm(false);
-      toast.success(isNL ? 'Nieuw gerecht aangemaakt en toegevoegd' : 'New dish created and added');
     } catch {
       toast.error(isNL ? 'Er ging iets mis' : 'Something went wrong');
     } finally {
@@ -184,13 +183,9 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
       toast.error('Selecteer een gerecht');
       return;
     }
-    
-    await suggestDish(restaurantId, selectedDishId, 1.0, 'owner');
-    const newDish = dishes.find((d) => d.dish_id === selectedDishId);
-    if (newDish) {
-      await verifyDish(newDish.id);
-    }
-    
+
+    await addOwnerDish(restaurantId, selectedDishId);
+
     setAddDishOpen(false);
     setSelectedDishId('');
   };
@@ -393,6 +388,11 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
             <div className="text-center py-8 text-muted-foreground">
               <AlertCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
               <p>{isNL ? 'Nog geen bevestigde gerechten' : 'No confirmed dishes yet'}</p>
+              <p className="mt-1 text-sm">
+                {isNL
+                  ? 'Voeg je gerechten toe met "Gerecht Toevoegen" of upload je menukaart. Wat je zelf toevoegt, is meteen bevestigd.'
+                  : 'Add your dishes with "Add Dish" or upload your menu. Dishes you add yourself are confirmed right away.'}
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
