@@ -125,6 +125,7 @@ import { OwnerTour } from '@/components/owner/OwnerTour';
 import { VisibilityProgress, type VisibilityStep } from '@/components/owner/VisibilityProgress';
 import { useOwnerTier } from '@/hooks/useOwnerTier';
 import { OpeningHoursExceptions } from '@/components/owner/OpeningHoursExceptions';
+import { OwnerContactCard } from '@/components/owner/OwnerContactCard';
 import { MultiLanguageProfile } from '@/components/owner/MultiLanguageProfile';
 import { BasicInfoEditor } from '@/components/owner/BasicInfoEditor';
 import { ParkingEditor } from '@/components/restaurant/ParkingEditor';
@@ -876,6 +877,7 @@ export default function OwnerDashboard() {
                 </Card>
               )}
             </div>
+            <OwnerContactCard restaurantId={selectedRestaurant?.id} restaurantName={selectedRestaurant?.name} />
           </TabsContent>
 
           {/* ===== CONTENT TAB ===== */}

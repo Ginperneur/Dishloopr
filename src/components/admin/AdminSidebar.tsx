@@ -74,6 +74,7 @@ const navGroups = [
       { id: 'support', label: 'Support Chat', icon: MessageSquare, badgeKey: 'pendingSupport' as const },
       { id: 'suggestions', label: 'Suggesties', icon: Inbox },
       { id: 'optouts', label: 'Afmeldingen', icon: Inbox },
+      { id: 'contact', label: 'Contactberichten', icon: Inbox },
     ],
   },
   {
