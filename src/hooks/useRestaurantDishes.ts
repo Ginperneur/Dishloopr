@@ -173,6 +173,29 @@ export function useRestaurantDishes(options: UseRestaurantDishesOptions = {}) {
     return true;
   };
 
+  /**
+   * A dish the owner adds themselves is confirmed straight away (no extra "suggested" step).
+   * If it already exists for the restaurant (e.g. as a suggestion), it is confirmed instead.
+   */
+  const addOwnerDish = async (restaurantId: string, dishId: string) => {
+    if (!user) return false;
+    const confirmed = { status: 'verified_by_owner', verified_by: user.id, verified_at: new Date().toISOString() };
+    const { error } = await supabase.from('restaurant_dishes').insert({
+      restaurant_id: restaurantId, dish_id: dishId, source: 'owner', confidence_score: 1, created_by: user.id, ...confirmed,
+    } as never);
+    if (error?.code === '23505') {
+      const { error: upErr } = await supabase.from('restaurant_dishes').update(confirmed as never)
+        .eq('restaurant_id', restaurantId).eq('dish_id', dishId);
+      if (upErr) { toast.error('Kon gerecht niet bevestigen'); return false; }
+    } else if (error) {
+      toast.error('Kon gerecht niet toevoegen');
+      return false;
+    }
+    toast.success('Gerecht toegevoegd en bevestigd');
+    await fetchDishes();
+    return true;
+  };
+
   const verifyDish = async (id: string) => {
     if (!user) return false;
 
@@ -270,6 +293,7 @@ export function useRestaurantDishes(options: UseRestaurantDishesOptions = {}) {
     loading,
     refetch: fetchDishes,
     suggestDish,
+    addOwnerDish,
     approveDish,
     verifyDish,
     rejectDish,

@@ -14,10 +14,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
-type Freq = 'daily' | 'weekly';
+type Freq = 'daily' | 'weekly' | 'monthly';
 type Sev = 'critical' | 'critical_and_warning';
 
-export function AnomalyAlertToggle() {
+/** Free owners get the alert monthly; Owner Pro chooses daily, weekly or monthly. */
+export function AnomalyAlertToggle({ isPro = false }: { isPro?: boolean }) {
   const { user } = useAuth();
   const [enabled, setEnabled] = useState(true);
   const [frequency, setFrequency] = useState<Freq>('daily');
@@ -68,7 +69,7 @@ export function AnomalyAlertToggle() {
     setFrequency(next);
     persist(
       { anomaly_alert_frequency: next },
-      next === 'daily' ? 'Dagelijkse alerts' : 'Wekelijkse alerts (maandag)',
+      next === 'daily' ? 'Dagelijkse alerts' : next === 'weekly' ? 'Wekelijkse alerts (maandag)' : 'Maandelijkse alerts (de 1e)',
       () => setFrequency(prev),
     );
   };
@@ -106,7 +107,7 @@ export function AnomalyAlertToggle() {
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">Frequentie</Label>
               <Select
-                value={frequency}
+                value={isPro ? frequency : 'monthly'}
                 onValueChange={(v) => changeFrequency(v as Freq)}
                 disabled={loading}
               >
@@ -114,10 +115,14 @@ export function AnomalyAlertToggle() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="daily">Dagelijks</SelectItem>
-                  <SelectItem value="weekly">Wekelijks (maandag)</SelectItem>
+                  <SelectItem value="daily" disabled={!isPro}>Dagelijks{!isPro && ' (Pro)'}</SelectItem>
+                  <SelectItem value="weekly" disabled={!isPro}>Wekelijks, maandag{!isPro && ' (Pro)'}</SelectItem>
+                  <SelectItem value="monthly">Maandelijks, de 1e</SelectItem>
                 </SelectContent>
               </Select>
+              {!isPro && (
+                <p className="text-xs text-muted-foreground">Met Owner Pro kies je voor dagelijkse of wekelijkse alerts.</p>
+              )}
             </div>
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">Ernst</Label>
