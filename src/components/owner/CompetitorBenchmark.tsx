@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { topPercent } from '@/lib/ownerFormat';
 import { BarChart3, TrendingUp, TrendingDown, Minus, Star, Eye, MessageSquare } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,8 +16,8 @@ interface BenchmarkData {
   avgRating: number;
   avgReviews: number;
   totalCompetitors: number;
-  ratingPercentile: number;
-  reviewPercentile: number;
+  ratingPercentile: number | null;
+  reviewPercentile: number | null;
 }
 
 export function CompetitorBenchmark({ restaurantId, cityId, cuisines, rating, reviewCount }: CompetitorBenchmarkProps) {
@@ -43,8 +44,9 @@ export function CompetitorBenchmark({ restaurantId, cityId, cuisines, rating, re
       const avgReviews = reviews.length > 0 ? reviews.reduce((a, b) => a + b, 0) / reviews.length : 0;
 
       // Calculate percentile
-      const ratingPercentile = Math.round((ratings.filter(r => r < rating).length / ratings.length) * 100);
-      const reviewPercentile = Math.round((reviews.filter(r => r < reviewCount).length / reviews.length) * 100);
+      // null when there is nothing to compare (no own rating yet, or no rated competitors): never NaN.
+      const ratingPercentile = topPercent(Number(rating), ratings);
+      const reviewPercentile = topPercent(Number(reviewCount), reviews);
 
       setBenchmark({
         avgRating,
@@ -85,7 +87,7 @@ export function CompetitorBenchmark({ restaurantId, cityId, cuisines, rating, re
             <div>
               <p className="text-sm font-medium">Beoordeling</p>
               <p className="text-xs text-muted-foreground">
-                Top {100 - benchmark.ratingPercentile}% in jouw stad
+                {benchmark.ratingPercentile === null ? 'Nog niet te vergelijken' : `Top ${benchmark.ratingPercentile}% in jouw stad`}
               </p>
             </div>
           </div>
@@ -105,7 +107,7 @@ export function CompetitorBenchmark({ restaurantId, cityId, cuisines, rating, re
             <div>
               <p className="text-sm font-medium">Aantal reviews</p>
               <p className="text-xs text-muted-foreground">
-                Top {100 - benchmark.reviewPercentile}% in jouw stad
+                {benchmark.reviewPercentile === null ? 'Nog niet te vergelijken' : `Top ${benchmark.reviewPercentile}% in jouw stad`}
               </p>
             </div>
           </div>

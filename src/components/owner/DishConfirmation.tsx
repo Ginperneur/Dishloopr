@@ -48,9 +48,23 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
   const [isClassifying, setIsClassifying] = useState(false);
 
   const suggestedDishes = dishes.filter((d) => d.status === 'suggested');
-  const confirmedDishes = dishes.filter((d) => 
+  const allConfirmed = dishes.filter((d) =>
     d.status === 'verified_by_owner' || d.status === 'approved_by_admin'
   );
+  // A dish deactivated in the catalogue is hidden from owners by RLS and arrives without a name.
+  // Those rows are not shown in the list (they looked like empty lines); the owner can clear them in one go.
+  const confirmedDishes = allConfirmed.filter((d) => !!d.dish?.name);
+  const unavailableDishes = allConfirmed.filter((d) => !d.dish?.name);
+  const [clearingUnavailable, setClearingUnavailable] = useState(false);
+  const clearUnavailable = async () => {
+    setClearingUnavailable(true);
+    const { data, error } = await supabase.from('restaurant_dishes').delete()
+      .in('id', unavailableDishes.map((d) => d.id)).select('id');
+    setClearingUnavailable(false);
+    if (error || !data?.length) { toast.error(isNL ? 'Opruimen lukte niet' : 'Could not clean up'); return; }
+    toast.success(isNL ? `${data.length} verouderde ${data.length === 1 ? 'regel' : 'regels'} verwijderd` : 'Removed');
+    refetch();
+  };
   const signatureCount = confirmedDishes.filter((d: any) => d.is_signature).length;
   const { data: ownerTier } = useOwnerTier(restaurantId);
   const isPro = ownerTier === 'pro';
@@ -392,6 +406,19 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
                 <span className="inline-flex items-center gap-1.5"><span>☪️</span>Halal</span>
                 <span className="inline-flex items-center gap-1.5"><X className="h-3.5 w-3.5" />{isNL ? 'Verwijderen' : 'Remove'}</span>
               </div>
+            </div>
+          )}
+
+          {unavailableDishes.length > 0 && (
+            <div className="mb-4 flex flex-col gap-2 rounded-lg border border-dashed p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-muted-foreground">
+                {isNL
+                  ? `${unavailableDishes.length} ${unavailableDishes.length === 1 ? 'gerecht staat' : 'gerechten staan'} niet meer in onze catalogus en ${unavailableDishes.length === 1 ? 'wordt' : 'worden'} niet getoond. Voeg ze zo nodig opnieuw toe.`
+                  : `${unavailableDishes.length} dishes are no longer in our catalogue and are hidden.`}
+              </p>
+              <Button variant="outline" size="sm" onClick={clearUnavailable} disabled={clearingUnavailable} className="shrink-0">
+                {isNL ? 'Opruimen' : 'Clean up'}
+              </Button>
             </div>
           )}
 

@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 
 interface DailyBriefingProps {
   restaurantName: string;
+  /** Owner's first name for the greeting; without it the greeting has no name. */
+  ownerFirstName?: string | null;
   totalViews: number;
   viewsByDay: { date: string; count: number }[];
   unansweredReviews: number;
@@ -18,6 +20,7 @@ interface DailyBriefingProps {
 
 export function DailyBriefing({
   restaurantName,
+  ownerFirstName,
   totalViews,
   viewsByDay,
   unansweredReviews,
@@ -86,11 +89,11 @@ export function DailyBriefing({
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="h-3.5 w-3.5 text-primary-foreground/80" />
                 <span className="text-[11px] font-medium uppercase tracking-widest text-primary-foreground/80">
-                  Daily Briefing
+                  Vandaag
                 </span>
               </div>
               <p className="text-sm text-primary-foreground/85 mb-1">
-                {greeting}, {restaurantName.split(' ')[0]}
+                {ownerFirstName ? `${greeting}, ${ownerFirstName}` : greeting}
               </p>
               <h2 className="text-xl md:text-2xl font-bold leading-tight mb-4 max-w-xl">
                 {headline}
