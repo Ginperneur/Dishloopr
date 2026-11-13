@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { lovable } from '@/integrations/lovable/index';
 import logo from '@/assets/dishloopr-logo.png';
+import { signupErrorMessage } from '@/lib/authErrors';
 
 const loginSchema = z.object({
   email: z.string().email('Ongeldig e-mailadres'),
@@ -145,14 +146,13 @@ export default function LoginPage() {
     setIsLoading(false);
 
     if (error) {
-      let message = 'Er is een fout opgetreden bij het registreren.';
-      if (error.message.includes('User already registered')) {
-        message = 'Dit e-mailadres is al geregistreerd.';
-      }
+      // Show what actually went wrong instead of one generic line (see src/lib/authErrors.ts).
+      console.error('[signup]', error);
       toast({
         variant: 'destructive',
         title: 'Registratie mislukt',
-        description: message,
+        description: signupErrorMessage(error),
+        duration: 10000,
       });
     } else {
       const isRestaurant = accountType === 'restaurant';
