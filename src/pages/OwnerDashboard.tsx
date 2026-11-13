@@ -1247,6 +1247,7 @@ export default function OwnerDashboard() {
                   onUpdate={(url) =>
                     setSelectedRestaurant({ ...selectedRestaurant, reservation_url: url, accepts_reservations: !!url } as any)
                   }
+                  onOpenIntegrations={() => { setActiveTab('integrations'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                 />
               </div>
             )}

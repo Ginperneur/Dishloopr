@@ -130,8 +130,14 @@ export function ReservationIntegrations({ restaurantId }: { restaurantId: string
               <div className="space-y-1.5">
                 <Label htmlFor="zc-id">Zenchef-restaurant-ID</Label>
                 <Input id="zc-id" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Bijvoorbeeld 378183, of plak je Zenchef-link of embedcode" autoComplete="off" />
+                <ol className="list-decimal space-y-1 pl-5 text-xs text-muted-foreground">
+                  <li>Log in op ZenchefOS en open de instellingen van je reserveringsmodule (de widget op je website).</li>
+                  <li>Kopieer je reserveringslink, of alleen het nummer achter <code>rid=</code> in die link.</li>
+                  <li>Plak de link of het nummer hierboven en klik op <span className="font-medium">Koppelen</span>.</li>
+                  <li>Controleer daarna op je restaurantpagina dat de knop Reserveren de Zenchef-widget opent.</li>
+                </ol>
                 <p className="text-xs text-muted-foreground">
-                  Je vindt het ID in ZenchefOS onder de installatie van de reserveringsmodule, of in je reserveringslink (rid=...). We gebruiken alleen het ID; scripts of andere code worden nooit overgenomen.
+                  We gebruiken alleen het ID; scripts of andere code worden nooit overgenomen. Kom je er niet uit? Stuur ons via de chat je reserveringslink, dan koppelen wij het.
                 </p>
               </div>
               <div className="space-y-1.5">
