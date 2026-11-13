@@ -563,30 +563,63 @@ export type Database = {
       }
       contact_messages: {
         Row: {
+          admin_notes: string | null
+          category: string | null
           created_at: string
           email: string
+          handled_at: string | null
           id: string
           message: string
           name: string
+          restaurant_id: string | null
+          status: string
           subject: string
+          user_id: string | null
         }
         Insert: {
+          admin_notes?: string | null
+          category?: string | null
           created_at?: string
           email: string
+          handled_at?: string | null
           id?: string
           message: string
           name: string
+          restaurant_id?: string | null
+          status?: string
           subject: string
+          user_id?: string | null
         }
         Update: {
+          admin_notes?: string | null
+          category?: string | null
           created_at?: string
           email?: string
+          handled_at?: string | null
           id?: string
           message?: string
           name?: string
+          restaurant_id?: string | null
+          status?: string
           subject?: string
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contact_messages_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "contact_messages_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cross_promotions: {
         Row: {
@@ -8338,6 +8371,14 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      set_restaurant_contact: {
+        Args: {
+          p_phone: string
+          p_restaurant_id: string
+          p_website_url: string
+        }
+        Returns: Json
       }
       set_restaurant_event_active: {
         Args: { p_active: boolean; p_event_id: string }

@@ -253,6 +253,13 @@
       "when": 1794580923433,
       "tag": "0038_owner_contact",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1794587950666,
+      "tag": "0039_owner_contact_details",
+      "breakpoints": true
     }
   ]
 }

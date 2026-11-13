@@ -1,8 +1,3 @@
--- Verified owners set their restaurant's phone number and website themselves, straight away.
--- The checks run here too, so the dashboard form is not the only gate. An empty value clears
--- the field. Address changes are not covered: they go to Dishloopr as a contact message
--- (category 'gegevens'), because the map and search results depend on them.
--- Idempotent on purpose (Lovable may apply it under another number, or twice).
 CREATE OR REPLACE FUNCTION public.set_restaurant_contact(p_restaurant_id uuid, p_phone text, p_website_url text)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE
