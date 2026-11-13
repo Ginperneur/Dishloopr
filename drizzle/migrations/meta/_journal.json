@@ -239,6 +239,13 @@
       "when": 1794578824635,
       "tag": "0036_0033_owner_delete_dishes",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1794580922433,
+      "tag": "0037_admin_restaurant_owner_pro_override",
+      "breakpoints": true
     }
   ]
 }

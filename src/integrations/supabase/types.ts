@@ -5548,6 +5548,7 @@ export type Database = {
           name: string
           needs_manual_review: boolean | null
           opening_hours: Json | null
+          owner_pro_override: boolean
           owner_tier: string
           parking_info: Json | null
           phone: string | null
@@ -5628,6 +5629,7 @@ export type Database = {
           name: string
           needs_manual_review?: boolean | null
           opening_hours?: Json | null
+          owner_pro_override?: boolean
           owner_tier?: string
           parking_info?: Json | null
           phone?: string | null
@@ -5708,6 +5710,7 @@ export type Database = {
           name?: string
           needs_manual_review?: boolean | null
           opening_hours?: Json | null
+          owner_pro_override?: boolean
           owner_tier?: string
           parking_info?: Json | null
           phone?: string | null
@@ -7739,6 +7742,10 @@ export type Database = {
       admin_apply_restaurant_categorization: {
         Args: { _data: Json }
         Returns: number
+      }
+      admin_set_restaurant_owner_pro: {
+        Args: { p_enabled: boolean; p_restaurant_id: string }
+        Returns: string
       }
       audit_and_fix_dish_classifications: { Args: never; Returns: Json }
       auto_enrich_dish_dietary_labels: { Args: never; Returns: Json }
