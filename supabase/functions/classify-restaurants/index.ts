@@ -8,6 +8,7 @@ const corsHeaders = {
 };
 
 interface ClassificationResult {
+  index: number;
   cuisines: string[];
   ambience_tags: string[];
   concepts: string[];
