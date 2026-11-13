@@ -76,7 +76,8 @@ export function DishConfirmation({ restaurantId, restaurantName }: DishConfirmat
 
 
   const getDishName = (dish: Dish | RestaurantDish['dish']) => {
-    if (!dish) return '';
+    // A dish that was deactivated in the catalogue is hidden from owners by RLS, so it arrives empty.
+    if (!dish?.name) return isNL ? 'Gerecht niet meer beschikbaar, verwijder het of voeg het opnieuw toe' : 'Dish no longer available';
     const name = isNL ? dish.name : (dish.name_en || dish.name);
     return formatDishName(name);
   };

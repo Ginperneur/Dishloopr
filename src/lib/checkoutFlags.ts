@@ -25,7 +25,7 @@ export const CHECKOUT_ENABLED = {
    * subscription). While off, owners can create events and an admin releases
    * them by hand (promotion_status 'comped'); see the events migration.
    */
-  event: flag(import.meta.env.VITE_ENABLE_EVENT_CHECKOUT as string | undefined),
+  event: true,
   /**
    * Founding Partner and Menuservice (create-package-checkout). Needs only
    * STRIPE_SECRET_KEY and the stripe-webhook secret; prices are created inline

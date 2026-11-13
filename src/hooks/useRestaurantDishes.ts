@@ -253,12 +253,14 @@ export function useRestaurantDishes(options: UseRestaurantDishesOptions = {}) {
   };
 
   const deleteDish = async (id: string) => {
-    const { error } = await supabase
+    // .select() returns the deleted rows: without it a delete blocked by RLS looks successful.
+    const { data, error } = await supabase
       .from('restaurant_dishes')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .select('id');
 
-    if (error) {
+    if (error || !data?.length) {
       toast.error('Kon gerecht niet verwijderen');
       return false;
     }

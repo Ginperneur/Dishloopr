@@ -211,6 +211,13 @@
       "when": 1794569000000,
       "tag": "0030_owner_opening_hours",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1794572000000,
+      "tag": "0031_owner_delete_dishes",
+      "breakpoints": true
     }
   ]
 }
