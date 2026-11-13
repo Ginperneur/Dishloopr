@@ -62,8 +62,11 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   // The free tag (first in each list) is the owner's own choice, saved through
   // set_free_restaurant_tag so only one tag from the fixed lists can be set this way.
-  const [picking, setPicking] = useState<{ category: string; value: string } | null>(null);
+  // One draft per category, so choices in several categories stay put until "Tags opslaan".
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [editing, setEditing] = useState<Record<string, boolean>>({});
   const [savingFree, setSavingFree] = useState(false);
+  const pendingCount = Object.values(drafts).filter(Boolean).length;
 
   useEffect(() => {
     if (restaurant?.id) fetchPaidTags();
@@ -115,16 +118,28 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
     }
   };
 
-  const saveFreeTag = async (categoryKey: string, dbField: string, value: string) => {
+  const saveFreeTags = async () => {
     setSavingFree(true);
-    const { data, error } = await supabase.rpc('set_free_restaurant_tag' as never, {
-      p_restaurant_id: restaurant.id, p_category: categoryKey, p_value: value,
-    } as never);
+    let updated = { ...restaurant };
+    const failed: { key: string; label: string }[] = [];
+    for (const { key, dbField, label } of TAG_CATEGORIES) {
+      const value = drafts[key];
+      if (!value) continue;
+      const { data, error } = await supabase.rpc('set_free_restaurant_tag' as never, {
+        p_restaurant_id: restaurant.id, p_category: key, p_value: value,
+      } as never);
+      if (error) failed.push({ key, label }); else updated = { ...updated, [dbField]: data as unknown as string[] };
+    }
     setSavingFree(false);
-    if (error) { toast.error(error.message || 'Opslaan lukte niet'); return; }
-    onUpdate({ ...restaurant, [dbField]: data as unknown as string[] });
-    setPicking(null);
-    toast.success('Tag opgeslagen');
+    onUpdate(updated);
+    if (failed.length) {
+      toast.error(`Opslaan lukte niet voor: ${failed.map(f => f.label).join(', ')}`);
+      setDrafts(d => Object.fromEntries(Object.entries(d).filter(([k]) => failed.some(f => f.key === k))));
+      return;
+    }
+    setDrafts({});
+    setEditing({});
+    toast.success('Tags opgeslagen');
   };
 
   const getAvailableOptions = (categoryKey: string, dbField: string, options: readonly string[]) => {
@@ -182,18 +197,18 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
                     {idx === 0 && <span className="ml-1 opacity-80">(gratis)</span>}
                   </Badge>
                 ))}
-                {currentTags.length > 0 && picking?.category !== key && (
-                  <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setPicking({ category: key, value: '' })}>
+                {currentTags.length > 0 && !editing[key] && (
+                  <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setEditing(e => ({ ...e, [key]: true }))}>
                     <Pencil className="h-3 w-3 mr-1" /> Wijzigen
                   </Button>
                 )}
               </div>
 
-              {(currentTags.length === 0 || picking?.category === key) && (
+              {(currentTags.length === 0 || editing[key]) && (
                 <div className="flex flex-wrap items-center gap-2">
                   <Select
-                    value={picking?.category === key ? picking.value : ''}
-                    onValueChange={(v) => setPicking({ category: key, value: v })}
+                    value={drafts[key] ?? ''}
+                    onValueChange={(v) => setDrafts(d => ({ ...d, [key]: v }))}
                   >
                     <SelectTrigger className="h-9 w-56 text-sm" aria-label={`Gratis tag voor ${label}`}>
                       <SelectValue placeholder={currentTags.length ? 'Kies een andere tag' : 'Kies je gratis tag'} />
@@ -204,13 +219,10 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button size="sm" className="h-9" disabled={picking?.category !== key || !picking.value || savingFree}
-                    onClick={() => picking && saveFreeTag(key, dbField, picking.value)}>
-                    {savingFree && picking?.category === key ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
-                    Opslaan
-                  </Button>
+                  {drafts[key] && <span className="text-xs text-muted-foreground">Nog niet opgeslagen</span>}
                   {currentTags.length > 0 && (
-                    <Button size="sm" variant="ghost" className="h-9 w-9 p-0" aria-label="Annuleren" onClick={() => setPicking(null)}>
+                    <Button size="sm" variant="ghost" className="h-9 w-9 p-0" aria-label="Annuleren"
+                      onClick={() => { setEditing(e => ({ ...e, [key]: false })); setDrafts(d => { const n = { ...d }; delete n[key]; return n; }); }}>
                       <X className="h-3 w-3" />
                     </Button>
                   )}
@@ -274,6 +286,14 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
             </div>
           );
         })}
+
+        <div className="flex flex-wrap items-center gap-3">
+          <Button onClick={saveFreeTags} disabled={pendingCount === 0 || savingFree} className="min-h-11">
+            {savingFree && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            Tags opslaan{pendingCount > 0 ? ` (${pendingCount})` : ''}
+          </Button>
+          {pendingCount > 0 && <span className="text-sm text-muted-foreground">Je keuzes worden pas bewaard als je op Tags opslaan klikt.</span>}
+        </div>
 
         <div className="border-t pt-4">
           <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">

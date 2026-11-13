@@ -527,6 +527,13 @@ serve(async (req) => {
     ) {
       const sub = event.data.object as Stripe.Subscription;
       const userId = sub.metadata?.user_id;
+      // Paid extra tags: a trigger adds or removes the tag on the restaurant when this flips.
+      {
+        const tagLive = ["active", "trialing", "past_due"].includes(sub.status);
+        const { error: tagErr } = await supabaseAdmin.from("restaurant_tag_subscriptions")
+          .update({ is_active: tagLive }).eq("stripe_subscription_id", sub.id);
+        if (tagErr) logStep("Extra tag status update error", { error: tagErr.message });
+      }
       if (userId && sub.metadata?.type === "owner_pro") {
         const isActive = sub.status === "active" || sub.status === "trialing";
         const priceId = sub.items.data[0]?.price?.id ?? null;
