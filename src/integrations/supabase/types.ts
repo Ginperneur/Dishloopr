@@ -8336,6 +8336,10 @@ export type Database = {
         Args: { p_active: boolean; p_event_id: string }
         Returns: undefined
       }
+      set_restaurant_opening_hours: {
+        Args: { p_hours: Json; p_restaurant_id: string }
+        Returns: Json
+      }
       set_signature_dish: {
         Args: { _rd_id: string; _restaurant_id: string }
         Returns: undefined

@@ -218,6 +218,13 @@
       "when": 1794574835174,
       "tag": "0033_owner_delete_dishes",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794578808650,
+      "tag": "0034_0031_paid_tag_sync",
+      "breakpoints": true
     }
   ]
 }
