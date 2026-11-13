@@ -204,6 +204,13 @@
       "when": 1794566000000,
       "tag": "0029_paid_tag_sync",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1794569000000,
+      "tag": "0030_owner_opening_hours",
+      "breakpoints": true
     }
   ]
 }

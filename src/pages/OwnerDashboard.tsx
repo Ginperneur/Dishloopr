@@ -896,6 +896,7 @@ export default function OwnerDashboard() {
                   restaurantId={selectedRestaurant.id}
                   currentName={selectedRestaurant.name}
                   currentOpeningHours={(selectedRestaurant as any).opening_hours}
+                  onHoursSaved={(opening_hours) => setSelectedRestaurant({ ...selectedRestaurant, opening_hours })}
                 />
                 <div className="mt-6">
                   <ParkingEditor restaurantId={selectedRestaurant.id} />

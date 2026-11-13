@@ -25,6 +25,8 @@ interface Props {
   restaurantId: string;
   currentName: string;
   currentOpeningHours: any;
+  /** Called after opening hours were saved directly, so the dashboard shows them right away. */
+  onHoursSaved?: (hours: Record<string, string>) => void;
 }
 
 type Pending = {
@@ -35,10 +37,11 @@ type Pending = {
   review_notes: string | null;
 };
 
-export function BasicInfoEditor({ restaurantId, currentName, currentOpeningHours }: Props) {
+export function BasicInfoEditor({ restaurantId, currentName, currentOpeningHours, onHoursSaved }: Props) {
   const { user } = useAuth();
   const [name, setName] = useState(currentName || '');
   const [descriptionNl, setDescriptionNl] = useState('');
+  const [descriptionOriginal, setDescriptionOriginal] = useState('');
   const [hours, setHours] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [pending, setPending] = useState<Pending[]>([]);
@@ -66,6 +69,7 @@ export function BasicInfoEditor({ restaurantId, currentName, currentOpeningHours
       .eq('language_code', 'nl')
       .maybeSingle();
     setDescriptionNl(data?.description || '');
+    setDescriptionOriginal(data?.description || '');
   };
 
   const loadPending = async () => {
@@ -104,42 +108,66 @@ export function BasicInfoEditor({ restaurantId, currentName, currentOpeningHours
       return;
     }
     setSaving(true);
+
+    // Opening hours in the required format go live directly (checked again by the database).
+    const tidyHours = Object.fromEntries(DAYS.map((d) => {
+      const r = checkHoursInput(hours[d.key] ?? '');
+      return [d.key, r.ok ? r.value : ''];
+    })) as Record<string, string>;
+    const currentHours = Object.fromEntries(DAYS.map((d) => [d.key, (currentOpeningHours as Record<string, unknown> | null)?.[d.key] ?? ''])) as Record<string, unknown>;
+    const hoursChanged = anyHours && JSON.stringify(tidyHours) !== JSON.stringify(currentHours);
+    let hoursSaved = false;
+    if (hoursChanged) {
+      const { error } = await supabase.rpc('set_restaurant_opening_hours' as never, {
+        p_restaurant_id: restaurantId, p_hours: tidyHours,
+      } as never);
+      if (error) {
+        setSaving(false);
+        toast.error('Openingstijden opslaan mislukt: ' + error.message);
+        return;
+      }
+      hoursSaved = true;
+      setHours(tidyHours);
+      onHoursSaved?.(tidyHours);
+    }
+
+    // Name and description still go to an admin first.
     const proposed: Record<string, any> = {};
     if (name.trim() && name.trim() !== currentName) proposed.name = name.trim();
-    if (anyHours) {
-      proposed.opening_hours = Object.fromEntries(DAYS.map((d) => {
-        const r = checkHoursInput(hours[d.key] ?? '');
-        return [d.key, r.ok ? r.value : ''];
-      }));
-    }
-    if (descriptionNl.trim()) proposed.description_nl = descriptionNl.trim();
+    if (descriptionNl.trim() && descriptionNl.trim() !== descriptionOriginal.trim()) proposed.description_nl = descriptionNl.trim();
 
-    if (Object.keys(proposed).length === 0) {
-      toast.info('Geen wijzigingen om in te dienen');
-      setSaving(false);
-      return;
+    if (Object.keys(proposed).length > 0) {
+      const { error } = await supabase.from('restaurant_pending_edits').insert({
+        restaurant_id: restaurantId,
+        submitted_by: user.id,
+        proposed_changes: proposed,
+        status: 'pending',
+      });
+      if (error) {
+        setSaving(false);
+        toast.error((hoursSaved ? 'Openingstijden zijn opgeslagen, maar het indienen van naam of beschrijving mislukte: ' : 'Indienen mislukt: ') + error.message);
+        return;
+      }
+      loadPending();
     }
-
-    const { error } = await supabase.from('restaurant_pending_edits').insert({
-      restaurant_id: restaurantId,
-      submitted_by: user.id,
-      proposed_changes: proposed,
-      status: 'pending',
-    });
     setSaving(false);
-    if (error) {
-      toast.error('Indienen mislukt: ' + error.message);
-      return;
+
+    if (hoursSaved && Object.keys(proposed).length > 0) {
+      toast.success('Openingstijden staan direct live. Naam of beschrijving beoordeelt een admin meestal binnen 1 werkdag.');
+    } else if (hoursSaved) {
+      toast.success('Openingstijden opgeslagen en direct zichtbaar voor gasten.');
+    } else if (Object.keys(proposed).length > 0) {
+      toast.success('Ingediend. Een admin beoordeelt je wijziging meestal binnen 1 werkdag.');
+    } else {
+      toast.info('Geen wijzigingen om op te slaan');
     }
-    toast.success('Wijzigingen ingediend — een admin beoordeelt ze meestal binnen 1 werkdag.');
-    loadPending();
   };
 
   return (
     <Card>
       <CardContent className="p-4 space-y-4">
         <p className="text-sm text-muted-foreground">
-          Wijzigingen aan naam, beschrijving en openingstijden worden ter goedkeuring aan een admin voorgelegd.
+          Openingstijden staan direct live zodra ze kloppen. Een nieuwe naam of beschrijving bekijkt eerst een admin.
         </p>
 
         {DAYS.every((d) => !hours[d.key]?.trim()) && (
@@ -199,7 +227,7 @@ export function BasicInfoEditor({ restaurantId, currentName, currentOpeningHours
         </div>
 
         <Button size="sm" onClick={submit} disabled={saving}>
-          <Save className="h-4 w-4 mr-1" /> {saving ? 'Indienen…' : 'Wijzigingen indienen'}
+          <Save className="h-4 w-4 mr-1" /> {saving ? 'Opslaan…' : 'Opslaan'}
         </Button>
 
         {pending.length > 0 && (
