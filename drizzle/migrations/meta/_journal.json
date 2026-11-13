@@ -197,6 +197,13 @@
       "when": 1794563000000,
       "tag": "0028_alert_frequency_monthly",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1794566000000,
+      "tag": "0029_paid_tag_sync",
+      "breakpoints": true
     }
   ]
 }

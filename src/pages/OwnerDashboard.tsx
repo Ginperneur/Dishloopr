@@ -1101,10 +1101,21 @@ export default function OwnerDashboard() {
 
             {/* Menu */}
             <div className="border-t pt-8">
-              <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
                 <UtensilsCrossed className="h-5 w-5 text-primary" />
                 Menu Beheren
               </h3>
+              <div className="mb-4 max-w-3xl space-y-1 text-sm text-muted-foreground">
+                <p>
+                  Zet hier je menukaart erin. Het snelst gaat dat met <span className="font-medium text-foreground">Menu importeren</span> hieronder:
+                  upload je kaart als pdf (wij herkennen de gerechten) of als csv-bestand. Geïmporteerde gerechten komen automatisch bij
+                  Bevestigde gerechten, zodat gasten je vinden als ze op die gerechten zoeken.
+                </p>
+                <p>
+                  Bij <span className="font-medium text-foreground">Menu Items</span> houd je per gerecht de naam, categorie, prijs en dieetopties bij.
+                  Dat telt mee voor je profielscore.
+                </p>
+              </div>
               {selectedRestaurant ? (
                 <MenuItemsManager restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
               ) : (

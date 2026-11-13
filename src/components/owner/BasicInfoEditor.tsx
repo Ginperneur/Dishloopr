@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Save, Clock } from 'lucide-react';
 import { toast } from 'sonner';
+import { checkHoursInput } from '@/lib/openingHoursInput';
 
 const DAYS: { key: string; label: string }[] = [
   { key: 'mon', label: 'Maandag' },
@@ -78,12 +79,39 @@ export function BasicInfoEditor({ restaurantId, currentName, currentOpeningHours
     setPending((data as Pending[]) || []);
   };
 
+  // Per-day check: only a time range or "gesloten" (see src/lib/openingHoursInput.ts).
+  const hourErrors = Object.fromEntries(DAYS.map((d) => {
+    const v = hours[d.key];
+    if (v === undefined || (!v.trim() && DAYS.every((x) => !hours[x.key]?.trim()))) return [d.key, null];
+    const r = checkHoursInput(v);
+    return [d.key, "error" in r ? r.error : null];
+  })) as Record<string, string | null>;
+  const hoursValid = DAYS.every((d) => !hourErrors[d.key]);
+  const anyHours = DAYS.some((d) => hours[d.key]?.trim());
+  const allHours = DAYS.every((d) => hours[d.key]?.trim());
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const tidy = (key: string) => {
+    setTouched((t) => ({ ...t, [key]: true }));
+    const r = checkHoursInput(hours[key] ?? '');
+    if (r.ok) setHours((h) => ({ ...h, [key]: r.value }));
+  };
+
   const submit = async () => {
     if (!user) return;
+    if (anyHours && (!allHours || !hoursValid)) {
+      setTouched(Object.fromEntries(DAYS.map((d) => [d.key, true])));
+      toast.error('Vul elke dag in met een tijd zoals 11:00 - 22:00, of kies Gesloten.');
+      return;
+    }
     setSaving(true);
     const proposed: Record<string, any> = {};
     if (name.trim() && name.trim() !== currentName) proposed.name = name.trim();
-    if (Object.keys(hours).length > 0) proposed.opening_hours = hours;
+    if (anyHours) {
+      proposed.opening_hours = Object.fromEntries(DAYS.map((d) => {
+        const r = checkHoursInput(hours[d.key] ?? '');
+        return [d.key, r.ok ? r.value : ''];
+      }));
+    }
     if (descriptionNl.trim()) proposed.description_nl = descriptionNl.trim();
 
     if (Object.keys(proposed).length === 0) {
@@ -125,18 +153,31 @@ export function BasicInfoEditor({ restaurantId, currentName, currentOpeningHours
 
         <div>
           <Label className="text-xs flex items-center gap-2 mb-2">
-            <Clock className="h-3.5 w-3.5" /> Openingstijden (per dag, bv. "12:00 - 22:00" of "gesloten")
+            <Clock className="h-3.5 w-3.5" /> Openingstijden: per dag een tijd (bv. 12:00 - 22:00, of 12:00 - 14:30, 17:00 - 22:00) of Gesloten
           </Label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {DAYS.map((d) => (
-              <div key={d.key} className="flex items-center gap-2">
-                <span className="text-xs w-24 text-muted-foreground">{d.label}</span>
-                <Input
-                  className="flex-1"
-                  value={hours[d.key] || ''}
-                  onChange={(e) => setHours({ ...hours, [d.key]: e.target.value })}
-                  placeholder="12:00 - 22:00"
-                />
+              <div key={d.key} className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <label htmlFor={`hours-${d.key}`} className="text-xs w-24 text-muted-foreground">{d.label}</label>
+                  <Input
+                    id={`hours-${d.key}`}
+                    className={`flex-1 ${touched[d.key] && hourErrors[d.key] ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                    value={hours[d.key] || ''}
+                    onChange={(e) => setHours({ ...hours, [d.key]: e.target.value })}
+                    onBlur={() => tidy(d.key)}
+                    placeholder="12:00 - 22:00"
+                    aria-invalid={Boolean(touched[d.key] && hourErrors[d.key])}
+                    aria-describedby={`hours-${d.key}-error`}
+                  />
+                  <Button type="button" size="sm" variant={hours[d.key] === 'gesloten' ? 'secondary' : 'outline'} className="h-9 shrink-0 text-xs"
+                    onClick={() => { setHours({ ...hours, [d.key]: 'gesloten' }); setTouched((t) => ({ ...t, [d.key]: true })); }}>
+                    Gesloten
+                  </Button>
+                </div>
+                {touched[d.key] && hourErrors[d.key] && (
+                  <p id={`hours-${d.key}-error`} className="pl-[104px] text-xs text-destructive">{hourErrors[d.key]}</p>
+                )}
               </div>
             ))}
           </div>
