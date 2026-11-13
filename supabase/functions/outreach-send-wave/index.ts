@@ -6,7 +6,7 @@
 // Each restaurant gets at most one mail per wave (UNIQUE restaurant_id, wave), and every run
 // respects the daily cap so the sending domain warms up instead of landing in spam.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2.57.2";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { getCaller, isAdmin, isInternalCaller, serviceClient } from "../_shared/auth.ts";
 import { type OutreachSegment, renderOutreach } from "../_shared/outreach/templates.ts";
 
