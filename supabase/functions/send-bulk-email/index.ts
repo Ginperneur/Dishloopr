@@ -21,6 +21,7 @@ interface Campaign {
   sent_count: number;
   failed_count: number;
   last_cursor: string | null;
+  started_at: string | null;
 }
 
 async function sendEmail(

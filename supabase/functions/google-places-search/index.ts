@@ -41,18 +41,23 @@ interface PlaceDetailsResult {
 }
 
 interface LocalRestaurant {
-  id: string;
+  place_id: string;
   name: string;
   address: string;
-  geo_lat: number | null;
-  geo_lng: number | null;
-  phone: string | null;
-  website_url: string | null;
-  rating: number;
-  review_count: number;
+  geo_lat: number | null | undefined;
+  geo_lng: number | null | undefined;
+  phone: string | null | undefined;
+  website: string | null | undefined;
+  rating: number | null | undefined;
+  review_count: number | null | undefined;
   price_level: number;
-  claim_status: string;
+  opening_hours: string[] | null;
+  opening_hours_periods?: unknown;
+  photo_reference?: string | null;
+  photo_references: string[];
   is_local: boolean;
+  restaurant_id?: string;
+  claim_status?: string;
 }
 
 serve(async (req) => {
