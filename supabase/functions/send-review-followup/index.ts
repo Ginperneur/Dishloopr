@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.118.0'
+import { createClient } from 'npm:@supabase/supabase-js@2.118.0'
 import { requireAdminOrInternal } from '../_shared/auth.ts'
 const esc = (v: unknown) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" } as Record<string, string>)[c]);
 
