@@ -225,6 +225,13 @@
       "when": 1794578808650,
       "tag": "0034_0031_paid_tag_sync",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1794578819868,
+      "tag": "0035_0032_owner_opening_hours",
+      "breakpoints": true
     }
   ]
 }
