@@ -88,9 +88,10 @@ DROP POLICY IF EXISTS outreach_replies_admin_update ON public.outreach_replies;
 CREATE POLICY outreach_replies_admin_update ON public.outreach_replies FOR UPDATE TO authenticated
   USING (public.has_role(auth.uid(), 'admin')) WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
--- Public bucket for marketing files such as the owner flyer; only admins upload or replace.
+-- Private bucket for marketing files such as the owner flyer (the workspace blocks public
+-- buckets); only admins upload or read, the send agent signs links. Applied as drizzle 0026.
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES ('marketing', 'marketing', true, 10485760, ARRAY['application/pdf', 'image/png', 'image/jpeg'])
+VALUES ('marketing', 'marketing', false, 10485760, ARRAY['application/pdf', 'image/png', 'image/jpeg'])
 ON CONFLICT (id) DO NOTHING;
 DROP POLICY IF EXISTS "Admins manage marketing files" ON storage.objects;
 CREATE POLICY "Admins manage marketing files" ON storage.objects FOR ALL TO authenticated

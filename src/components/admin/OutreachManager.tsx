@@ -246,9 +246,13 @@ const FLYER_MODES = [
 ] as const;
 
 function FlyerSettings({ mode, onMode }: { mode: OutreachSettings['flyer_mode']; onMode: (m: OutreachSettings['flyer_mode']) => void }) {
-  const url = supabase.storage.from('marketing').getPublicUrl(FLYER_PATH).data.publicUrl;
   const [busy, setBusy] = useState(false);
-  const [stamp, setStamp] = useState(() => Date.now());
+  // The bucket is private: open the current flyer through a short-lived signed link.
+  const view = async () => {
+    const { data, error } = await supabase.storage.from('marketing').createSignedUrl(FLYER_PATH, 300);
+    if (error || !data?.signedUrl) { toast.error('Nog geen flyer geüpload'); return; }
+    window.open(data.signedUrl, '_blank', 'noopener');
+  };
   const upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
@@ -257,7 +261,7 @@ function FlyerSettings({ mode, onMode }: { mode: OutreachSettings['flyer_mode'];
     setBusy(true);
     const { error } = await supabase.storage.from('marketing').upload(FLYER_PATH, file, { upsert: true, contentType: 'application/pdf', cacheControl: '300' });
     setBusy(false);
-    if (error) toast.error(error.message); else { toast.success('Flyer geüpload'); setStamp(Date.now()); }
+    if (error) toast.error(error.message); else toast.success('Flyer geüpload');
   };
   return (
     <div className="space-y-2 rounded-lg border p-3">
@@ -275,7 +279,7 @@ function FlyerSettings({ mode, onMode }: { mode: OutreachSettings['flyer_mode'];
             <input type="file" accept="application/pdf" className="sr-only" onChange={upload} />
           </label>
         </Button>
-        <a href={`${url}?v=${stamp}`} target="_blank" rel="noreferrer" className="text-sm text-primary underline">Huidige flyer bekijken</a>
+        <Button type="button" size="sm" variant="link" className="min-h-11 px-0" onClick={view}>Huidige flyer bekijken</Button>
       </div>
     </div>
   );

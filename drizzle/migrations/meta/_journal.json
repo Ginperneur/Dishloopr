@@ -178,13 +178,6 @@
       "breakpoints": true
     },
     {
-      "idx": 25,
-      "version": "7",
-      "when": 1794510000000,
-      "tag": "0025_outreach_agent",
-      "breakpoints": true
-    },
-    {
       "idx": 26,
       "version": "7",
       "when": 1794514471012,
