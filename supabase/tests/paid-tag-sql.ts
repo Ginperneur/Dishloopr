@@ -8,7 +8,10 @@ await db.exec(await Deno.readTextFile(new URL("./stubs.sql", import.meta.url)));
 await db.exec(`ALTER TABLE restaurants ADD COLUMN cuisines text[], ADD COLUMN ambience_tags text[],
     ADD COLUMN concepts text[], ADD COLUMN experiences text[], ADD COLUMN updated_at timestamptz;
   CREATE TABLE restaurant_tag_subscriptions (id serial PRIMARY KEY, restaurant_id uuid, user_id uuid,
-    tag_category text, tag_value text, stripe_subscription_id text, is_active boolean NOT NULL DEFAULT true);`);
+    tag_category text, tag_value text, stripe_subscription_id text, is_active boolean NOT NULL DEFAULT true,
+    -- Same rules as the real table (20260412063335), so the webhook's write is checked against them.
+    payment_type text NOT NULL DEFAULT 'per_tag' CHECK (payment_type IN ('per_tag', 'owner_pro')),
+    UNIQUE (restaurant_id, tag_category, tag_value));`);
 const R = "00000000-0000-0000-0000-000000000101";
 await db.exec(`INSERT INTO restaurants (id, name, slug, ambience_tags) VALUES ('${R}', 'T', 't', ARRAY['Gezellig']);`);
 await db.exec(`INSERT INTO restaurant_tag_subscriptions (restaurant_id, tag_category, tag_value, stripe_subscription_id, is_active)
@@ -31,4 +34,22 @@ t = await tags(); check("deleted subscription removes its tag", JSON.stringify(t
 await db.exec(`INSERT INTO restaurant_tag_subscriptions (restaurant_id, tag_category, tag_value, stripe_subscription_id) VALUES ('${R}', 'cuisine', 'Thais', 'sub_c')`);
 const c = (await db.query<{ c: string[] }>(`SELECT cuisines c FROM restaurants WHERE id = '${R}'`)).rows[0].c;
 check("works on an empty category", JSON.stringify(c) === '["Thais"]', c);
+// The Stripe webhook's write for a paid tag (stripe-webhook, extra_tag): must satisfy the table rules.
+const webhookUpsert = (sub: string) => db.query(`INSERT INTO restaurant_tag_subscriptions
+    (restaurant_id, tag_category, tag_value, payment_type, stripe_subscription_id, is_active)
+  VALUES ($1, 'ambience', 'Vegan', 'per_tag', $2, true)
+  ON CONFLICT (restaurant_id, tag_category, tag_value)
+  DO UPDATE SET payment_type = EXCLUDED.payment_type, stripe_subscription_id = EXCLUDED.stripe_subscription_id, is_active = EXCLUDED.is_active`, [R, sub]);
+let saved = true;
+try { await webhookUpsert('sub_vegan'); } catch (e) { saved = false; console.log(String(e)); }
+check("webhook write for a paid tag is accepted", saved);
+t = await tags(); check("paid tag from webhook shows on the restaurant", (t ?? []).includes('Vegan'), t);
+await db.exec(`UPDATE restaurant_tag_subscriptions SET is_active = false WHERE stripe_subscription_id = 'sub_vegan'`);
+let rebought = true;
+try { await webhookUpsert('sub_vegan_2'); } catch { rebought = false; }
+t = await tags(); check("re-buying a cancelled tag reactivates it", rebought && (t ?? []).includes('Vegan'), t);
+let oldShape = true;
+try { await db.exec(`INSERT INTO restaurant_tag_subscriptions (restaurant_id, tag_category, tag_value, payment_type) VALUES ('${R}', 'ambience', 'Vis', 'subscription')`); } catch { oldShape = false; }
+check("the old payment_type 'subscription' is refused (the bug)", !oldShape);
+
 Deno.exit(ok ? 0 : 1);

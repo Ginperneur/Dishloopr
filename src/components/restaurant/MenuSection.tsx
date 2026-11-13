@@ -5,6 +5,7 @@ import { ChevronDown, Leaf, Wheat, AlertCircle, Star, Filter } from 'lucide-reac
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useMenuItems, type CourseType } from '@/hooks/useMenuItems';
+import { formatPrice } from '@/lib/menuMerge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Toggle } from '@/components/ui/toggle';
 import { formatDishName, isDutchLocale } from '@/lib/utils';
@@ -247,6 +248,9 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
                                 </Badge>
                               )}
                             </div>
+                            {item.description && (
+                              <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{item.description}</p>
+                            )}
                             {/* Dietary badges */}
                             <div className="flex flex-wrap gap-1 mt-1">
                               {item.is_vegetarian && (
@@ -274,6 +278,9 @@ export function MenuSection({ restaurantId }: MenuSectionProps) {
                               )}
                             </div>
                           </div>
+                          {formatPrice(item.price) && (
+                            <span className="shrink-0 text-sm font-medium tabular-nums">{formatPrice(item.price)}</span>
+                          )}
                         </div>
                       ))}
                     </div>

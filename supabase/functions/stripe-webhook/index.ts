@@ -224,11 +224,15 @@ serve(async (req) => {
               user_id: userId,
               tag_category: metadata.tag_category,
               tag_value: metadata.tag_value,
-              payment_type: "subscription",
+              // The table only allows 'per_tag' or 'owner_pro', and the only unique key is
+              // (restaurant_id, tag_category, tag_value). With "subscription" and
+              // onConflict stripe_subscription_id every paid tag failed to save, so owners paid
+              // and never got their tag. Re-buying a cancelled tag reuses its row.
+              payment_type: "per_tag",
               stripe_subscription_id: (session.subscription as string) || null,
               is_active: true,
             },
-            { onConflict: "stripe_subscription_id" }
+            { onConflict: "restaurant_id,tag_category,tag_value" }
           );
 
         if (tagError) {

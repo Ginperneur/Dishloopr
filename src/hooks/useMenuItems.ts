@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { mergeMenuRows, type MenuRow } from '@/lib/menuMerge';
 
 export type CourseType = 'borrel' | 'voorgerecht' | 'hoofdgerecht' | 'bijgerecht' | 'nagerecht' | 'drank';
 
@@ -108,13 +109,38 @@ export function useMenuItems(restaurantId: string | undefined) {
             };
           });
 
-        setMenuItems(items);
+        // Prices and descriptions the owner keeps under Menu Items (only available ones are public).
+        const { data: menuRows } = await supabase
+          .from('menu_items')
+          .select('id, name, description, price, category, is_vegetarian, is_vegan, is_gluten_free, image_url')
+          .eq('restaurant_id', restaurantId)
+          .eq('is_available', true);
+        const all = mergeMenuRows(items, (menuRows ?? []) as MenuRow[], (row, course) => ({
+          id: `menu-${row.id}`,
+          restaurant_id: restaurantId,
+          name: row.name,
+          description: row.description?.trim() || null,
+          price: Number(row.price) || 0,
+          category: row.category,
+          course_type: course,
+          allergens: [],
+          is_vegetarian: !!row.is_vegetarian || !!row.is_vegan,
+          is_vegan: !!row.is_vegan,
+          is_gluten_free: !!row.is_gluten_free,
+          is_halal: false,
+          image_url: null,
+          is_available: true,
+          is_signature: false,
+          vertaling_nl: null,
+        }));
+
+        setMenuItems(all);
         
-        const uniqueCategories = [...new Set(items.map(item => item.category))];
+        const uniqueCategories = [...new Set(all.map(item => item.category))];
         setCategories(uniqueCategories);
 
         const presentCourseTypes = COURSE_TYPE_ORDER.filter(ct =>
-          items.some(item => item.course_type === ct)
+          all.some(item => item.course_type === ct)
         );
         setCourseTypes(presentCourseTypes);
       } catch (err) {
