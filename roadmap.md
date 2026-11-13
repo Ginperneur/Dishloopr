@@ -1,4 +1,5 @@
 # Parkeerinformatie
+- [x] 0040_hide_junk_dishes gegevensopschoning uitgevoerd via gegevensquery (684 inactief, 9 goedgekeurd beschermd, niets verwijderd); alle 74 edge functions gedeployed inclusief stripe-webhook.
 - [x] Gratis Owner Pro: adminschakelaar per restaurant, Stripe-sync behoudt toegang; 7 beveiligings-/gedragstests geslaagd, ingelogd toekennen/intrekken/verversen gecontroleerd; Testkeuken heeft Pro.
 - [x] Onbekende openingstijden: badges onderdrukt, neutrale melding op restaurantpagina; 15 tests geslaagd, 44 echte kaarten en Tensai Ramen op desktop/mobiel gecontroleerd.
 - [x] Claim hervat na tab sluiten/verversen, mailbestemming en inloggen; dashboardcodeveld zichtbaar, verzendpauze bevestigd; 12 tests; tijdelijke restaurants/claims/codes verwijderd.
