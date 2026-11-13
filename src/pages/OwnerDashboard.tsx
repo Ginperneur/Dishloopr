@@ -899,6 +899,13 @@ export default function OwnerDashboard() {
                   onHoursSaved={(opening_hours) => setSelectedRestaurant({ ...selectedRestaurant, opening_hours })}
                 />
                 <div className="mt-6">
+                  <h4 className="text-base font-semibold flex items-center gap-2 mb-3">
+                    <Clock className="h-4 w-4 text-primary" />
+                    Uitzonderingen op je openingstijden
+                  </h4>
+                  <OpeningHoursExceptions restaurantId={selectedRestaurant.id} />
+                </div>
+                <div className="mt-6">
                   <ParkingEditor restaurantId={selectedRestaurant.id} />
                 </div>
               </div>
@@ -914,6 +921,13 @@ export default function OwnerDashboard() {
                   description="Verifieer je eigendom om naam, beschrijving en openingstijden te kunnen bewerken (ter goedkeuring)."
                   onRequestVerification={() => setVerificationDialogOpen(true)}
                 />
+                <div className="mt-6">
+                  <h4 className="text-base font-semibold flex items-center gap-2 mb-3">
+                    <Clock className="h-4 w-4 text-primary" />
+                    Uitzonderingen op je openingstijden
+                  </h4>
+                  <OpeningHoursExceptions restaurantId={selectedRestaurant.id} />
+                </div>
               </div>
             )}
             {/* Restaurant Quick Settings */}
@@ -1181,17 +1195,6 @@ export default function OwnerDashboard() {
                 <Card><CardContent className="py-8 text-center"><p className="text-muted-foreground text-sm">Selecteer een restaurant</p></CardContent></Card>
               )}
             </div>
-
-            {/* Openingstijden Uitzonderingen */}
-            {selectedRestaurant && (
-              <div className="border-t pt-8">
-                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                  <Clock className="h-5 w-5 text-primary" />
-                  Openingstijden Uitzonderingen
-                </h3>
-                <OpeningHoursExceptions restaurantId={selectedRestaurant.id} />
-              </div>
-            )}
 
             {/* Multi-language Profile (Pro) */}
             {selectedRestaurant && isVerified && (
