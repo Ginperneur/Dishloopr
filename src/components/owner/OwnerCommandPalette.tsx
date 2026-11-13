@@ -12,17 +12,19 @@ import {
 } from '@/components/ui/command';
 import {
   LayoutDashboard,
-  FileText,
+  UtensilsCrossed,
+  MessageSquare,
+  CalendarCheck,
   BarChart3,
-  Megaphone,
-  TrendingUp,
-  Receipt,
+  Rocket,
+  Settings,
   Store,
   ExternalLink,
   Share2,
   Plus,
   Search,
 } from 'lucide-react';
+import { OWNER_TABS } from '@/lib/ownerTabs';
 
 export interface OwnerCommandPaletteProps {
   open: boolean;
@@ -35,14 +37,8 @@ export interface OwnerCommandPaletteProps {
   onOpenShare?: () => void;
 }
 
-const TABS = [
-  { id: 'overview', label: 'Overzicht', icon: LayoutDashboard, shortcut: '1' },
-  { id: 'content', label: 'Content', icon: FileText, shortcut: '2' },
-  { id: 'insights', label: 'Inzichten', icon: BarChart3, shortcut: '3' },
-  { id: 'marketing', label: 'Marketing', icon: Megaphone, shortcut: '4' },
-  { id: 'market', label: 'Markt', icon: TrendingUp, shortcut: '5' },
-  { id: 'invoices', label: 'Facturen', icon: Receipt, shortcut: '6' },
-];
+const ICONS = [LayoutDashboard, Store, UtensilsCrossed, MessageSquare, CalendarCheck, BarChart3, Rocket, Settings];
+const TABS = OWNER_TABS.map((t, i) => ({ id: t.id as string, label: t.label, icon: ICONS[i], shortcut: String(i + 1) }));
 
 export function OwnerCommandPalette({
   open,
@@ -64,7 +60,8 @@ export function OwnerCommandPalette({
         onOpenChange(!open);
       }
       if (!open && (e.metaKey || e.ctrlKey) && e.shiftKey) {
-        const tab = TABS.find((t) => t.shortcut === e.key);
+        // e.key is '!' etc. with Shift held, so match the physical digit key.
+        const tab = TABS.find((t) => e.code === `Digit${t.shortcut}`);
         if (tab) {
           e.preventDefault();
           onChangeTab(tab.id);

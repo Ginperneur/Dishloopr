@@ -57,10 +57,12 @@ interface UseRestaurantDishesOptions {
   restaurantId?: string;
   status?: DishStatus | DishStatus[];
   includeAll?: boolean; // For admin view
+  /** false skips loading, e.g. while the owner dashboard has no restaurant selected yet. */
+  enabled?: boolean;
 }
 
 export function useRestaurantDishes(options: UseRestaurantDishesOptions = {}) {
-  const { restaurantId, status, includeAll = false } = options;
+  const { restaurantId, status, includeAll = false, enabled = true } = options;
   const { user } = useAuth();
   const [dishes, setDishes] = useState<RestaurantDish[]>([]);
   const [availableDishes, setAvailableDishes] = useState<Dish[]>([]);
@@ -125,9 +127,10 @@ export function useRestaurantDishes(options: UseRestaurantDishesOptions = {}) {
   };
 
   useEffect(() => {
+    if (!enabled) return;
     fetchDishes();
     searchDishes();
-  }, [restaurantId, JSON.stringify(status)]);
+  }, [restaurantId, JSON.stringify(status), enabled]);
 
   const suggestDish = async (
     restaurantId: string,

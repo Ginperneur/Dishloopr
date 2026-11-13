@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { Navigate, Link, useSearchParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { 
-  Eye, 
-  MousePointer, 
-  Globe, 
-  Phone, 
+import {
+  Eye,
+  MousePointer,
+  Globe,
+  Phone,
   MapPin,
   Star,
   MessageSquare,
@@ -17,7 +17,6 @@ import {
   Zap,
   Gauge,
   UtensilsCrossed,
-  Lock,
   Shield,
   AlertTriangle,
   Check,
@@ -26,19 +25,22 @@ import {
   TrendingUp,
   BarChart3,
   Megaphone,
-  LayoutDashboard,
   FileText,
-  ChevronRight,
   Rocket,
-  CheckCircle2,
   PartyPopper,
   Instagram,
-  Receipt,
   ChevronsUpDown,
-  Plug
+  Plug,
+  HelpCircle,
+  Search,
+  Settings,
+  CalendarCheck,
+  Languages,
+  Link2,
+  QrCode,
+  Tag,
+  Ticket,
 } from 'lucide-react';
-import { HelpCircle } from 'lucide-react';
-import { Calendar } from 'lucide-react';
 import { MyPackagesCard } from '@/components/owner/MyPackagesCard';
 import { ProGrowthInsights } from '@/components/owner/ProGrowthInsights';
 import { Layout } from '@/components/layout/Layout';
@@ -46,9 +48,9 @@ import { SEOHead } from '@/components/seo/SEOHead';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { OwnerSidebar } from '@/components/owner/OwnerSidebar';
@@ -56,7 +58,6 @@ import { OwnerCommandPalette } from '@/components/owner/OwnerCommandPalette';
 import { OwnerDashboardSkeleton } from '@/components/owner/OwnerDashboardSkeleton';
 import { OwnerTabHeader } from '@/components/owner/OwnerTabHeader';
 import { OwnerHelpDialog } from '@/components/owner/OwnerHelpDialog';
-import { OwnerEmptyState } from '@/components/owner/OwnerEmptyState';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOwnerDashboard } from '@/hooks/useOwnerDashboard';
@@ -82,7 +83,6 @@ import { DishConfirmation } from '@/components/owner/DishConfirmation';
 import { TagRequestForm } from '@/components/owner/TagRequestForm';
 import { TagManager } from '@/components/owner/TagManager';
 import { RestaurantImageUpload } from '@/components/admin/RestaurantImageUpload';
-import { ActionCards } from '@/components/owner/ActionCards';
 import { DailyBriefing } from '@/components/owner/DailyBriefing';
 import { ReviewIntelligence } from '@/components/owner/ReviewIntelligence';
 import { NeighborhoodAnalysis } from '@/components/owner/NeighborhoodAnalysis';
@@ -100,7 +100,6 @@ import { CompetitorBenchmark } from '@/components/owner/CompetitorBenchmark';
 import { DealsManager } from '@/components/owner/DealsManager';
 import { NotificationBell } from '@/components/owner/NotificationBell';
 import { QuickShareMenu } from '@/components/owner/QuickShareMenu';
-import { ProfileCompletenessCard } from '@/components/owner/ProfileCompletenessCard';
 import { WeeklyReportToggle } from '@/components/owner/WeeklyReportToggle';
 import { AnomalyAlertToggle } from '@/components/owner/AnomalyAlertToggle';
 import { EventReportToggle } from '@/components/owner/EventReportToggle';
@@ -122,7 +121,6 @@ import { UpgradeToProCard } from '@/components/owner/UpgradeToProCard';
 import { ProPaywall } from '@/components/owner/ProPaywall';
 import { ProUpsellBanner } from '@/components/owner/ProUpsellBanner';
 import { OwnerTour } from '@/components/owner/OwnerTour';
-import { VisibilityProgress, type VisibilityStep } from '@/components/owner/VisibilityProgress';
 import { useOwnerTier } from '@/hooks/useOwnerTier';
 import { OpeningHoursExceptions } from '@/components/owner/OpeningHoursExceptions';
 import { OwnerContactCard } from '@/components/owner/OwnerContactCard';
@@ -133,14 +131,20 @@ import { CrossPromotionManager } from '@/components/owner/CrossPromotionManager'
 import { BestTimeToPost } from '@/components/owner/BestTimeToPost';
 import { LostToCompetitor } from '@/components/owner/LostToCompetitor';
 import { EventsCalendarView } from '@/components/owner/EventsCalendarView';
-import { useOptimizationInsights } from '@/hooks/useOptimizationInsights';
+import { ContactDetailsEditor } from '@/components/owner/ContactDetailsEditor';
+import { PagePreviewCard } from '@/components/owner/PagePreviewCard';
+import { PageScoreCard } from '@/components/owner/PageScoreCard';
+import { PackagesSummary } from '@/components/owner/PackagesSummary';
+import { AccountSettings } from '@/components/owner/AccountSettings';
 import { useMarketInsights } from '@/hooks/useMarketInsights';
 import { useRestaurantDishes } from '@/hooks/useRestaurantDishes';
 import { type ClaimPermissions } from '@/types/claims';
 import { PendingClaimCodes } from '@/components/claims/PendingClaimCodes';
+import { OWNER_TABS, resolveOwnerTab, type OwnerTab } from '@/lib/ownerTabs';
+import { pageTasks, type PageTask } from '@/lib/pageScore';
+import { ownerFirstName, safePercent } from '@/lib/ownerFormat';
 
 export default function OwnerDashboard() {
-  const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const [searchParams] = useSearchParams();
   const { refreshStatus: refreshProStatus } = useOwnerProCheckout();
@@ -159,14 +163,26 @@ export default function OwnerDashboard() {
   const [permissions, setPermissions] = useState<ClaimPermissions | null>(null);
   const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('overview');
+  const initial = resolveOwnerTab(searchParams.get('tab'));
+  const [activeTab, setActiveTab] = useState<OwnerTab>(initial.tab);
+  const [insightsTab, setInsightsTab] = useState<string>(initial.tab === 'insights' && initial.sub ? initial.sub : 'visitors');
+  const [settingsTab, setSettingsTab] = useState<string>(initial.tab === 'settings' && initial.sub ? initial.sub : 'account');
+  const [contactOpen, setContactOpen] = useState(false);
+  const [reviewLimit, setReviewLimit] = useState(10);
+  const [ownerName, setOwnerName] = useState<string | null>(null);
+  // Opens a section; old ids (content, market, invoices, ...) still work for mails and Stripe returns.
+  const go = (id: string) => {
+    const t = resolveOwnerTab(id);
+    setActiveTab(t.tab);
+    if (t.tab === 'insights') setInsightsTab(t.sub ?? 'visitors');
+    if (t.tab === 'settings' && t.sub) setSettingsTab(t.sub);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   const [restaurantPickerOpen, setRestaurantPickerOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
 
-  // Fetch optimization data for action cards
-  const { data: optimizationData } = useOptimizationInsights(selectedRestaurant?.id);
-  const { dishes: restaurantDishes } = useRestaurantDishes({ restaurantId: selectedRestaurant?.id || '' });
+  const { dishes: restaurantDishes } = useRestaurantDishes({ restaurantId: selectedRestaurant?.id || '', enabled: !!selectedRestaurant?.id });
   const { competitors, peakHours, peakDays, promotionROI } = useMarketInsights(
     selectedRestaurant?.id,
     selectedRestaurant?.city_id,
@@ -176,9 +192,31 @@ export default function OwnerDashboard() {
   const { data: ownerTier } = useOwnerTier(selectedRestaurant?.id);
   const isPro = ownerTier === 'pro';
 
+  // Owner's first name for the greeting (was the first word of the restaurant name).
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase.from('profiles').select('name').eq('id', user.id).maybeSingle();
+      setOwnerName(ownerFirstName({ profileName: data?.name, metaName: user.user_metadata?.name, email: user.email }));
+    })();
+  }, [user]);
+
+  // Menu minimum for full visibility and the restaurant's count towards it (same rule as the public site).
+  const { data: menuProgress } = useQuery({
+    queryKey: ['owner-menu-progress', selectedRestaurant?.id],
+    enabled: !!selectedRestaurant?.id,
+    queryFn: async () => {
+      const rpc = supabase.rpc as unknown as (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown }>;
+      const [min, count] = await Promise.all([
+        rpc('visibility_menu_minimum'),
+        rpc('menu_dish_count', { p_restaurant_id: selectedRestaurant!.id }),
+      ]);
+      return { minimum: Number(min.data ?? 5) || 5, count: Number(count.data ?? 0) };
+    },
+  });
+
   const unansweredReviews = reviews.filter(r => !r.owner_response).length;
   const suggestedDishCount = restaurantDishes.filter(d => d.status === 'suggested').length;
-  const trendingMissingDishes = optimizationData?.suggestions.filter(s => s.type === 'missing_dish').length || 0;
 
   const activeClaim = selectedRestaurant 
     ? userClaims.find(c => c.restaurant_id === selectedRestaurant.id && !['superseded', 'rejected'].includes(c.status))
@@ -206,7 +244,7 @@ export default function OwnerDashboard() {
         duration: 10000,
         action: {
           label: 'Bekijk status',
-          onClick: () => setActiveTab('overview'),
+          onClick: () => go('overview'),
         },
       });
       window.history.replaceState({}, '', '/owner-dashboard');
@@ -223,10 +261,10 @@ export default function OwnerDashboard() {
         duration: 10000,
         action: {
           label: 'Naar Promoties',
-          onClick: () => setActiveTab('promotions'),
+          onClick: () => go('promotions'),
         },
       });
-      setActiveTab('promotions');
+      go('promotions');
       window.history.replaceState({}, '', '/owner-dashboard');
     } else if (newsletter === 'cancelled') {
       toast.info('Nieuwsbrief betaling geannuleerd.');
@@ -241,7 +279,7 @@ export default function OwnerDashboard() {
         duration: 12000,
         action: {
           label: 'Bekijk Inzichten',
-          onClick: () => setActiveTab('insights'),
+          onClick: () => go('insights'),
         },
       });
       refreshProStatus();
@@ -260,10 +298,10 @@ export default function OwnerDashboard() {
         duration: 12000,
         action: {
           label: 'Bekijk looptijd',
-          onClick: () => setActiveTab('promotions'),
+          onClick: () => go('promotions'),
         },
       });
-      setActiveTab('promotions');
+      go('promotions');
       window.history.replaceState({}, '', '/owner-dashboard');
     } else if (featured === 'cancelled') {
       toast.info('Premium plek niet afgerond.');
@@ -276,9 +314,9 @@ export default function OwnerDashboard() {
       toast.success('Listing boost geactiveerd ✓', {
         description: `Je boost is actief vanaf ${new Date().toLocaleDateString('nl-NL')} en loopt 30 dagen.`,
         duration: 10000,
-        action: { label: 'Bekijk looptijd', onClick: () => setActiveTab('promotions') },
+        action: { label: 'Bekijk looptijd', onClick: () => go('promotions') },
       });
-      setActiveTab('promotions');
+      go('promotions');
       window.history.replaceState({}, '', '/owner-dashboard');
     }
 
@@ -288,19 +326,30 @@ export default function OwnerDashboard() {
       toast.success('Gesponsord gerecht geactiveerd ✓', {
         description: `Je gerecht wordt uitgelicht vanaf ${new Date().toLocaleDateString('nl-NL')}.`,
         duration: 10000,
-        action: { label: 'Bekijk looptijd', onClick: () => setActiveTab('promotions') },
+        action: { label: 'Bekijk looptijd', onClick: () => go('promotions') },
       });
-      setActiveTab('promotions');
+      go('promotions');
       window.history.replaceState({}, '', '/owner-dashboard');
     }
 
-    // Checkout return and links in the monthly event report open the content tab.
+    // Checkout return and links in the monthly event report open Promoties, where events now live.
     const eventCheckout = searchParams.get('event_checkout');
     if (eventCheckout || searchParams.get('section') === 'evenementen') {
       if (eventCheckout === 'success') {
         toast.success('Betaling ontvangen', { description: 'Je evenement staat binnen een paar minuten online.', duration: 10000 });
       }
-      setActiveTab('content');
+      go('promotions');
+      window.history.replaceState({}, '', '/owner-dashboard');
+    }
+
+    // Extra tag, featured and listing checkouts return here; their status lives under Promoties.
+    const tagAdded = searchParams.get('tag_added');
+    const payment = searchParams.get('payment');
+    if (tagAdded || payment) {
+      if (tagAdded) toast.success(`Tag ${tagAdded} toegevoegd`, { description: 'Je tag staat binnen een paar minuten op je pagina.', duration: 10000 });
+      else if (payment === 'success') toast.success('Betaling ontvangen', { description: 'Je promotie staat hieronder bij Promoties.', duration: 10000 });
+      else toast.info('Betaling niet afgerond.');
+      go('promotions');
       window.history.replaceState({}, '', '/owner-dashboard');
     }
 
@@ -310,7 +359,7 @@ export default function OwnerDashboard() {
       if (packageCheckout === 'success') {
         toast.success('Betaling geregeld', { description: 'Je pakket staat hieronder bij Promoties en je plek is direct live.', duration: 10000 });
       }
-      setActiveTab('promotions');
+      go('promotions');
       window.history.replaceState({}, '', '/owner-dashboard');
     }
   }, [searchParams]);
@@ -325,18 +374,6 @@ export default function OwnerDashboard() {
     if (!selectedRestaurant) return;
     const perms = await getPermissions(selectedRestaurant.id);
     setPermissions(perms);
-  };
-
-  // Calculate trend percentages (compare current 15d vs previous 15d)
-  const calculateTrend = (currentValue: number): { value: number; label: string } => {
-    if (!analytics?.viewsByDay || analytics.viewsByDay.length < 2) {
-      return { value: 0, label: 'vs vorige periode' };
-    }
-    const mid = Math.floor(analytics.viewsByDay.length / 2);
-    const firstHalf = analytics.viewsByDay.slice(0, mid).reduce((s, d) => s + d.count, 0);
-    const secondHalf = analytics.viewsByDay.slice(mid).reduce((s, d) => s + d.count, 0);
-    const change = firstHalf > 0 ? Math.round(((secondHalf - firstHalf) / firstHalf) * 100) : 0;
-    return { value: change, label: 'vs vorige 15d' };
   };
 
   if (authLoading || loading) {
@@ -369,48 +406,48 @@ export default function OwnerDashboard() {
   }
 
   const isVerified = permissions?.isVerifiedOwner ?? false;
+  const r = selectedRestaurant as (typeof selectedRestaurant & Record<string, any>) | null;
 
-  // Onboarding checklist for new owners
-  const onboardingSteps = [
-    { 
-      id: 'verify', 
-      label: 'Verifieer je eigendom', 
-      done: isVerified,
-      action: () => setVerificationDialogOpen(true),
-      tab: undefined
-    },
-    { 
-      id: 'dishes', 
-      label: 'Bevestig je gerechten', 
-      done: suggestedDishCount === 0 && restaurantDishes.length > 0,
-      action: () => setActiveTab('content'),
-      tab: 'content'
-    },
-    { 
-      id: 'photos', 
-      label: 'Voeg foto\'s toe', 
-      done: (selectedRestaurant?.images?.length || 0) >= 3,
-      action: () => setActiveTab('content'),
-      tab: 'content'
-    },
-    { 
-      id: 'menu', 
-      label: 'Upload je menu', 
-      done: false, // We don't easily know this, keep as suggestion
-      action: () => setActiveTab('content'),
-      tab: 'content'
-    },
-    { 
-      id: 'reviews', 
-      label: 'Reageer op reviews', 
-      done: unansweredReviews === 0 && reviews.length > 0,
-      action: () => setActiveTab('overview'),
-      tab: 'overview'
-    },
-  ];
+  const tasks = pageTasks({
+    isVerified,
+    description: r?.description,
+    images: r?.images,
+    openingHours: r?.opening_hours,
+    phone: r?.phone,
+    websiteUrl: r?.website_url,
+    instagramUrl: r?.instagram_url,
+    tiktokUrl: r?.tiktok_url,
+    approvedDishes: menuProgress?.count ?? restaurantDishes.filter(d => d.status === 'verified_by_owner' || d.status === 'approved_by_admin').length,
+    suggestedDishes: suggestedDishCount,
+    menuMinimum: menuProgress?.minimum ?? 5,
+    unansweredReviews,
+  });
+  const openTask = (t: PageTask) => (t.tab === 'verify' ? setVerificationDialogOpen(true) : go(t.tab));
 
-  const completedSteps = onboardingSteps.filter(s => s.done).length;
-  const isOnboardingComplete = completedSteps >= 4; // 4 out of 5 is good enough
+  const saveToggle = async (column: string, value: boolean, labels: [string, string], extra?: () => Promise<unknown>) => {
+    if (!r) return;
+    const { error } = await supabase.from('restaurants').update({ [column]: value } as never).eq('id', r.id);
+    if (error) { toast.error('Kon instelling niet opslaan'); return; }
+    if (value && extra) await extra();
+    toast.success(value ? labels[0] : labels[1]);
+    setSelectedRestaurant({ ...r, [column]: value } as any);
+  };
+  const markDishes = (patch: Record<string, boolean>) => async () => {
+    await supabase.from('restaurant_dishes').update(patch as never).eq('restaurant_id', r!.id).neq('status', 'rejected');
+  };
+
+  const locked = (featureName: string, description: string) => (
+    <LockedFeatureOverlay featureName={featureName} description={description} onRequestVerification={() => setVerificationDialogOpen(true)} />
+  );
+  const section = (title: string, icon: typeof Store, children: ReactNode, id?: string) => {
+    const Icon = icon;
+    return (
+      <section id={id} className="space-y-4 border-t pt-8 first:border-t-0 first:pt-0">
+        <h3 className="flex items-center gap-2 text-lg font-semibold"><Icon className="h-5 w-5 text-primary" />{title}</h3>
+        {children}
+      </section>
+    );
+  };
 
   return (
     <Layout showFooter={false}>
@@ -421,27 +458,33 @@ export default function OwnerDashboard() {
       />
       <SidebarProvider defaultOpen={true}>
         <div className="owner-shell flex w-full min-h-[calc(100svh-4rem)] animate-in fade-in duration-300">
-          <a href="#owner-main" className="skip-link">
-            Direct naar inhoud
-          </a>
+          <a href="#owner-main" className="skip-link">Direct naar inhoud</a>
           <OwnerSidebar
             activeTab={activeTab}
-            onChange={setActiveTab}
+            onChange={go}
             isVerified={isVerified}
+            unansweredReviews={unansweredReviews}
+            onOpenHelp={() => setContactOpen(true)}
           />
           <OwnerCommandPalette
             open={paletteOpen}
             onOpenChange={setPaletteOpen}
             activeTab={activeTab}
-            onChangeTab={setActiveTab}
-            restaurants={restaurants.map((r) => ({ id: r.id, name: r.name, slug: r.slug }))}
+            onChangeTab={go}
+            restaurants={restaurants.map((x) => ({ id: x.id, name: x.name, slug: x.slug }))}
             selectedRestaurantId={selectedRestaurant?.id}
             onSelectRestaurant={(id) => {
-              const r = restaurants.find((x) => x.id === id);
-              if (r) setSelectedRestaurant(r);
+              const x = restaurants.find((y) => y.id === id);
+              if (x) setSelectedRestaurant(x);
             }}
           />
           <OwnerHelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
+          <Dialog open={contactOpen} onOpenChange={setContactOpen}>
+            <DialogContent className="max-h-[90svh] max-w-2xl overflow-y-auto p-0">
+              <DialogTitle className="sr-only">Hulp en contact</DialogTitle>
+              <OwnerContactCard restaurantId={selectedRestaurant?.id} restaurantName={selectedRestaurant?.name} />
+            </DialogContent>
+          </Dialog>
           <div className="flex-1 flex flex-col min-w-0">
             {/* Sticky inner header */}
             <div className="sticky top-14 md:top-16 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
@@ -451,43 +494,22 @@ export default function OwnerDashboard() {
                 {restaurants.length > 1 ? (
                   <Popover open={restaurantPickerOpen} onOpenChange={setRestaurantPickerOpen}>
                     <PopoverTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        role="combobox"
-                        aria-expanded={restaurantPickerOpen}
-                        className="max-w-[220px] md:max-w-[320px] justify-between px-2 font-medium"
-                      >
-                        <span className="truncate">
-                          {selectedRestaurant?.name || 'Selecteer restaurant'}
-                        </span>
+                      <Button variant="ghost" role="combobox" aria-expanded={restaurantPickerOpen}
+                        className="max-w-[220px] md:max-w-[320px] justify-between px-2 font-medium">
+                        <span className="truncate">{selectedRestaurant?.name || 'Selecteer restaurant'}</span>
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[320px] p-0" align="start">
-                      <Command
-                        filter={(value, search) =>
-                          value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0
-                        }
-                      >
+                      <Command filter={(value, search) => (value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}>
                         <CommandInput placeholder="Zoek restaurant..." />
                         <CommandList>
                           <CommandEmpty>Geen restaurant gevonden.</CommandEmpty>
                           <CommandGroup>
                             {restaurants.map(restaurant => (
-                              <CommandItem
-                                key={restaurant.id}
-                                value={restaurant.name}
-                                onSelect={() => {
-                                  setSelectedRestaurant(restaurant);
-                                  setRestaurantPickerOpen(false);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    'mr-2 h-4 w-4',
-                                    selectedRestaurant?.id === restaurant.id ? 'opacity-100' : 'opacity-0'
-                                  )}
-                                />
+                              <CommandItem key={restaurant.id} value={restaurant.name}
+                                onSelect={() => { setSelectedRestaurant(restaurant); setRestaurantPickerOpen(false); }}>
+                                <Check className={cn('mr-2 h-4 w-4', selectedRestaurant?.id === restaurant.id ? 'opacity-100' : 'opacity-0')} />
                                 <span className="truncate">{restaurant.name}</span>
                               </CommandItem>
                             ))}
@@ -497,1228 +519,513 @@ export default function OwnerDashboard() {
                     </PopoverContent>
                   </Popover>
                 ) : (
-                  <span className="font-medium truncate max-w-[220px] md:max-w-none">
-                    {selectedRestaurant?.name || 'Dashboard'}
-                  </span>
+                  <span className="font-medium truncate max-w-[220px] md:max-w-none">{selectedRestaurant?.name || 'Dashboard'}</span>
                 )}
+                <span className="hidden sm:inline-flex"><ClaimStatusBadge status={selectedRestaurant?.claim_status || 'unclaimed'} size="sm" /></span>
                 <div className="flex-1" />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPaletteOpen(true)}
-                  className="hidden md:inline-flex h-9 gap-2 text-muted-foreground"
-                  aria-label="Open command palette"
-                >
+                <Button variant="outline" size="sm" onClick={() => setPaletteOpen(true)}
+                  className="hidden lg:inline-flex h-9 gap-2 text-muted-foreground" aria-label="Snel zoeken">
                   <span className="text-xs">Snel zoeken</span>
-                  <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100">
-                    ⌘K
-                  </kbd>
+                  <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium">⌘K</kbd>
                 </Button>
                 {selectedRestaurant && (
-                  <QuickShareMenu
-                    restaurantSlug={selectedRestaurant.slug}
-                    restaurantName={selectedRestaurant.name}
-                    address={(selectedRestaurant as any).address}
-                  />
+                  <Button variant="outline" size="sm" className="h-9" asChild>
+                    <Link to={`/restaurant/${selectedRestaurant.slug}`} target="_blank" rel="noopener">
+                      <Eye className="h-4 w-4 sm:mr-1.5" /><span className="hidden sm:inline">Bekijk je pagina</span>
+                    </Link>
+                  </Button>
                 )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 hidden sm:inline-flex"
-                  aria-label="Toon sneltoetsen"
-                  onClick={() => setHelpOpen(true)}
-                >
+                {selectedRestaurant && (
+                  <QuickShareMenu restaurantSlug={selectedRestaurant.slug} restaurantName={selectedRestaurant.name} address={r?.address} />
+                )}
+                <Button variant="ghost" size="icon" className="h-9 w-9 hidden sm:inline-flex" aria-label="Toon sneltoetsen" onClick={() => setHelpOpen(true)}>
                   <HelpCircle className="h-4 w-4" />
                 </Button>
                 <NotificationBell />
               </div>
             </div>
 
-            <div
-              id="owner-main"
-              tabIndex={-1}
-              role="main"
-              className="w-full px-4 md:px-6 py-6 md:py-8 max-w-[1600px] mx-auto focus:outline-none"
-            >
+            <div id="owner-main" tabIndex={-1} role="main"
+              className="w-full px-4 md:px-6 py-6 md:py-8 max-w-[1280px] mx-auto focus:outline-none">
               <PendingClaimCodes />
-              {/* Page header */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-6"
-              >
-                <div className="flex items-center gap-3 flex-wrap">
-                <ClaimStatusBadge 
-                  status={selectedRestaurant?.claim_status || 'unclaimed'} 
-                  size="sm" 
-                />
-                <Button variant="ghost" size="sm" className="h-7 text-xs" asChild>
-                  <Link to={`/restaurant/${selectedRestaurant?.slug}`}>
-                    <ExternalLink className="h-3 w-3 mr-1" />
-                    Bekijk pagina
-                  </Link>
-                </Button>
-                <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
-                  <Link to={`/voor-restaurants/pakketten${selectedRestaurant?.slug ? `?slug=${selectedRestaurant.slug}` : ''}`}>Pakketten</Link>
-                </Button>
-                </div>
-              </motion.div>
 
-        {/* Status Banner - Compact */}
-        {!isVerified && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-            {isPendingAdminReview ? (
-              <Card className="border-primary/30 bg-primary/5">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <Clock className="h-5 w-5 text-primary flex-shrink-0" />
-                    <div className="flex-1">
-                      <p className="font-medium text-primary text-sm">In afwachting van admin review</p>
-                      <p className="text-xs text-muted-foreground">
-                        Je betaling is ontvangen. Een admin zal je aanvraag beoordelen.
-                      </p>
-                    </div>
-                    <Button size="sm" variant="outline" asChild>
-                      <Link to="/contact">Contact</Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="border-accent/30 bg-accent/5">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <AlertTriangle className="h-5 w-5 text-accent-foreground flex-shrink-0" />
-                    <div className="flex-1">
-                      <p className="font-medium text-accent-foreground text-sm">Beperkte toegang</p>
-                      <p className="text-xs text-muted-foreground">
-                        Verifieer je eigendom voor volledige dashboard-toegang.
-                      </p>
-                    </div>
-                    <Button size="sm" onClick={() => setVerificationDialogOpen(true)}>
-                      <Shield className="h-3 w-3 mr-1" />
-                      Verifieer
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </motion.div>
-        )}
-
-        {/* Onboarding Quickstart - show for new owners */}
-        {!isOnboardingComplete && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className="mb-6"
-          >
-            <Card className="border-primary/20">
-              <CardContent className="p-4 md:p-5">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Rocket className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-sm">Aan de slag met je profiel</p>
-                    <p className="text-xs text-muted-foreground">{completedSteps} van {onboardingSteps.length} stappen voltooid</p>
-                  </div>
-                  <Badge variant="secondary" className="text-xs">
-                    {Math.round((completedSteps / onboardingSteps.length) * 100)}%
-                  </Badge>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
-                  {onboardingSteps.map((step, i) => (
-                    <button
-                      key={step.id}
-                      onClick={step.action}
-                      className={`flex items-center gap-2 p-2.5 rounded-lg border text-left transition-colors text-sm ${
-                        step.done 
-                          ? 'border-primary/30 bg-primary/5 text-primary' 
-                          : 'border-border hover:border-primary/40 hover:bg-primary/5'
-                      }`}
-                    >
-                      {step.done ? (
-                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+              {/* Verification status */}
+              {!isVerified && (
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+                  <Card className={isPendingAdminReview ? 'border-primary/30 bg-primary/5' : 'border-accent/30 bg-accent/5'}>
+                    <CardContent className="flex items-center gap-3 p-4">
+                      {isPendingAdminReview ? <Clock className="h-5 w-5 shrink-0 text-primary" /> : <AlertTriangle className="h-5 w-5 shrink-0 text-accent-foreground" />}
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{isPendingAdminReview ? 'In afwachting van controle' : 'Beperkte toegang'}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {isPendingAdminReview
+                            ? 'We hebben je aanvraag ontvangen en controleren hem meestal binnen 1 werkdag.'
+                            : 'Verifieer dat je de eigenaar bent, dan kun je alles op je pagina zelf aanpassen.'}
+                        </p>
+                      </div>
+                      {isPendingAdminReview ? (
+                        <Button size="sm" variant="outline" onClick={() => setContactOpen(true)}>Contact</Button>
                       ) : (
-                        <span className="h-4 w-4 rounded-full border-2 border-muted-foreground/30 shrink-0" />
+                        <Button size="sm" onClick={() => setVerificationDialogOpen(true)}><Shield className="mr-1 h-3 w-3" />Verifieer</Button>
                       )}
-                      <span className={`text-xs font-medium ${step.done ? 'line-through opacity-60' : ''}`}>
-                        {step.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Overview-only mission-control band: KPIs + briefing + actions */}
-        {activeTab === 'overview' && (
-        <>
-        {searchParams.get('welcome') === '1' && selectedRestaurant && (
-          <Card className="mb-6 border-primary/30 bg-primary/5">
-            <CardContent className="p-5">
-              <p className="font-semibold text-lg mb-1">Welkom, je bent nu de eigenaar van {selectedRestaurant.name}!</p>
-              <p className="text-sm text-muted-foreground mb-3">Loop deze punten na zodat gasten de juiste informatie zien:</p>
-              <ul className="grid sm:grid-cols-2 gap-1">
-                {['Menu en prijzen controleren', 'Openingstijden', "Foto's", 'Parkeerinformatie', 'Sfeer-tags'].map((item) => (
-                  <li key={item}>
-                    <button type="button" onClick={() => setActiveTab('content')} className="flex items-center gap-2 min-h-11 text-sm hover:text-primary">
-                      <span className="h-4 w-4 rounded border border-primary" aria-hidden /> {item}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        )}
-        {/* Daily Briefing - hero insight card (first) */}
-        {selectedRestaurant && (
-          <DailyBriefing
-            restaurantName={selectedRestaurant.name}
-            totalViews={analytics?.totalViews || 0}
-            viewsByDay={analytics?.viewsByDay || []}
-            unansweredReviews={unansweredReviews}
-            suggestedDishes={suggestedDishCount}
-            isVerified={isVerified}
-            primaryActionLabel={
-              !isVerified
-                ? 'Verifieer nu'
-                : unansweredReviews > 0
-                ? 'Beantwoord reviews'
-                : suggestedDishCount > 0
-                ? 'Bevestig gerechten'
-                : 'Bekijk inzichten'
-            }
-            primaryActionHint={
-              !isVerified
-                ? 'Ontgrendel alle data en functies'
-                : unansweredReviews > 0
-                ? 'Reageren verhoogt vertrouwen'
-                : suggestedDishCount > 0
-                ? 'Word beter vindbaar'
-                : 'Optimaliseer je profiel verder'
-            }
-            onPrimaryAction={() => {
-              if (!isVerified) {
-                setVerificationDialogOpen(true);
-              } else if (unansweredReviews > 0) {
-                setActiveTab('overview');
-              } else if (suggestedDishCount > 0) {
-                setActiveTab('content');
-              } else {
-                setActiveTab('insights');
-              }
-            }}
-          />
-        )}
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 mb-6"
-        >
-          <div className="md:col-span-3 lg:col-span-2 lg:row-span-1">
-            <StatCard
-              variant="primary"
-              title="Profielweergaven (30d)"
-              value={analytics?.totalViews ?? '—'}
-              icon={Eye}
-              sparkline={(analytics?.viewsByDay || []).map(d => d.count)}
-            />
-          </div>
-          <StatCard
-            title="Totale clicks"
-            value={analytics?.totalClicks ?? '—'}
-            icon={MousePointer}
-            sparkline={(analytics?.viewsByDay || []).map(d => d.count)}
-          />
-          <div className="grid grid-cols-2 gap-3 md:gap-4 md:col-span-3 lg:col-span-1 lg:grid-cols-1">
-            <StatCard
-              title="Website"
-              value={analytics?.websiteClicks ?? '—'}
-              icon={Globe}
-            />
-            <StatCard
-              title="Telefoon"
-              value={analytics?.phoneClicks ?? '—'}
-              icon={Phone}
-            />
-          </div>
-        </motion.div>
-
-        <section className="mb-6 space-y-4">
-          <h2 className="font-semibold">Gevonden in de laatste 30 dagen</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            <StatCard title="Vertoningen in resultaten" value={analytics?.impressions ?? '—'} icon={Eye} />
-            <StatCard title="Route" value={analytics?.routeClicks ?? '—'} icon={MapPin} />
-            <StatCard title="Reserveren" value={analytics?.reservationClicks ?? '—'} icon={MousePointer} />
-          </div>
-          <h3 className="font-medium">Top 5 gerechten</h3>
-          <ol className="divide-y divide-border">
-            {analytics?.topDishes.map(item => <li key={item.dish} className="flex justify-between py-2 text-sm"><span className="capitalize">{item.dish.replace(/-/g, ' ')}</span><span className="tabular-nums">{item.count}</span></li>)}
-          </ol>
-          {analytics && !analytics.topDishes.length && <p className="text-sm text-muted-foreground">Nog geen vertoningen op gerecht.</p>}
-        </section>
-        {selectedRestaurant && !selectedRestaurant.is_active && (
-          <OwnerHiddenNotice slug={selectedRestaurant.slug} onAddMenu={() => setActiveTab('content')} />
-        )}
-        {/* Profile completeness ring (after KPIs) */}
-        {selectedRestaurant && (
-          <ProfileCompletenessCard
-            restaurant={selectedRestaurant as any}
-            dishCount={restaurantDishes.length}
-            onNavigateTab={(tab) => setActiveTab(tab)}
-          />
-        )}
-
-        {/* Action Cards */}
-        <ActionCards
-          unansweredReviews={unansweredReviews}
-          suggestedDishes={suggestedDishCount}
-          optimizationScore={optimizationData?.overallScore ?? null}
-          trendingMissingDishes={trendingMissingDishes}
-          onNavigateTab={(tab) => {
-            // Map old tab names to new grouped tabs
-            const tabMap: Record<string, string> = {
-              'reviews': 'overview',
-              'dish-confirmation': 'content',
-              'optimization': 'insights',
-            };
-            setActiveTab(tabMap[tab] || tab);
-          }}
-        />
-        </>
-        )}
-
-        {/* Main Tabs - Grouped into 5 clear sections */}
-        <Tabs value={activeTab} defaultValue="overview" onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="sr-only" aria-hidden="true">
-            <TabsTrigger value="overview">Overzicht</TabsTrigger>
-            <TabsTrigger value="content">Content</TabsTrigger>
-            <TabsTrigger value="insights">Inzichten</TabsTrigger>
-            <TabsTrigger value="promotions">Promoties</TabsTrigger>
-            <TabsTrigger value="marketing">Marketing</TabsTrigger>
-            <TabsTrigger value="market">Markt</TabsTrigger>
-            <TabsTrigger value="integrations">Integraties</TabsTrigger>
-            <TabsTrigger value="invoices">Facturen</TabsTrigger>
-          </TabsList>
-
-          {/* ===== OVERZICHT TAB ===== */}
-          <TabsContent value="overview" className="space-y-6">
-            {!isPro && selectedRestaurant && (
-              <ProUpsellBanner onSeeMore={() => setActiveTab('insights')} />
-            )}
-            {/* Reviews Section */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5 text-primary" />
-                  Reviews
-                  {unansweredReviews > 0 && (
-                    <Badge variant="destructive" className="text-xs">{unansweredReviews} onbeantwoord</Badge>
-                  )}
-                </h3>
-              </div>
-
-              {reviews.length > 0 ? (
-                <div className="space-y-6">
-                  {/* Review Intelligence */}
-                  <ReviewIntelligence
-                    reviews={reviews}
-                    onApplyTemplate={(reviewId, text) => {
-                      respondToReview(reviewId, text);
-                    }}
-                  />
-
-                  {/* Review List */}
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Alle Reviews</h4>
-                    {reviews.slice(0, 5).map(review => (
-                      <ReviewCard
-                        key={review.id}
-                        review={review}
-                        onRespond={respondToReview}
-                        canRespond={isVerified}
-                        restaurantId={selectedRestaurant?.id}
-                        restaurantName={selectedRestaurant?.name}
-                      />
-                    ))}
-                    {reviews.length > 5 && (
-                      <p className="text-sm text-muted-foreground text-center py-2">
-                        En {reviews.length - 5} meer...
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <Card className="border-dashed">
-                  <CardContent className="py-10 text-center max-w-md mx-auto">
-                    <div className="h-12 w-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-3">
-                      <MessageSquare className="h-6 w-6 text-primary" />
-                    </div>
-                    <p className="font-medium text-sm mb-1">Nog geen reviews</p>
-                    <p className="text-xs text-muted-foreground mb-4">
-                      Deel je profiel met gasten — reviews verhogen je positie in zoekresultaten.
-                    </p>
-                    {selectedRestaurant && (
-                      <Button size="sm" variant="outline" asChild>
-                        <Link to={`/restaurant/${selectedRestaurant.slug}`}>
-                          <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                          Bekijk publieke pagina
-                        </Link>
-                      </Button>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-            <OwnerContactCard restaurantId={selectedRestaurant?.id} restaurantName={selectedRestaurant?.name} />
-          </TabsContent>
-
-          {/* ===== CONTENT TAB ===== */}
-          <TabsContent value="content" className="space-y-8">
-            <OwnerTabHeader
-              icon={FileText}
-              title="Content & Profiel"
-              description="Beheer gerechten, foto's, instellingen en je publieke profiel."
-            />
-            {/* Basisgegevens (naam, beschrijving, openingstijden) — via goedkeuring */}
-            {selectedRestaurant && isVerified && (
-              <div>
-                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                  <Store className="h-5 w-5 text-primary" />
-                  Basisgegevens
-                </h3>
-                <BasicInfoEditor
-                  restaurantId={selectedRestaurant.id}
-                  currentName={selectedRestaurant.name}
-                  currentOpeningHours={(selectedRestaurant as any).opening_hours}
-                  onHoursSaved={(opening_hours) => setSelectedRestaurant({ ...selectedRestaurant, opening_hours })}
-                />
-                <div className="mt-6">
-                  <h4 className="text-base font-semibold flex items-center gap-2 mb-3">
-                    <Clock className="h-4 w-4 text-primary" />
-                    Uitzonderingen op je openingstijden
-                  </h4>
-                  <OpeningHoursExceptions restaurantId={selectedRestaurant.id} />
-                </div>
-                <div className="mt-6">
-                  <ParkingEditor restaurantId={selectedRestaurant.id} />
-                </div>
-              </div>
-            )}
-            {selectedRestaurant && !isVerified && (
-              <div>
-                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                  <Store className="h-5 w-5 text-primary" />
-                  Basisgegevens
-                </h3>
-                <LockedFeatureOverlay
-                  featureName="Basisgegevens bewerken"
-                  description="Verifieer je eigendom om naam, beschrijving en openingstijden te kunnen bewerken (ter goedkeuring)."
-                  onRequestVerification={() => setVerificationDialogOpen(true)}
-                />
-                <div className="mt-6">
-                  <h4 className="text-base font-semibold flex items-center gap-2 mb-3">
-                    <Clock className="h-4 w-4 text-primary" />
-                    Uitzonderingen op je openingstijden
-                  </h4>
-                  <OpeningHoursExceptions restaurantId={selectedRestaurant.id} />
-                </div>
-              </div>
-            )}
-            {/* Restaurant Quick Settings */}
-            {selectedRestaurant && (
-              <div>
-                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                  <Store className="h-5 w-5 text-primary" />
-                  Restaurant Instellingen
-                </h3>
-                <Card>
-                  <CardContent className="p-4 space-y-0 divide-y divide-border">
-                    {/* Fully Halal Toggle */}
-                    <ToggleRow
-                      emoji="✓"
-                      emojiClass="text-green-600 font-bold"
-                      title="Volledig Halal"
-                      description="Alle gerechten in dit restaurant zijn halal"
-                      checked={(selectedRestaurant as any).is_fully_halal ?? false}
-                      onChange={async (newValue) => {
-                        const { error } = await supabase
-                          .from('restaurants')
-                          .update({ is_fully_halal: newValue } as any)
-                          .eq('id', selectedRestaurant.id);
-                        if (error) {
-                          toast.error('Kon instelling niet opslaan');
-                          return;
-                        }
-                        // Mark all restaurant_dishes as halal
-                        if (newValue) {
-                          await supabase
-                            .from('restaurant_dishes')
-                            .update({ is_halal: true } as any)
-                            .eq('restaurant_id', selectedRestaurant.id)
-                            .neq('status', 'rejected');
-                        }
-                        toast.success(newValue ? 'Restaurant als halal gemarkeerd — alle gerechten bijgewerkt' : 'Halal-markering verwijderd');
-                        setSelectedRestaurant({ ...selectedRestaurant, is_fully_halal: newValue } as any);
-                      }}
-                    />
-                    {/* Fully Vegetarian */}
-                    <ToggleRow
-                      emoji="🥬"
-                      title="Volledig Vegetarisch"
-                      description="Alle gerechten in dit restaurant zijn vegetarisch"
-                      checked={(selectedRestaurant as any).is_fully_vegetarian ?? false}
-                      onChange={async (newValue) => {
-                        const { error } = await supabase
-                          .from('restaurants')
-                          .update({ is_fully_vegetarian: newValue } as any)
-                          .eq('id', selectedRestaurant.id);
-                        if (error) { toast.error('Kon instelling niet opslaan'); return; }
-                        if (newValue) {
-                          await supabase
-                            .from('restaurant_dishes')
-                            .update({ is_vegetarian: true } as any)
-                            .eq('restaurant_id', selectedRestaurant.id)
-                            .neq('status', 'rejected');
-                        }
-                        toast.success(newValue ? 'Restaurant als vegetarisch gemarkeerd' : 'Vegetarisch-markering verwijderd');
-                        setSelectedRestaurant({ ...selectedRestaurant, is_fully_vegetarian: newValue } as any);
-                      }}
-                    />
-                    {/* Fully Vegan */}
-                    <ToggleRow
-                      emoji="🌱"
-                      title="Volledig Veganistisch"
-                      description="Alle gerechten in dit restaurant zijn veganistisch"
-                      checked={(selectedRestaurant as any).is_fully_vegan ?? false}
-                      onChange={async (newValue) => {
-                        const { error } = await supabase
-                          .from('restaurants')
-                          .update({ is_fully_vegan: newValue } as any)
-                          .eq('id', selectedRestaurant.id);
-                        if (error) { toast.error('Kon instelling niet opslaan'); return; }
-                        if (newValue) {
-                          await supabase
-                            .from('restaurant_dishes')
-                            .update({ is_vegan: true, is_vegetarian: true } as any)
-                            .eq('restaurant_id', selectedRestaurant.id)
-                            .neq('status', 'rejected');
-                        }
-                        toast.success(newValue ? 'Restaurant als veganistisch gemarkeerd' : 'Veganistisch-markering verwijderd');
-                        setSelectedRestaurant({ ...selectedRestaurant, is_fully_vegan: newValue } as any);
-                      }}
-                    />
-                    {/* Terrace */}
-                    <ToggleRow
-                      emoji="☀️"
-                      title="Terras beschikbaar"
-                      description="Gasten kunnen buiten zitten"
-                      checked={(selectedRestaurant as any).has_terrace ?? false}
-                      onChange={async (newValue) => {
-                        const { error } = await supabase
-                          .from('restaurants')
-                          .update({ has_terrace: newValue } as any)
-                          .eq('id', selectedRestaurant.id);
-                        if (error) { toast.error('Kon instelling niet opslaan'); return; }
-                        toast.success(newValue ? 'Terras geactiveerd' : 'Terras gedeactiveerd');
-                        setSelectedRestaurant({ ...selectedRestaurant, has_terrace: newValue } as any);
-                      }}
-                    />
-                    {/* Reservations */}
-                    <ToggleRow
-                      emoji="📅"
-                      title="Reserveringen"
-                      description="Dit restaurant accepteert reserveringen"
-                      checked={(selectedRestaurant as any).accepts_reservations ?? false}
-                      onChange={async (newValue) => {
-                        const { error } = await supabase
-                          .from('restaurants')
-                          .update({ accepts_reservations: newValue } as any)
-                          .eq('id', selectedRestaurant.id);
-                        if (error) { toast.error('Kon instelling niet opslaan'); return; }
-                        toast.success(newValue ? 'Reserveringen geactiveerd' : 'Reserveringen gedeactiveerd');
-                        setSelectedRestaurant({ ...selectedRestaurant, accepts_reservations: newValue } as any);
-                      }}
-                    />
-                    {/* Delivery */}
-                    <ToggleRow
-                      emoji="🚗"
-                      title="Bezorging"
-                      description="Dit restaurant biedt bezorging aan"
-                      checked={(selectedRestaurant as any).has_delivery ?? false}
-                      onChange={async (newValue) => {
-                        const { error } = await supabase
-                          .from('restaurants')
-                          .update({ has_delivery: newValue } as any)
-                          .eq('id', selectedRestaurant.id);
-                        if (error) { toast.error('Kon instelling niet opslaan'); return; }
-                        toast.success(newValue ? 'Bezorging geactiveerd' : 'Bezorging gedeactiveerd');
-                        setSelectedRestaurant({ ...selectedRestaurant, has_delivery: newValue } as any);
-                      }}
-                    />
-                    {/* Takeaway */}
-                    <ToggleRow
-                      emoji="🥡"
-                      title="Afhaal"
-                      description="Dit restaurant biedt afhaal aan"
-                      checked={(selectedRestaurant as any).has_takeaway ?? false}
-                      onChange={async (newValue) => {
-                        const { error } = await supabase
-                          .from('restaurants')
-                          .update({ has_takeaway: newValue } as any)
-                          .eq('id', selectedRestaurant.id);
-                        if (error) { toast.error('Kon instelling niet opslaan'); return; }
-                        toast.success(newValue ? 'Afhaal geactiveerd' : 'Afhaal gedeactiveerd');
-                        setSelectedRestaurant({ ...selectedRestaurant, has_takeaway: newValue } as any);
-                      }}
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-
-            {/* Tag Manager - Profiel Tags */}
-            {selectedRestaurant && (
-              <TagManager
-                restaurant={selectedRestaurant}
-                onUpdate={(updated) => setSelectedRestaurant(updated)}
-              />
-            )}
-
-            {/* Email Preferences */}
-            <WeeklyReportToggle />
-            <AnomalyAlertToggle isPro={isPro} />
-            <EventReportToggle />
-
-            {/* Dishes Confirmation */}
-            <div>
-              <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                <UtensilsCrossed className="h-5 w-5 text-primary" />
-                Gerechten Bevestigen
-                {suggestedDishCount > 0 && (
-                  <Badge variant="secondary" className="text-xs">{suggestedDishCount} suggesties</Badge>
-                )}
-              </h3>
-              {selectedRestaurant ? (
-                <div className="space-y-4">
-                  <DishConfirmation restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
-                  <TagRequestForm restaurantId={selectedRestaurant.id} />
-                </div>
-              ) : (
-                <Card><CardContent className="py-8 text-center"><p className="text-muted-foreground text-sm">Selecteer een restaurant</p></CardContent></Card>
-              )}
-            </div>
-
-            {/* Menu */}
-            <div className="border-t pt-8">
-              <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
-                <UtensilsCrossed className="h-5 w-5 text-primary" />
-                Menu Beheren
-              </h3>
-              <div className="mb-4 max-w-3xl space-y-1 text-sm text-muted-foreground">
-                <p>
-                  Zet hier je menukaart erin. Het snelst gaat dat met <span className="font-medium text-foreground">Menu importeren</span> hieronder:
-                  upload je kaart als pdf (wij herkennen de gerechten) of als csv-bestand. Geïmporteerde gerechten komen automatisch bij
-                  Bevestigde gerechten, zodat gasten je vinden als ze op die gerechten zoeken.
-                </p>
-                <p>
-                  Bij <span className="font-medium text-foreground">Menu Items</span> houd je per gerecht de naam, categorie, prijs en dieetopties bij.
-                  Dat telt mee voor je profielscore.
-                </p>
-              </div>
-              {selectedRestaurant ? (
-                <MenuItemsManager restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
-              ) : (
-                <Card><CardContent className="py-8 text-center"><p className="text-muted-foreground text-sm">Selecteer een restaurant</p></CardContent></Card>
-              )}
-              {selectedRestaurant && (
-                <div className="mt-4">
-                  <OwnerMenuUpload restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
-                </div>
-              )}
-            </div>
-
-            {/* Photos */}
-            <div className="border-t pt-8">
-              <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                <Image className="h-5 w-5 text-primary" />
-                Foto's Beheren
-              </h3>
-              {isVerified && selectedRestaurant ? (
-                <div className="space-y-4">
-                  <Card className="border-primary/20 bg-primary/5">
-                    <CardContent className="p-4">
-                      <p className="text-sm text-muted-foreground">
-                        Je foto's worden automatisch opgehaald van Google. Hier kun je ze vervangen of aanvullen.
-                      </p>
                     </CardContent>
                   </Card>
-                  <RestaurantImageUpload
-                    restaurantId={selectedRestaurant.id}
-                    restaurantName={selectedRestaurant.name}
-                    existingImages={selectedRestaurant.images || []}
-                    onImagesUpdate={() => toast.success('Foto\'s opgeslagen')}
-                  />
-                </div>
-              ) : (
-                <LockedFeatureOverlay 
-                  featureName="Foto's Beheren"
-                  description="Vervang of voeg nieuwe foto's toe aan je restaurantprofiel."
-                  onRequestVerification={() => setVerificationDialogOpen(true)}
-                />
+                </motion.div>
               )}
-            </div>
 
-            {/* Events & Acties */}
-            <div className="border-t pt-8">
-              <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                <PartyPopper className="h-5 w-5 text-primary" />
-                Evenementen en specials
-              </h3>
-              {isVerified && selectedRestaurant ? (
-                <div className="space-y-6">
-                  <OwnerEventsManager restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
-                  <EventsCalendarView restaurantId={selectedRestaurant.id} />
-                </div>
-              ) : selectedRestaurant ? (
-                <LockedFeatureOverlay
-                  featureName="Evenementen"
-                  description="Zet specials en evenementen op Dishloopr voor €5 per maand per evenement."
-                  onRequestVerification={() => setVerificationDialogOpen(true)}
-                />
-              ) : (
-                <Card><CardContent className="py-8 text-center"><p className="text-muted-foreground text-sm">Selecteer een restaurant</p></CardContent></Card>
-              )}
-            </div>
+              <Tabs value={activeTab} onValueChange={(v) => go(v)} className="space-y-6">
+                <TabsList className="sr-only" aria-hidden="true">
+                  {OWNER_TABS.map(t => <TabsTrigger key={t.id} value={t.id}>{t.label}</TabsTrigger>)}
+                </TabsList>
 
-            {/* Multi-language Profile (Pro) */}
-            {selectedRestaurant && isVerified && (
-              <div className="border-t pt-8">
-                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                  Meertalig profiel
-                </h3>
-                <ProGate restaurantId={selectedRestaurant.id} enforced>
-                  <MultiLanguageProfile restaurantId={selectedRestaurant.id} defaultName={selectedRestaurant.name} />
-                </ProGate>
-              </div>
-            )}
-
-            {/* Social Media (verified owners only) */}
-            <div className="border-t pt-8">
-              <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                <Instagram className="h-5 w-5 text-primary" />
-                Social Media
-              </h3>
-              {isVerified && selectedRestaurant ? (
-                <SocialLinksManager
-                  restaurantId={selectedRestaurant.id}
-                  instagramUrl={(selectedRestaurant as any).instagram_url || ''}
-                  tiktokUrl={(selectedRestaurant as any).tiktok_url || ''}
-                  onUpdate={(ig, tk) =>
-                    setSelectedRestaurant({ ...selectedRestaurant, instagram_url: ig, tiktok_url: tk } as any)
-                  }
-                />
-              ) : (
-                <LockedFeatureOverlay
-                  featureName="Social Media koppelen"
-                  description="Koppel je Instagram en TikTok zodat bezoekers je accounts direct vanaf je restaurantpagina kunnen vinden."
-                  onRequestVerification={() => setVerificationDialogOpen(true)}
-                />
-              )}
-            </div>
-
-            {/* Reservation link */}
-            {selectedRestaurant && (
-              <div className="border-t pt-8">
-                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  Reserveringslink
-                </h3>
-                <ReservationLinkManager
-                  restaurantId={selectedRestaurant.id}
-                  reservationUrl={(selectedRestaurant as any).reservation_url || ''}
-                  hasWebsite={!!(selectedRestaurant as any).website_url}
-                  onUpdate={(url) =>
-                    setSelectedRestaurant({ ...selectedRestaurant, reservation_url: url, accepts_reservations: !!url } as any)
-                  }
-                  onOpenIntegrations={() => { setActiveTab('integrations'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                />
-              </div>
-            )}
-
-            {/* Response Templates / AI antwoord-assistent (Pro) */}
-            {selectedRestaurant && isVerified && (
-              <div className="border-t pt-8">
-                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                  <MessageSquare className="h-5 w-5 text-primary" />
-                  AI antwoord-assistent
-                </h3>
-                <ProGate restaurantId={selectedRestaurant.id} enforced>
-                  <ResponseTemplatesManager restaurantId={selectedRestaurant.id} />
-                </ProGate>
-              </div>
-            )}
-
-            {/* Internal Feedback Inbox (Pro) */}
-            {selectedRestaurant && isVerified && (
-              <div className="border-t pt-8">
-                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                  <MessageSquare className="h-5 w-5 text-primary" />
-                  Interne gast-feedback (QR)
-                </h3>
-                <ProGate restaurantId={selectedRestaurant.id} showBadge={false}>
-                  <InternalFeedbackInbox restaurantId={selectedRestaurant.id} />
-                </ProGate>
-              </div>
-            )}
-
-            {/* Team Members (Pro) */}
-            {selectedRestaurant && isVerified && (
-              <div className="border-t pt-8">
-                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                  <Store className="h-5 w-5 text-primary" />
-                  Team-beheer
-                </h3>
-                <ProGate restaurantId={selectedRestaurant.id} enforced>
-                  <TeamMembersManager restaurantId={selectedRestaurant.id} />
-                </ProGate>
-              </div>
-            )}
-          </TabsContent>
-
-          {/* ===== INZICHTEN TAB ===== */}
-          <TabsContent value="insights">
-            <OwnerTabHeader
-              icon={BarChart3}
-              title="Inzichten & Analytics"
-              description="Prestaties, zoekpositie, publiek en optimalisatiekansen."
-              actions={
-                isVerified && selectedRestaurant ? (
-                  <InsightsExportButton
-                    restaurantId={selectedRestaurant.id}
-                    restaurantName={selectedRestaurant.name}
-                  />
-                ) : undefined
-              }
-            />
-            {!isPro && selectedRestaurant ? (
-              <ProPaywall
-                featureName="Inzichten & Analytics"
-                description="Begrijp precies hoe gasten je restaurant vinden, wat ze bestellen en waar je groei laat liggen."
-                previewVariant="insights"
-                benefits={[
-                  'Volledige prestatie-analytics: weergaven, kliks en conversies per dag',
-                  'Live zoekpositie en zoektermen waarop je gevonden wordt',
-                  'Conversie-funnel + AI-detectie van plotselinge dalingen',
-                  'Wekelijkse AI-aanbevelingen op maat van jouw cijfers',
-                  'Kanaal-attributie en jaar-op-jaar benchmark',
-                  'Positie door de tijd, gemiste zoekvraag, beste posting-tijden en "verloren aan concurrenten"',
-                  'Gerechten-analytics en optimalisatie-dashboard',
-                  'Exporteer alle inzichten naar CSV/PDF',
-                ]}
-              />
-            ) : isVerified && selectedRestaurant ? (
-              <div className="space-y-8">
-                {/* Analytics */}
-                <div>
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                    <BarChart3 className="h-5 w-5 text-primary" />
-                    Prestatie Analytics
-                  </h3>
-                  <AnalyticsTab analytics={analytics} restaurant={selectedRestaurant} reviews={reviews} />
-                </div>
-
-                {/* Search Ranking */}
-                <div className="border-t pt-8">
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                    <TrendingUp className="h-5 w-5 text-primary" />
-                    Zoekpositie
-                  </h3>
-                  <SearchRanking restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
-                </div>
-
-                {/* Conversion Funnel (Pro) */}
-                <div className="border-t pt-8">
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                    <BarChart3 className="h-5 w-5 text-primary" />
-                    Conversie & Zoektermen
-                  </h3>
-                  <ProGate restaurantId={selectedRestaurant.id} enforced>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <OwnerFunnel restaurantId={selectedRestaurant.id} />
-                      <SearchTermHeatmap restaurantId={selectedRestaurant.id} />
-                    </div>
-                  </ProGate>
-                </div>
-
-                {/* Growth insights (Pro): position over time, funnel per term, missed demand, prices */}
-                <div className="border-t pt-8">
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                    <TrendingUp className="h-5 w-5 text-primary" />
-                    Groei-inzichten
-                  </h3>
-                  <ProGate restaurantId={selectedRestaurant.id} enforced>
-                    <ProGrowthInsights restaurantId={selectedRestaurant.id} />
-                  </ProGate>
-                </div>
-
-                {/* Weekly AI recommendations (Pro) */}
-                <div className="border-t pt-8">
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                    <BarChart3 className="h-5 w-5 text-primary" />
-                    AI-aanbevelingen
-                  </h3>
-                  <ProGate restaurantId={selectedRestaurant.id} enforced>
-                    <div className="space-y-6">
-                      <FunnelAnomalies restaurantId={selectedRestaurant.id} />
-                      <WeeklyRecommendations restaurantId={selectedRestaurant.id} />
-                    </div>
-                  </ProGate>
-                </div>
-
-                {/* Attribution (Pro) */}
-                <div className="border-t pt-8">
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                    <BarChart3 className="h-5 w-5 text-primary" />
-                    Hoe gasten je vinden
-                  </h3>
-                  <ProGate restaurantId={selectedRestaurant.id} enforced>
-                    <ChannelAttribution restaurantId={selectedRestaurant.id} />
-                  </ProGate>
-                </div>
-
-                {/* Benchmark vs vorig jaar (gratis) */}
-                <div className="border-t pt-8">
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                    <TrendingUp className="h-5 w-5 text-primary" />
-                    Jaar-op-jaar benchmark
-                  </h3>
-                  <HistoricalBenchmark restaurantId={selectedRestaurant.id} />
-                </div>
-
-                {/* Best time to post (Pro): when the city searches for this menu */}
-                <div className="border-t pt-8">
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                    <BarChart3 className="h-5 w-5 text-primary" />
-                    Wanneer gasten zoeken
-                  </h3>
-                  <ProGate restaurantId={selectedRestaurant.id} enforced>
-                    <BestTimeToPost restaurantId={selectedRestaurant.id} />
-                  </ProGate>
-                </div>
-
-                {/* Lost to competitor (Pro) */}
-                <div className="border-t pt-8">
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                    <TrendingUp className="h-5 w-5 text-primary" />
-                    Verloren aan concurrenten
-                  </h3>
-                  <ProGate restaurantId={selectedRestaurant.id} enforced>
-                    <LostToCompetitor restaurantId={selectedRestaurant.id} />
-                  </ProGate>
-                </div>
-
-                {/* Dish Analytics */}
-                <div className="border-t pt-8">
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                    <UtensilsCrossed className="h-5 w-5 text-primary" />
-                    Gerechten Analytics
-                  </h3>
-                  <DishAnalytics restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
-                </div>
-
-                {/* Optimization */}
-                <div className="border-t pt-8">
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                    <Gauge className="h-5 w-5 text-primary" />
-                    Optimalisatie
-                  </h3>
-                  <OptimizationDashboard restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
-                </div>
-              </div>
-            ) : (
-              <LockedFeatureOverlay 
-                featureName="Inzichten & Analytics"
-                description="Bekijk uitgebreide statistieken, gerechten analytics en optimalisatie-tips."
-                onRequestVerification={() => setVerificationDialogOpen(true)}
-              />
-            )}
-          </TabsContent>
-
-          {/* ===== PROMOTIES TAB ===== */}
-          <TabsContent value="promotions" className="space-y-8">
-            <OwnerTabHeader
-              icon={Rocket}
-              title="Promoties & Zichtbaarheid"
-              description="Alle manieren om hoger te scoren, nieuwe gasten te bereiken en op te vallen."
-            />
-            {selectedRestaurant && (
-              <>
-                <MyPackagesCard restaurantId={selectedRestaurant.id} restaurantSlug={selectedRestaurant.slug} restaurantName={selectedRestaurant.name} />
-                <VisibilityProgress
-                  steps={[
-                    {
-                      id: 'verify',
-                      label: 'Restaurant geverifieerd',
-                      hint: 'Vereist voor alle promoties',
-                      done: isVerified,
-                      onClick: () => setVerificationDialogOpen(true),
-                    },
-                    {
-                      id: 'pro',
-                      label: 'Owner Pro actief',
-                      hint: 'Inzichten + Markt + onbeperkte tags',
-                      done: isPro,
-                      onClick: () => setActiveTab('insights'),
-                    },
-                    {
-                      id: 'sponsored',
-                      label: 'Gerecht in de spotlight',
-                      hint: 'Promoot je signature dish',
-                      done: false,
-                      scrollTo: 'promo-sponsored',
-                    },
-                    {
-                      id: 'newsletter',
-                      label: 'Nieuwsbrief plaatsing',
-                      hint: 'Bereik foodies in hun inbox',
-                      done: false,
-                      scrollTo: 'promo-newsletter',
-                    },
-                  ] as VisibilityStep[]}
-                />
-
-                <div id="promo-sponsored">
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                    <Megaphone className="h-5 w-5 text-primary" />
-                    Gerecht-specifieke Sponsoring
-                  </h3>
-                  <SponsoredMarketplace restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} />
-                </div>
-
-                <div id="promo-newsletter" className="border-t pt-8">
-                  <NewsletterPlacement
-                    restaurantId={selectedRestaurant.id}
-                    restaurantName={selectedRestaurant.name}
-                  />
-                </div>
-
-                {isVerified && (
-                  <div className="border-t pt-8">
-                    <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                      <Zap className="h-5 w-5 text-primary" />
-                      Vraag Routing
-                    </h3>
-                    <DemandRoutingSettings restaurant={selectedRestaurant} />
-                  </div>
-                )}
-              </>
-            )}
-          </TabsContent>
-
-          {/* ===== MARKETING TAB ===== */}
-          <TabsContent value="marketing" className="space-y-8">
-            <OwnerTabHeader
-              icon={Megaphone}
-              title="Marketing & Retentie"
-              description="Loyalty, kortingscodes, social posts en samenwerkingen met andere restaurants."
-            />
-            {selectedRestaurant && (
-              <>
-                <div>
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                    <Megaphone className="h-5 w-5 text-primary" />
-                    Kortingscodes
-                  </h3>
-                  <PromoCodesManager restaurantId={selectedRestaurant.id} />
-                </div>
-
-                <div className="border-t pt-8">
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                    <Sparkles className="h-5 w-5 text-primary" />
-                    AI Social-post Generator
-                  </h3>
-                  <ProGate restaurantId={selectedRestaurant.id} enforced>
-                    <SocialPostGenerator restaurantName={selectedRestaurant.name} />
-                  </ProGate>
-                </div>
-
-                {/* Loyalty (Pro) */}
-                <div className="border-t pt-8">
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                    <Crown className="h-5 w-5 text-primary" />
-                    Stempelkaart & Loyalty
-                  </h3>
-                  <ProGate restaurantId={selectedRestaurant.id} enforced>
-                    <LoyaltyProgramManager restaurantId={selectedRestaurant.id} />
-                  </ProGate>
-                </div>
-
-                {/* Cross-promotie (Pro) */}
-                <div className="border-t pt-8">
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                    <Crown className="h-5 w-5 text-primary" />
-                    Cross-promotie
-                  </h3>
-                  <ProGate restaurantId={selectedRestaurant.id} enforced>
-                    <CrossPromotionManager restaurantId={selectedRestaurant.id} />
-                  </ProGate>
-                </div>
-
-                {/* Upgrade CTA */}
-                <div className="border-t pt-8">
-                  <UpgradeToProCard restaurantId={selectedRestaurant.id} />
-                </div>
-              </>
-            )}
-          </TabsContent>
-
-          {/* ===== MARKT TAB ===== */}
-          <TabsContent value="market">
-            <OwnerTabHeader
-              icon={TrendingUp}
-              title="Markt & Concurrentie"
-              description="Buurtanalyse, benchmarks, piekuren en deals."
-            />
-            {!isPro && selectedRestaurant ? (
-              <ProPaywall
-                featureName="Markt & Concurrentie"
-                description="Zie precies hoe je presteert ten opzichte van de concurrentie in jouw buurt en stad."
-                previewVariant="market"
-                benefits={[
-                  'Buurtanalyse: vergelijk rating, reviews en prijsniveau van directe concurrenten',
-                  'Competitor benchmark op keuken, stad en prijsklasse',
-                  'Deals-manager voor tijdelijke acties met meetbare ROI',
-                  'QR-code generator voor tafels, flyers en social',
-                  'Piekuren- en piekdagen-inzicht op basis van echte zoekvraag',
-                  'Promotie ROI: zie welke acties klanten écht opleverden',
-                ]}
-              />
-            ) : isVerified && selectedRestaurant ? (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                    <BarChart3 className="h-5 w-5 text-primary" />
-                    Buurtanalyse
-                  </h3>
-                  <NeighborhoodAnalysis
-                    competitors={competitors}
-                    myRating={selectedRestaurant.rating}
-                    myReviewCount={selectedRestaurant.review_count}
-                    myName={selectedRestaurant.name}
-                  />
-                </div>
-
-                <div className="border-t pt-8">
-                  <ProGate restaurantId={selectedRestaurant.id}>
-                    <CompetitorBenchmark
-                      restaurantId={selectedRestaurant.id}
-                      cityId={selectedRestaurant.city_id}
-                      cuisines={selectedRestaurant.cuisines || []}
-                      rating={Number(selectedRestaurant.rating)}
-                      reviewCount={selectedRestaurant.review_count}
+                {/* ===== OVERZICHT ===== */}
+                <TabsContent value="overview" className="space-y-6">
+                  {searchParams.get('welcome') === '1' && selectedRestaurant && (
+                    <Card className="border-primary/30 bg-primary/5">
+                      <CardContent className="p-5">
+                        <p className="mb-1 text-lg font-semibold">Welkom, je bent nu de eigenaar van {selectedRestaurant.name}!</p>
+                        <p className="text-sm text-muted-foreground">Loop de takenlijst hieronder na, dan zien gasten meteen de juiste informatie.</p>
+                      </CardContent>
+                    </Card>
+                  )}
+                  {selectedRestaurant && (
+                    <DailyBriefing
+                      restaurantName={selectedRestaurant.name}
+                      ownerFirstName={ownerName}
+                      totalViews={analytics?.totalViews || 0}
+                      viewsByDay={analytics?.viewsByDay || []}
+                      unansweredReviews={unansweredReviews}
+                      suggestedDishes={suggestedDishCount}
+                      isVerified={isVerified}
+                      primaryActionLabel={!isVerified ? 'Verifieer nu' : unansweredReviews > 0 ? 'Beantwoord reviews' : suggestedDishCount > 0 ? 'Bevestig gerechten' : 'Bekijk inzichten'}
+                      primaryActionHint={!isVerified ? 'Ontgrendel alle data en functies' : unansweredReviews > 0 ? 'Reageren verhoogt vertrouwen' : suggestedDishCount > 0 ? 'Word beter vindbaar' : 'Zie hoe gasten je vinden'}
+                      onPrimaryAction={() => {
+                        if (!isVerified) setVerificationDialogOpen(true);
+                        else if (unansweredReviews > 0) go('reviews');
+                        else if (suggestedDishCount > 0) go('menu');
+                        else go('insights');
+                      }}
                     />
-                  </ProGate>
-                </div>
+                  )}
+                  {selectedRestaurant && !selectedRestaurant.is_active && (
+                    <OwnerHiddenNotice slug={selectedRestaurant.slug} onAddMenu={() => go('menu')} />
+                  )}
 
-                <div className="border-t pt-8">
-                  <DealsManager restaurantId={selectedRestaurant.id} />
-                </div>
+                  <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+                    <PageScoreCard tasks={tasks} onOpen={openTask} />
+                    {selectedRestaurant && (
+                      <PackagesSummary restaurantId={selectedRestaurant.id} isPro={isPro}
+                        onManage={() => go('invoices')} onExplore={() => go('promotions')} />
+                    )}
+                  </div>
 
-                <div className="border-t pt-8">
-                  <QRCodeGenerator
-                    restaurantSlug={selectedRestaurant.slug}
-                    restaurantName={selectedRestaurant.name}
-                  />
-                </div>
+                  <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
+                    <StatCard variant="primary" title="Paginaweergaven (30d)" value={analytics?.totalViews ?? '—'} icon={Eye}
+                      sparkline={(analytics?.viewsByDay || []).map(d => d.count)} />
+                    <StatCard title="Vertoningen in resultaten" value={analytics?.impressions ?? '—'} icon={Search} />
+                    <StatCard title="Route" value={analytics?.routeClicks ?? '—'} icon={MapPin} />
+                    <StatCard title="Reserveren" value={analytics?.reservationClicks ?? '—'} icon={MousePointer} />
+                    <StatCard title="Website" value={analytics?.websiteClicks ?? '—'} icon={Globe} />
+                    <StatCard title="Telefoon" value={analytics?.phoneClicks ?? '—'} icon={Phone} />
+                    <StatCard title="Totale kliks" value={analytics?.totalClicks ?? '—'} icon={MousePointer} />
+                    <StatCard title="Kliks per weergave" icon={Gauge}
+                      value={(() => { const p = safePercent(analytics?.totalClicks ?? 0, analytics?.totalViews ?? 0); return p === null ? '—' : `${p.toLocaleString('nl-NL')}%`; })()} />
+                  </div>
 
-                <div className="border-t pt-8">
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                    <Clock className="h-5 w-5 text-primary" />
-                    Piekuren-inzicht
-                  </h3>
-                  <PeakHoursInsight peakHours={peakHours} peakDays={peakDays} />
-                </div>
+                  <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+                    <Card>
+                      <CardContent className="space-y-3 p-5">
+                        <div className="flex items-center justify-between">
+                          <h2 className="flex items-center gap-2 font-semibold"><MessageSquare className="h-4 w-4 text-primary" />Laatste reviews
+                            {unansweredReviews > 0 && <Badge variant="destructive" className="text-xs">{unansweredReviews} onbeantwoord</Badge>}
+                          </h2>
+                          <Button variant="link" size="sm" className="h-auto p-0" onClick={() => go('reviews')}>Alle reviews</Button>
+                        </div>
+                        {reviews.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">Nog geen reviews. Deel je pagina met gasten, reviews helpen je hoger in de resultaten.</p>
+                        ) : (
+                          <ul className="divide-y">
+                            {reviews.slice(0, 3).map(rv => (
+                              <li key={rv.id} className="flex items-start gap-3 py-3">
+                                <Star className="mt-0.5 h-4 w-4 shrink-0 fill-rating text-rating" />
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm font-medium">{rv.rating} van 5{rv.profile?.name ? `, ${rv.profile.name}` : ''}</p>
+                                  {(rv.title || rv.body) && <p className="line-clamp-2 text-sm text-muted-foreground">{rv.title || rv.body}</p>}
+                                </div>
+                                {!rv.owner_response && <Badge variant="outline" className="shrink-0 text-xs">Nog geen reactie</Badge>}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="space-y-3 p-5">
+                        <h2 className="flex items-center gap-2 font-semibold"><Rocket className="h-4 w-4 text-primary" />Promoties</h2>
+                        <p className="text-sm text-muted-foreground">
+                          Uitgelicht zet je bovenaan bij je gerechten. Daarnaast kun je extra tags, evenementen en een plek in de nieuwsbrief kiezen.
+                        </p>
+                        <Button variant="outline" size="sm" onClick={() => go('promotions')}>Bekijk promoties</Button>
+                      </CardContent>
+                    </Card>
+                  </div>
 
-                <div className="border-t pt-8">
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                    <Crown className="h-5 w-5 text-primary" />
-                    Promotie ROI
-                  </h3>
-                  <PromotionROI promotions={promotionROI} />
-                </div>
+                  {!isPro && selectedRestaurant && <ProUpsellBanner onSeeMore={() => go('insights')} />}
+                </TabsContent>
 
-              </div>
-            ) : (
-              <LockedFeatureOverlay 
-                featureName="Markt & Concurrentie"
-                description="Vergelijk je prestaties met concurrenten en bekijk het rendement van je promoties."
-                onRequestVerification={() => setVerificationDialogOpen(true)}
+                {/* ===== PROFIEL ===== */}
+                <TabsContent value="profile" className="space-y-6">
+                  <OwnerTabHeader icon={Store} title="Profiel" description="Alles wat gasten op je pagina zien. Rechts zie je hoe het eruitziet." />
+                  {r && (
+                    <div className="grid gap-8 lg:grid-cols-[1fr_320px] lg:items-start">
+                      <div className="min-w-0 space-y-8">
+                        {isVerified ? (
+                          <>
+                            <ContactDetailsEditor restaurantId={r.id} restaurantName={r.name} phone={r.phone ?? null}
+                              websiteUrl={r.website_url ?? null} address={r.address ?? null}
+                              onSaved={(next) => setSelectedRestaurant({ ...r, ...next } as any)} />
+                            {section('Naam, beschrijving en openingstijden', Clock, (
+                              <>
+                                <BasicInfoEditor restaurantId={r.id} currentName={r.name} currentOpeningHours={r.opening_hours}
+                                  onHoursSaved={(opening_hours) => setSelectedRestaurant({ ...r, opening_hours } as any)} />
+                                <div className="space-y-3">
+                                  <h4 className="text-base font-semibold">Afwijkende dagen</h4>
+                                  <OpeningHoursExceptions restaurantId={r.id} />
+                                </div>
+                              </>
+                            ))}
+                          </>
+                        ) : (
+                          <>
+                            {locked('Gegevens bewerken', 'Verifieer dat je de eigenaar bent om contactgegevens, naam, beschrijving en openingstijden te bewerken.')}
+                            {section('Afwijkende dagen', Clock, <OpeningHoursExceptions restaurantId={r.id} />)}
+                          </>
+                        )}
+
+                        {section("Foto's", Image, isVerified ? (
+                          <>
+                            <p className="text-sm text-muted-foreground">Je foto's halen we automatisch op bij Google. Hier kun je ze vervangen of aanvullen. Met 3 of meer foto's word je vaker aangeklikt.</p>
+                            <RestaurantImageUpload restaurantId={r.id} restaurantName={r.name} existingImages={r.images || []}
+                              onImagesUpdate={() => toast.success("Foto's opgeslagen")} />
+                          </>
+                        ) : locked("Foto's beheren", "Vervang of voeg foto's toe aan je pagina."))}
+
+                        {section('Faciliteiten en parkeren', Sparkles, (
+                          <>
+                            <Card>
+                              <CardContent className="divide-y divide-border p-4">
+                                <ToggleRow emoji="✓" emojiClass="text-green-600 font-bold" title="Volledig halal" description="Alle gerechten zijn halal"
+                                  checked={r.is_fully_halal ?? false}
+                                  onChange={(v) => saveToggle('is_fully_halal', v, ['Restaurant als halal gemarkeerd, alle gerechten bijgewerkt', 'Halal-markering verwijderd'], markDishes({ is_halal: true }))} />
+                                <ToggleRow emoji="🥬" title="Volledig vegetarisch" description="Alle gerechten zijn vegetarisch"
+                                  checked={r.is_fully_vegetarian ?? false}
+                                  onChange={(v) => saveToggle('is_fully_vegetarian', v, ['Restaurant als vegetarisch gemarkeerd', 'Vegetarisch-markering verwijderd'], markDishes({ is_vegetarian: true }))} />
+                                <ToggleRow emoji="🌱" title="Volledig veganistisch" description="Alle gerechten zijn veganistisch"
+                                  checked={r.is_fully_vegan ?? false}
+                                  onChange={(v) => saveToggle('is_fully_vegan', v, ['Restaurant als veganistisch gemarkeerd', 'Veganistisch-markering verwijderd'], markDishes({ is_vegan: true, is_vegetarian: true }))} />
+                                <ToggleRow emoji="☀️" title="Terras" description="Gasten kunnen buiten zitten"
+                                  checked={r.has_terrace ?? false} onChange={(v) => saveToggle('has_terrace', v, ['Terras aangezet', 'Terras uitgezet'])} />
+                                <ToggleRow emoji="🚗" title="Bezorgen" description="Je bezorgt aan huis"
+                                  checked={r.has_delivery ?? false} onChange={(v) => saveToggle('has_delivery', v, ['Bezorgen aangezet', 'Bezorgen uitgezet'])} />
+                                <ToggleRow emoji="🥡" title="Afhalen" description="Gasten kunnen bestellen om mee te nemen"
+                                  checked={r.has_takeaway ?? false} onChange={(v) => saveToggle('has_takeaway', v, ['Afhalen aangezet', 'Afhalen uitgezet'])} />
+                              </CardContent>
+                            </Card>
+                            <ParkingEditor restaurantId={r.id} />
+                          </>
+                        ))}
+
+                        {section('Social media', Instagram, isVerified ? (
+                          <SocialLinksManager restaurantId={r.id} instagramUrl={r.instagram_url || ''} tiktokUrl={r.tiktok_url || ''}
+                            onUpdate={(ig, tk) => setSelectedRestaurant({ ...r, instagram_url: ig, tiktok_url: tk } as any)} />
+                        ) : locked('Social media koppelen', 'Koppel Instagram en TikTok zodat gasten je direct vanaf je pagina volgen.'))}
+
+                        {isVerified && section('Meertalig profiel', Languages, (
+                          <ProGate restaurantId={r.id} enforced>
+                            <MultiLanguageProfile restaurantId={r.id} defaultName={r.name} />
+                          </ProGate>
+                        ))}
+
+                        <p className="border-t pt-6 text-sm text-muted-foreground">
+                          Tags zoals Vegan of Romantisch beheer je onder{' '}
+                          <button type="button" className="font-medium text-primary underline" onClick={() => go('promotions')}>Promoties</button>.
+                          Je reserveringsknop stel je in onder{' '}
+                          <button type="button" className="font-medium text-primary underline" onClick={() => go('reservations')}>Reserveringen</button>.
+                        </p>
+                      </div>
+                      <aside className="lg:sticky lg:top-[9.5rem]">
+                        <PagePreviewCard slug={r.slug} name={r.name} cityName={cityName} cuisines={r.cuisines} tags={r.ambience_tags}
+                          images={r.images} rating={Number(r.rating)} reviewCount={r.review_count} openingHours={r.opening_hours}
+                          phone={r.phone} reservationUrl={r.reservation_url} isActive={!!r.is_active} />
+                      </aside>
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* ===== MENU ===== */}
+                <TabsContent value="menu" className="space-y-8">
+                  <OwnerTabHeader icon={UtensilsCrossed} title="Menu"
+                    description={`Gasten vinden je via je gerechten. Vanaf ${menuProgress?.minimum ?? 5} gerechten sta je volledig zichtbaar${menuProgress ? ` (nu ${menuProgress.count})` : ''}.`} />
+                  {r ? (
+                    <>
+                      {section('Je gerechten', UtensilsCrossed, (
+                        <>
+                          {suggestedDishCount > 0 && <Badge variant="secondary" className="text-xs">{suggestedDishCount} voorgesteld, bevestig of wijs af</Badge>}
+                          <DishConfirmation restaurantId={r.id} restaurantName={r.name} />
+                        </>
+                      ))}
+                      {section('Menukaart en prijzen', FileText, (
+                        <>
+                          <p className="max-w-3xl text-sm text-muted-foreground">
+                            Het snelst gaat het met <span className="font-medium text-foreground">Menu importeren</span>: upload je kaart als pdf of csv, wij herkennen de gerechten
+                            en zetten ze bij je gerechten. Per gerecht houd je hieronder naam, categorie, prijs en dieetopties bij.
+                          </p>
+                          <OwnerMenuUpload restaurantId={r.id} restaurantName={r.name} />
+                          <MenuItemsManager restaurantId={r.id} restaurantName={r.name} />
+                        </>
+                      ))}
+                    </>
+                  ) : null}
+                </TabsContent>
+
+                {/* ===== REVIEWS EN FEEDBACK ===== */}
+                <TabsContent value="reviews" className="space-y-8">
+                  <OwnerTabHeader icon={MessageSquare} title="Reviews en feedback"
+                    description="Wat gasten over je zeggen. Een snel antwoord laat zien dat je luistert." />
+                  {section(unansweredReviews > 0 ? `Reviews (${unansweredReviews} onbeantwoord)` : 'Reviews', Star, reviews.length > 0 ? (
+                    <div className="space-y-6">
+                      <ReviewIntelligence reviews={reviews} onApplyTemplate={(reviewId, text) => respondToReview(reviewId, text)} />
+                      <div className="space-y-3">
+                        {[...reviews].sort((a, b) => Number(!!a.owner_response) - Number(!!b.owner_response)).slice(0, reviewLimit).map(review => (
+                          <ReviewCard key={review.id} review={review} onRespond={respondToReview} canRespond={isVerified}
+                            restaurantId={selectedRestaurant?.id} restaurantName={selectedRestaurant?.name} />
+                        ))}
+                        {reviews.length > reviewLimit && (
+                          <Button variant="outline" className="w-full" onClick={() => setReviewLimit(n => n + 10)}>
+                            Toon meer ({reviews.length - reviewLimit})
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <Card className="border-dashed">
+                      <CardContent className="mx-auto max-w-md py-10 text-center">
+                        <p className="mb-1 text-sm font-medium">Nog geen reviews</p>
+                        <p className="mb-4 text-xs text-muted-foreground">Deel je pagina met gasten. Reviews helpen je hoger in de zoekresultaten.</p>
+                        {selectedRestaurant && (
+                          <Button size="sm" variant="outline" asChild>
+                            <Link to={`/restaurant/${selectedRestaurant.slug}`}><ExternalLink className="mr-1.5 h-3.5 w-3.5" />Bekijk je pagina</Link>
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                  {r && isVerified && section('Antwoorden met AI en vaste teksten', Sparkles, (
+                    <ProGate restaurantId={r.id} enforced><ResponseTemplatesManager restaurantId={r.id} /></ProGate>
+                  ))}
+                  {r && isVerified && section('Feedback van gasten aan tafel', QrCode, (
+                    <>
+                      <p className="text-sm text-muted-foreground">
+                        Met een QR-code op tafel of de rekening geven gasten direct feedback. Positieve gasten sturen we door naar je pagina, kritiek komt alleen bij jou binnen.
+                      </p>
+                      <ProGate restaurantId={r.id} enforced><QRCodeGenerator restaurantSlug={r.slug} restaurantName={r.name} /></ProGate>
+                      <ProGate restaurantId={r.id} showBadge={false}><InternalFeedbackInbox restaurantId={r.id} /></ProGate>
+                    </>
+                  ))}
+                </TabsContent>
+
+                {/* ===== RESERVERINGEN ===== */}
+                <TabsContent value="reservations" className="space-y-8">
+                  <OwnerTabHeader icon={CalendarCheck} title="Reserveringen"
+                    description="Kies hoe gasten bij je reserveren. De Reserveren-knop op je pagina gebruikt wat je hier instelt." />
+                  {r && (
+                    <>
+                      <Card>
+                        <CardContent className="p-4">
+                          <ToggleRow emoji="📅" title="Je neemt reserveringen aan" description="Uit: de Reserveren-knop verdwijnt van je pagina"
+                            checked={r.accepts_reservations ?? false}
+                            onChange={(v) => saveToggle('accepts_reservations', v, ['Reserveringen aangezet', 'Reserveringen uitgezet'])} />
+                        </CardContent>
+                      </Card>
+                      {section('Reserveringslink', Link2, (
+                        <ReservationLinkManager restaurantId={r.id} reservationUrl={r.reservation_url || ''} hasWebsite={!!r.website_url}
+                          onUpdate={(url) => setSelectedRestaurant({ ...r, reservation_url: url, accepts_reservations: !!url } as any)}
+                          onOpenIntegrations={() => document.getElementById('reservation-systems')?.scrollIntoView({ behavior: 'smooth' })} />
+                      ))}
+                      {section('Reserveringssysteem koppelen', Plug, isVerified ? (
+                        <>
+                          <ReservationIntegrations restaurantId={r.id} />
+                          <ReservationStatsCard restaurantId={r.id} />
+                        </>
+                      ) : locked('Reserveringssysteem koppelen', 'Koppel bijvoorbeeld Zenchef, zodat gasten direct vanaf je Dishloopr-pagina reserveren.'), 'reservation-systems')}
+                    </>
+                  )}
+                </TabsContent>
+
+                {/* ===== INZICHTEN (incl. Markt) ===== */}
+                <TabsContent value="insights" className="space-y-6">
+                  <OwnerTabHeader icon={BarChart3} title="Inzichten" description="Hoe gasten je vinden en hoe je het doet ten opzichte van de buurt."
+                    actions={isVerified && selectedRestaurant ? <InsightsExportButton restaurantId={selectedRestaurant.id} restaurantName={selectedRestaurant.name} /> : undefined} />
+                  <Tabs value={insightsTab} onValueChange={setInsightsTab}>
+                    <TabsList>
+                      <TabsTrigger value="visitors">Bezoekers en gerechten</TabsTrigger>
+                      <TabsTrigger value="market">Markt</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="visitors" className="pt-4">
+                      {!isPro && selectedRestaurant ? (
+                        <ProPaywall featureName="Inzichten" description="Begrijp precies hoe gasten je vinden, wat ze zoeken en waar je groei laat liggen." previewVariant="insights"
+                          benefits={[
+                            'Weergaven, kliks en conversies per dag',
+                            'Je zoekpositie en de zoektermen waarop je gevonden wordt',
+                            'Conversie-funnel met melding bij plotselinge dalingen',
+                            'Wekelijkse aanbevelingen op basis van je cijfers',
+                            'Kanalen en vergelijking met vorig jaar',
+                            'Gerechten-analyse en optimalisatietips',
+                            'Alles exporteren naar csv of pdf',
+                          ]} />
+                      ) : isVerified && r ? (
+                        <div className="space-y-8">
+                          {section('Prestaties', BarChart3, <AnalyticsTab analytics={analytics} restaurant={r} reviews={reviews} />)}
+                          {section('Zoekpositie', TrendingUp, <SearchRanking restaurantId={r.id} restaurantName={r.name} />)}
+                          {section('Conversie en zoektermen', BarChart3, (
+                            <ProGate restaurantId={r.id} enforced>
+                              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                                <OwnerFunnel restaurantId={r.id} />
+                                <SearchTermHeatmap restaurantId={r.id} />
+                              </div>
+                            </ProGate>
+                          ))}
+                          {section('Groei-inzichten', TrendingUp, <ProGate restaurantId={r.id} enforced><ProGrowthInsights restaurantId={r.id} /></ProGate>)}
+                          {section('Aanbevelingen en meldingen', Sparkles, (
+                            <ProGate restaurantId={r.id} enforced>
+                              <div className="space-y-6"><FunnelAnomalies restaurantId={r.id} /><WeeklyRecommendations restaurantId={r.id} /></div>
+                            </ProGate>
+                          ))}
+                          {section('Hoe gasten je vinden', BarChart3, <ProGate restaurantId={r.id} enforced><ChannelAttribution restaurantId={r.id} /></ProGate>)}
+                          {section('Vergeleken met vorig jaar', TrendingUp, <HistoricalBenchmark restaurantId={r.id} />)}
+                          {section('Wanneer gasten zoeken', Clock, <ProGate restaurantId={r.id} enforced><BestTimeToPost restaurantId={r.id} /></ProGate>)}
+                          {section('Gerechten', UtensilsCrossed, <DishAnalytics restaurantId={r.id} restaurantName={r.name} />)}
+                          {section('Optimalisatie', Gauge, <OptimizationDashboard restaurantId={r.id} restaurantName={r.name} />)}
+                        </div>
+                      ) : locked('Inzichten', 'Bekijk statistieken, gerechten-analyse en optimalisatietips.')}
+                    </TabsContent>
+                    <TabsContent value="market" className="pt-4">
+                      {!isPro && selectedRestaurant ? (
+                        <ProPaywall featureName="Markt" description="Zie hoe je het doet ten opzichte van restaurants in je buurt en stad." previewVariant="market"
+                          benefits={[
+                            'Buurtanalyse: rating, reviews en prijsniveau van directe concurrenten',
+                            'Vergelijking op keuken, stad en prijsklasse',
+                            'Piekuren en piekdagen op basis van echte zoekvraag',
+                            'Welke gasten je verliest aan concurrenten',
+                            'Wat je promoties opleveren',
+                          ]} />
+                      ) : isVerified && r ? (
+                        <div className="space-y-8">
+                          {section('Buurtanalyse', BarChart3, (
+                            <NeighborhoodAnalysis competitors={competitors} myRating={r.rating} myReviewCount={r.review_count} myName={r.name} />
+                          ))}
+                          {section('Vergelijking met je stad', TrendingUp, (
+                            <CompetitorBenchmark restaurantId={r.id} cityId={r.city_id} cuisines={r.cuisines || []}
+                              rating={Number(r.rating)} reviewCount={r.review_count} />
+                          ))}
+                          {section('Verloren aan concurrenten', TrendingUp, <ProGate restaurantId={r.id} enforced><LostToCompetitor restaurantId={r.id} /></ProGate>)}
+                          {section('Piekuren', Clock, <PeakHoursInsight peakHours={peakHours} peakDays={peakDays} />)}
+                          {section('Wat je promoties opleveren', Crown, <PromotionROI promotions={promotionROI} />)}
+                        </div>
+                      ) : locked('Markt', 'Vergelijk je prestaties met restaurants in je buurt.')}
+                    </TabsContent>
+                  </Tabs>
+                </TabsContent>
+
+                {/* ===== PROMOTIES ===== */}
+                <TabsContent value="promotions" className="space-y-8">
+                  <OwnerTabHeader icon={Rocket} title="Promoties"
+                    description="Alles wat je extra zichtbaar maakt. Uitgelicht is het hoofdpakket, daarnaast kies je losse extra's." />
+                  {r && (
+                    <>
+                      {section('Uitgelicht', Crown, (
+                        <MyPackagesCard restaurantId={r.id} restaurantSlug={r.slug} restaurantName={r.name} />
+                      ))}
+                      {section('Tags', Tag, (
+                        <>
+                          <p className="text-sm text-muted-foreground">Met tags verschijn je bij filters zoals Vegan of Romantisch. Eén tag is gratis, extra tags kosten €5 per maand.</p>
+                          <TagManager restaurant={r} onUpdate={(updated) => setSelectedRestaurant(updated)} />
+                          <TagRequestForm restaurantId={r.id} />
+                        </>
+                      ))}
+                      {section('Evenementen en specials', PartyPopper, isVerified ? (
+                        <div className="space-y-6">
+                          <p className="text-sm text-muted-foreground">Een proeverij, kerstmenu of live muziek komt in de eventlijst van je stad en op je pagina, voor €5 per maand per evenement.</p>
+                          <OwnerEventsManager restaurantId={r.id} restaurantName={r.name} />
+                          <EventsCalendarView restaurantId={r.id} />
+                        </div>
+                      ) : locked('Evenementen', 'Zet specials en evenementen op Dishloopr voor €5 per maand per evenement.'))}
+                      {section('Nieuwsbrief', Megaphone, <NewsletterPlacement restaurantId={r.id} restaurantName={r.name} />, 'promo-newsletter')}
+                      {section('Gerecht in de spotlight', Star, <SponsoredMarketplace restaurantId={r.id} restaurantName={r.name} />, 'promo-sponsored')}
+
+                      <div className="border-t pt-8">
+                        <h2 className="font-display text-xl font-bold">Gasten terug laten komen</h2>
+                        <p className="mt-1 text-sm text-muted-foreground">Kortingen, acties en loyalty voor gasten die je al kennen.</p>
+                      </div>
+                      {section('Kortingscodes en acties', Ticket, (
+                        <div className="space-y-6">
+                          <PromoCodesManager restaurantId={r.id} />
+                          {isVerified && <ProGate restaurantId={r.id} enforced><DealsManager restaurantId={r.id} /></ProGate>}
+                        </div>
+                      ))}
+                      {section('Social posts maken', Sparkles, <ProGate restaurantId={r.id} enforced><SocialPostGenerator restaurantName={r.name} /></ProGate>)}
+                      {section('Stempelkaart en loyalty', Crown, <ProGate restaurantId={r.id} enforced><LoyaltyProgramManager restaurantId={r.id} /></ProGate>)}
+                      {section('Samenwerken met andere restaurants', Store, <ProGate restaurantId={r.id} enforced><CrossPromotionManager restaurantId={r.id} /></ProGate>)}
+                      {isVerified && section('Vraag doorsturen', Zap, <DemandRoutingSettings restaurant={r} />)}
+                      {!isPro && <div className="border-t pt-8"><UpgradeToProCard restaurantId={r.id} /></div>}
+                    </>
+                  )}
+                </TabsContent>
+
+                {/* ===== INSTELLINGEN EN PAKKETTEN ===== */}
+                <TabsContent value="settings" className="space-y-6">
+                  <OwnerTabHeader icon={Settings} title="Instellingen en pakketten" description="Je account, meldingen, team en alles wat je betaalt." />
+                  <Tabs value={settingsTab} onValueChange={setSettingsTab}>
+                    <TabsList className="flex h-auto flex-wrap justify-start">
+                      <TabsTrigger value="account">Account</TabsTrigger>
+                      <TabsTrigger value="notifications">Meldingen</TabsTrigger>
+                      <TabsTrigger value="team">Team</TabsTrigger>
+                      <TabsTrigger value="billing">Pakketten en facturen</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="account" className="pt-4">
+                      <AccountSettings onNameSaved={(n) => setOwnerName(ownerFirstName({ profileName: n }))} />
+                    </TabsContent>
+                    <TabsContent value="notifications" className="space-y-4 pt-4">
+                      <WeeklyReportToggle />
+                      <AnomalyAlertToggle isPro={isPro} />
+                      <EventReportToggle />
+                    </TabsContent>
+                    <TabsContent value="team" className="pt-4">
+                      {r && isVerified ? (
+                        <ProGate restaurantId={r.id} enforced><TeamMembersManager restaurantId={r.id} /></ProGate>
+                      ) : locked('Team', 'Nodig collega\'s uit om je pagina mee te beheren.')}
+                    </TabsContent>
+                    <TabsContent value="billing" className="space-y-6 pt-4">
+                      {r && <PackagesSummary restaurantId={r.id} isPro={isPro} onExplore={() => go('promotions')} />}
+                      <InvoicesTab />
+                    </TabsContent>
+                  </Tabs>
+                </TabsContent>
+              </Tabs>
+            </div>
+
+            {selectedRestaurant && (
+              <VerificationRequiredDialog
+                open={verificationDialogOpen}
+                onOpenChange={setVerificationDialogOpen}
+                claimId={activeClaimId}
+                restaurantId={selectedRestaurant.id}
+                restaurantName={selectedRestaurant.name}
+                restaurantWebsite={selectedRestaurant.website_url}
+                onVerificationComplete={() => { loadPermissions(); setVerificationDialogOpen(false); }}
               />
             )}
-          </TabsContent>
-
-          {/* ===== INTEGRATIES TAB ===== */}
-          <TabsContent value="integrations">
-            <OwnerTabHeader
-              icon={Plug}
-              title="Integraties"
-              description="Reserveringssystemen koppelen en zien wat Dishloopr aan reserveringen oplevert."
-            />
-            {selectedRestaurant && isVerified ? (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold">Reserveringssystemen</h3>
-                <ReservationIntegrations restaurantId={selectedRestaurant.id} />
-                <ReservationStatsCard restaurantId={selectedRestaurant.id} />
-              </div>
-            ) : selectedRestaurant ? (
-              <LockedFeatureOverlay
-                featureName="Reserveringssystemen koppelen"
-                description="Koppel je Zenchef zodat gasten direct vanaf je Dishloopr-pagina reserveren."
-                onRequestVerification={() => setVerificationDialogOpen(true)}
-              />
-            ) : null}
-          </TabsContent>
-
-          {/* ===== FACTUREN TAB ===== */}
-          <TabsContent value="invoices">
-            <OwnerTabHeader
-              icon={Receipt}
-              title="Facturen & Betalingen"
-              description="Overzicht van je facturen en abonnement."
-            />
-            <InvoicesTab />
-          </TabsContent>
-
-        </Tabs>
-      </div>
-
-      {/* Verification Dialog */}
-      {selectedRestaurant && (
-        <VerificationRequiredDialog
-          open={verificationDialogOpen}
-          onOpenChange={setVerificationDialogOpen}
-          claimId={activeClaimId}
-          restaurantId={selectedRestaurant.id}
-          restaurantName={selectedRestaurant.name}
-          restaurantWebsite={selectedRestaurant.website_url}
-          onVerificationComplete={() => {
-            loadPermissions();
-            setVerificationDialogOpen(false);
-          }}
-        />
-      )}
-
-      {/* One-time onboarding tour for newly claimed owners */}
-      <OwnerTour userId={user?.id} />
+            <OwnerTour userId={user?.id} />
           </div>
         </div>
       </SidebarProvider>

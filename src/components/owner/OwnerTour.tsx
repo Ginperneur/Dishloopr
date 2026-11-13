@@ -28,8 +28,8 @@ const STEPS = [
   },
   {
     icon: UtensilsCrossed,
-    title: 'Bevestig je gerechten & menu',
-    body: 'Ga naar Content om je gerechten te bevestigen, foto\'s te uploaden en je menu compleet te maken. Hoe rijker je profiel, hoe beter je vindbaar bent.',
+    title: 'Zet je gerechten en profiel compleet',
+    body: 'Onder Menu bevestig je je gerechten, onder Profiel zet je foto\'s, openingstijden en contactgegevens. Op Overzicht zie je in één score wat er nog ontbreekt.',
   },
   {
     icon: BarChart3,
@@ -39,7 +39,7 @@ const STEPS = [
   {
     icon: Rocket,
     title: 'Word zichtbaarder via Promoties',
-    body: 'In het Promoties-tabblad activeer je Premium plekken, ambiance add-ons, listing-boosts en nieuwsbriefplaatsingen. Alle prijzen staan bovenaan.',
+    body: 'Onder Promoties vind je Uitgelicht, ons hoofdpakket, en losse extra\'s: tags, evenementen en een plek in de nieuwsbrief.',
   },
   {
     icon: Crown,
@@ -48,8 +48,8 @@ const STEPS = [
   },
   {
     icon: PartyPopper,
-    title: 'Klaar — succes!',
-    body: 'Je kunt deze rondleiding altijd opnieuw openen via het help-icoon (?) rechtsboven.',
+    title: 'Klaar, succes!',
+    body: 'Vragen? Onderaan het menu staat Hulp nodig, daar stuur je ons direct een bericht.',
   },
 ] as const;
 
