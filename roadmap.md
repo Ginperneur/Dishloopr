@@ -1,4 +1,5 @@
 # Parkeerinformatie
+- [ ] Gratis Owner Pro: adminschakelaar per restaurant, bescherming tegen Stripe-sync, beveiligings- en ingelogde eindtest.
 - [x] Onbekende openingstijden: badges onderdrukt, neutrale melding op restaurantpagina; 15 tests geslaagd, 44 echte kaarten en Tensai Ramen op desktop/mobiel gecontroleerd.
 - [x] Claim hervat na tab sluiten/verversen, mailbestemming en inloggen; dashboardcodeveld zichtbaar, verzendpauze bevestigd; 12 tests; tijdelijke restaurants/claims/codes verwijderd.
 - [x] Claimcodemail via geverifieerde mailvoorziening; 11 tests, echte verzending 06:52 UTC, gekoppelde logregels, duidelijke foutmelding en testrestaurant/testclaim opgeruimd.
