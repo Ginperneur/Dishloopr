@@ -13,9 +13,10 @@ const corsHeaders = {
 };
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+const NAME = { routing: "Vraag doorsturen", uitgelicht: "Uitgelicht" } as const;
 const euro = (c: number) => `€${(c / 100).toLocaleString("nl-NL", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 
-interface Action { action: "reprice" | "cancel" | "won"; slot_id: string | null; bid_id: string | null; restaurant_id: string; user_id: string; price_cents: number; stripe_subscription_id: string | null }
+interface Action { product: "routing" | "uitgelicht"; action: "reprice" | "cancel" | "won"; slot_id: string | null; bid_id: string | null; restaurant_id: string; user_id: string; price_cents: number; stripe_subscription_id: string | null }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -30,15 +31,19 @@ Deno.serve(async (req) => {
     const quarterStart = today.getUTCDate() === 1 && [0, 3, 6, 9].includes(today.getUTCMonth());
     const settle = quarterStart || body.settle === true;
 
+    // Vraag doorsturen (promo_slots) and Uitgelicht (package_orders) share the same auction rules.
     const actions: Action[] = [];
-    if (settle) {
-      const { data, error } = await db.rpc("promo_settle");
+    const run = async (fn: string, product: Action["product"]) => {
+      const { data, error } = await db.rpc(fn);
       if (error) throw error;
-      actions.push(...((data ?? []) as Action[]));
+      actions.push(...((data ?? []) as Action[]).map(a => ({ ...a, product })));
+    };
+    if (settle) {
+      await run("promo_settle", "routing");
+      await run("uitgelicht_settle", "uitgelicht");
     }
-    const { data: daily, error: dailyErr } = await db.rpc("promo_daily");
-    if (dailyErr) throw dailyErr;
-    actions.push(...((daily ?? []) as Action[]));
+    await run("promo_daily", "routing");
+    await run("uitgelicht_daily", "uitgelicht");
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
     const results: { action: string; ok: boolean; error?: string }[] = [];
@@ -53,13 +58,13 @@ Deno.serve(async (req) => {
               items: [{ id: item.id, price_data: { currency: "eur", unit_amount: a.price_cents, tax_behavior: "exclusive", recurring: { interval: "month" }, product } }],
               proration_behavior: "none",
             });
-            await notify(db, a, "Nieuwe prijs voor je plek", `Vanaf je volgende factuur betaal je ${euro(a.price_cents)} per maand voor Vraag doorsturen.`);
+            await notify(db, a, "Nieuwe prijs voor je plek", `Vanaf je volgende factuur betaal je ${euro(a.price_cents)} per maand voor ${NAME[a.product]}.`);
           }
         } else if (a.action === "cancel" && a.stripe_subscription_id) {
           await stripe.subscriptions.update(a.stripe_subscription_id, { cancel_at_period_end: true });
-          await notify(db, a, "Je bent overboden", "Andere restaurants boden meer voor je plek bij Vraag doorsturen. Je plek loopt af aan het eind van je betaalde periode. Je kunt opnieuw bieden.");
+          await notify(db, a, "Je bent overboden", `Andere restaurants boden meer voor je plek bij ${NAME[a.product]}. Je plek loopt af aan het eind van je betaalde periode. Je kunt opnieuw bieden.`);
         } else if (a.action === "won") {
-          await notify(db, a, "Je hebt een plek gewonnen", `Rond binnen 7 dagen af voor ${euro(a.price_cents)} per maand, onder Promoties, Vraag doorsturen.`);
+          await notify(db, a, "Je hebt een plek gewonnen", `Rond binnen 7 dagen af voor ${euro(a.price_cents)} per maand bij ${NAME[a.product]}${a.product === "uitgelicht" ? " (Pakketten)" : " (Promoties)"}.`);
         }
         results.push({ action: a.action, ok: true });
       } catch (e) {
@@ -77,6 +82,6 @@ Deno.serve(async (req) => {
 async function notify(db: SupabaseClient, a: Action, title: string, body: string) {
   await db.from("owner_notifications").insert({
     user_id: a.user_id, restaurant_id: a.restaurant_id, type: "promo_slot", title, body,
-    link: "/owner-dashboard?tab=promotions",
+    link: a.product === "uitgelicht" ? "/voor-restaurants/pakketten" : "/owner-dashboard?tab=promotions",
   });
 }

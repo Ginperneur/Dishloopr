@@ -470,6 +470,10 @@ serve(async (req) => {
           logStep("Package order insert error", { error: orderError.message });
           return new Response(JSON.stringify({ error: orderError.message }), { status: 500 });
         }
+        if (metadata.bid_id) {
+          // A won Uitgelicht bid is now paid.
+          await supabaseAdmin.from("promo_bids").update({ status: "converted", updated_at: new Date().toISOString() }).eq("id", metadata.bid_id);
+        }
         if (type === "menu_service") {
           // Start the automatic import and translation; the owner then checks and publishes it.
           const run = fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/run-menu-service`, {
