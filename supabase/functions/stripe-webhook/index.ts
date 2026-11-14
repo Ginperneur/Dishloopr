@@ -446,7 +446,9 @@ serve(async (req) => {
           const sub = await stripe.subscriptions.retrieve(subscriptionId);
           status = sub.status === "trialing" ? "trialing" : "active";
           periodEnd = periodEndIso(sub);
-          if (type === "founding_partner" && metadata.plan === "month") {
+          // The 6-month minimum term belongs to the Founding Partner deal; later monthly Uitgelicht
+          // places are cancellable monthly and can be outbid at the quarterly auction.
+          if (type === "founding_partner" && metadata.plan === "month" && metadata.founding_partner === "true") {
             // Minimum term of 6 months, counted from the first paid day (launch).
             commitmentUntil = commitmentEnd((sub.trial_end ?? sub.start_date) * 1000);
           }

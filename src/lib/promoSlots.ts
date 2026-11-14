@@ -33,3 +33,16 @@ export function routingAction(s: MarketStatus): RoutingAction {
   if (s.my_bid?.status === 'open') return { kind: 'bid', text: `Je staat op de wachtlijst met ${formatEuroCents(s.my_bid.amount_cents)} per maand. Pas je bod aan of wacht op de veiling.` };
   return { kind: 'bid', text: 'Alle plekken zijn bezet of er wachten al bieders. Bied het bedrag dat je maximaal per maand wilt betalen.' };
 }
+
+/**
+ * The auction rule in plain code, for the explanation page and its worked example (the database
+ * applies the same rule in promo_settle / uitgelicht_settle): the highest `slots` amounts win and
+ * all winners pay the highest amount that did not win, at least the list price.
+ */
+export function auctionOutcome(amounts: { name: string; cents: number }[], slots: number, listCents: number) {
+  const ranked = [...amounts].sort((a, b) => b.cents - a.cents);
+  const winners = ranked.slice(0, slots);
+  const losers = ranked.slice(slots);
+  const priceCents = Math.max(listCents, losers[0]?.cents ?? listCents);
+  return { winners, losers, priceCents };
+}

@@ -271,6 +271,11 @@ export default function PackagesPage() {
           </Card>
         </div>
 
+        <p className="text-center text-sm text-muted-foreground">
+          Plekken zijn beperkt en de prijs volgt de vraag.{' '}
+          <Link to="/voor-restaurants/plekken-en-bieden" className="font-medium text-primary underline">Lees hoe plekken, prijzen en bieden werken</Link>
+        </p>
+
         <div className="flex flex-col gap-5 rounded-3xl border bg-card p-7 md:flex-row md:items-center md:justify-between">
           <div className="max-w-xl space-y-3">
             <div className="flex flex-wrap items-center gap-2">
@@ -334,6 +339,7 @@ export default function PackagesPage() {
                     Komt er een plek vrij, dan gaat die naar het hoogste bod. Elk kwartaal is er een veiling: de hoogste bieders krijgen een plek
                     en betalen allemaal het hoogste bod dat net niet won, minimaal de lijstprijs.
                     {pageStatus?.next_auction && ` Volgende veiling: ${new Date(pageStatus.next_auction).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}.`}
+                    {' '}<Link to="/voor-restaurants/plekken-en-bieden" className="text-primary underline">Zo werkt bieden</Link>
                   </p>
                   {user ? (
                     <div className="flex gap-2">

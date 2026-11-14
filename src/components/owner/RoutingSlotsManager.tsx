@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { Gavel, Loader2, Zap } from 'lucide-react';
@@ -180,6 +181,7 @@ export function RoutingSlotsManager({ restaurantId, cityId }: Props) {
           <p>Een vrije plek koop je direct voor de lijstprijs, per maand opzegbaar. Gerechten en steden met veel vraag zijn duurder.</p>
           <p>Alles bezet? Bied het bedrag dat je maximaal per maand wilt betalen. Komt er een plek vrij, dan gaat die naar het hoogste bod.</p>
           <p>Elk kwartaal is er een veiling. De 3 hoogste houden of krijgen een plek en betalen allemaal hetzelfde: het hoogste bod dat net niet won, minimaal de lijstprijs. Zonder biedingen loopt je plek gewoon door tegen de lijstprijs.</p>
+          <p><Link to="/voor-restaurants/plekken-en-bieden" className="font-medium text-primary underline">Lees de volledige uitleg met rekenvoorbeeld</Link></p>
         </div>
 
         {mine.length > 0 && (
