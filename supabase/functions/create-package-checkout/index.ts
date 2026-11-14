@@ -82,9 +82,11 @@ Deno.serve(async (req) => {
       if (!(pages ?? []).some((p: { page_slug: string }) => p.page_slug === page_slug)) {
         return json({ error: "Je restaurant staat niet op deze gerechtpagina" }, 400);
       }
-      const { data: left } = await admin.rpc("founding_places_left", { p_page_slug: page_slug });
-      if (typeof left === "number" && left <= 0) {
-        return json({ error: `Alle ${FOUNDING_PLACES_PER_PAGE} plekken voor Uitgelicht op deze pagina zijn vergeven` }, 409);
+      if (foundingWindowOpen()) {
+        const { data: left } = await admin.rpc("founding_places_left", { p_page_slug: page_slug });
+        if (typeof left === "number" && left <= 0) {
+          return json({ error: `Alle ${FOUNDING_PLACES_PER_PAGE} plekken voor Uitgelicht op deze pagina zijn vergeven` }, 409);
+        }
       }
       const { count } = await admin.from("package_orders").select("id", { count: "exact", head: true })
         .eq("restaurant_id", restaurant.id).eq("package", "founding_partner").eq("page_slug", page_slug)
@@ -101,16 +103,23 @@ Deno.serve(async (req) => {
     // tijdens het actievenster; Menuservice heeft geen normalCents en gebruikt
     // dus altijd option.cents.
     const isFoundingDeal = option.package === "founding_partner" && foundingWindowOpen();
-    const effectiveCents = option.package === "founding_partner" && !isFoundingDeal && option.normalCents
-      ? option.normalCents
-      : option.cents;
+    // After the Founding Partner window Uitgelicht is monthly, priced per page by demand
+    // (uitgelicht_reserve): a won bid at its clearing price, or a free place at the list price.
+    let dynamicCents: number | null = null;
+    let bidId: string | null = null;
+    if (option.package === "founding_partner" && !isFoundingDeal) {
+      if (option.plan !== "month") return json({ error: "Na de Founding Partner actie is Uitgelicht per maand" }, 400);
+      const { data: reserved, error: resErr } = await admin.rpc("uitgelicht_reserve", { p_page_slug: pageSlug, p_restaurant: restaurant.id });
+      if (resErr) return json({ error: resErr.message }, 409);
+      dynamicCents = (reserved as { price_cents: number }).price_cents;
+      bidId = (reserved as { bid_id: string | null }).bid_id;
+    }
+    const effectiveCents = dynamicCents ?? option.cents;
 
     // The STRIPE_FOUNDING_* price ids hold the €59/€590 promo price, so they may only be used
     // inside the window; after it, a normal-price id (or the inline normal price) applies.
-    const usesNormalPrice = option.package === "founding_partner" && !isFoundingDeal;
-    const priceId = usesNormalPrice
-      ? (option.normalPriceEnv ? Deno.env.get(option.normalPriceEnv) : undefined)
-      : Deno.env.get(option.priceEnv);
+    // A dynamic price is always created inline; Stripe price ids only for the fixed prices.
+    const priceId = dynamicCents !== null ? undefined : Deno.env.get(option.priceEnv);
     const lineItem = priceId
       ? { price: priceId, quantity: 1 }
       : {
@@ -131,6 +140,7 @@ Deno.serve(async (req) => {
       user_id: user.id,
       amount_cents: String(effectiveCents),
       ...(pageSlug ? { page_slug: pageSlug } : {}),
+      ...(bidId ? { bid_id: bidId } : {}),
       ...(option.package === "founding_partner"
         ? { founding_partner: String(isFoundingDeal), ...(isFoundingDeal ? { discount_until: FOUNDING_DISCOUNT_UNTIL } : {}) }
         : {}),
