@@ -3083,6 +3083,67 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_bids: {
+        Row: {
+          amount_cents: number
+          clearing_cents: number | null
+          created_at: string
+          id: string
+          market_id: string
+          pay_by: string | null
+          restaurant_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          clearing_cents?: number | null
+          created_at?: string
+          id?: string
+          market_id: string
+          pay_by?: string | null
+          restaurant_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          clearing_cents?: number | null
+          created_at?: string
+          id?: string
+          market_id?: string
+          pay_by?: string | null
+          restaurant_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_bids_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "promo_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_bids_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "promo_bids_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       promo_code_redemptions: {
         Row: {
           created_at: string
@@ -3159,6 +3220,129 @@ export type Database = {
           valid_until?: string | null
         }
         Relationships: []
+      }
+      promo_markets: {
+        Row: {
+          city_id: string
+          created_at: string
+          dish_id: string
+          id: string
+          product: string
+          slots: number
+        }
+        Insert: {
+          city_id: string
+          created_at?: string
+          dish_id: string
+          id?: string
+          product: string
+          slots?: number
+        }
+        Update: {
+          city_id?: string
+          created_at?: string
+          dish_id?: string
+          id?: string
+          product?: string
+          slots?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_markets_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_markets_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["city_id"]
+          },
+          {
+            foreignKeyName: "promo_markets_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_markets_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["dish_id"]
+          },
+        ]
+      }
+      promo_slots: {
+        Row: {
+          bid_id: string | null
+          created_at: string
+          id: string
+          market_id: string
+          price_cents: number
+          reserved_until: string | null
+          restaurant_id: string
+          status: string
+          stripe_subscription_id: string | null
+          term_end: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bid_id?: string | null
+          created_at?: string
+          id?: string
+          market_id: string
+          price_cents: number
+          reserved_until?: string | null
+          restaurant_id: string
+          status?: string
+          stripe_subscription_id?: string | null
+          term_end?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bid_id?: string | null
+          created_at?: string
+          id?: string
+          market_id?: string
+          price_cents?: number
+          reserved_until?: string | null
+          restaurant_id?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          term_end?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_slots_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "promo_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_slots_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "promo_slots_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_tokens: {
         Row: {
@@ -8142,6 +8326,91 @@ export type Database = {
           term: string
         }[]
       }
+      place_promo_bid: {
+        Args: {
+          p_amount_cents: number
+          p_city: string
+          p_dish: string
+          p_product: string
+          p_restaurant: string
+        }
+        Returns: string
+      }
+      promo_base_cents: { Args: { p_product: string }; Returns: number }
+      promo_can_manage: { Args: { p_restaurant: string }; Returns: boolean }
+      promo_daily: {
+        Args: never
+        Returns: {
+          action: string
+          bid_id: string
+          price_cents: number
+          restaurant_id: string
+          slot_id: string
+          stripe_subscription_id: string
+          user_id: string
+        }[]
+      }
+      promo_demand: {
+        Args: { p_city: string; p_dish: string }
+        Returns: {
+          searches_per_month: number
+          suppliers: number
+        }[]
+      }
+      promo_dish_on_menu: {
+        Args: { p_dish: string; p_restaurant: string }
+        Returns: boolean
+      }
+      promo_fill_free_slots: {
+        Args: { p_market: string }
+        Returns: {
+          bid_id: string
+          clearing_cents: number
+          restaurant_id: string
+          user_id: string
+        }[]
+      }
+      promo_list_price: {
+        Args: { p_city: string; p_dish: string; p_product: string }
+        Returns: number
+      }
+      promo_market_id: {
+        Args: { p_city: string; p_dish: string; p_product: string }
+        Returns: string
+      }
+      promo_market_status: {
+        Args: {
+          p_city: string
+          p_dish: string
+          p_product: string
+          p_restaurant: string
+        }
+        Returns: Json
+      }
+      promo_quarter_end: { Args: { d: string }; Returns: string }
+      promo_reserve_slot: {
+        Args: {
+          p_city: string
+          p_dish: string
+          p_product: string
+          p_restaurant: string
+          p_user: string
+        }
+        Returns: Json
+      }
+      promo_settle: {
+        Args: never
+        Returns: {
+          action: string
+          bid_id: string
+          price_cents: number
+          restaurant_id: string
+          slot_id: string
+          stripe_subscription_id: string
+          user_id: string
+        }[]
+      }
+      promo_taken: { Args: { p_market: string }; Returns: number }
       public_launch_date: { Args: never; Returns: string }
       public_package_links: {
         Args: never
@@ -8221,6 +8490,13 @@ export type Database = {
           context: string
           metric: string
           totaal: number
+        }[]
+      }
+      routing_sponsors: {
+        Args: { p_city: string; p_dish_ids: string[] }
+        Returns: {
+          dish_id: string
+          restaurant_id: string
         }[]
       }
       save_reservation_integration: {
@@ -8422,6 +8698,7 @@ export type Database = {
       update_user_badges: { Args: { p_user_id: string }; Returns: undefined }
       verify_cron_secret: { Args: { p_secret: string }; Returns: boolean }
       visibility_menu_minimum: { Args: never; Returns: number }
+      withdraw_promo_bid: { Args: { p_bid: string }; Returns: undefined }
     }
     Enums: {
       app_role: "user" | "owner" | "admin" | "moderator"
