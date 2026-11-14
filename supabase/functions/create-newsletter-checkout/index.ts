@@ -57,23 +57,11 @@ serve(async (req) => {
       });
     }
 
+    // Only all of the Netherlands is sold for now: the newsletter goes to every subscriber, so a city
+    // or province placement could not be delivered as promised. Old clients sending another scope get national.
     const allowedScopes = ["city", "province", "national"] as const;
-    const finalScope: typeof allowedScopes[number] = allowedScopes.includes(scope)
-      ? scope
-      : "city";
-
-    if (finalScope === "city" && !targetCityId) {
-      return new Response(JSON.stringify({ error: "targetCityId is required for city scope" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    if (finalScope === "province" && !targetProvince) {
-      return new Response(JSON.stringify({ error: "targetProvince is required for province scope" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const finalScope: typeof allowedScopes[number] = "national";
+    void scope; void targetCityId; void targetProvince;
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -99,9 +87,9 @@ serve(async (req) => {
     // (newsletter_price_id_<scope>) is no longer required: those prices were removed from the
     // Stripe catalogue, which made every placement fail. The amount is created inline instead.
     const priceMap: Record<typeof allowedScopes[number], number> = {
-      city: 15,
+      city: 20,
       province: 20,
-      national: 40,
+      national: 20,
     };
     const scopeLabel = { city: "één stad", province: "één provincie", national: "heel Nederland" }[finalScope];
 
@@ -116,8 +104,8 @@ serve(async (req) => {
         promo_type: promoType || "actie",
         edition_id: editionId || null,
         scope: finalScope,
-        target_city_id: finalScope === "city" ? targetCityId : null,
-        target_province: finalScope === "province" ? targetProvince : null,
+        target_city_id: null,
+        target_province: null,
         price_paid: priceMap[finalScope],
         status: "pending_payment",
       })
@@ -162,8 +150,7 @@ serve(async (req) => {
         restaurant_id: restaurantId,
         user_id: user.id,
         scope: finalScope,
-        target_city_id: targetCityId || "",
-        target_province: targetProvince || "",
+
       },
     });
 
