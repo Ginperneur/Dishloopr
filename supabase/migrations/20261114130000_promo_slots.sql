@@ -281,7 +281,9 @@ BEGIN
    WHERE status = 'pending_payment' AND reserved_until < now();
   UPDATE public.promo_bids SET status = 'expired', updated_at = now()
    WHERE status = 'won' AND pay_by < now();
-  FOR v_market IN SELECT DISTINCT market_id FROM public.promo_bids WHERE status = 'open' LOOP
+  -- Routing only: Uitgelicht places live in package_orders and have their own functions.
+  FOR v_market IN SELECT DISTINCT b.market_id FROM public.promo_bids b JOIN public.promo_markets m ON m.id = b.market_id
+                   WHERE b.status = 'open' AND m.product = 'routing' LOOP
     RETURN QUERY SELECT 'won'::text, NULL::uuid, f.bid_id, f.restaurant_id, f.user_id, f.clearing_cents, NULL::text
                    FROM public.promo_fill_free_slots(v_market) f;
   END LOOP;
@@ -295,7 +297,7 @@ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE
   v_m public.promo_markets; v_list int; v_clear int; v_term date := public.promo_quarter_end(current_date);
 BEGIN
-  FOR v_m IN SELECT * FROM public.promo_markets LOOP
+  FOR v_m IN SELECT * FROM public.promo_markets WHERE product = 'routing' LOOP
     v_list := public.promo_list_price(v_m.product, v_m.city_id, v_m.dish_id);
     IF NOT EXISTS (SELECT 1 FROM public.promo_bids b WHERE b.market_id = v_m.id AND b.status = 'open') THEN
       -- No competition: holders renew at the new list price.
