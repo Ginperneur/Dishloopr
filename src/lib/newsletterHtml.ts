@@ -9,6 +9,8 @@ export interface NewsletterPlacementItem {
   restaurant_name: string;
   restaurant_slug: string;
   city_name?: string | null;
+  /** Optional photo uploaded by the owner (Dishloopr storage only). */
+  image_url?: string | null;
 }
 
 const PROMO_LABEL: Record<string, string> = {
@@ -21,6 +23,12 @@ const PROMO_LABEL: Record<string, string> = {
 
 export const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+/** Only images from Dishloopr storage go into the mail. */
+export function safeImage(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return /^https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/object\/public\/restaurant-images\/[A-Za-z0-9/_.-]+$/.test(url) ? url : null;
+}
 
 export function buildNewsletterHtml(opts: {
   title: string;
@@ -35,6 +43,7 @@ export function buildNewsletterHtml(opts: {
     return `
     <tr><td style="padding:0 0 16px">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #ece4dd;border-radius:12px">
+        ${safeImage(p.image_url) ? `<tr><td style="padding:0"><a href="${url}"><img src="${escapeHtml(safeImage(p.image_url)!)}" alt="${escapeHtml(p.title)}" width="560" style="display:block;width:100%;max-width:560px;height:auto;border:0;border-radius:12px 12px 0 0"></a></td></tr>` : ''}
         <tr><td style="padding:18px 20px">
           <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#c24a12;text-transform:uppercase;letter-spacing:.04em">${escapeHtml(PROMO_LABEL[p.promo_type] ?? 'Tip')}</p>
           <p style="margin:0 0 4px;font-size:18px;font-weight:700;color:#1f1a17">${escapeHtml(p.title)}</p>

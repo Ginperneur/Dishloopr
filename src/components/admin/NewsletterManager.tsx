@@ -36,6 +36,7 @@ interface Placement {
   price_paid: number;
   admin_notes: string | null;
   created_at: string;
+  image_url?: string | null;
   restaurants?: { name: string; slug?: string; cities?: { name: string } | null } | null;
 }
 
@@ -166,6 +167,7 @@ export function NewsletterManager() {
         restaurant_name: p.restaurants?.name ?? 'Restaurant',
         restaurant_slug: p.restaurants?.slug ?? '',
         city_name: p.restaurants?.cities?.name ?? null,
+        image_url: p.image_url ?? null,
       })),
     });
     const userId = (await supabase.auth.getUser()).data.user?.id;
@@ -583,7 +585,12 @@ export function NewsletterManager() {
               {placements.map(placement => (
                 <TableRow key={placement.id}>
                   <TableCell className="font-medium">{(placement.restaurants as any)?.name || '-'}</TableCell>
-                  <TableCell>{placement.title}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {placement.image_url && <a href={placement.image_url} target="_blank" rel="noopener"><img src={placement.image_url} alt="" className="h-10 w-14 rounded object-cover" /></a>}
+                      <span>{placement.title}</span>
+                    </div>
+                  </TableCell>
                   <TableCell className="text-xs">{promoTypeLabel[placement.promo_type] || placement.promo_type}</TableCell>
                   <TableCell>{statusBadge(placement.status)}</TableCell>
                   <TableCell>
