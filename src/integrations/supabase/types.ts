@@ -1331,6 +1331,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           custom_filter: Json | null
+          edition_id: string | null
           failed_count: number | null
           html_content: string
           id: string
@@ -1349,6 +1350,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           custom_filter?: Json | null
+          edition_id?: string | null
           failed_count?: number | null
           html_content: string
           id?: string
@@ -1367,6 +1369,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           custom_filter?: Json | null
+          edition_id?: string | null
           failed_count?: number | null
           html_content?: string
           id?: string
@@ -1380,7 +1383,15 @@ export type Database = {
           total_recipients?: number | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "email_campaigns_edition_id_fkey"
+            columns: ["edition_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_editions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       error_logs: {
         Row: {
@@ -8403,6 +8414,7 @@ export type Database = {
       track_founding_metrics: { Args: { p_items: Json }; Returns: number }
       track_reservation_funnel: { Args: { p_items: Json }; Returns: number }
       track_restaurant_metrics: { Args: { p_items: Json }; Returns: number }
+      unsubscribe_newsletter: { Args: { p_id: string }; Returns: boolean }
       unsubscribe_restaurant_contact: {
         Args: { p_token: string }
         Returns: string
