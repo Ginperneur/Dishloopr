@@ -274,6 +274,13 @@
       "when": 1794649229391,
       "tag": "0041_promo_slots",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1794649330484,
+      "tag": "0042_uitgelicht_auction",
+      "breakpoints": true
     }
   ]
 }

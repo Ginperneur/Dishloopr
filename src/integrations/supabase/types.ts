@@ -3090,6 +3090,7 @@ export type Database = {
           created_at: string
           id: string
           market_id: string
+          page_slug: string | null
           pay_by: string | null
           restaurant_id: string
           status: string
@@ -3102,6 +3103,7 @@ export type Database = {
           created_at?: string
           id?: string
           market_id: string
+          page_slug?: string | null
           pay_by?: string | null
           restaurant_id: string
           status?: string
@@ -3114,6 +3116,7 @@ export type Database = {
           created_at?: string
           id?: string
           market_id?: string
+          page_slug?: string | null
           pay_by?: string | null
           restaurant_id?: string
           status?: string
@@ -8336,6 +8339,14 @@ export type Database = {
         }
         Returns: string
       }
+      place_uitgelicht_bid: {
+        Args: {
+          p_amount_cents: number
+          p_page_slug: string
+          p_restaurant: string
+        }
+        Returns: string
+      }
       promo_base_cents: { Args: { p_product: string }; Returns: number }
       promo_can_manage: { Args: { p_restaurant: string }; Returns: boolean }
       promo_daily: {
@@ -8690,6 +8701,56 @@ export type Database = {
       track_founding_metrics: { Args: { p_items: Json }; Returns: number }
       track_reservation_funnel: { Args: { p_items: Json }; Returns: number }
       track_restaurant_metrics: { Args: { p_items: Json }; Returns: number }
+      uitgelicht_daily: {
+        Args: never
+        Returns: {
+          action: string
+          bid_id: string
+          price_cents: number
+          restaurant_id: string
+          slot_id: string
+          stripe_subscription_id: string
+          user_id: string
+        }[]
+      }
+      uitgelicht_list_price: { Args: { p_page_slug: string }; Returns: number }
+      uitgelicht_on_page: {
+        Args: { p_page_slug: string; p_restaurant: string }
+        Returns: boolean
+      }
+      uitgelicht_page: {
+        Args: { p_page_slug: string }
+        Returns: {
+          city_id: string
+          dish_id: string
+        }[]
+      }
+      uitgelicht_page_status: {
+        Args: { p_page_slug: string; p_restaurant: string }
+        Returns: Json
+      }
+      uitgelicht_protected: {
+        Args: { p_created: string; p_period_end: string; p_plan: string }
+        Returns: boolean
+      }
+      uitgelicht_reserve: {
+        Args: { p_page_slug: string; p_restaurant: string }
+        Returns: Json
+      }
+      uitgelicht_settle: {
+        Args: never
+        Returns: {
+          action: string
+          bid_id: string
+          price_cents: number
+          restaurant_id: string
+          slot_id: string
+          stripe_subscription_id: string
+          user_id: string
+        }[]
+      }
+      uitgelicht_taken: { Args: { p_page_slug: string }; Returns: number }
+      uitgelicht_window_end: { Args: never; Returns: string }
       unsubscribe_newsletter: { Args: { p_id: string }; Returns: boolean }
       unsubscribe_restaurant_contact: {
         Args: { p_token: string }
