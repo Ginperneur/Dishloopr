@@ -267,6 +267,13 @@
       "when": 1794649074920,
       "tag": "0040_newsletter_national",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1794649229391,
+      "tag": "0041_promo_slots",
+      "breakpoints": true
     }
   ]
 }
