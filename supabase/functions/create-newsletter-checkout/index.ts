@@ -48,6 +48,7 @@ serve(async (req) => {
       scope,
       targetCityId,
       targetProvince,
+      imageUrl,
     } = await req.json();
 
     if (!restaurantId || !title) {
@@ -62,6 +63,18 @@ serve(async (req) => {
     const allowedScopes = ["city", "province", "national"] as const;
     const finalScope: typeof allowedScopes[number] = "national";
     void scope; void targetCityId; void targetProvince;
+
+    // An optional photo, only from the restaurant's own folder in Dishloopr storage.
+    if (!/^[0-9a-f-]{36}$/i.test(String(restaurantId))) {
+      return new Response(JSON.stringify({ error: "Ongeldig restaurant" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const photo = typeof imageUrl === "string" && imageUrl.trim() ? imageUrl.trim() : null;
+    if (photo && !new RegExp(`^https://[a-z0-9]+\\.supabase\\.co/storage/v1/object/public/restaurant-images/${restaurantId}/[A-Za-z0-9/_.-]+$`).test(photo)) {
+      return new Response(JSON.stringify({ error: "Ongeldige foto: upload hem opnieuw" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -106,6 +119,7 @@ serve(async (req) => {
         scope: finalScope,
         target_city_id: null,
         target_province: null,
+        image_url: photo,
         price_paid: priceMap[finalScope],
         status: "pending_payment",
       })

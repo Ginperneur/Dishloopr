@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Newspaper, CreditCard, Loader2, Globe2 } from 'lucide-react';
+import { Newspaper, CreditCard, Loader2, Globe2, ImagePlus } from 'lucide-react';
+import { toEmailJpeg } from '@/lib/emailImage';
 import { sendAnalyticsEvent } from '@/lib/cookieConsent';
 
 interface Props {
@@ -27,6 +28,27 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
   const [description, setDescription] = useState('');
   const [promoType, setPromoType] = useState('actie');
   const [submitting, setSubmitting] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  // One photo per placement, stored in the restaurant's own folder (restaurant-images/<id>/newsletter/).
+  const uploadPhoto = async (file: File | undefined) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { toast.error('Kies een foto (jpg, png of webp).'); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error('Deze foto is groter dan 10 MB.'); return; }
+    setUploading(true);
+    try {
+      const blob = await toEmailJpeg(file);
+      const path = `${restaurantId}/newsletter/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+      const { error } = await supabase.storage.from('restaurant-images').upload(path, blob, { contentType: 'image/jpeg' });
+      if (error) throw error;
+      setImageUrl(supabase.storage.from('restaurant-images').getPublicUrl(path).data.publicUrl);
+    } catch (e) {
+      toast.error('Uploaden lukte niet', { description: e instanceof Error ? e.message : undefined });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   useEffect(() => {
     if (user) fetchPlacements();
@@ -43,7 +65,7 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
   };
 
   const canSubmit = () => {
-    return !!title.trim();
+    return !!title.trim() && !uploading;
   };
 
   const handleSubmit = async () => {
@@ -60,6 +82,7 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
           restaurantName,
           title,
           description,
+          imageUrl,
           promoType,
           scope: 'national',
         },
@@ -125,6 +148,23 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
             onChange={e => setDescription(e.target.value)} 
             rows={2} 
           />
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Foto (optioneel)</p>
+            {imageUrl ? (
+              <div className="flex items-center gap-3">
+                <img src={imageUrl} alt="Je foto voor de nieuwsbrief" className="h-20 w-32 rounded-md object-cover" />
+                <Button type="button" variant="ghost" size="sm" onClick={() => setImageUrl(null)}>Verwijderen</Button>
+              </div>
+            ) : (
+              <label className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed px-3 py-3 text-sm text-muted-foreground hover:border-primary/50">
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                {uploading ? 'Foto uploaden…' : 'Kies een foto van je gerecht of actie'}
+                <input type="file" accept="image/*" className="sr-only" disabled={uploading}
+                  onChange={e => { void uploadPhoto(e.target.files?.[0]); e.target.value = ''; }} />
+              </label>
+            )}
+            <p className="text-xs text-muted-foreground">Liggend werkt het best. We verkleinen hem automatisch voor de mail.</p>
+          </div>
           <Select value={promoType} onValueChange={setPromoType}>
             <SelectTrigger>
               <SelectValue />
@@ -160,8 +200,9 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
           <div className="space-y-2">
             {placements.map(p => (
               <Card key={p.id}>
-                <CardContent className="p-3 flex items-center justify-between">
-                  <div>
+                <CardContent className="p-3 flex items-center justify-between gap-3">
+                  {p.image_url && <img src={p.image_url} alt="" className="h-12 w-16 shrink-0 rounded object-cover" loading="lazy" />}
+                  <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm">{p.title}</p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(p.created_at).toLocaleDateString('nl')}
