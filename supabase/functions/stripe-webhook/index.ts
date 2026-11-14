@@ -3,6 +3,7 @@ import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
 import { periodEndIso } from "../_shared/stripePeriod.ts";
 import { commitmentEnd } from "../_shared/launch.ts";
+import { releasePaidEvent } from "../_shared/eventPayment.ts";
 
 // Supabase edge runtime: keep work running after the response is sent.
 declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined;
@@ -56,7 +57,7 @@ serve(async (req) => {
 
     logStep("Event type", { type: event.type });
 
-    if (event.type === "checkout.session.completed") {
+    if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
       const session = event.data.object as Stripe.Checkout.Session;
       logStep("Checkout session completed", { sessionId: session.id });
 
@@ -257,22 +258,15 @@ serve(async (req) => {
       }
       // Handle event promotion (€5/month per event)
       else if (type === "event_promotion" && metadata.event_id && restaurantId) {
-        const subscriptionId = (session.subscription as string) || null;
-        let paidUntil: string | null = null;
-        if (subscriptionId) {
+        if (session.payment_status !== "paid") {
+          logStep("Event payment pending", { eventId: metadata.event_id });
+        } else {
+          const subscriptionId = typeof session.subscription === "string" ? session.subscription : session.subscription?.id;
+          if (!subscriptionId) throw new Error("Event payment missing subscription");
           const sub = await stripe.subscriptions.retrieve(subscriptionId);
-          paidUntil = periodEndIso(sub);
+          await releasePaidEvent(supabaseAdmin, sub);
+          logStep("Event promotion activated", { eventId: metadata.event_id });
         }
-        const { error: eventError } = await supabaseAdmin
-          .from("restaurant_events")
-          .update({ promotion_status: "paid", stripe_subscription_id: subscriptionId, paid_until: paidUntil })
-          .eq("id", metadata.event_id)
-          .eq("restaurant_id", restaurantId);
-        if (eventError) {
-          logStep("Event promotion update error", { error: eventError.message });
-          return new Response(JSON.stringify({ error: eventError.message }), { status: 500 });
-        }
-        logStep("Event promotion activated", { eventId: metadata.event_id });
       }
       // Handle featured subscription purchase
       else if (type === "featured_subscription" && metadata.slot_id && restaurantId) {
@@ -544,6 +538,17 @@ serve(async (req) => {
       }
     }
 
+    // Invoice payment also recovers a missed checkout notification and handles renewals.
+    if (event.type === "invoice.payment_succeeded") {
+      const invoice = event.data.object as Stripe.Invoice;
+      const subscription = invoice.parent?.subscription_details?.subscription;
+      const subscriptionId = typeof subscription === "string" ? subscription : subscription?.id;
+      if (subscriptionId && invoice.paid) {
+        const sub = await stripe.subscriptions.retrieve(subscriptionId);
+        await releasePaidEvent(supabaseAdmin, sub);
+      }
+    }
+
     // Subscription lifecycle events for Owner Pro
     if (
       event.type === "customer.subscription.updated" ||
@@ -608,15 +613,19 @@ serve(async (req) => {
         logStep("Package order synced", { subscriptionId: sub.id, status: sub.status });
       }
       if (sub.metadata?.type === "event_promotion" && sub.metadata?.event_id) {
-        const isActive = sub.status === "active" || sub.status === "trialing";
-        await supabaseAdmin
+        // A subscription status alone is not proof of payment. Activation comes
+        // from checkout/invoice payment confirmations above.
+        const { error: eventError } = await supabaseAdmin
           .from("restaurant_events")
           .update({
-            promotion_status: isActive ? "paid" : "lapsed",
+            ...(["canceled", "unpaid", "incomplete_expired", "paused"].includes(sub.status) ? { promotion_status: "lapsed" } : {}),
             stripe_subscription_id: sub.id,
             paid_until: periodEndIso(sub),
           })
-          .eq("id", sub.metadata.event_id);
+          .eq("id", sub.metadata.event_id)
+          .eq("restaurant_id", sub.metadata.restaurant_id)
+          .eq("stripe_subscription_id", sub.id);
+        if (eventError) throw new Error(eventError.message);
         logStep("Event promotion synced", { eventId: sub.metadata.event_id, status: sub.status });
       }
     }
