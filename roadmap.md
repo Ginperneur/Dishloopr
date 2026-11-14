@@ -1,5 +1,5 @@
 # Parkeerinformatie
-- [ ] Evenementen automatisch vrijgeven na bevestigde betaling; betaalmeldingen en herhaalde verwerking testen, stripe-webhook deployen.
+- [x] Evenementvrijgave na bevestigde checkout-/factuurbetaling gebouwd; vijf controles geslaagd, stripe-webhook gedeployed. Geen echte evenementbetaling uitgevoerd; twee aanwezige evenementen hebben nog geen geregistreerde betaling.
 - [x] newsletter_national, promo_slots en uitgelicht_auction achtereenvolgens toegepast als 0040/0041/0042; zes aangevraagde edge functions gedeployed; negen schemacontroles geslaagd. Ontbrekende tabelrechten toegevoegd voor publiek lezen van markten, eigenaren lezen van plekken/biedingen en servicebeheer.
 - [x] 0040_hide_junk_dishes gegevensopschoning uitgevoerd via gegevensquery (684 inactief, 9 goedgekeurd beschermd, niets verwijderd); alle 74 edge functions gedeployed inclusief stripe-webhook.
 - [x] Gratis Owner Pro: adminschakelaar per restaurant, Stripe-sync behoudt toegang; 7 beveiligings-/gedragstests geslaagd, ingelogd toekennen/intrekken/verversen gecontroleerd; Testkeuken heeft Pro.
