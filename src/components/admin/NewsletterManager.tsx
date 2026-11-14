@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { buildNewsletterHtml } from '@/lib/newsletterHtml';
 import { Plus, Send, Users, FileText, Check, X, Clock, Mail, Play, Pause, RotateCcw, Eye } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
@@ -35,7 +36,7 @@ interface Placement {
   price_paid: number;
   admin_notes: string | null;
   created_at: string;
-  restaurants?: { name: string } | null;
+  restaurants?: { name: string; slug?: string; cities?: { name: string } | null } | null;
 }
 
 interface Campaign {
@@ -95,7 +96,7 @@ export function NewsletterManager() {
     setLoading(true);
     const [editionsRes, placementsRes, subsRes, campaignsRes] = await Promise.all([
       supabase.from('newsletter_editions').select('*').order('created_at', { ascending: false }),
-      supabase.from('newsletter_placements').select('*, restaurants:restaurant_id(name)').order('created_at', { ascending: false }),
+      supabase.from('newsletter_placements').select('*, restaurants:restaurant_id(name, slug, cities(name))').order('created_at', { ascending: false }),
       supabase.from('newsletter_subscribers').select('*', { count: 'exact', head: true }).eq('is_active', true),
       supabase.from('email_campaigns').select('*').order('created_at', { ascending: false }).limit(50),
     ]);
@@ -144,6 +145,41 @@ export function NewsletterManager() {
     const { error } = await supabase.from('newsletter_editions').update(updateData as never).eq('id', id);
     if (error) toast.error('Update mislukt');
     else { toast.success(status === 'sent' ? 'Editie gemarkeerd als verzonden' : 'Status bijgewerkt'); fetchData(); }
+  };
+
+  // Turns an edition into a campaign draft for all subscribers, with its approved placements in it.
+  // When that campaign completes, the edition is marked sent and the placements published (DB trigger).
+  const createCampaignFromEdition = async (edition: Edition) => {
+    const items = placements.filter(p => p.edition_id === edition.id && p.status === 'approved');
+    const waiting = placements.filter(p => p.edition_id === edition.id && p.status === 'paid').length;
+    if (!items.length) {
+      toast.error(waiting ? `Keur eerst de ${waiting} betaalde plaatsing(en) goed onder Plaatsingen.` : 'Deze editie heeft nog geen goedgekeurde plaatsingen.');
+      return;
+    }
+    const html = buildNewsletterHtml({
+      title: edition.title,
+      intro: edition.intro_text,
+      placements: items.map(p => ({
+        title: p.title,
+        description: p.description,
+        promo_type: p.promo_type,
+        restaurant_name: p.restaurants?.name ?? 'Restaurant',
+        restaurant_slug: p.restaurants?.slug ?? '',
+        city_name: p.restaurants?.cities?.name ?? null,
+      })),
+    });
+    const userId = (await supabase.auth.getUser()).data.user?.id;
+    const { error } = await supabase.from('email_campaigns').insert({
+      title: `Nieuwsbrief: ${edition.title}`,
+      subject: edition.title,
+      html_content: html,
+      segment: 'subscribers',
+      created_by: userId,
+      edition_id: edition.id,
+    } as never);
+    if (error) { toast.error('Mail maken mislukt: ' + error.message); return; }
+    toast.success(`Concept-mail gemaakt met ${items.length} plaatsing(en)${waiting ? `. Let op: ${waiting} betaalde plaatsing(en) wachten nog op goedkeuring.` : ''}`, { duration: 8000 });
+    fetchData();
   };
 
   // Campaign functions
@@ -503,7 +539,13 @@ export function NewsletterManager() {
                           </Button>
                         )}
                         {(edition.status === 'draft' || edition.status === 'scheduled') && (
-                          <Button size="sm" onClick={() => updateEditionStatus(edition.id, 'sent')}>
+                          <Button size="sm" variant="outline" onClick={() => createCampaignFromEdition(edition)}>
+                            <Mail className="h-3 w-3 mr-1" />
+                            Maak mail
+                          </Button>
+                        )}
+                        {(edition.status === 'draft' || edition.status === 'scheduled') && (
+                          <Button size="sm" variant="ghost" onClick={() => updateEditionStatus(edition.id, 'sent')}>
                             <Send className="h-3 w-3 mr-1" />
                             Markeer verzonden
                           </Button>

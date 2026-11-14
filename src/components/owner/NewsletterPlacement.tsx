@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Newspaper, CreditCard, Loader2, MapPin, Map, Globe2 } from 'lucide-react';
+import { Newspaper, CreditCard, Loader2, Globe2 } from 'lucide-react';
 import { sendAnalyticsEvent } from '@/lib/cookieConsent';
 
 interface Props {
@@ -16,13 +16,9 @@ interface Props {
   restaurantName: string;
 }
 
-type Scope = 'city' | 'province' | 'national';
-
-const SCOPE_OPTIONS: { id: Scope; price: number; title: string; subtitle: string; Icon: any }[] = [
-  { id: 'city', price: 15, title: 'Eén stad', subtitle: 'Bereik foodies in 1 stad', Icon: MapPin },
-  { id: 'province', price: 20, title: 'Eén provincie', subtitle: 'Bereik foodies in 1 provincie', Icon: Map },
-  { id: 'national', price: 40, title: 'Heel Nederland', subtitle: 'Bereik alle abonnees in NL', Icon: Globe2 },
-];
+// Sold for all of the Netherlands only until the newsletter can be sent per city or province:
+// every subscriber gets the same mail, so a city or province choice would promise nothing.
+export const NEWSLETTER_PRICE = 20;
 
 export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
   const { user } = useAuth();
@@ -30,26 +26,11 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [promoType, setPromoType] = useState('actie');
-  const [scope, setScope] = useState<Scope>('city');
-  const [targetCityId, setTargetCityId] = useState<string>('');
-  const [targetProvince, setTargetProvince] = useState<string>('');
-  const [cities, setCities] = useState<{ id: string; name: string }[]>([]);
-  const [provinces, setProvinces] = useState<{ slug: string; name: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (user) fetchPlacements();
-    loadGeoData();
   }, [user, restaurantId]);
-
-  const loadGeoData = async () => {
-    const [c, p] = await Promise.all([
-      supabase.from('cities').select('id, name').eq('is_active', true).eq('country_code', 'NL').order('name'),
-      supabase.from('nl_provinces' as any).select('slug, name').order('name'),
-    ]);
-    setCities((c.data as any) || []);
-    setProvinces((p.data as any) || []);
-  };
 
   const fetchPlacements = async () => {
     const { data } = await supabase
@@ -61,13 +42,8 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
     setPlacements(data || []);
   };
 
-  const selectedOption = SCOPE_OPTIONS.find(o => o.id === scope)!;
-
   const canSubmit = () => {
-    if (!title.trim()) return false;
-    if (scope === 'city' && !targetCityId) return false;
-    if (scope === 'province' && !targetProvince) return false;
-    return true;
+    return !!title.trim();
   };
 
   const handleSubmit = async () => {
@@ -85,9 +61,7 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
           title,
           description,
           promoType,
-          scope,
-          targetCityId: scope === 'city' ? targetCityId : null,
-          targetProvince: scope === 'province' ? targetProvince : null,
+          scope: 'national',
         },
       });
 
@@ -123,61 +97,23 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
         <h3 className="text-lg font-semibold">Nieuwsbrief Plaatsing</h3>
       </div>
       <p className="text-sm text-muted-foreground">
-        Plaats je actie, event of aanbieding in de 2-wekelijkse Dishloopr nieuwsbrief.
-        Kies hoe groot je bereik moet zijn — vanaf <strong>€15</strong>.
+        Plaats je actie, event of aanbieding in de nieuwsbrief van Dishloopr, die elke twee weken naar alle
+        abonnees in Nederland gaat. Eén plaatsing kost <strong>€{NEWSLETTER_PRICE}</strong>. We controleren je tekst
+        voordat hij meegaat.
       </p>
 
-      {/* Scope selector */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {SCOPE_OPTIONS.map(opt => {
-          const active = scope === opt.id;
-          return (
-            <button
-              key={opt.id}
-              type="button"
-              onClick={() => setScope(opt.id)}
-              className={`text-left rounded-lg border p-3 transition-colors ${
-                active ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border hover:border-primary/40'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <opt.Icon className={`h-4 w-4 ${active ? 'text-primary' : 'text-muted-foreground'}`} />
-                <span className={`text-sm font-semibold ${active ? 'text-primary' : ''}`}>€{opt.price}</span>
-              </div>
-              <p className="font-medium text-sm">{opt.title}</p>
-              <p className="text-xs text-muted-foreground">{opt.subtitle}</p>
-            </button>
-          );
-        })}
+      <div className="flex items-center gap-3 rounded-lg border border-primary bg-primary/5 p-3">
+        <Globe2 className="h-4 w-4 shrink-0 text-primary" />
+        <div className="flex-1">
+          <p className="text-sm font-medium">Heel Nederland</p>
+          <p className="text-xs text-muted-foreground">Alle abonnees van de nieuwsbrief</p>
+        </div>
+        <span className="text-sm font-semibold text-primary">€{NEWSLETTER_PRICE}</span>
       </div>
 
       {/* New placement form */}
       <Card>
         <CardContent className="p-4 space-y-3">
-          {scope === 'city' && (
-            <Select value={targetCityId} onValueChange={setTargetCityId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Kies een stad" />
-              </SelectTrigger>
-              <SelectContent>
-                {cities.map(c => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-          {scope === 'province' && (
-            <Select value={targetProvince} onValueChange={setTargetProvince}>
-              <SelectTrigger>
-                <SelectValue placeholder="Kies een provincie" />
-              </SelectTrigger>
-              <SelectContent>
-                {provinces.map(p => (
-                  <SelectItem key={p.slug} value={p.name}>{p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
           <Input 
             placeholder="Titel van je actie (bijv. '2e pizza gratis')" 
             value={title} 
@@ -203,7 +139,7 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
           </Select>
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium">
-              Kosten: <span className="text-primary">€{selectedOption.price},00</span>
+              Kosten: <span className="text-primary">€{NEWSLETTER_PRICE},00</span>
             </p>
             <Button onClick={handleSubmit} disabled={submitting || !canSubmit()}>
               {submitting ? (
