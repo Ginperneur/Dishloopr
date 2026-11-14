@@ -241,6 +241,20 @@ serve(async (req) => {
         }
         logStep("Extra tag subscription activated");
       }
+      // Paid promotion slot (Vraag doorsturen): the reserved slot becomes active.
+      else if (type === "promo_slot" && metadata.slot_id) {
+        const { error: slotErr } = await supabaseAdmin.from("promo_slots")
+          .update({ status: "active", stripe_subscription_id: (session.subscription as string) || null, reserved_until: null, updated_at: new Date().toISOString() })
+          .eq("id", metadata.slot_id);
+        if (slotErr) {
+          logStep("Promo slot activation error", { error: slotErr.message });
+          return new Response(JSON.stringify({ error: slotErr.message }), { status: 500 });
+        }
+        if (metadata.bid_id) {
+          await supabaseAdmin.from("promo_bids").update({ status: "converted", updated_at: new Date().toISOString() }).eq("id", metadata.bid_id);
+        }
+        logStep("Promo slot activated", { slotId: metadata.slot_id });
+      }
       // Handle event promotion (€5/month per event)
       else if (type === "event_promotion" && metadata.event_id && restaurantId) {
         const subscriptionId = (session.subscription as string) || null;
@@ -432,7 +446,9 @@ serve(async (req) => {
           const sub = await stripe.subscriptions.retrieve(subscriptionId);
           status = sub.status === "trialing" ? "trialing" : "active";
           periodEnd = periodEndIso(sub);
-          if (type === "founding_partner" && metadata.plan === "month") {
+          // The 6-month minimum term belongs to the Founding Partner deal; later monthly Uitgelicht
+          // places are cancellable monthly and can be outbid at the quarterly auction.
+          if (type === "founding_partner" && metadata.plan === "month" && metadata.founding_partner === "true") {
             // Minimum term of 6 months, counted from the first paid day (launch).
             commitmentUntil = commitmentEnd((sub.trial_end ?? sub.start_date) * 1000);
           }
@@ -455,6 +471,10 @@ serve(async (req) => {
         if (orderError) {
           logStep("Package order insert error", { error: orderError.message });
           return new Response(JSON.stringify({ error: orderError.message }), { status: 500 });
+        }
+        if (metadata.bid_id) {
+          // A won Uitgelicht bid is now paid.
+          await supabaseAdmin.from("promo_bids").update({ status: "converted", updated_at: new Date().toISOString() }).eq("id", metadata.bid_id);
         }
         if (type === "menu_service") {
           // Start the automatic import and translation; the owner then checks and publishes it.
@@ -537,6 +557,15 @@ serve(async (req) => {
         const { error: tagErr } = await supabaseAdmin.from("restaurant_tag_subscriptions")
           .update({ is_active: tagLive }).eq("stripe_subscription_id", sub.id);
         if (tagErr) logStep("Extra tag status update error", { error: tagErr.message });
+      }
+      // Paid promotion slots: an ended or unpaid subscription frees the slot for the waiting list.
+      if (sub.metadata?.type === "promo_slot") {
+        const status = event.type === "customer.subscription.deleted" || ["canceled", "unpaid", "incomplete_expired"].includes(sub.status)
+          ? "ended" : sub.cancel_at_period_end ? "ending" : "active";
+        const { error: promoErr } = await supabaseAdmin.from("promo_slots")
+          .update({ status, updated_at: new Date().toISOString() })
+          .eq("stripe_subscription_id", sub.id).neq("status", "ended");
+        if (promoErr) logStep("Promo slot status update error", { error: promoErr.message });
       }
       if (userId && sub.metadata?.type === "owner_pro") {
         const isActive = sub.status === "active" || sub.status === "trialing";

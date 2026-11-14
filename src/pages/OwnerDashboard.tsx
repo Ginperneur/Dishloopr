@@ -69,7 +69,7 @@ import { StatCard } from '@/components/owner/StatCard';
 import { ReviewCard } from '@/components/owner/ReviewCard';
 import { AnalyticsTab } from '@/components/owner/AnalyticsTab';
 import { SponsoredMarketplace } from '@/components/sponsored/SponsoredMarketplace';
-import { DemandRoutingSettings } from '@/components/routing/DemandRoutingSettings';
+import { RoutingSlotsManager } from '@/components/owner/RoutingSlotsManager';
 import { OptimizationDashboard } from '@/components/optimization/OptimizationDashboard';
 import { DishAnalytics } from '@/components/owner/DishAnalytics';
 import { SearchRanking } from '@/components/owner/SearchRanking';
@@ -338,6 +338,13 @@ export default function OwnerDashboard() {
       if (eventCheckout === 'success') {
         toast.success('Betaling ontvangen', { description: 'Je evenement staat binnen een paar minuten online.', duration: 10000 });
       }
+      go('promotions');
+      window.history.replaceState({}, '', '/owner-dashboard');
+    }
+
+    // Vraag doorsturen checkout returns here.
+    if (searchParams.get('promo') === 'success') {
+      toast.success('Je plek is betaald', { description: 'Binnen een paar minuten sta je bovenaan bij Vraag doorsturen voor dit gerecht.', duration: 10000 });
       go('promotions');
       window.history.replaceState({}, '', '/owner-dashboard');
     }
@@ -946,6 +953,9 @@ export default function OwnerDashboard() {
                       {section('Uitgelicht', Crown, (
                         <MyPackagesCard restaurantId={r.id} restaurantSlug={r.slug} restaurantName={r.name} />
                       ))}
+                      {section('Vraag doorsturen', Zap, isVerified
+                        ? <RoutingSlotsManager restaurantId={r.id} cityId={r.city_id ?? null} />
+                        : locked('Vraag doorsturen', 'Verifieer dat je de eigenaar bent om gasten van volle of gesloten restaurants te ontvangen.'), 'promo-routing')}
                       {section('Tags', Tag, (
                         <>
                           <p className="text-sm text-muted-foreground">Met tags verschijn je bij filters zoals Vegan of Romantisch. Eén tag is gratis, extra tags kosten €5 per maand.</p>
@@ -976,7 +986,6 @@ export default function OwnerDashboard() {
                       {section('Social posts maken', Sparkles, <ProGate restaurantId={r.id} enforced><SocialPostGenerator restaurantName={r.name} /></ProGate>)}
                       {section('Stempelkaart en loyalty', Crown, <ProGate restaurantId={r.id} enforced><LoyaltyProgramManager restaurantId={r.id} /></ProGate>)}
                       {section('Samenwerken met andere restaurants', Store, <ProGate restaurantId={r.id} enforced><CrossPromotionManager restaurantId={r.id} /></ProGate>)}
-                      {isVerified && section('Vraag doorsturen', Zap, <DemandRoutingSettings restaurant={r} />)}
                       {!isPro && <div className="border-t pt-8"><UpgradeToProCard restaurantId={r.id} /></div>}
                     </>
                   )}

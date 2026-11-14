@@ -28,6 +28,7 @@ const ThanksPage = lazy(() => import("./pages/ThanksPage"));
 const RestaurantInvitePage = lazy(() => import("./pages/RestaurantInvitePage"));
 const UnsubscribePage = lazy(() => import("./pages/UnsubscribePage"));
 const NewsletterUnsubscribePage = lazy(() => import("./pages/NewsletterUnsubscribePage"));
+const PlacesExplainedPage = lazy(() => import("./pages/PlacesExplainedPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
@@ -132,6 +133,7 @@ const App = () => (
                   <Route path="/privacy" element={<PrivacyPage />} />
                   <Route path="/voor-restaurants/afmelden" element={<RestaurantOptoutPage />} />
                   <Route path="/voor-restaurants/pakketten" element={<PackagesPage />} />
+                  <Route path="/voor-restaurants/plekken-en-bieden" element={<PlacesExplainedPage />} />
                   <Route path="/voor-restaurants/bedankt" element={<ThanksPage />} />
                   <Route path="/voor-restaurants/:slug" element={<RestaurantInvitePage />} />
                   <Route path="/afmelden" element={<UnsubscribePage />} />
