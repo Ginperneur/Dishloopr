@@ -91,7 +91,12 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Show the function's own message instead of "Edge Function returned a non-2xx status code".
+        const reason = await (error as { context?: Response }).context?.json?.()
+          .then((b: { error?: string }) => b?.error).catch(() => null);
+        throw new Error(reason || error.message);
+      }
       if (data?.url) {
         window.location.href = data.url;
       } else {
