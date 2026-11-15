@@ -8353,6 +8353,29 @@ export type Database = {
         }
         Returns: string
       }
+      promo_action_mail: {
+        Args: { p_bid: string; p_product: string; p_slot: string }
+        Returns: {
+          email: string
+          label: string
+          restaurant_name: string
+        }[]
+      }
+      promo_auction_reminders: {
+        Args: never
+        Returns: {
+          auction_date: string
+          email: string
+          highest_bid_cents: number
+          label: string
+          my_cents: number
+          open_bids: number
+          product: string
+          restaurant_name: string
+          role: string
+          user_id: string
+        }[]
+      }
       promo_base_cents: { Args: { p_product: string }; Returns: number }
       promo_can_manage: { Args: { p_restaurant: string }; Returns: boolean }
       promo_daily: {
@@ -8386,6 +8409,15 @@ export type Database = {
           restaurant_id: string
           user_id: string
         }[]
+      }
+      promo_item_label: {
+        Args: {
+          p_city: string
+          p_dish: string
+          p_page_slug: string
+          p_product: string
+        }
+        Returns: string
       }
       promo_list_price: {
         Args: { p_city: string; p_dish: string; p_product: string }
