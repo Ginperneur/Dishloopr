@@ -8067,6 +8067,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      core_landing_dish_slugs: { Args: never; Returns: string[] }
       create_biweekly_newsletter_draft: { Args: never; Returns: string }
       deduplicate_dishes: { Args: never; Returns: Json }
       deduplicate_restaurant_dishes: { Args: never; Returns: Json }
@@ -8079,6 +8080,10 @@ export type Database = {
         Returns: boolean
       }
       dl_norm: { Args: { t: string }; Returns: string }
+      ensure_core_landing_pages: {
+        Args: { p_min_restaurants?: number }
+        Returns: number
+      }
       founding_partner_live: { Args: { p_status: string }; Returns: boolean }
       founding_partners_for_page: {
         Args: { p_page_slug: string }
