@@ -182,18 +182,6 @@ const EXPORTS: ExportConfig[] = [
       fetchAllRows('newsletter_subscribers', 'id, email, is_active, subscribed_at, unsubscribed_at', 'subscribed_at'),
   },
   {
-    key: 'discovery_results',
-    label: 'Discovery resultaten',
-    description: 'Restaurants gevonden via Google Places discovery scans.',
-    icon: <Database className="w-5 h-5" />,
-    fetchData: () =>
-      fetchAllRows(
-        'discovery_results',
-        'id, name, address, city, google_place_id, status, source, created_at',
-        'created_at'
-      ),
-  },
-  {
     key: 'restaurant_suggestions',
     pii: true,
     label: 'Restaurant suggesties',

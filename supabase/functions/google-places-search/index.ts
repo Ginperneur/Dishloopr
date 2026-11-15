@@ -7,37 +7,23 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Google Maps Platform EEA terms: results may be shown during the search, but only place_id
+// may be stored. We therefore request only the fields an owner needs to recognise and confirm
+// their restaurant, and no ratings, opening hours, photos or coordinates
+// (docs/google-places-compliance.md).
 interface PlaceSearchRequest {
   query: string;
   city?: string;
   includeLocal?: boolean; // Whether to also search local database
+  includeGoogle?: boolean; // false = local database only
 }
 
 interface PlaceDetailsResult {
   place_id: string;
   name: string;
   formatted_address: string;
-  geometry?: {
-    location: {
-      lat: number;
-      lng: number;
-    };
-  };
-  opening_hours?: {
-    weekday_text?: string[];
-    periods?: Array<{
-      open: { day: number; time: string };
-      close?: { day: number; time: string };
-    }>;
-  };
   formatted_phone_number?: string;
   website?: string;
-  rating?: number;
-  user_ratings_total?: number;
-  price_level?: number;
-  photos?: Array<{
-    photo_reference: string;
-  }>;
 }
 
 interface LocalRestaurant {
@@ -51,10 +37,6 @@ interface LocalRestaurant {
   rating: number | null | undefined;
   review_count: number | null | undefined;
   price_level: number;
-  opening_hours: string[] | null;
-  opening_hours_periods?: unknown;
-  photo_reference?: string | null;
-  photo_references: string[];
   is_local: boolean;
   restaurant_id?: string;
   claim_status?: string;
@@ -109,7 +91,7 @@ serve(async (req) => {
 
     console.log('Authenticated user:', user.id);
 
-    const { query, city, includeLocal = true }: PlaceSearchRequest = await req.json();
+    const { query, city, includeLocal = true, includeGoogle = true }: PlaceSearchRequest = await req.json();
     
     if (!query) {
       throw new Error('Query is required');
@@ -166,8 +148,6 @@ serve(async (req) => {
           rating: r.rating,
           review_count: r.review_count,
           price_level: r.price_level,
-          opening_hours: null,
-          photo_references: [],
           is_local: true,
           restaurant_id: r.id,
           claim_status: r.claim_status,
@@ -179,8 +159,8 @@ serve(async (req) => {
     // We still search Google to provide additional options
     const apiKey = Deno.env.get('GOOGLE_PLACES_API_KEY');
     
-    // If no API key, only return local results
-    if (!apiKey) {
+    // If no API key or the caller wants local results only
+    if (!apiKey || !includeGoogle) {
       console.log('No Google Places API key, returning only local results');
       return new Response(
         JSON.stringify({ results: localResults }),
@@ -232,7 +212,7 @@ serve(async (req) => {
       try {
         const detailsUrl = new URL('https://maps.googleapis.com/maps/api/place/details/json');
         detailsUrl.searchParams.set('place_id', place.place_id);
-        detailsUrl.searchParams.set('fields', 'place_id,name,formatted_address,geometry,opening_hours,formatted_phone_number,website,rating,user_ratings_total,price_level,photos');
+        detailsUrl.searchParams.set('fields', 'place_id,name,formatted_address,formatted_phone_number,website');
         detailsUrl.searchParams.set('key', apiKey);
         detailsUrl.searchParams.set('language', 'nl');
 
@@ -255,22 +235,13 @@ serve(async (req) => {
       place_id: place.place_id,
       name: place.name,
       address: place.formatted_address,
-      geo_lat: place.geometry?.location?.lat,
-      geo_lng: place.geometry?.location?.lng,
-      phone: place.formatted_phone_number,
-      website: place.website,
-      rating: place.rating,
-      review_count: place.user_ratings_total,
-      price_level: place.price_level ? Math.min(place.price_level, 4) : 2,
-      opening_hours: place.opening_hours?.weekday_text || null,
-      opening_hours_periods: place.opening_hours?.periods || null,
-      photo_reference: place.photos?.[0]?.photo_reference || null,
-      photo_references: place.photos?.map(p => p.photo_reference) || [],
+      phone: place.formatted_phone_number ?? null,
+      website: place.website ?? null,
       is_local: false,
     }));
 
     // Merge results: local results first, then Google results (avoiding duplicates)
-    const allResults = [...localResults];
+    const allResults: Array<LocalRestaurant | (typeof googleResults)[number]> = [...localResults];
     
     for (const googleResult of googleResults) {
       // Check if this Google result matches any local result by name similarity

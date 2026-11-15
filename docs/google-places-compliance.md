@@ -1,6 +1,6 @@
 # Google Places: compliance-inventaris en uitfaseerplan
 
-Status: inventaris, 15-11-2026. Alleen code gelezen. Er is geen data verwijderd, niets gedeployed en geen query op productie gedraaid. De beslissingen in hoofdstuk 7 liggen bij de eigenaar van Dishloopr.
+Status, 15-11-2026: inventaris klaar; fase 1 (instroom stoppen) is in code gebouwd, zie hoofdstuk 10. Er is geen data verwijderd, niets gedeployed en geen query op productie gedraaid. Fase 1 werkt pas na het deployen van de edge functions en de frontend. De beslissingen in hoofdstuk 7 liggen bij de eigenaar van Dishloopr.
 
 ## 1. Samenvatting
 
@@ -280,22 +280,20 @@ H. **Slugs** die een stuk van de `place_id` bevatten laten staan? Advies: ja, he
 
 ## 8. Concrete codewijzigingen (checklist)
 
-Fase 1, instroom stoppen:
+Fase 1, instroom stoppen (gebouwd, zie hoofdstuk 10):
 
-- [ ] `supabase/functions/fetch-google-photos/index.ts`: uitschakelen (410), later verwijderen.
-- [ ] `supabase/functions/approve-discovery-restaurant/index.ts`: stap 2 (r. 131 tot 179) en stap 4b (r. 256 tot 296) weg; stap 1 alleen `google_place_id`; activering laten afhangen van niet-Google adres/geo.
-- [ ] `supabase/functions/discover-restaurants/index.ts`: insert (r. 259 tot 277) beperken tot `place_id` en eigen metadata; `raw_data` niet meer schrijven. Of de functie uitzetten tot fase 3.
-- [ ] `supabase/functions/enrich-restaurants/index.ts`: uitschakelen.
-- [ ] `supabase/functions/geocode-restaurants/index.ts`: Google Geocoding vervangen door PDOK Locatieserver.
-- [ ] `src/components/admin/BulkRestaurantUpload.tsx`: Google-verrijking, overschrijven en foto-aanroep weg.
-- [ ] `src/pages/ClaimPage.tsx`: niet meer `rating`, `review_count`, `opening_hours`, `geo_*` uit Google opslaan; wel `google_place_id`; foto-aanroep weg; `is_active: true` heroverwegen.
-- [ ] `src/pages/AddRestaurantPage.tsx`: idem; `googleRating` uit `formData` halen.
-- [ ] `src/components/admin/PhotosManager.tsx`: Google-ophaalfunctie weg (CSV-export van restaurants zonder foto kan blijven).
-- [ ] `src/components/admin/RestaurantAudit.tsx`: fix "Geen foto's" weg; fix "Geen coördinaten" naar PDOK.
-- [ ] `src/components/admin/GoogleEnrichManager.tsx`, `MissingWebsiteUrls.tsx` (Google-knop): uit admin-navigatie.
-- [ ] `src/components/admin/DataExportManager.tsx`: export `discovery_results` weg.
-- [ ] `src/lib/ratingDisplay.ts`, `src/components/restaurant/RatingSummary.tsx`: Google-score niet meer tonen; selects aanpassen in `RestaurantPage.tsx`, `DatabaseRestaurantCard.tsx`, `CollectionPage.tsx`, `useCollections.ts`, `seoLandingLoader.ts`; `ManualReviewQueue.tsx` Google-kolom weg.
-- [ ] Er zijn geen unit-tests voor `getRatingDisplay`; bij de wijziging er een toevoegen.
+- [x] `fetch-google-photos`, `enrich-restaurants`, `discover-restaurants`: geven 410 (`_shared/googleDisabled.ts`).
+- [x] `approve-discovery-restaurant`: goedkeuren vanuit `discovery_results` geeft 410; de pipeline voor bestaande restaurants draait zonder Google (geen Place Details, geen foto's).
+- [x] `geocode-restaurants`: PDOK Locatieserver (`_shared/pdokGeocode.ts`), met controle op postcode/plaats en huisnummer.
+- [x] `google-places-search`: vraagt alleen nog naam, adres, telefoon, website op; nieuwe optie `includeGoogle: false`.
+- [x] `BulkRestaurantUpload.tsx` en `GoogleEnrichManager.tsx`: verwijderd, ook uit het adminmenu.
+- [x] `ClaimPage.tsx`: zoekt alleen in de eigen database en maakt geen restaurants meer aan; niet gevonden gaat naar `/add-restaurant`.
+- [x] `AddRestaurantPage.tsx`: slaat alleen door de eigenaar bevestigde velden en `google_place_id` op; geen rating, openingstijden, coördinaten of foto's.
+- [x] `PhotosManager.tsx`, `MissingWebsiteUrls.tsx`: alleen nog lijst (en CSV-export van restaurants zonder foto).
+- [x] `RestaurantAudit.tsx`: fix "Geen foto's" weg; "Geen coördinaten" via PDOK met de juiste parameter.
+- [x] `DataExportManager.tsx`: export `discovery_results` weg.
+- [x] Weergave: alleen nog de eigen Dishloopr-score (`ratingDisplay.ts`, `RatingSummary.tsx`, selects, `ManualReviewQueue.tsx`, i18n).
+- [x] Tests: `supabase/tests/pdok-geocode.ts`, `supabase/tests/rating-display.ts`.
 
 Fase 2, herkomst:
 
@@ -324,3 +322,30 @@ Fase 4, opruimen (na beslissing):
 - `DataExportManager.tsx` r. 192 vraagt kolommen op die niet in `discovery_results` bestaan.
 - `BulkRestaurantUpload.tsx` r. 134: het commentaar zegt dat `google_place_id` niet bestaat; de kolom bestaat sinds `20260417070025`.
 - `discover-restaurants` r. 175 zet `Amsterdam` vast in de hotspot-zoekopdracht, ook voor andere steden.
+
+## 10. Fase 1: wat er gebouwd is
+
+Gebouwd op 15-11-2026, nog niet gedeployed. Tot de deploy draaien de oude edge functions in Supabase en slaan ze nog steeds Google-content op.
+
+| Onderdeel | Wat er nu gebeurt |
+| --- | --- |
+| `fetch-google-photos`, `enrich-restaurants`, `discover-restaurants` | Antwoorden 410 met een Nederlandse foutmelding. De oude code staat in de git-geschiedenis |
+| `approve-discovery-restaurant` | `discoveryResultId` geeft 410. Met `restaurantId` (knop "bestaande verrijken" in Discovery) lopen classificatie, menu scrapen, reserveringslink en activering nog, zonder Google |
+| `geocode-restaurants` | PDOK Locatieserver. Een PDOK-resultaat wordt alleen geaccepteerd als postcode (of anders plaats of gemeente) en huisnummer overeenkomen; anders blijven de coördinaten leeg in plaats van fout. Accepteert nu ook `restaurant_ids`, zodat de fix in RestaurantAudit werkt |
+| `google-places-search` | Google-resultaten bevatten alleen `place_id`, naam, adres, telefoon en website. Geen rating, openingstijden, foto's of coördinaten meer, wat ook API-kosten scheelt |
+| ClaimPage | Claimen kan alleen nog voor restaurants die al op Dishloopr staan. Staat het er niet, dan gaat de eigenaar naar `/add-restaurant` |
+| AddRestaurantPage | Google vult het formulier voor; de eigenaar controleert en verstuurt. Opgeslagen: naam, adres, telefoon, website zoals de eigenaar ze indient, plus `google_place_id`. Coördinaten komen later via PDOK (Geocode in het adminpaneel) |
+| Admin | Import (CSV via Google) en Google Verrijking zijn weg. Foto's en Zonder website tonen alleen nog lijsten. Discovery toont een melding dat scannen en goedkeuren stilstaan |
+| Publieke site | Alleen de eigen Dishloopr-score, vanaf 10 eigen reviews. Restaurants zonder genoeg eigen reviews tonen geen score meer |
+
+Gevolgen om te weten:
+
+- De skill `dishloopr-restaurant-approval` (Discovery-wachtrij goedkeuren) werkt niet meer tot fase 3.
+- Nieuwe restaurants via AddRestaurantPage hebben geen coördinaten tot een admin Geocode draait. Geocode "alles" pakt alleen actieve restaurants; nieuw ingediende restaurants zijn inactief tot goedkeuring.
+- Een AddRestaurantPage-indiening is nog steeds door Google voorgevuld. Dat is verdedigbaar omdat de eigenaar de velden controleert en indient, maar het is beslissing F in hoofdstuk 7: wie het strikter wil, vervangt de Google-zoekstap door zoeken in de eigen database plus Overture.
+- `GOOGLE_PLACES_API_KEY` is nog nodig voor die zoekstap. `geocode-restaurants` gebruikt hem niet meer.
+- De privacypagina (`src/pages/PrivacyPage.tsx`) noemt Google Places nog als bron. Dat klopt zolang de oude data er staat; bijwerken na fase 4.
+- Bestaande Google-data (kolommen, foto's, `discovery_results`, backuptabellen) is niet aangeraakt; dat is fase 4.
+
+Gecontroleerd: TypeScript (`tsc -p tsconfig.app.json`), `vite build`, `deno check` op de zes functies, en de Deno-tests in `supabase/tests` (`pdok-geocode.ts`, `rating-display.ts`, plus bestaande). ESLint geeft op de gewijzigde bestanden geen nieuwe meldingen ten opzichte van de vorige versie. Niet gecontroleerd: de schermen in de browser en de functies na deploy.
+

@@ -214,8 +214,6 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
             </h3>
             <div className="flex items-center gap-1 shrink-0">
               <RatingSummary
-                googleRating={(restaurant as any).google_rating}
-                googleReviewsCount={(restaurant as any).google_reviews_count}
                 ownReviewCount={ownStats?.count}
                 ownAverage={ownStats?.average}
               />

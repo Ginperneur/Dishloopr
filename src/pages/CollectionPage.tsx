@@ -69,8 +69,6 @@ function RestaurantCard({ item, index }: { item: CollectionRestaurant; index: nu
                   {restaurant.name}
                 </h3>
                 <RatingSummary
-                  googleRating={restaurant.google_rating}
-                  googleReviewsCount={restaurant.google_reviews_count}
                   ownReviewCount={ownStats?.count}
                   ownAverage={ownStats?.average}
                 />

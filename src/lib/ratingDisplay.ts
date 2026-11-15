@@ -1,16 +1,15 @@
+// Only Dishloopr's own review score is shown. Google ratings may not be stored or reused under
+// the Google Maps Platform EEA terms (docs/google-places-compliance.md).
 export const OWN_REVIEW_THRESHOLD = 10;
 
 export interface RatingInput {
-  googleRating?: number | string | null;
-  googleReviewsCount?: number | string | null;
   ownReviewCount?: number | null;
   ownAverage?: number | null;
 }
 
 export type RatingDisplay =
   | { mode: 'none' }
-  | { mode: 'google-only'; google: number; googleCount: number }
-  | { mode: 'both'; own: number; google: number | null; googleCount: number };
+  | { mode: 'own'; own: number; count: number };
 
 const num = (v: unknown) => {
   const n = Number(v);
@@ -18,14 +17,9 @@ const num = (v: unknown) => {
 };
 
 export function getRatingDisplay(input: RatingInput): RatingDisplay {
-  const google = num(input.googleRating);
-  const googleCount = Math.max(0, Math.round(num(input.googleReviewsCount)));
-  const ownCount = num(input.ownReviewCount);
+  const count = num(input.ownReviewCount);
   const own = num(input.ownAverage);
-  if (ownCount >= OWN_REVIEW_THRESHOLD && own > 0) {
-    return { mode: 'both', own, google: google > 0 ? google : null, googleCount };
-  }
-  if (google > 0) return { mode: 'google-only', google, googleCount };
+  if (count >= OWN_REVIEW_THRESHOLD && own > 0) return { mode: 'own', own, count };
   return { mode: 'none' };
 }
 

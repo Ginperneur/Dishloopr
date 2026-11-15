@@ -3,7 +3,7 @@ import {
   TrendingUp, Crown, Users, Search, MapPin, AlertCircle, Shield,
   Store, UtensilsCrossed, Check, Sparkles,
   MessageSquare, FileText,
-  Bell, Star,
+  Bell,
   ShieldAlert, Image, Eye, Upload, Globe, Download, Zap, Clock, Settings, Inbox, Calendar
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -100,13 +100,11 @@ const navGroups = [
       { id: 'broken-images', label: 'Kapotte afbeeldingen', icon: Image },
       { id: 'duplicates', label: 'Duplicaten', icon: AlertCircle },
       { id: 'completeness', label: 'Volledigheid', icon: Eye },
-      { id: 'bulk-import', label: 'Import', icon: Upload },
       { id: 'menu-scraper', label: 'Menu Scraper', icon: Globe },
       { id: 'manual-menu', label: 'Handmatig Menu', icon: Upload },
       { id: 'empty-dishes', label: '0 Gerechten', icon: AlertCircle },
       { id: 'discovery', label: 'Discovery', icon: Search },
       { id: 'geocode', label: 'Geocode', icon: MapPin },
-      { id: 'google-enrich', label: 'Google Verrijking', icon: Star },
       { id: 'missing-website', label: 'Zonder website', icon: Globe },
       { id: 'manual-review', label: 'Handmatig nakijken', icon: AlertCircle },
       { id: 'dish-screening', label: 'Gerecht-screening', icon: Check },

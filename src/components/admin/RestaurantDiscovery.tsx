@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -700,6 +701,16 @@ export function RestaurantDiscovery() {
 
   return (
     <div className="space-y-6">
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Scannen en goedkeuren via Google staat stil</AlertTitle>
+        <AlertDescription>
+          De Google-voorwaarden staan niet toe dat we namen, adressen, ratings of foto's uit Google Places opslaan.
+          Nieuwe scans en goedkeuren vanuit deze wachtrij geven daarom een foutmelding, tot discovery op Overture Maps draait.
+          De pipeline voor bestaande discovery-restaurants (menu, classificatie, reserveringslink) werkt nog wel.
+          Zie docs/google-places-compliance.md.
+        </AlertDescription>
+      </Alert>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="pb-2"><CardDescription>Grid Punten</CardDescription></CardHeader>

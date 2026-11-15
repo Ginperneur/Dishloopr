@@ -1,5 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
+import { geocodeWithPdok } from "../_shared/pdokGeocode.ts";
+
+// Geocodes via PDOK Locatieserver (BAG). The Google Geocoding API was dropped because its
+// coordinates may not be stored longer than 30 days (docs/google-places-compliance.md).
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,14 +29,6 @@ serve(async (req: Request) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const googleApiKey = Deno.env.get("GOOGLE_PLACES_API_KEY");
-
-    if (!googleApiKey) {
-      return new Response(
-        JSON.stringify({ error: "Google Places API key not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
 
     // Verify user is admin
     const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
@@ -59,7 +55,8 @@ serve(async (req: Request) => {
     }
 
     // Parse request body
-    const { restaurantId, all } = await req.json();
+    const { restaurantId: singleId, restaurant_ids, all } = await req.json();
+    const restaurantId = singleId ?? (Array.isArray(restaurant_ids) ? restaurant_ids[0] : undefined);
 
     // Use service role for updates
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
@@ -111,22 +108,17 @@ serve(async (req: Request) => {
 
     for (const restaurant of restaurantsToGeocode) {
       const cityName = restaurant.cities?.name || "";
-      const fullAddress = `${restaurant.address}, ${restaurant.postal_code || ""} ${cityName}, Netherlands`;
-      
-      console.log(`Geocoding: ${restaurant.name} - ${fullAddress}`);
+      console.log(`Geocoding: ${restaurant.name}`);
 
       try {
-        // Use Google Geocoding API
-        const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(fullAddress)}&key=${googleApiKey}`;
-        const geocodeRes = await fetch(geocodeUrl);
-        const geocodeData = await geocodeRes.json();
+        const geo = await geocodeWithPdok({
+          address: restaurant.address,
+          postalCode: restaurant.postal_code,
+          city: cityName,
+        });
 
-        if (geocodeData.status === "OK" && geocodeData.results.length > 0) {
-          const location = geocodeData.results[0].geometry.location;
-          const lat = location.lat;
-          const lng = location.lng;
-
-          // Update restaurant with coordinates
+        if (geo.ok) {
+          const { lat, lng } = geo;
           const { error: updateError } = await adminClient
             .from("restaurants")
             .update({ geo_lat: lat, geo_lng: lng })
@@ -136,12 +128,11 @@ serve(async (req: Request) => {
             console.error(`Failed to update ${restaurant.name}:`, updateError);
             results.push({ id: restaurant.id, name: restaurant.name, status: "update_failed" });
           } else {
-            console.log(`Updated ${restaurant.name}: ${lat}, ${lng}`);
             results.push({ id: restaurant.id, name: restaurant.name, status: "success", lat, lng });
           }
         } else {
-          console.warn(`No results for ${restaurant.name}: ${geocodeData.status}`);
-          results.push({ id: restaurant.id, name: restaurant.name, status: `geocode_failed: ${geocodeData.status}` });
+          console.warn(`No PDOK match for ${restaurant.name}: ${geo.reason}`);
+          results.push({ id: restaurant.id, name: restaurant.name, status: `geocode_failed: ${geo.reason}` });
         }
 
         // Small delay to respect rate limits
@@ -161,6 +152,7 @@ serve(async (req: Request) => {
       JSON.stringify({
         processed: results.length,
         success: successCount,
+        geocoded: successCount,
         failed: failedCount,
         results,
       }),

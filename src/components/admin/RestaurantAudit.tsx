@@ -327,7 +327,9 @@ export function RestaurantAudit() {
   };
 
   const canAutoFix = (flagLabel: string) => {
-    return ["Geen foto's", "Geen gerechten", "Geen coördinaten", "Geen keuken"].includes(flagLabel);
+    // "Geen foto's" is no longer auto-fixable: Google Places photos may not be stored
+    // (docs/google-places-compliance.md).
+    return ["Geen gerechten", "Geen coördinaten", "Geen keuken"].includes(flagLabel);
   };
 
   const handleAutoFix = async (restaurant: AuditRestaurant, flag: AuditFlag) => {
@@ -336,44 +338,6 @@ export function RestaurantAudit() {
 
     try {
       switch (flag.label) {
-        case "Geen foto's": {
-          // Search Google Places for this restaurant, then fetch photos
-          const searchQuery = `${restaurant.name} ${restaurant.address}`;
-          const { data: searchData, error: searchError } = await supabase.functions.invoke("google-places-search", {
-            body: { query: searchQuery, city: restaurant.city_name },
-          });
-          if (searchError) throw searchError;
-
-          const place = searchData?.results?.[0];
-          if (!place?.place_id) {
-            toast.warning(`Geen Google Places resultaat gevonden voor ${restaurant.name}`);
-            break;
-          }
-
-          const { data: photoData, error: photoError } = await supabase.functions.invoke("fetch-google-photos", {
-            body: {
-              place_id: place.place_id,
-              photo_references: place.photo_references || [],
-              restaurant_id: restaurant.id,
-              max_photos: 5,
-            },
-          });
-          if (photoError) throw photoError;
-
-          if (photoData?.count > 0) {
-            toast.success(`${photoData.count} foto's toegevoegd voor ${restaurant.name}`);
-            // Update local state
-            setRestaurants(prev => prev.map(r => {
-              if (r.id !== restaurant.id) return r;
-              const newFlags = r.flags.filter(f => f.label !== "Geen foto's");
-              return { ...r, images: ['placeholder'], flags: newFlags, risk_score: r.risk_score - 2 };
-            }));
-          } else {
-            toast.warning(`Geen foto's gevonden voor ${restaurant.name}`);
-          }
-          break;
-        }
-
         case "Geen gerechten": {
           if (!restaurant.website_url) {
             toast.warning(`${restaurant.name} heeft geen website om te scrapen`);
@@ -401,7 +365,7 @@ export function RestaurantAudit() {
 
         case "Geen coördinaten": {
           const { data: geoData, error: geoError } = await supabase.functions.invoke("geocode-restaurants", {
-            body: { restaurant_ids: [restaurant.id] },
+            body: { restaurantId: restaurant.id },
           });
           if (geoError) throw geoError;
 

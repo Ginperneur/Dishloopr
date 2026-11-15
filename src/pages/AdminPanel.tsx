@@ -23,7 +23,6 @@ import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { RestaurantDetailModal } from '@/components/admin/RestaurantDetailModal';
 import { AddRestaurantModal } from '@/components/admin/AddRestaurantModal';
 import { SponsoredProductsManager } from '@/components/admin/SponsoredProductsManager';
-import { BulkRestaurantUpload } from '@/components/admin/BulkRestaurantUpload';
 import { ClaimRequestsQueue } from '@/components/admin/ClaimRequestsQueue';
 import { OptoutRequestsManager } from '@/components/admin/OptoutRequestsManager';
 import { ContactMessagesManager } from '@/components/admin/ContactMessagesManager';
@@ -41,7 +40,6 @@ import { SeoLandingPagesManager } from '@/components/admin/SeoLandingPagesManage
 import { DishApprovalManager } from '@/components/admin/DishApprovalManager';
 import { ChainsManager } from '@/components/admin/ChainsManager';
 import { GeocodeManager } from '@/components/admin/GeocodeManager';
-import { GoogleEnrichManager } from '@/components/admin/GoogleEnrichManager';
 import { AIMetadataEnrichment } from '@/components/admin/AIMetadataEnrichment';
 import { PhotosManager } from '@/components/admin/PhotosManager';
 import { RestaurantDishesManager } from '@/components/admin/RestaurantDishesManager';
@@ -147,12 +145,10 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'broken-images': { title: "Broken Images", description: "Kapotte afbeeldingen opsporen" },
   'duplicates': { title: "Duplicaten", description: "Dubbele restaurants samenvoegen" },
   'completeness': { title: "Completeness", description: "Datakwaliteit per restaurant" },
-  'bulk-import': { title: "Bulk Import", description: "CSV restaurants importeren" },
   'menu-scraper': { title: "Menu Scraper", description: "Gerechten van websites scrapen" },
   'manual-menu': { title: "Handmatig Menu", description: "Foto of PDF uploaden voor restaurants waar scrapen niet werkt" },
   'empty-dishes': { title: "0 Gerechten", description: "Restaurants zonder gerechten — direct zien wat aandacht nodig heeft" },
   'geocode': { title: "Geocode", description: "Coördinaten toekennen" },
-  'google-enrich': { title: "Google Verrijking", description: "Ratings & openingstijden importeren" },
   'ai-classify': { title: "AI Classificatie", description: "Keuken, sfeer & concept via AI" },
   'photos': { title: "Foto's", description: "Google-foto's ophalen" },
   'data-export': { title: "Data Export", description: "Data exporteren als CSV" },
@@ -675,14 +671,12 @@ export default function AdminPanel() {
               {activeSection === 'manual-menu' && <ManualMenuUpload />}
               {activeSection === 'empty-dishes' && <EmptyDishesManager onNavigateToTab={handleNavigateToTab} />}
               {activeSection === 'data-export' && <DataExportManager />}
-              {activeSection === 'bulk-import' && <BulkRestaurantUpload onSuccess={fetchData} />}
               {activeSection === 'audit' && <RestaurantAudit />}
               {activeSection === 'discovery' && <RestaurantDiscovery />}
               {activeSection === 'broken-images' && <BrokenImageChecker />}
               {activeSection === 'duplicates' && <DuplicateMerger />}
               {activeSection === 'completeness' && <CompletenessScore />}
               {activeSection === 'geocode' && <GeocodeManager />}
-              {activeSection === 'google-enrich' && <GoogleEnrichManager />}
               {activeSection === 'ai-classify' && <AIMetadataEnrichment />}
               {activeSection === 'photos' && <PhotosManager />}
               {activeSection === 'seo-health' && <SeoHealthMonitor />}

@@ -18,8 +18,6 @@ interface Row {
   ambience_clean: string | null;
   concept_clean: string | null;
   meal_types_clean: string | null;
-  google_status: string | null;
-  google_rating: number | null;
   is_active: boolean;
   verified_at: string | null;
 }
@@ -33,7 +31,7 @@ export function ManualReviewQueue() {
     setLoading(true);
     const { data, error } = await supabase
       .from('restaurants')
-      .select('id,name,slug,review_status,cuisine_primary,ambience_clean,concept_clean,meal_types_clean,google_status,google_rating,is_active,verified_at,cities:city_id(name)')
+      .select('id,name,slug,review_status,cuisine_primary,ambience_clean,concept_clean,meal_types_clean,is_active,verified_at,cities:city_id(name)')
       .eq('needs_manual_review', true)
       .order('name', { ascending: true })
       .limit(1000);
@@ -53,8 +51,6 @@ export function ManualReviewQueue() {
         ambience_clean: r.ambience_clean,
         concept_clean: r.concept_clean,
         meal_types_clean: r.meal_types_clean,
-        google_status: r.google_status,
-        google_rating: r.google_rating,
         is_active: r.is_active,
         verified_at: r.verified_at,
       }))
@@ -121,7 +117,6 @@ export function ManualReviewQueue() {
                   <th className="py-2">Sfeer</th>
                   <th className="py-2">Concept</th>
                   <th className="py-2">Maaltijd</th>
-                  <th className="py-2">Google</th>
                   <th className="py-2 w-12"></th>
                 </tr>
               </thead>
@@ -143,9 +138,6 @@ export function ManualReviewQueue() {
                     <td className="py-2">{r.ambience_clean || '—'}</td>
                     <td className="py-2">{r.concept_clean || '—'}</td>
                     <td className="py-2">{r.meal_types_clean || '—'}</td>
-                    <td className="py-2 text-xs text-muted-foreground">
-                      {r.google_status || '—'}{r.google_rating ? ` · ${r.google_rating}★` : ''}
-                    </td>
                     <td className="py-2">
                       <Link to={`/restaurant/${r.slug}`} target="_blank" className="text-primary inline-flex">
                         <ExternalLink className="h-3.5 w-3.5" />

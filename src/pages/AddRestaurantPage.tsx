@@ -11,27 +11,23 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { 
   Store, MapPin, Phone, Globe, Upload, Loader2, CheckCircle, ArrowLeft, 
-  Info, Search, Star, Clock, ChevronRight, FileEdit, Database, ExternalLink, Mail
+  Info, Search, ChevronRight, FileEdit, Database, ExternalLink, Mail
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Google Maps Platform EEA terms: a Google result may prefill the form the owner checks and
+// submits, but only place_id is stored as is. No Google ratings, opening hours, coordinates or
+// photos are saved (docs/google-places-compliance.md).
 interface GooglePlaceResult {
   place_id: string;
   name: string;
   address: string;
-  geo_lat?: number;
-  geo_lng?: number;
   phone?: string;
   website?: string;
-  rating?: number;
-  review_count?: number;
   price_level?: number;
-  opening_hours?: string[];
-  opening_hours_periods?: any[];
-  photo_references?: string[];
   is_local?: boolean;
   restaurant_id?: string;
   claim_status?: string;
@@ -47,12 +43,7 @@ interface FormData {
   cuisines: string[];
   priceLevel: number;
   notes: string;
-  geoLat: number | null;
-  geoLng: number | null;
   placeId: string | null;
-  openingHours: string[] | null;
-  photoReferences: string[];
-  googleRating: number | null;
 }
 
 type Step = 'search' | 'select' | 'details' | 'submitting' | 'done';
@@ -83,8 +74,7 @@ export default function AddRestaurantPage() {
   const [formData, setFormData] = useState<FormData>({
     name: '', address: '', postalCode: '', cityName: '', phone: '', website: '',
     cuisines: [], priceLevel: 2, notes: '',
-    geoLat: null, geoLng: null, placeId: null,
-    openingHours: null, photoReferences: [], googleRating: null,
+    placeId: null,
   });
 
   // Proof docs
@@ -150,12 +140,7 @@ export default function AddRestaurantPage() {
       cuisines: [],
       priceLevel: result.price_level || 2,
       notes: '',
-      geoLat: result.geo_lat || null,
-      geoLng: result.geo_lng || null,
       placeId: result.place_id || null,
-      openingHours: result.opening_hours || null,
-      photoReferences: result.photo_references || [],
-      googleRating: result.rating || null,
     });
 
     setIsManualEntry(false);
@@ -168,8 +153,7 @@ export default function AddRestaurantPage() {
     setFormData({
       name: searchName, address: '', postalCode: '', cityName: searchCity,
       phone: '', website: '', cuisines: [], priceLevel: 2, notes: '',
-      geoLat: null, geoLng: null, placeId: null,
-      openingHours: null, photoReferences: [], googleRating: null,
+      placeId: null,
     });
     setStep('details');
   };
@@ -266,12 +250,7 @@ export default function AddRestaurantPage() {
           website_url: formData.website || null,
           cuisines: formData.cuisines.length > 0 ? formData.cuisines : null,
           price_level: formData.priceLevel,
-          geo_lat: formData.geoLat,
-          geo_lng: formData.geoLng,
-          opening_hours: formData.openingHours
-            ? { weekday_text: formData.openingHours }
-            : null,
-          rating: formData.googleRating || 0,
+          google_place_id: formData.placeId && !formData.placeId.startsWith('local_') ? formData.placeId : null,
           claimed_by_owner_id: user.id,
           claim_status: 'claimed_unverified',
           is_active: false,
@@ -326,18 +305,6 @@ export default function AddRestaurantPage() {
         await supabase
           .from('user_roles')
           .insert({ user_id: user.id, role: 'owner' });
-      }
-
-      // Fetch Google photos in background if available
-      if (formData.photoReferences.length > 0 && formData.placeId) {
-        supabase.functions.invoke('fetch-google-photos', {
-          body: {
-            place_id: formData.placeId,
-            photo_references: formData.photoReferences,
-            restaurant_id: restaurant.id,
-            max_photos: 5
-          }
-        }).catch(err => console.error('Failed to fetch photos:', err));
       }
 
       // Auto-detect reservation provider in background (Zenchef/TheFork/OpenTable/...)
@@ -527,12 +494,6 @@ export default function AddRestaurantPage() {
                                   <span className="truncate">{result.address}</span>
                                 </p>
                                 <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                                  {result.rating && (
-                                    <span className="flex items-center gap-1">
-                                      <Star className="h-3 w-3 text-amber-500" />
-                                      {result.rating}
-                                    </span>
-                                  )}
                                   {result.phone && (
                                     <span className="flex items-center gap-1">
                                       <Phone className="h-3 w-3" />
@@ -603,9 +564,7 @@ export default function AddRestaurantPage() {
                     <div className="flex items-center gap-2 text-sm">
                       <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
                       <span>
-                        <strong>{selectedResult.name}</strong> automatisch ingevuld via Google Places
-                        {selectedResult.rating && <> • ⭐ {selectedResult.rating}</>}
-                        {selectedResult.opening_hours && <> • Openingstijden gevonden</>}
+                        <strong>{selectedResult.name}</strong> voorgevuld. Controleer naam, adres, telefoon en website en pas ze aan waar nodig.
                       </span>
                     </div>
                   </CardContent>
@@ -721,21 +680,6 @@ export default function AddRestaurantPage() {
                     </div>
                   </div>
 
-                  {/* Opening hours preview (if available) */}
-                  {formData.openingHours && formData.openingHours.length > 0 && (
-                    <div className="pt-4 border-t">
-                      <Label className="flex items-center gap-2 mb-2">
-                        <Clock className="h-4 w-4" />
-                        Openingstijden (van Google)
-                      </Label>
-                      <div className="bg-muted/50 rounded-lg p-3 text-sm space-y-1">
-                        {formData.openingHours.map((hour, i) => (
-                          <p key={i} className="text-muted-foreground">{hour}</p>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
                   {/* Proof documents */}
                   <div className="pt-4 border-t">
                     <Label>Bewijsdocumenten (KVK-uittreksel, etc.)</Label>
@@ -828,11 +772,6 @@ export default function AddRestaurantPage() {
                   <p className="text-muted-foreground mb-2">
                     Je restaurant is ingediend voor review. We nemen binnen 24-48 uur contact met je op.
                   </p>
-                  {formData.photoReferences.length > 0 && (
-                    <p className="text-sm text-muted-foreground mb-6">
-                      📸 Foto's worden automatisch opgehaald van Google.
-                    </p>
-                  )}
                   <div className="bg-background/60 border rounded-lg p-3 text-sm mb-4 max-w-sm mx-auto">
                     <div className="flex items-start gap-2 text-left">
                       <Mail className="h-4 w-4 mt-0.5 text-primary shrink-0" />
