@@ -40,6 +40,7 @@ import {
   QrCode,
   Tag,
   Ticket,
+  Wand2,
 } from 'lucide-react';
 import { MyPackagesCard } from '@/components/owner/MyPackagesCard';
 import { UitgelichtOffers } from '@/components/owner/UitgelichtOffers';
@@ -72,6 +73,7 @@ import { AnalyticsTab } from '@/components/owner/AnalyticsTab';
 import { SponsoredMarketplace } from '@/components/sponsored/SponsoredMarketplace';
 import { RoutingSlotsManager } from '@/components/owner/RoutingSlotsManager';
 import { OptimizationDashboard } from '@/components/optimization/OptimizationDashboard';
+import { SimulationMode } from '@/components/optimization/SimulationMode';
 import { DishAnalytics } from '@/components/owner/DishAnalytics';
 import { SearchRanking } from '@/components/owner/SearchRanking';
 import { ClaimStatusBadge } from '@/components/claims/ClaimStatusBadge';
@@ -340,6 +342,13 @@ export default function OwnerDashboard() {
         toast.success('Betaling ontvangen', { description: 'Je evenement staat binnen een paar minuten online.', duration: 10000 });
       }
       go('promotions');
+      window.history.replaceState({}, '', '/owner-dashboard');
+    }
+
+    // Bought simulations return here.
+    if (searchParams.get('simulation') === 'success') {
+      toast.success('Simulaties gekocht', { description: 'Je tegoed staat klaar onder Menu, bij Wat als?', duration: 10000 });
+      go('menu');
       window.history.replaceState({}, '', '/owner-dashboard');
     }
 
@@ -781,6 +790,10 @@ export default function OwnerDashboard() {
                           {suggestedDishCount > 0 && <Badge variant="secondary" className="text-xs">{suggestedDishCount} voorgesteld, bevestig of wijs af</Badge>}
                           <DishConfirmation restaurantId={r.id} restaurantName={r.name} />
                         </>
+                      ))}
+                      {isVerified && section('Wat als?', Wand2, (
+                        <SimulationMode restaurantId={r.id} priceLevel={r.price_level ?? null}
+                          tags={[...(r.ambience_tags ?? []), ...(r.cuisines ?? [])]} />
                       ))}
                       {section('Menukaart en prijzen', FileText, (
                         <>

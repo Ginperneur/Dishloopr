@@ -242,6 +242,19 @@ serve(async (req) => {
         }
         logStep("Extra tag subscription activated");
       }
+      // Purchased simulations: the quantity comes from the line item (adjustable in Checkout).
+      else if (type === "simulation_credits" && restaurantId) {
+        const items = await stripe.checkout.sessions.listLineItems(session.id, { limit: 1 });
+        const quantity = items.data[0]?.quantity ?? 1;
+        const { error: simErr } = await supabaseAdmin.rpc("grant_simulation_credits", {
+          p_session: session.id, p_restaurant: restaurantId, p_user: userId ?? null, p_quantity: quantity,
+        });
+        if (simErr) {
+          logStep("Simulation credits error", { error: simErr.message });
+          return new Response(JSON.stringify({ error: simErr.message }), { status: 500 });
+        }
+        logStep("Simulation credits granted", { restaurantId, quantity });
+      }
       // Paid promotion slot (Vraag doorsturen): the reserved slot becomes active.
       else if (type === "promo_slot" && metadata.slot_id) {
         const { error: slotErr } = await supabaseAdmin.from("promo_slots")
