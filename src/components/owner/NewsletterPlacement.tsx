@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Newspaper, CreditCard, Loader2, Globe2, ImagePlus } from 'lucide-react';
+import { Newspaper, CreditCard, Loader2, Globe2, ImagePlus, FileText } from 'lucide-react';
 import { toEmailJpeg } from '@/lib/emailImage';
 import { sendAnalyticsEvent } from '@/lib/cookieConsent';
 
@@ -30,6 +30,26 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [pdf, setPdf] = useState<{ url: string; name: string } | null>(null);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
+
+  // One PDF per placement (menu or flyer): linked from the mail, stored next to the photo.
+  const uploadPdf = async (file: File | undefined) => {
+    if (!file) return;
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) { toast.error('Kies een pdf-bestand.'); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error('Deze pdf is groter dan 10 MB.'); return; }
+    setUploadingPdf(true);
+    try {
+      const path = `${restaurantId}/newsletter/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.pdf`;
+      const { error } = await supabase.storage.from('restaurant-images').upload(path, file, { contentType: 'application/pdf' });
+      if (error) throw error;
+      setPdf({ url: supabase.storage.from('restaurant-images').getPublicUrl(path).data.publicUrl, name: file.name });
+    } catch (e) {
+      toast.error('Uploaden lukte niet', { description: e instanceof Error ? e.message : undefined });
+    } finally {
+      setUploadingPdf(false);
+    }
+  };
 
   // One photo per placement, stored in the restaurant's own folder (restaurant-images/<id>/newsletter/).
   const uploadPhoto = async (file: File | undefined) => {
@@ -65,7 +85,7 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
   };
 
   const canSubmit = () => {
-    return !!title.trim() && !uploading;
+    return !!title.trim() && !uploading && !uploadingPdf;
   };
 
   const handleSubmit = async () => {
@@ -83,6 +103,7 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
           title,
           description,
           imageUrl,
+          pdfUrl: pdf?.url ?? null,
           promoType,
           scope: 'national',
         },
@@ -164,6 +185,24 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
               </label>
             )}
             <p className="text-xs text-muted-foreground">Liggend werkt het best. We verkleinen hem automatisch voor de mail.</p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Pdf (optioneel)</p>
+            {pdf ? (
+              <div className="flex items-center gap-3 rounded-md border p-2 text-sm">
+                <FileText className="h-4 w-4 shrink-0 text-primary" />
+                <a href={pdf.url} target="_blank" rel="noopener" className="flex-1 truncate underline">{pdf.name}</a>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setPdf(null)}>Verwijderen</Button>
+              </div>
+            ) : (
+              <label className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed px-3 py-3 text-sm text-muted-foreground hover:border-primary/50">
+                {uploadingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                {uploadingPdf ? 'Pdf uploaden…' : 'Voeg een pdf toe, bijvoorbeeld je menukaart of flyer'}
+                <input type="file" accept="application/pdf,.pdf" className="sr-only" disabled={uploadingPdf}
+                  onChange={e => { void uploadPdf(e.target.files?.[0]); e.target.value = ''; }} />
+              </label>
+            )}
+            <p className="text-xs text-muted-foreground">In de mail komt een knop "Bekijk de pdf". Maximaal 10 MB.</p>
           </div>
           <Select value={promoType} onValueChange={setPromoType}>
             <SelectTrigger>

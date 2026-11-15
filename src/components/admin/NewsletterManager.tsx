@@ -37,6 +37,7 @@ interface Placement {
   admin_notes: string | null;
   created_at: string;
   image_url?: string | null;
+  pdf_url?: string | null;
   restaurants?: { name: string; slug?: string; cities?: { name: string } | null } | null;
 }
 
@@ -168,6 +169,7 @@ export function NewsletterManager() {
         restaurant_slug: p.restaurants?.slug ?? '',
         city_name: p.restaurants?.cities?.name ?? null,
         image_url: p.image_url ?? null,
+        pdf_url: p.pdf_url ?? null,
       })),
     });
     const userId = (await supabase.auth.getUser()).data.user?.id;
@@ -589,6 +591,7 @@ export function NewsletterManager() {
                     <div className="flex items-center gap-2">
                       {placement.image_url && <a href={placement.image_url} target="_blank" rel="noopener"><img src={placement.image_url} alt="" className="h-10 w-14 rounded object-cover" /></a>}
                       <span>{placement.title}</span>
+                      {placement.pdf_url && <a href={placement.pdf_url} target="_blank" rel="noopener" className="text-xs text-primary underline">pdf</a>}
                     </div>
                   </TableCell>
                   <TableCell className="text-xs">{promoTypeLabel[placement.promo_type] || placement.promo_type}</TableCell>

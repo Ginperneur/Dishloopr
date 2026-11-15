@@ -2,7 +2,7 @@ import { PGlite } from "npm:@electric-sql/pglite@0.2.17";
 // Checks the national newsletter: the mail contains the placements (escaped), a sent campaign
 // publishes its edition's approved placements, and the personal unsubscribe link works.
 // Usage from the repo root: deno run -A --config supabase/tests/deno.json supabase/tests/newsletter.ts
-import { buildNewsletterHtml, safeImage } from "../../src/lib/newsletterHtml.ts";
+import { buildNewsletterHtml, safeImage, safePdf } from "../../src/lib/newsletterHtml.ts";
 let ok = true;
 const check = (l: string, p: boolean, g?: unknown) => { ok &&= p; console.log(p ? "PASS" : "FAIL", l, p ? "" : JSON.stringify(g)); };
 
@@ -24,6 +24,10 @@ const withPhoto = buildNewsletterHtml({ title: "W", placements: [
 ] });
 check("photo from Dishloopr storage shown", withPhoto.includes(`src="${IMG}"`) && withPhoto.includes('alt="Met foto"'));
 check("photo from elsewhere left out", !withPhoto.includes("evil.example"));
+const PDF = IMG.replace(/1-abc\.jpg$/, "menu.pdf");
+const withPdf = buildNewsletterHtml({ title: "W", placements: [{ title: "Menu", description: null, promo_type: "actie", restaurant_name: "T", restaurant_slug: "t", pdf_url: PDF }] });
+check("pdf linked in the mail", withPdf.includes(`href="${PDF}"`) && withPdf.includes("Bekijk de pdf"));
+check("only .pdf from Dishloopr storage", safePdf(PDF) === PDF && safePdf(IMG) === null && safePdf("https://evil.example/x.pdf") === null);
 check("safeImage refuses javascript and quotes", safeImage('javascript:alert(1)') === null && safeImage(IMG + '" onerror="x') === null);
 
 const repo = Deno.args[0] ?? ".";
@@ -44,6 +48,10 @@ try { await db.exec("INSERT INTO newsletter_placements (status, image_url) VALUE
 check("database refuses a photo from elsewhere", refused);
 await db.exec(`INSERT INTO newsletter_placements (status, image_url) VALUES ('rejected', '${IMG}')`);
 check("database accepts a Dishloopr storage photo", true);
+let badPdf = false;
+try { await db.exec(`INSERT INTO newsletter_placements (status, pdf_url) VALUES ('paid', '${IMG}')`); } catch { badPdf = true; }
+check("database refuses a pdf_url that is not a .pdf", badPdf);
+await db.exec(`INSERT INTO newsletter_placements (status, pdf_url) VALUES ('rejected', '${PDF}')`);
 await db.exec("DELETE FROM newsletter_placements");
 const ed = (await db.query<{ id: string }>("INSERT INTO newsletter_editions (title) VALUES ('W47') RETURNING id")).rows[0].id;
 await db.exec(`INSERT INTO newsletter_placements (edition_id, status) VALUES ('${ed}', 'approved'), ('${ed}', 'paid'), ('${ed}', 'rejected');
