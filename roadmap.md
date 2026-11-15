@@ -1,5 +1,5 @@
 # Parkeerinformatie
-- [ ] support_chat_rls toepassen; gastgesprekken afschermen, beveiligingsscan vernieuwen en alleen publiceren zonder kritieke meldingen.
+- [x] support_chat_rls toegepast als 0051; RLS en alle gesprek-/berichtregels gecontroleerd; nieuwe databasescan zonder kritieke meldingen. Publicatie aanvragen.
 - [x] newsletter_placement_photo en restaurant_positions_all_pages toegepast als 0043/0044; foto/PDF-kolommen en functie gecontroleerd.
 - [x] Drie kritieke toegangsmeldingen aangepakt; 0046–0049 toegepast (363 kernpagina's, wekelijkse taak); vijf functies gedeployed; publicatie aangevraagd.
 - [x] Evenementvrijgave na bevestigde checkout-/factuurbetaling gebouwd; vijf controles geslaagd, stripe-webhook gedeployed. Geen echte evenementbetaling uitgevoerd; twee aanwezige evenementen hebben nog geen geregistreerde betaling.
