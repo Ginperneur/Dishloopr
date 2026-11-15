@@ -102,6 +102,7 @@ interface Stats {
   pendingSupport: number;
   pendingTagRequests: number;
   pendingEventReleases: number;
+  pendingContact: number;
   activeRestaurants: number;
 }
 
@@ -177,7 +178,7 @@ export default function AdminPanel() {
   const { isAdmin, loading: adminLoading } = useAdminCheck();
   const [stats, setStats] = useState<Stats>({
     totalUsers: 0, totalRestaurants: 0, totalReviews: 0, totalCities: 0,
-    totalDishes: 0, pendingReviews: 0, pendingClaims: 0, pendingSupport: 0, pendingTagRequests: 0, pendingEventReleases: 0, activeRestaurants: 0
+    totalDishes: 0, pendingReviews: 0, pendingClaims: 0, pendingSupport: 0, pendingTagRequests: 0, pendingEventReleases: 0, pendingContact: 0, activeRestaurants: 0
   });
   const [users, setUsers] = useState<any[]>([]);
   const [restaurants, setRestaurants] = useState<any[]>([]);
@@ -209,6 +210,16 @@ export default function AdminPanel() {
     if (isAdmin) fetchStats();
   }, [isAdmin]);
 
+  // Refresh counters periodically and when leaving a section, so new contact messages show up
+  useEffect(() => {
+    if (!isAdmin) return;
+    const t = setInterval(fetchStats, 60000);
+    return () => clearInterval(t);
+  }, [isAdmin]);
+  useEffect(() => {
+    if (isAdmin) fetchStats();
+  }, [activeSection]);
+
   // Lazy-load section data only when needed
   useEffect(() => {
     if (!isAdmin) return;
@@ -221,7 +232,7 @@ export default function AdminPanel() {
       { count: userCount }, { count: restaurantCount }, { count: reviewCount },
       { count: cityCount }, { count: dishCount }, { count: pendingCount },
       { count: newClaimsCount }, { count: legacyClaimsCount }, { count: activeCount },
-      { count: supportCount }, { count: tagRequestCount }, { count: eventReleaseCount }
+      { count: supportCount }, { count: tagRequestCount }, { count: eventReleaseCount }, { count: contactCount }
     ] = await Promise.all([
       supabase.from('profiles').select('*', { count: 'exact', head: true }),
       supabase.from('restaurants').select('*', { count: 'exact', head: true }),
@@ -234,7 +245,8 @@ export default function AdminPanel() {
       supabase.from('restaurants').select('*', { count: 'exact', head: true }).eq('is_active', true),
       supabase.from('support_conversations').select('*', { count: 'exact', head: true }).eq('escalated', true).is('resolved_at', null),
       supabase.from('restaurant_tag_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-      supabase.from('restaurant_events').select('*', { count: 'exact', head: true }).eq('promotion_status', 'unpaid').eq('is_active', true)
+      supabase.from('restaurant_events').select('*', { count: 'exact', head: true }).eq('promotion_status', 'unpaid').eq('is_active', true),
+      supabase.from('contact_messages').select('*', { count: 'exact', head: true }).eq('status', 'nieuw')
     ]);
 
     setStats({
@@ -245,6 +257,7 @@ export default function AdminPanel() {
       pendingSupport: supportCount || 0,
       pendingTagRequests: tagRequestCount || 0,
       pendingEventReleases: eventReleaseCount || 0,
+      pendingContact: contactCount || 0,
       activeRestaurants: activeCount || 0
     });
     setLoading(false);
@@ -380,6 +393,7 @@ export default function AdminPanel() {
           pendingSupport={stats.pendingSupport}
           pendingTagRequests={stats.pendingTagRequests}
           pendingEventReleases={stats.pendingEventReleases}
+          pendingContact={stats.pendingContact}
         />
 
         <div className="flex-1 flex flex-col min-w-0">
