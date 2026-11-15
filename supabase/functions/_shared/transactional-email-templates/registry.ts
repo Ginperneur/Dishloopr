@@ -2,6 +2,7 @@ import type { ComponentType } from 'npm:react@18.3.1'
 import { template as claimCode } from './claim-code.tsx'
 import { template as eventReport } from './event-report.tsx'
 import { template as foundingReport } from './founding-report.tsx'
+import { template as promoAuction } from './promo-auction.tsx'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -24,4 +25,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'claim-code': claimCode,
   'event-report': eventReport,
   'founding-report': foundingReport,
+  'promo-auction': promoAuction,
 }

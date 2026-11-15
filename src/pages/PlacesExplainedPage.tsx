@@ -110,6 +110,7 @@ export default function PlacesExplainedPage() {
           </Step>
           <Step n={4} title="Elk kwartaal is er een veiling">
             <p>Op 1 januari, 1 april, 1 juli en 1 oktober bekijken we elke combinatie waar biedingen op staan. Wie een plek heeft, doet mee met de lijstprijs, of met een eigen hoger bod. De hoogste bieders houden of krijgen een plek.</p>
+            <p>Je krijgt 14 dagen en 3 dagen van tevoren een mail als je plek in de veiling gaat of als je bod meedoet. Na de veiling hoor je per mail of je gewonnen hebt, overboden bent of een nieuwe prijs betaalt.</p>
           </Step>
         </section>
 
