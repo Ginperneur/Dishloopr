@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { TestMailsCard } from './TestMailsCard';
 import {
   FileText, UtensilsCrossed, Store, MessageSquare, AlertTriangle,
   TrendingUp, ArrowRight, Loader2, CheckCircle2, ChevronDown, ChevronUp, Check, X,
@@ -340,6 +341,7 @@ export function AdminToday({ onNavigate }: AdminTodayProps) {
           </CardContent>
         </Card>
       )}
+      <TestMailsCard />
     </div>
   );
 }

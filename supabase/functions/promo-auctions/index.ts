@@ -27,11 +27,30 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const db = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "") as unknown as SupabaseClient;
   try {
+    let caller: { id: string; email?: string } | null = null;
     if (!(await isInternalCaller(req, db))) {
-      const user = await getCaller(req);
-      if (!user || !(await isAdmin(db, user.id))) return json({ error: "Forbidden" }, 403);
+      caller = await getCaller(req);
+      if (!caller || !(await isAdmin(db, caller.id))) return json({ error: "Forbidden" }, 403);
     }
     const body = await req.json().catch(() => ({}));
+
+    // Test: an admin gets every auction mail once, with sample data. Nothing else runs.
+    if (body.test_mail === true) {
+      if (!caller?.email) return json({ error: "Alleen vanuit het adminpaneel" }, 400);
+      const next = nextQuarterStart(new Date()).toISOString().slice(0, 10);
+      const base = { restaurantName: "Dishloopr Testkeuken", label: "Vraag doorsturen voor ramen in Utrecht", link: LINK.routing, auctionDate: next };
+      const variants = [
+        { kind: "reminder_holder", myCents: 1500, highestBidCents: 2500, openBids: 2, daysLeft: 14 },
+        { kind: "reminder_bidder", myCents: 2000, highestBidCents: 2500, openBids: 2, daysLeft: 3 },
+        { kind: "won", priceCents: 2000 },
+        { kind: "outbid" },
+        { kind: "reprice", priceCents: 2000 },
+      ];
+      const stamp = Date.now();
+      for (const v of variants)
+        await sendTemplateEmail("promo-auction", caller.email, { templateData: { ...base, ...v }, idempotencyKey: `promo-test-${v.kind}-${caller.id}-${stamp}` });
+      return json({ test: true, sent: variants.length, to: caller.email });
+    }
     const today = new Date();
     const quarterStart = today.getUTCDate() === 1 && [0, 3, 6, 9].includes(today.getUTCMonth());
     const settle = quarterStart || body.settle === true;

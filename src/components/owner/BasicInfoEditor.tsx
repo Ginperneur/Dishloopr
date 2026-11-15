@@ -77,7 +77,7 @@ export function BasicInfoEditor({ restaurantId, currentName, currentOpeningHours
       .from('restaurant_pending_edits')
       .select('id, status, proposed_changes, created_at, review_notes')
       .eq('restaurant_id', restaurantId)
-      .in('status', ['pending', 'approved', 'rejected'])
+      .in('status', ['pending', 'approved', 'rejected', 'auto_applied'])
       .order('created_at', { ascending: false })
       .limit(3);
     setPending((data as Pending[]) || []);
@@ -153,11 +153,11 @@ export function BasicInfoEditor({ restaurantId, currentName, currentOpeningHours
     setSaving(false);
 
     if (hoursSaved && Object.keys(proposed).length > 0) {
-      toast.success('Openingstijden staan direct live. Naam of beschrijving beoordeelt een admin meestal binnen 1 werkdag.');
+      toast.success('Openingstijden staan direct live. Naam of beschrijving controleren we binnen een uur.');
     } else if (hoursSaved) {
       toast.success('Openingstijden opgeslagen en direct zichtbaar voor gasten.');
     } else if (Object.keys(proposed).length > 0) {
-      toast.success('Ingediend. Een admin beoordeelt je wijziging meestal binnen 1 werkdag.');
+      toast.success('Ingediend. We controleren je wijziging binnen een uur; meestal staat hij dan live.');
     } else {
       toast.info('Geen wijzigingen om op te slaan');
     }
@@ -167,7 +167,7 @@ export function BasicInfoEditor({ restaurantId, currentName, currentOpeningHours
     <Card>
       <CardContent className="p-4 space-y-4">
         <p className="text-sm text-muted-foreground">
-          Openingstijden staan direct live zodra ze kloppen. Een nieuwe naam of beschrijving bekijkt eerst een admin.
+          Openingstijden staan direct live zodra ze kloppen. Een nieuwe naam of beschrijving controleren we eerst, meestal binnen een uur.
         </p>
 
         {DAYS.every((d) => !hours[d.key]?.trim()) && (
@@ -238,9 +238,9 @@ export function BasicInfoEditor({ restaurantId, currentName, currentOpeningHours
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <Badge
-                      variant={p.status === 'approved' ? 'default' : p.status === 'rejected' ? 'destructive' : 'secondary'}
+                      variant={p.status === 'approved' || p.status === 'auto_applied' ? 'default' : p.status === 'rejected' ? 'destructive' : 'secondary'}
                     >
-                      {p.status === 'pending' ? 'In review' : p.status === 'approved' ? 'Goedgekeurd' : 'Afgewezen'}
+                      {p.status === 'pending' ? 'In review' : p.status === 'approved' || p.status === 'auto_applied' ? 'Goedgekeurd' : 'Afgewezen'}
                     </Badge>
                     <span className="text-muted-foreground">
                       {new Date(p.created_at).toLocaleDateString('nl-NL')}

@@ -76,6 +76,7 @@ const navGroups = [
       { id: 'suggestions', label: 'Suggesties', icon: Inbox },
       { id: 'optouts', label: 'Afmeldingen', icon: Inbox },
       { id: 'contact', label: 'Contactberichten', icon: Inbox, badgeKey: 'pendingContact' as const },
+      { id: 'edits', label: 'Wijzigingen', icon: Inbox },
     ],
   },
   {
