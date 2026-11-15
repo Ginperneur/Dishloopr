@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CityCombobox } from '@/components/common/CityCombobox';
 import { formatEuroCents, routingAction, type MarketStatus } from '@/lib/promoSlots';
 
 // promo_* tables and functions are newer than the generated types.
@@ -29,7 +30,7 @@ export function RoutingSlotsManager({ restaurantId, cityId }: Props) {
 
   const { data: cities = [] } = useQuery({
     queryKey: ['nl-cities'],
-    queryFn: async () => (await supabase.from('cities').select('id, name').eq('is_active', true).eq('country_code', 'NL').order('name')).data ?? [],
+    queryFn: async () => (await supabase.from('cities').select('id, name, slug').eq('is_active', true).eq('country_code', 'NL').order('name')).data ?? [],
   });
   const { data: dishes = [] } = useQuery({
     queryKey: ['own-menu-dishes', restaurantId],
@@ -121,10 +122,7 @@ export function RoutingSlotsManager({ restaurantId, cityId }: Props) {
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label>Stad</Label>
-            <Select value={city} onValueChange={setCity}>
-              <SelectTrigger className="min-h-11"><SelectValue placeholder="Kies een stad" /></SelectTrigger>
-              <SelectContent>{cities.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-            </Select>
+            <CityCombobox cities={cities} value={city} onChange={setCity} />
           </div>
           <div className="space-y-1.5">
             <Label>Gerecht van je menu</Label>
