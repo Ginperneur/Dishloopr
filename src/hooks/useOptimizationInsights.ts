@@ -30,14 +30,6 @@ interface OptimizationSuggestion {
   actionLabel: string;
 }
 
-interface SimulationResult {
-  currentPosition: number;
-  projectedPosition: number;
-  visibilityChange: number;
-  competitorComparison: string;
-  confidence: number;
-}
-
 export interface OptimizationData {
   dishVisibility: DishVisibility[];
   tagAnalysis: TagAnalysis[];
@@ -246,7 +238,7 @@ export function useOptimizationInsights(restaurantId: string | undefined) {
           return priorityOrder[a.priority] - priorityOrder[b.priority];
         }),
         overallScore,
-        isPremium: false // Would check subscription status
+        isPremium: (restaurant as { owner_tier?: string }).owner_tier === 'pro'
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load insights');
@@ -259,57 +251,10 @@ export function useOptimizationInsights(restaurantId: string | undefined) {
     fetchInsights();
   }, [fetchInsights]);
 
-  const simulateChange = async (
-    changeType: 'add_dish' | 'remove_tag' | 'change_price',
-    params: { dishId?: string; tag?: string; newPriceLevel?: number }
-  ): Promise<SimulationResult | null> => {
-    if (!restaurantId || !data) return null;
-
-    // Simulated calculation based on current data
-    if (changeType === 'add_dish' && params.dishId) {
-      const { data: dish } = await supabase
-        .from('dishes')
-        .select('*, restaurant_dishes(restaurant_id)')
-        .eq('id', params.dishId)
-        .single();
-
-      if (!dish) return null;
-
-      const competitorCount = (dish.restaurant_dishes || []).length;
-      const avgPosition = competitorCount > 0 ? Math.ceil(competitorCount / 2) : 1;
-      
-      return {
-        currentPosition: 0,
-        projectedPosition: avgPosition,
-        visibilityChange: Math.round(dish.search_count * 0.1),
-        competitorComparison: `${competitorCount} restaurants bieden dit gerecht aan`,
-        confidence: competitorCount > 5 ? 85 : competitorCount > 2 ? 70 : 55
-      };
-    }
-
-    if (changeType === 'remove_tag' && params.tag) {
-      const tagData = data.tagAnalysis.find(t => t.tag === params.tag);
-      if (!tagData) return null;
-
-      return {
-        currentPosition: 0,
-        projectedPosition: 0,
-        visibilityChange: tagData.status === 'disputed' ? 5 : -10,
-        competitorComparison: tagData.status === 'disputed' 
-          ? 'Verwijderen verbetert tag-matching' 
-          : 'Kan zichtbaarheid in filters verminderen',
-        confidence: 75
-      };
-    }
-
-    return null;
-  };
-
   return {
     data,
     loading,
     error,
     refetch: fetchInsights,
-    simulateChange
   };
 }

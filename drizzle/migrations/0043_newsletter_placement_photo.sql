@@ -1,0 +1,6 @@
+ALTER TABLE public.newsletter_placements ADD COLUMN IF NOT EXISTS image_url text;
+ALTER TABLE public.newsletter_placements DROP CONSTRAINT IF EXISTS newsletter_placements_image_url_check;
+ALTER TABLE public.newsletter_placements ADD CONSTRAINT newsletter_placements_image_url_check CHECK (image_url IS NULL OR image_url ~ '^https://[a-z0-9]+\.supabase\.co/storage/v1/object/public/restaurant-images/[0-9a-f-]{36}/[A-Za-z0-9/_.-]+$');
+ALTER TABLE public.newsletter_placements ADD COLUMN IF NOT EXISTS pdf_url text;
+ALTER TABLE public.newsletter_placements DROP CONSTRAINT IF EXISTS newsletter_placements_pdf_url_check;
+ALTER TABLE public.newsletter_placements ADD CONSTRAINT newsletter_placements_pdf_url_check CHECK (pdf_url IS NULL OR pdf_url ~ '^https://[a-z0-9]+\.supabase\.co/storage/v1/object/public/restaurant-images/[0-9a-f-]{36}/[A-Za-z0-9/_.-]+\.pdf$');

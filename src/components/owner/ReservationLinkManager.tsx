@@ -41,9 +41,11 @@ interface Props {
   reservationUrl: string;
   hasWebsite: boolean;
   onUpdate?: (url: string | null) => void;
+  /** Opens the Integraties tab, where Zenchef is connected through its official widget. */
+  onOpenIntegrations?: () => void;
 }
 
-export function ReservationLinkManager({ restaurantId, reservationUrl, hasWebsite, onUpdate }: Props) {
+export function ReservationLinkManager({ restaurantId, reservationUrl, hasWebsite, onUpdate, onOpenIntegrations }: Props) {
   const [url, setUrl] = useState(reservationUrl || '');
   const [saving, setSaving] = useState(false);
   const [detecting, setDetecting] = useState(false);
@@ -101,8 +103,20 @@ export function ReservationLinkManager({ restaurantId, reservationUrl, hasWebsit
     <Card>
       <CardContent className="p-4 space-y-4">
         <p className="text-sm text-muted-foreground">
-          Koppel je reserveringslink (Zenchef, TheFork, OpenTable, eigen formulier, …) zodat gasten direct via je restaurantpagina kunnen boeken.
+          Koppel je reserveringslink (TheFork, OpenTable, eigen formulier, …) zodat gasten direct via je restaurantpagina kunnen boeken.
         </p>
+
+        <div className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm">
+            <span className="font-medium">Gebruik je Zenchef?</span> Koppel het dan onder Integraties. Gasten boeken dan via de officiële
+            Zenchef-widget op je pagina, en reserveringen komen gewoon in je eigen Zenchef binnen.
+          </p>
+          {onOpenIntegrations && (
+            <Button type="button" variant="outline" size="sm" className="min-h-10 shrink-0" onClick={onOpenIntegrations}>
+              Naar Integraties
+            </Button>
+          )}
+        </div>
 
         <div className="space-y-2">
           <Label htmlFor="reservation-url">Reserveringslink</Label>

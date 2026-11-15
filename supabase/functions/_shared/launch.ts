@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2.57.2";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 
 // Fallback when app_settings.launch_date is missing or malformed.
 const DEFAULT_LAUNCH = "2026-12-01";

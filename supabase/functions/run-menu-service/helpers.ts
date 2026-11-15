@@ -1,5 +1,5 @@
 import { Resend } from "https://esm.sh/resend@2.0.0";
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2.57.2";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { escapeHtml } from "../_shared/auth.ts";
 
 export const toBase64 = (bytes: Uint8Array) => {

@@ -23,7 +23,7 @@ export function PromotionROI({ promotions }: PromotionROIProps) {
           <TrendingUp className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
           <p className="text-muted-foreground">Geen promoties gevonden.</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Ga naar de Sponsoring tab om je eerste promotie te starten.
+            Start je eerste promotie onder Promoties, bijvoorbeeld Uitgelicht of een evenement.
           </p>
         </CardContent>
       </Card>

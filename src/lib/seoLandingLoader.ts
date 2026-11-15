@@ -127,10 +127,7 @@ export async function loadLandingRestaurants(page: SeoLandingPage) {
   const { canonical, isHub } = landingIdentity(page);
   if (!canonical || !page.city_id) return { restaurants: [] as LandingRestaurant[], members: [] as LandingMember[] };
   const cityId = page.city_id;
-  const [cityRestaurants, matches, dishRows] = await Promise.all([
-    readAllPages<LandingRestaurant>((from, to) => supabase.from('restaurants')
-      .select('id, name, slug, address, rating, review_count, price_level, images, cuisines, ambience_tags, meal_types, is_featured, is_top_listing, geo_lat, geo_lng, opening_hours, google_rating, google_reviews_count')
-      .eq('city_id', cityId).eq('is_active', true).order('id').range(from, to)),
+  const [matches, dishRows] = await Promise.all([
     readAllPages((from, to) => {
       const query = supabase.from('restaurant_dishes')
         .select(`id, restaurant_id, price, is_signature, dishes:dish_id!inner(${DISH_FIELDS}), restaurants:restaurant_id!inner(city_id, is_active)`)
@@ -168,6 +165,15 @@ export async function loadLandingRestaurants(page: SeoLandingPage) {
       best.set(match.restaurant_id, candidate);
     }
   }
+  // Only fetch the restaurants that actually matched, in blocks of 200 ids.
+  const matchedIds = [...best.keys()];
+  const idBlocks: string[][] = [];
+  for (let i = 0; i < matchedIds.length; i += 200) idBlocks.push(matchedIds.slice(i, i + 200));
+  const cityRestaurants = (await Promise.all(idBlocks.map(block =>
+    readAllPages<LandingRestaurant>((from, to) => supabase.from('restaurants')
+      .select('id, name, slug, address, rating, review_count, price_level, images, cuisines, ambience_tags, meal_types, is_featured, is_top_listing, geo_lat, geo_lng, opening_hours, google_rating, google_reviews_count')
+      .in('id', block).eq('city_id', cityId).eq('is_active', true).order('id').range(from, to)),
+  ))).flat();
   const restaurants = cityRestaurants.filter(r => best.has(r.id)).map(r => {
     const match = best.get(r.id);
     return { ...r, signatureDish: match ? { name: match.name, price: match.price } : undefined,

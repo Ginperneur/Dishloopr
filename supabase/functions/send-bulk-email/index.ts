@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,6 +21,7 @@ interface Campaign {
   sent_count: number;
   failed_count: number;
   last_cursor: string | null;
+  started_at: string | null;
 }
 
 async function sendEmail(
@@ -153,7 +154,9 @@ async function sendBatch(
   for (let i = 0; i < emails.length; i += CONCURRENT_SENDS) {
     const chunk = emails.slice(i, i + CONCURRENT_SENDS);
     const results = await Promise.allSettled(
-      chunk.map((r) => sendEmail(apiKey, r.email, subject, html))
+      // Newsletters carry a personal unsubscribe link: {{unsubscribe_url}} becomes this subscriber's link.
+      chunk.map((r) => sendEmail(apiKey, r.email, subject,
+        html.replaceAll("{{unsubscribe_url}}", `https://dishloopr.nl/nieuwsbrief/afmelden?id=${encodeURIComponent(r.id)}`)))
     );
     for (const result of results) {
       if (result.status === "fulfilled" && result.value) {

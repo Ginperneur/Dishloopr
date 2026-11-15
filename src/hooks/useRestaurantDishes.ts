@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { isRealDishName } from '@/lib/dishNames';
+
 
 export type DishStatus = 'suggested' | 'approved_by_admin' | 'verified_by_owner' | 'rejected';
 export type DishSource = 'cuisine_rules' | 'website_hints' | 'user_review' | 'admin' | 'owner';
@@ -45,6 +47,7 @@ export interface Dish {
   name: string;
   name_en: string | null;
   slug: string;
+  canonical_slug?: string | null;
   cuisine_tags: string[] | null;
   synonyms: string[] | null;
   is_active: boolean;
@@ -54,10 +57,12 @@ interface UseRestaurantDishesOptions {
   restaurantId?: string;
   status?: DishStatus | DishStatus[];
   includeAll?: boolean; // For admin view
+  /** false skips loading, e.g. while the owner dashboard has no restaurant selected yet. */
+  enabled?: boolean;
 }
 
 export function useRestaurantDishes(options: UseRestaurantDishesOptions = {}) {
-  const { restaurantId, status, includeAll = false } = options;
+  const { restaurantId, status, includeAll = false, enabled = true } = options;
   const { user } = useAuth();
   const [dishes, setDishes] = useState<RestaurantDish[]>([]);
   const [availableDishes, setAvailableDishes] = useState<Dish[]>([]);
@@ -99,22 +104,33 @@ export function useRestaurantDishes(options: UseRestaurantDishesOptions = {}) {
     }
   };
 
-  const fetchAvailableDishes = async () => {
-    const { data, error } = await supabase
+  /**
+   * Dishes to pick from. Searches in the database (the table has far more than the 1000 rows a
+   * plain select returns, and alphabetically the first ones were scraping debris), skips aliases
+   * and names that are not real words, and shows the most searched dishes without a query.
+   */
+  const searchDishes = async (query = '') => {
+    const term = query.replace(/[^\p{L}\p{M}\d\s'’-]/gu, ' ').trim();
+    let req = supabase
       .from('dishes')
       .select('*')
       .eq('is_active', true)
-      .order('name');
-
+      .filter('name', 'match', '^[[:alpha:]]')
+      .order('search_count', { ascending: false, nullsFirst: false })
+      .limit(60);
+    if (term) req = req.or(`name.ilike.%${term}%,name_en.ilike.%${term}%,vertaling_nl.ilike.%${term}%`);
+    const { data, error } = await req;
     if (!error && data) {
-      setAvailableDishes(data as Dish[]);
+      setAvailableDishes((data as Dish[]).filter(d =>
+        isRealDishName(d.name) && (!d.canonical_slug || d.canonical_slug === d.slug)));
     }
   };
 
   useEffect(() => {
+    if (!enabled) return;
     fetchDishes();
-    fetchAvailableDishes();
-  }, [restaurantId, JSON.stringify(status)]);
+    searchDishes();
+  }, [restaurantId, JSON.stringify(status), enabled]);
 
   const suggestDish = async (
     restaurantId: string,
@@ -173,6 +189,29 @@ export function useRestaurantDishes(options: UseRestaurantDishesOptions = {}) {
     return true;
   };
 
+  /**
+   * A dish the owner adds themselves is confirmed straight away (no extra "suggested" step).
+   * If it already exists for the restaurant (e.g. as a suggestion), it is confirmed instead.
+   */
+  const addOwnerDish = async (restaurantId: string, dishId: string) => {
+    if (!user) return false;
+    const confirmed = { status: 'verified_by_owner', verified_by: user.id, verified_at: new Date().toISOString() };
+    const { error } = await supabase.from('restaurant_dishes').insert({
+      restaurant_id: restaurantId, dish_id: dishId, source: 'owner', confidence_score: 1, created_by: user.id, ...confirmed,
+    } as never);
+    if (error?.code === '23505') {
+      const { error: upErr } = await supabase.from('restaurant_dishes').update(confirmed as never)
+        .eq('restaurant_id', restaurantId).eq('dish_id', dishId);
+      if (upErr) { toast.error('Kon gerecht niet bevestigen'); return false; }
+    } else if (error) {
+      toast.error('Kon gerecht niet toevoegen');
+      return false;
+    }
+    toast.success('Gerecht toegevoegd en bevestigd');
+    await fetchDishes();
+    return true;
+  };
+
   const verifyDish = async (id: string) => {
     if (!user) return false;
 
@@ -217,12 +256,14 @@ export function useRestaurantDishes(options: UseRestaurantDishesOptions = {}) {
   };
 
   const deleteDish = async (id: string) => {
-    const { error } = await supabase
+    // .select() returns the deleted rows: without it a delete blocked by RLS looks successful.
+    const { data, error } = await supabase
       .from('restaurant_dishes')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .select('id');
 
-    if (error) {
+    if (error || !data?.length) {
       toast.error('Kon gerecht niet verwijderen');
       return false;
     }
@@ -267,9 +308,11 @@ export function useRestaurantDishes(options: UseRestaurantDishesOptions = {}) {
   return {
     dishes,
     availableDishes,
+    searchDishes,
     loading,
     refetch: fetchDishes,
     suggestDish,
+    addOwnerDish,
     approveDish,
     verifyDish,
     rejectDish,

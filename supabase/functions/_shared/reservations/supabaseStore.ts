@@ -1,5 +1,5 @@
 // Supabase-backed ReservationStore (service role, server-side only).
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2.57.2";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import type { EventStatus, Integration, NewReservation, ProviderName, ReservationStore, StoredReservation } from "./types.ts";
 import { ReservationError } from "./types.ts";
 import { ZenchefProvider } from "./zenchef.ts";

@@ -15,6 +15,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { lovable } from '@/integrations/lovable/index';
 import logo from '@/assets/dishloopr-logo.png';
+import { signupErrorMessage } from '@/lib/authErrors';
+import { PasswordStrengthMeter, type PasswordCheck } from '@/components/auth/PasswordStrengthMeter';
 import { isNativeApp } from '@/lib/native';
 
 // Google blocks OAuth inside embedded WebViews, and offering it in the iOS app would
@@ -70,6 +72,7 @@ export default function LoginPage() {
   const [signupName, setSignupName] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
+  const [signupCheck, setSignupCheck] = useState<PasswordCheck | null>(null);
   const [accountType, setAccountType] = useState<'user' | 'restaurant'>('user');
 
   const handleGoogleLogin = async () => {
@@ -156,19 +159,27 @@ export default function LoginPage() {
       return;
     }
 
+    if (signupCheck?.pwned) {
+      toast({
+        variant: 'destructive',
+        title: 'Kies een ander wachtwoord',
+        description: 'Dit wachtwoord komt voor in gelekte wachtwoordlijsten en wordt geweigerd.',
+      });
+      return;
+    }
+
     setIsLoading(true);
     const { error } = await signUp(signupEmail, signupPassword, signupName, accountType);
     setIsLoading(false);
 
     if (error) {
-      let message = 'Er is een fout opgetreden bij het registreren.';
-      if (error.message.includes('User already registered')) {
-        message = 'Dit e-mailadres is al geregistreerd.';
-      }
+      // Show what actually went wrong instead of one generic line (see src/lib/authErrors.ts).
+      console.error('[signup]', error);
       toast({
         variant: 'destructive',
         title: 'Registratie mislukt',
-        description: message,
+        description: signupErrorMessage(error),
+        duration: 10000,
       });
     } else {
       const isRestaurant = accountType === 'restaurant';
@@ -403,6 +414,8 @@ export default function LoginPage() {
                         className="pl-10 pr-10 h-11 text-base"
                         value={signupPassword}
                         onChange={(e) => setSignupPassword(e.target.value)}
+                        autoComplete="new-password"
+                        aria-describedby="signup-password-strength"
                         required
                       />
                       <button
@@ -417,6 +430,8 @@ export default function LoginPage() {
                         )}
                       </button>
                     </div>
+                    <PasswordStrengthMeter id="signup-password-strength" password={signupPassword}
+                      context={[signupName, signupEmail.split('@')[0]]} onCheck={setSignupCheck} />
                   </div>
 
                   <Button type="submit" className="w-full h-11" size="lg" disabled={isLoading}>

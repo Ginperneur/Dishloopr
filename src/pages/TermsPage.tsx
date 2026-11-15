@@ -122,12 +122,12 @@ export default function TermsPage() {
                   <strong>Uitgelicht.</strong> Een uitgelichte plek op één gerechtpagina, altijd gemarkeerd
                   als ‘Uitgelicht’. Per gerechtpagina zijn maximaal 5 plekken beschikbaar. Wij
                   geven geen garantie op aantallen bezoekers. Dishloopr heeft op 1 december 2026 een soft launch;
-                  wie Uitgelicht afneemt tussen 1 december 2026 en 5 januari 2027 wordt Founding Partner en
+                  wie Uitgelicht afneemt uiterlijk op 5 januari 2027 wordt Founding Partner en
                   betaalt de actieprijs tot en met 31 december 2027, waarna automatisch de normale prijs gaat
                   gelden. De Founding Partner-badge blijft daarna op de pagina staan, ook als het abonnement
-                  eindigt. Facturering start op de soft launch (1 december 2026). Gaat de launch niet door vóór
-                  31 maart 2027, dan ontvang je een volledige terugbetaling. Een maandabonnement heeft een
-                  minimale looptijd van 6 maanden, gerekend vanaf de soft launch, en is daarna maandelijks
+                  eindigt. Facturering start op de dag van afname en de plek gaat direct live. Gaat de soft launch
+                  niet door vóór 31 maart 2027, dan ontvang je een volledige terugbetaling. Een maandabonnement heeft een
+                  minimale looptijd van 6 maanden, gerekend vanaf de dag van afname, en is daarna maandelijks
                   opzegbaar; een jaarabonnement loopt het jaar uit. Dishloopr mag misleidende plaatsingen
                   weigeren of beëindigen.
                 </li>

@@ -35,7 +35,15 @@ export default function RestaurantOptoutPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
-  const set = (k: keyof typeof form) => (e: { target: { value: string } }) => setForm({ ...form, [k]: e.target.value });
+  // One-click opt-out from an outreach mail (?t=<afmeld_token>), no form needed.
+  const token = params.get('t') || '';
+  const [quick, setQuick] = useState<'idle' | 'busy' | 'done' | 'error'>('idle');
+  const quickUnsubscribe = async () => {
+    setQuick('busy');
+    const { error: err } = await supabase.rpc('outreach_unsubscribe' as never, { p_token: token } as never);
+    setQuick(err ? 'error' : 'done');
+  };
+  const set =(k: keyof typeof form) => (e: { target: { value: string } }) => setForm({ ...form, [k]: e.target.value });
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +66,20 @@ export default function RestaurantOptoutPage() {
       <div className="container py-12 max-w-xl">
         <h1 className="text-3xl font-bold mb-2">Gegevens aanpassen of verwijderen</h1>
         <p className="text-muted-foreground mb-6">Voor restaurants die op Dishloopr staan.</p>
+        {token && !done && (
+          <div className="mb-8 rounded-lg border border-border bg-muted/40 p-5" role={quick === 'done' ? 'status' : undefined}>
+            {quick === 'done' ? (
+              <p>Je bent afgemeld. {form.naam_restaurant || 'Dit restaurant'} krijgt geen mails meer van ons.</p>
+            ) : (
+              <>
+                <p className="mb-3">Geen mails meer ontvangen over {form.naam_restaurant || 'je restaurant'}?</p>
+                <Button onClick={quickUnsubscribe} disabled={quick === 'busy'}>{quick === 'busy' ? 'Bezig…' : 'Afmelden'}</Button>
+                {quick === 'error' && <p className="mt-2 text-sm text-destructive">Dat lukte niet. Gebruik het formulier hieronder.</p>}
+              </>
+            )}
+            <p className="mt-4 text-sm text-muted-foreground">Wil je ook gegevens laten aanpassen of verwijderen? Gebruik dan het formulier hieronder.</p>
+          </div>
+        )}
         {done ? (
           <div role="status" className="rounded-lg border border-border bg-muted/40 p-5">
             Ontvangen. Je ontvangt geen mails meer; verzoeken om te verwijderen of aan te passen handelen we binnen 5 werkdagen af.

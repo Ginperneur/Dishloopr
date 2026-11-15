@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
   if (!rl.allowed && rl.response) return rl.response;
 
   let parsedRestaurantId: string | null = null;
-  let adminSupabase: ReturnType<typeof createClient> | null = null;
+  let adminSupabase: any = null;
   let runStartedAt = new Date().toISOString();
   let scrapedUrlForLog: string | null = null;
 

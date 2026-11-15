@@ -1,8 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
 import { periodEndIso } from "../_shared/stripePeriod.ts";
 import { commitmentEnd } from "../_shared/launch.ts";
+import { releasePaidEvent } from "../_shared/eventPayment.ts";
 
 // Supabase edge runtime: keep work running after the response is sent.
 declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined;
@@ -45,7 +46,9 @@ serve(async (req) => {
     }
 
     try {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      // Deno only has async (SubtleCrypto) HMAC: the sync constructEvent throws on every
+      // request, which made Stripe see all live webhooks as failed.
+      event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret, undefined, Stripe.createSubtleCryptoProvider());
       logStep("Webhook signature verified");
     } catch (err) {
       logStep("Webhook signature verification failed", { error: String(err) });
@@ -54,7 +57,7 @@ serve(async (req) => {
 
     logStep("Event type", { type: event.type });
 
-    if (event.type === "checkout.session.completed") {
+    if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
       const session = event.data.object as Stripe.Checkout.Session;
       logStep("Checkout session completed", { sessionId: session.id });
 
@@ -222,11 +225,15 @@ serve(async (req) => {
               user_id: userId,
               tag_category: metadata.tag_category,
               tag_value: metadata.tag_value,
-              payment_type: "subscription",
+              // The table only allows 'per_tag' or 'owner_pro', and the only unique key is
+              // (restaurant_id, tag_category, tag_value). With "subscription" and
+              // onConflict stripe_subscription_id every paid tag failed to save, so owners paid
+              // and never got their tag. Re-buying a cancelled tag reuses its row.
+              payment_type: "per_tag",
               stripe_subscription_id: (session.subscription as string) || null,
               is_active: true,
             },
-            { onConflict: "stripe_subscription_id" }
+            { onConflict: "restaurant_id,tag_category,tag_value" }
           );
 
         if (tagError) {
@@ -235,24 +242,44 @@ serve(async (req) => {
         }
         logStep("Extra tag subscription activated");
       }
+      // Purchased simulations: the quantity comes from the line item (adjustable in Checkout).
+      else if (type === "simulation_credits" && restaurantId) {
+        const items = await stripe.checkout.sessions.listLineItems(session.id, { limit: 1 });
+        const quantity = items.data[0]?.quantity ?? 1;
+        const { error: simErr } = await supabaseAdmin.rpc("grant_simulation_credits", {
+          p_session: session.id, p_restaurant: restaurantId, p_user: userId ?? null, p_quantity: quantity,
+        });
+        if (simErr) {
+          logStep("Simulation credits error", { error: simErr.message });
+          return new Response(JSON.stringify({ error: simErr.message }), { status: 500 });
+        }
+        logStep("Simulation credits granted", { restaurantId, quantity });
+      }
+      // Paid promotion slot (Vraag doorsturen): the reserved slot becomes active.
+      else if (type === "promo_slot" && metadata.slot_id) {
+        const { error: slotErr } = await supabaseAdmin.from("promo_slots")
+          .update({ status: "active", stripe_subscription_id: (session.subscription as string) || null, reserved_until: null, updated_at: new Date().toISOString() })
+          .eq("id", metadata.slot_id);
+        if (slotErr) {
+          logStep("Promo slot activation error", { error: slotErr.message });
+          return new Response(JSON.stringify({ error: slotErr.message }), { status: 500 });
+        }
+        if (metadata.bid_id) {
+          await supabaseAdmin.from("promo_bids").update({ status: "converted", updated_at: new Date().toISOString() }).eq("id", metadata.bid_id);
+        }
+        logStep("Promo slot activated", { slotId: metadata.slot_id });
+      }
       // Handle event promotion (€5/month per event)
       else if (type === "event_promotion" && metadata.event_id && restaurantId) {
-        const subscriptionId = (session.subscription as string) || null;
-        let paidUntil: string | null = null;
-        if (subscriptionId) {
+        if (session.payment_status !== "paid") {
+          logStep("Event payment pending", { eventId: metadata.event_id });
+        } else {
+          const subscriptionId = typeof session.subscription === "string" ? session.subscription : session.subscription?.id;
+          if (!subscriptionId) throw new Error("Event payment missing subscription");
           const sub = await stripe.subscriptions.retrieve(subscriptionId);
-          paidUntil = periodEndIso(sub);
+          await releasePaidEvent(supabaseAdmin, sub);
+          logStep("Event promotion activated", { eventId: metadata.event_id });
         }
-        const { error: eventError } = await supabaseAdmin
-          .from("restaurant_events")
-          .update({ promotion_status: "paid", stripe_subscription_id: subscriptionId, paid_until: paidUntil })
-          .eq("id", metadata.event_id)
-          .eq("restaurant_id", restaurantId);
-        if (eventError) {
-          logStep("Event promotion update error", { error: eventError.message });
-          return new Response(JSON.stringify({ error: eventError.message }), { status: 500 });
-        }
-        logStep("Event promotion activated", { eventId: metadata.event_id });
       }
       // Handle featured subscription purchase
       else if (type === "featured_subscription" && metadata.slot_id && restaurantId) {
@@ -426,7 +453,9 @@ serve(async (req) => {
           const sub = await stripe.subscriptions.retrieve(subscriptionId);
           status = sub.status === "trialing" ? "trialing" : "active";
           periodEnd = periodEndIso(sub);
-          if (type === "founding_partner" && metadata.plan === "month") {
+          // The 6-month minimum term belongs to the Founding Partner deal; later monthly Uitgelicht
+          // places are cancellable monthly and can be outbid at the quarterly auction.
+          if (type === "founding_partner" && metadata.plan === "month" && metadata.founding_partner === "true") {
             // Minimum term of 6 months, counted from the first paid day (launch).
             commitmentUntil = commitmentEnd((sub.trial_end ?? sub.start_date) * 1000);
           }
@@ -449,6 +478,10 @@ serve(async (req) => {
         if (orderError) {
           logStep("Package order insert error", { error: orderError.message });
           return new Response(JSON.stringify({ error: orderError.message }), { status: 500 });
+        }
+        if (metadata.bid_id) {
+          // A won Uitgelicht bid is now paid.
+          await supabaseAdmin.from("promo_bids").update({ status: "converted", updated_at: new Date().toISOString() }).eq("id", metadata.bid_id);
         }
         if (type === "menu_service") {
           // Start the automatic import and translation; the owner then checks and publishes it.
@@ -518,6 +551,17 @@ serve(async (req) => {
       }
     }
 
+    // Invoice payment also recovers a missed checkout notification and handles renewals.
+    if (event.type === "invoice.payment_succeeded") {
+      const invoice = event.data.object as Stripe.Invoice;
+      const subscription = invoice.parent?.subscription_details?.subscription;
+      const subscriptionId = typeof subscription === "string" ? subscription : subscription?.id;
+      if (subscriptionId && invoice.paid) {
+        const sub = await stripe.subscriptions.retrieve(subscriptionId);
+        await releasePaidEvent(supabaseAdmin, sub);
+      }
+    }
+
     // Subscription lifecycle events for Owner Pro
     if (
       event.type === "customer.subscription.updated" ||
@@ -525,6 +569,22 @@ serve(async (req) => {
     ) {
       const sub = event.data.object as Stripe.Subscription;
       const userId = sub.metadata?.user_id;
+      // Paid extra tags: a trigger adds or removes the tag on the restaurant when this flips.
+      {
+        const tagLive = ["active", "trialing", "past_due"].includes(sub.status);
+        const { error: tagErr } = await supabaseAdmin.from("restaurant_tag_subscriptions")
+          .update({ is_active: tagLive }).eq("stripe_subscription_id", sub.id);
+        if (tagErr) logStep("Extra tag status update error", { error: tagErr.message });
+      }
+      // Paid promotion slots: an ended or unpaid subscription frees the slot for the waiting list.
+      if (sub.metadata?.type === "promo_slot") {
+        const status = event.type === "customer.subscription.deleted" || ["canceled", "unpaid", "incomplete_expired"].includes(sub.status)
+          ? "ended" : sub.cancel_at_period_end ? "ending" : "active";
+        const { error: promoErr } = await supabaseAdmin.from("promo_slots")
+          .update({ status, updated_at: new Date().toISOString() })
+          .eq("stripe_subscription_id", sub.id).neq("status", "ended");
+        if (promoErr) logStep("Promo slot status update error", { error: promoErr.message });
+      }
       if (userId && sub.metadata?.type === "owner_pro") {
         const isActive = sub.status === "active" || sub.status === "trialing";
         const priceId = sub.items.data[0]?.price?.id ?? null;
@@ -566,15 +626,19 @@ serve(async (req) => {
         logStep("Package order synced", { subscriptionId: sub.id, status: sub.status });
       }
       if (sub.metadata?.type === "event_promotion" && sub.metadata?.event_id) {
-        const isActive = sub.status === "active" || sub.status === "trialing";
-        await supabaseAdmin
+        // A subscription status alone is not proof of payment. Activation comes
+        // from checkout/invoice payment confirmations above.
+        const { error: eventError } = await supabaseAdmin
           .from("restaurant_events")
           .update({
-            promotion_status: isActive ? "paid" : "lapsed",
+            ...(["canceled", "unpaid", "incomplete_expired", "paused"].includes(sub.status) ? { promotion_status: "lapsed" } : {}),
             stripe_subscription_id: sub.id,
             paid_until: periodEndIso(sub),
           })
-          .eq("id", sub.metadata.event_id);
+          .eq("id", sub.metadata.event_id)
+          .eq("restaurant_id", sub.metadata.restaurant_id)
+          .eq("stripe_subscription_id", sub.id);
+        if (eventError) throw new Error(eventError.message);
         logStep("Event promotion synced", { eventId: sub.metadata.event_id, status: sub.status });
       }
     }

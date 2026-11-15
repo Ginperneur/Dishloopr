@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS idx_dishes_dish_group ON public.dishes (dish_group);

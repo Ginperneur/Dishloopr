@@ -34,6 +34,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { formatDishName } from '@/lib/utils';
 import { ParkingEditor } from '@/components/restaurant/ParkingEditor';
+import { OwnerProAccess } from '@/components/admin/OwnerProAccess';
 
 interface RestaurantDetailModalProps {
   restaurant: any;
@@ -462,6 +463,8 @@ export function RestaurantDetailModal({ restaurant, open, onOpenChange, onUpdate
             </div>
           </DialogTitle>
         </DialogHeader>
+
+        <OwnerProAccess restaurantId={restaurant.id} onUpdate={onUpdate} />
 
         {loading ? (
           <div className="space-y-4 animate-pulse">

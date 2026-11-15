@@ -1,5 +1,5 @@
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import { corsHeaders } from 'npm:@supabase/supabase-js@2.118.0/cors';
+import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
 
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
 Deno.serve(async (req) => {

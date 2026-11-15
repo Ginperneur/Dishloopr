@@ -1,3 +1,4 @@
+import { OWNER_TABS } from '@/lib/ownerTabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useEffect } from 'react';
 
@@ -8,12 +9,7 @@ export interface OwnerHelpDialogProps {
 
 const SHORTCUTS: { keys: string[]; label: string }[] = [
   { keys: ['⌘', 'K'], label: 'Open snel zoeken (command palette)' },
-  { keys: ['⌘', '⇧', '1'], label: 'Ga naar Overzicht' },
-  { keys: ['⌘', '⇧', '2'], label: 'Ga naar Content' },
-  { keys: ['⌘', '⇧', '3'], label: 'Ga naar Inzichten' },
-  { keys: ['⌘', '⇧', '4'], label: 'Ga naar Marketing' },
-  { keys: ['⌘', '⇧', '5'], label: 'Ga naar Markt' },
-  { keys: ['⌘', '⇧', '6'], label: 'Ga naar Facturen' },
+  ...OWNER_TABS.map((t, i) => ({ keys: ['⌘', '⇧', String(i + 1)], label: `Ga naar ${t.label}` })),
   { keys: ['?'], label: 'Toon deze hulp' },
   { keys: ['Esc'], label: 'Sluit dialogen en menu\u2019s' },
 ];

@@ -26,7 +26,10 @@ import { SponsoredProductsManager } from '@/components/admin/SponsoredProductsMa
 import { BulkRestaurantUpload } from '@/components/admin/BulkRestaurantUpload';
 import { ClaimRequestsQueue } from '@/components/admin/ClaimRequestsQueue';
 import { OptoutRequestsManager } from '@/components/admin/OptoutRequestsManager';
+import { ContactMessagesManager } from '@/components/admin/ContactMessagesManager';
+import { PendingEditsQueue } from '@/components/admin/PendingEditsQueue';
 import { PresaleManager } from '@/components/admin/PresaleManager';
+import { OutreachManager } from '@/components/admin/OutreachManager';
 import { ClaimsVerificationManager } from '@/components/admin/ClaimsVerificationManager';
 import { ClaimReviewQueue } from '@/components/admin/ClaimReviewQueue';
 import { DishesManager } from '@/components/admin/DishesManager';
@@ -36,6 +39,7 @@ import { ActivityLog } from '@/components/admin/ActivityLog';
 import { SettingsManager } from '@/components/admin/SettingsManager';
 import { CollectionsManager } from '@/components/admin/CollectionsManager';
 import { SeoLandingPagesManager } from '@/components/admin/SeoLandingPagesManager';
+import { UitgelichtDishesManager } from '@/components/admin/UitgelichtDishesManager';
 import { DishApprovalManager } from '@/components/admin/DishApprovalManager';
 import { ChainsManager } from '@/components/admin/ChainsManager';
 import { GeocodeManager } from '@/components/admin/GeocodeManager';
@@ -99,6 +103,7 @@ interface Stats {
   pendingSupport: number;
   pendingTagRequests: number;
   pendingEventReleases: number;
+  pendingContact: number;
   activeRestaurants: number;
 }
 
@@ -131,9 +136,12 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'claims': { title: "Claims", description: "Restaurant claims verwerken" },
   'support': { title: "Support Chat", description: "Escalaties van de AI-klantenservice" },
   'optouts': { title: "Afmeldingen", description: "Opt-out- en aanpasverzoeken van restaurants" },
+  'edits': { title: "Wijzigingen", description: "Naam- en beschrijvingswijzigingen van eigenaren die de automatische controle niet goedkeurde" },
+  'contact': { title: "Contactberichten", description: "Vragen, meldingen en klachten van eigenaren en bezoekers" },
   'suggestions': { title: "Suggesties", description: "Door bezoekers ingediende restaurant-suggesties" },
   'sponsored': { title: "Sponsored", description: "Gesponsorde producten beheren" },
   'presale': { title: 'Presale', description: '' },
+  'outreach': { title: 'Outreach', description: 'Mailgolf naar eigenaren, database en gekwalificeerde antwoorden' },
   'featured-slots': { title: "Featured Spots", description: "Featured slots en sfeer-pricing" },
   'newsletter': { title: "Nieuwsbrief", description: "Edities en plaatsingen" },
   'seo': { title: "SEO Pages", description: "City×dish landing pages" },
@@ -172,7 +180,7 @@ export default function AdminPanel() {
   const { isAdmin, loading: adminLoading } = useAdminCheck();
   const [stats, setStats] = useState<Stats>({
     totalUsers: 0, totalRestaurants: 0, totalReviews: 0, totalCities: 0,
-    totalDishes: 0, pendingReviews: 0, pendingClaims: 0, pendingSupport: 0, pendingTagRequests: 0, pendingEventReleases: 0, activeRestaurants: 0
+    totalDishes: 0, pendingReviews: 0, pendingClaims: 0, pendingSupport: 0, pendingTagRequests: 0, pendingEventReleases: 0, pendingContact: 0, activeRestaurants: 0
   });
   const [users, setUsers] = useState<any[]>([]);
   const [restaurants, setRestaurants] = useState<any[]>([]);
@@ -184,7 +192,9 @@ export default function AdminPanel() {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [userModalOpen, setUserModalOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState('today');
+  const [activeSection, setActiveSection] = useState(() => {
+    try { return new URLSearchParams(window.location.search).get('section') || 'today'; } catch { return 'today'; }
+  });
   
   // Pagination states
   const [restaurantPage, setRestaurantPage] = useState(1);
@@ -204,6 +214,16 @@ export default function AdminPanel() {
     if (isAdmin) fetchStats();
   }, [isAdmin]);
 
+  // Refresh counters periodically and when leaving a section, so new contact messages show up
+  useEffect(() => {
+    if (!isAdmin) return;
+    const t = setInterval(fetchStats, 60000);
+    return () => clearInterval(t);
+  }, [isAdmin]);
+  useEffect(() => {
+    if (isAdmin) fetchStats();
+  }, [activeSection]);
+
   // Lazy-load section data only when needed
   useEffect(() => {
     if (!isAdmin) return;
@@ -216,7 +236,7 @@ export default function AdminPanel() {
       { count: userCount }, { count: restaurantCount }, { count: reviewCount },
       { count: cityCount }, { count: dishCount }, { count: pendingCount },
       { count: newClaimsCount }, { count: legacyClaimsCount }, { count: activeCount },
-      { count: supportCount }, { count: tagRequestCount }, { count: eventReleaseCount }
+      { count: supportCount }, { count: tagRequestCount }, { count: eventReleaseCount }, { count: contactCount }
     ] = await Promise.all([
       supabase.from('profiles').select('*', { count: 'exact', head: true }),
       supabase.from('restaurants').select('*', { count: 'exact', head: true }),
@@ -229,7 +249,8 @@ export default function AdminPanel() {
       supabase.from('restaurants').select('*', { count: 'exact', head: true }).eq('is_active', true),
       supabase.from('support_conversations').select('*', { count: 'exact', head: true }).eq('escalated', true).is('resolved_at', null),
       supabase.from('restaurant_tag_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-      supabase.from('restaurant_events').select('*', { count: 'exact', head: true }).eq('promotion_status', 'unpaid').eq('is_active', true)
+      supabase.from('restaurant_events').select('*', { count: 'exact', head: true }).eq('promotion_status', 'unpaid').eq('is_active', true),
+      supabase.from('contact_messages').select('*', { count: 'exact', head: true }).eq('status', 'nieuw')
     ]);
 
     setStats({
@@ -240,6 +261,7 @@ export default function AdminPanel() {
       pendingSupport: supportCount || 0,
       pendingTagRequests: tagRequestCount || 0,
       pendingEventReleases: eventReleaseCount || 0,
+      pendingContact: contactCount || 0,
       activeRestaurants: activeCount || 0
     });
     setLoading(false);
@@ -375,6 +397,7 @@ export default function AdminPanel() {
           pendingSupport={stats.pendingSupport}
           pendingTagRequests={stats.pendingTagRequests}
           pendingEventReleases={stats.pendingEventReleases}
+          pendingContact={stats.pendingContact}
         />
 
         <div className="flex-1 flex flex-col min-w-0">
@@ -432,7 +455,10 @@ export default function AdminPanel() {
               {activeSection === 'event-releases' && <EventReleaseQueue />}
               {activeSection === 'suggestions' && <RestaurantSuggestionsQueue />}
               {activeSection === 'optouts' && <OptoutRequestsManager />}
+              {activeSection === 'contact' && <ContactMessagesManager />}
+              {activeSection === 'edits' && <PendingEditsQueue />}
               {activeSection === 'presale' && <PresaleManager />}
+              {activeSection === 'outreach' && <OutreachManager />}
               {activeSection === 'kpi' && <KpiDashboard />}
               {activeSection === 'revenue' && <RevenueDashboard />}
               {activeSection === 'package-orders' && <PackageOrdersManager />}
@@ -653,9 +679,12 @@ export default function AdminPanel() {
               )}
               {activeSection === 'notifications' && <NotificationManager />}
               {activeSection === 'seo' && (
-                <Card>
-                  <CardContent className="pt-6"><SeoLandingPagesManager /></CardContent>
-                </Card>
+                <div className="space-y-6">
+                  <UitgelichtDishesManager />
+                  <Card>
+                    <CardContent className="pt-6"><SeoLandingPagesManager /></CardContent>
+                  </Card>
+                </div>
               )}
               {activeSection === 'newsletter' && (
                 <Card>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Tag, Plus, Crown, Loader2, X, ShoppingCart } from 'lucide-react';
+import { Tag, Plus, Crown, Loader2, X, ShoppingCart, Pencil } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -60,6 +60,13 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
   const [loading, setLoading] = useState(true);
   const [addingTag, setAddingTag] = useState<{ category: string; value: string } | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  // The free tag (first in each list) is the owner's own choice, saved through
+  // set_free_restaurant_tag so only one tag from the fixed lists can be set this way.
+  // One draft per category, so choices in several categories stay put until "Tags opslaan".
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [editing, setEditing] = useState<Record<string, boolean>>({});
+  const [savingFree, setSavingFree] = useState(false);
+  const pendingCount = Object.values(drafts).filter(Boolean).length;
 
   useEffect(() => {
     if (restaurant?.id) fetchPaidTags();
@@ -99,16 +106,41 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
         },
       });
 
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
+      // Show the function's own message instead of "Edge Function returned a non-2xx status code".
+      const reason = data?.error ?? (error ? await (error as { context?: Response }).context?.json?.().then((b: { error?: string }) => b?.error).catch(() => null) : null);
+      if (reason || error) throw new Error(reason || 'Kon de betaling niet starten');
+      // Same tab: a window.open after an await is often blocked as a pop-up.
+      if (data?.url) window.location.href = data.url;
     } catch (e: any) {
       toast.error(e.message || 'Kon checkout niet starten');
     } finally {
       setCheckoutLoading(false);
       setAddingTag(null);
     }
+  };
+
+  const saveFreeTags = async () => {
+    setSavingFree(true);
+    let updated = { ...restaurant };
+    const failed: { key: string; label: string }[] = [];
+    for (const { key, dbField, label } of TAG_CATEGORIES) {
+      const value = drafts[key];
+      if (!value) continue;
+      const { data, error } = await supabase.rpc('set_free_restaurant_tag' as never, {
+        p_restaurant_id: restaurant.id, p_category: key, p_value: value,
+      } as never);
+      if (error) failed.push({ key, label }); else updated = { ...updated, [dbField]: data as unknown as string[] };
+    }
+    setSavingFree(false);
+    onUpdate(updated);
+    if (failed.length) {
+      toast.error(`Opslaan lukte niet voor: ${failed.map(f => f.label).join(', ')}`);
+      setDrafts(d => Object.fromEntries(Object.entries(d).filter(([k]) => failed.some(f => f.key === k))));
+      return;
+    }
+    setDrafts({});
+    setEditing({});
+    toast.success('Tags opgeslagen');
   };
 
   const getAvailableOptions = (categoryKey: string, dbField: string, options: readonly string[]) => {
@@ -134,7 +166,7 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
           Profiel Tags
         </CardTitle>
         <CardDescription>
-          Je hebt 1 gratis tag per categorie. Voeg extra tags toe voor €5/maand per tag (max 3), of neem Owner Pro (€29/maand) voor dezelfde limiet zonder losse kosten.
+          Kies per categorie zelf 1 gratis tag die het best bij je zaak past. Extra tags kosten €5 per maand per tag (max 3), of zitten bij Owner Pro (€29 per maand) inbegrepen.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -161,18 +193,42 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
                     variant={idx === 0 ? 'default' : 'secondary'}
                     className="text-xs"
                   >
-                    {idx === 0 && <span className="mr-1">🆓</span>}
                     {idx > 0 && <Crown className="h-3 w-3 mr-1" />}
                     {tag}
+                    {idx === 0 && <span className="ml-1 opacity-80">(gratis)</span>}
                   </Badge>
                 ))}
-                
-                {currentTags.length === 0 && (
-                  <span className="text-xs text-muted-foreground italic">
-                    Nog geen tags — wordt automatisch ingevuld door AI
-                  </span>
+                {currentTags.length > 0 && !editing[key] && (
+                  <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setEditing(e => ({ ...e, [key]: true }))}>
+                    <Pencil className="h-3 w-3 mr-1" /> Wijzigen
+                  </Button>
                 )}
               </div>
+
+              {(currentTags.length === 0 || editing[key]) && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Select
+                    value={drafts[key] ?? ''}
+                    onValueChange={(v) => setDrafts(d => ({ ...d, [key]: v }))}
+                  >
+                    <SelectTrigger className="h-9 w-56 text-sm" aria-label={`Gratis tag voor ${label}`}>
+                      <SelectValue placeholder={currentTags.length ? 'Kies een andere tag' : 'Kies je gratis tag'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {options.filter(o => o !== currentTags[0]).map(opt => (
+                        <SelectItem key={opt} value={opt} className="text-sm">{opt}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {drafts[key] && <span className="text-xs text-muted-foreground">Nog niet opgeslagen</span>}
+                  {currentTags.length > 0 && (
+                    <Button size="sm" variant="ghost" className="h-9 w-9 p-0" aria-label="Annuleren"
+                      onClick={() => { setEditing(e => ({ ...e, [key]: false })); setDrafts(d => { const n = { ...d }; delete n[key]; return n; }); }}>
+                      <X className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+              )}
 
               {canAddMore && currentTags.length > 0 && (
                 <div className="flex items-center gap-2 mt-1">
@@ -232,7 +288,15 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
           );
         })}
 
-        <div className="border-t pt-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button onClick={saveFreeTags} disabled={pendingCount === 0 || savingFree} className="min-h-11">
+            {savingFree && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            Tags opslaan{pendingCount > 0 ? ` (${pendingCount})` : ''}
+          </Button>
+          {pendingCount > 0 && <span className="text-sm text-muted-foreground">Je keuzes worden pas bewaard als je op Tags opslaan klikt.</span>}
+        </div>
+
+        {(restaurant as { owner_tier?: string }).owner_tier !== 'pro' && <div className="border-t pt-4">
           <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
             <Crown className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
             <div className="space-y-1">
@@ -243,7 +307,7 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
               </p>
             </div>
           </div>
-        </div>
+        </div>}
       </CardContent>
     </Card>
   );

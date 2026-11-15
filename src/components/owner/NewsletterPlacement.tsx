@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Newspaper, CreditCard, Loader2, MapPin, Map, Globe2 } from 'lucide-react';
+import { Newspaper, CreditCard, Loader2, Globe2, ImagePlus, FileText } from 'lucide-react';
+import { toEmailJpeg } from '@/lib/emailImage';
 import { sendAnalyticsEvent } from '@/lib/cookieConsent';
 
 interface Props {
@@ -16,13 +17,9 @@ interface Props {
   restaurantName: string;
 }
 
-type Scope = 'city' | 'province' | 'national';
-
-const SCOPE_OPTIONS: { id: Scope; price: number; title: string; subtitle: string; Icon: any }[] = [
-  { id: 'city', price: 15, title: 'Eén stad', subtitle: 'Bereik foodies in 1 stad', Icon: MapPin },
-  { id: 'province', price: 20, title: 'Eén provincie', subtitle: 'Bereik foodies in 1 provincie', Icon: Map },
-  { id: 'national', price: 40, title: 'Heel Nederland', subtitle: 'Bereik alle abonnees in NL', Icon: Globe2 },
-];
+// Sold for all of the Netherlands only until the newsletter can be sent per city or province:
+// every subscriber gets the same mail, so a city or province choice would promise nothing.
+export const NEWSLETTER_PRICE = 20;
 
 export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
   const { user } = useAuth();
@@ -30,26 +27,52 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [promoType, setPromoType] = useState('actie');
-  const [scope, setScope] = useState<Scope>('city');
-  const [targetCityId, setTargetCityId] = useState<string>('');
-  const [targetProvince, setTargetProvince] = useState<string>('');
-  const [cities, setCities] = useState<{ id: string; name: string }[]>([]);
-  const [provinces, setProvinces] = useState<{ slug: string; name: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [pdf, setPdf] = useState<{ url: string; name: string } | null>(null);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
+
+  // One PDF per placement (menu or flyer): linked from the mail, stored next to the photo.
+  const uploadPdf = async (file: File | undefined) => {
+    if (!file) return;
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) { toast.error('Kies een pdf-bestand.'); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error('Deze pdf is groter dan 10 MB.'); return; }
+    setUploadingPdf(true);
+    try {
+      const path = `${restaurantId}/newsletter/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.pdf`;
+      const { error } = await supabase.storage.from('restaurant-images').upload(path, file, { contentType: 'application/pdf' });
+      if (error) throw error;
+      setPdf({ url: supabase.storage.from('restaurant-images').getPublicUrl(path).data.publicUrl, name: file.name });
+    } catch (e) {
+      toast.error('Uploaden lukte niet', { description: e instanceof Error ? e.message : undefined });
+    } finally {
+      setUploadingPdf(false);
+    }
+  };
+
+  // One photo per placement, stored in the restaurant's own folder (restaurant-images/<id>/newsletter/).
+  const uploadPhoto = async (file: File | undefined) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { toast.error('Kies een foto (jpg, png of webp).'); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error('Deze foto is groter dan 10 MB.'); return; }
+    setUploading(true);
+    try {
+      const blob = await toEmailJpeg(file);
+      const path = `${restaurantId}/newsletter/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+      const { error } = await supabase.storage.from('restaurant-images').upload(path, blob, { contentType: 'image/jpeg' });
+      if (error) throw error;
+      setImageUrl(supabase.storage.from('restaurant-images').getPublicUrl(path).data.publicUrl);
+    } catch (e) {
+      toast.error('Uploaden lukte niet', { description: e instanceof Error ? e.message : undefined });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   useEffect(() => {
     if (user) fetchPlacements();
-    loadGeoData();
   }, [user, restaurantId]);
-
-  const loadGeoData = async () => {
-    const [c, p] = await Promise.all([
-      supabase.from('cities').select('id, name').eq('is_active', true).eq('country_code', 'NL').order('name'),
-      supabase.from('nl_provinces' as any).select('slug, name').order('name'),
-    ]);
-    setCities((c.data as any) || []);
-    setProvinces((p.data as any) || []);
-  };
 
   const fetchPlacements = async () => {
     const { data } = await supabase
@@ -61,13 +84,8 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
     setPlacements(data || []);
   };
 
-  const selectedOption = SCOPE_OPTIONS.find(o => o.id === scope)!;
-
   const canSubmit = () => {
-    if (!title.trim()) return false;
-    if (scope === 'city' && !targetCityId) return false;
-    if (scope === 'province' && !targetProvince) return false;
-    return true;
+    return !!title.trim() && !uploading && !uploadingPdf;
   };
 
   const handleSubmit = async () => {
@@ -84,14 +102,19 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
           restaurantName,
           title,
           description,
+          imageUrl,
+          pdfUrl: pdf?.url ?? null,
           promoType,
-          scope,
-          targetCityId: scope === 'city' ? targetCityId : null,
-          targetProvince: scope === 'province' ? targetProvince : null,
+          scope: 'national',
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Show the function's own message instead of "Edge Function returned a non-2xx status code".
+        const reason = await (error as { context?: Response }).context?.json?.()
+          .then((b: { error?: string }) => b?.error).catch(() => null);
+        throw new Error(reason || error.message);
+      }
       if (data?.url) {
         window.location.href = data.url;
       } else {
@@ -118,61 +141,23 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
         <h3 className="text-lg font-semibold">Nieuwsbrief Plaatsing</h3>
       </div>
       <p className="text-sm text-muted-foreground">
-        Plaats je actie, event of aanbieding in de 2-wekelijkse Dishloopr nieuwsbrief.
-        Kies hoe groot je bereik moet zijn — vanaf <strong>€15</strong>.
+        Plaats je actie, event of aanbieding in de nieuwsbrief van Dishloopr, die elke twee weken naar alle
+        abonnees in Nederland gaat. Eén plaatsing kost <strong>€{NEWSLETTER_PRICE}</strong>. We controleren je tekst
+        voordat hij meegaat.
       </p>
 
-      {/* Scope selector */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {SCOPE_OPTIONS.map(opt => {
-          const active = scope === opt.id;
-          return (
-            <button
-              key={opt.id}
-              type="button"
-              onClick={() => setScope(opt.id)}
-              className={`text-left rounded-lg border p-3 transition-colors ${
-                active ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border hover:border-primary/40'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <opt.Icon className={`h-4 w-4 ${active ? 'text-primary' : 'text-muted-foreground'}`} />
-                <span className={`text-sm font-semibold ${active ? 'text-primary' : ''}`}>€{opt.price}</span>
-              </div>
-              <p className="font-medium text-sm">{opt.title}</p>
-              <p className="text-xs text-muted-foreground">{opt.subtitle}</p>
-            </button>
-          );
-        })}
+      <div className="flex items-center gap-3 rounded-lg border border-primary bg-primary/5 p-3">
+        <Globe2 className="h-4 w-4 shrink-0 text-primary" />
+        <div className="flex-1">
+          <p className="text-sm font-medium">Heel Nederland</p>
+          <p className="text-xs text-muted-foreground">Alle abonnees van de nieuwsbrief</p>
+        </div>
+        <span className="text-sm font-semibold text-primary">€{NEWSLETTER_PRICE}</span>
       </div>
 
       {/* New placement form */}
       <Card>
         <CardContent className="p-4 space-y-3">
-          {scope === 'city' && (
-            <Select value={targetCityId} onValueChange={setTargetCityId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Kies een stad" />
-              </SelectTrigger>
-              <SelectContent>
-                {cities.map(c => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-          {scope === 'province' && (
-            <Select value={targetProvince} onValueChange={setTargetProvince}>
-              <SelectTrigger>
-                <SelectValue placeholder="Kies een provincie" />
-              </SelectTrigger>
-              <SelectContent>
-                {provinces.map(p => (
-                  <SelectItem key={p.slug} value={p.name}>{p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
           <Input 
             placeholder="Titel van je actie (bijv. '2e pizza gratis')" 
             value={title} 
@@ -184,6 +169,41 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
             onChange={e => setDescription(e.target.value)} 
             rows={2} 
           />
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Foto (optioneel)</p>
+            {imageUrl ? (
+              <div className="flex items-center gap-3">
+                <img src={imageUrl} alt="Je foto voor de nieuwsbrief" className="h-20 w-32 rounded-md object-cover" />
+                <Button type="button" variant="ghost" size="sm" onClick={() => setImageUrl(null)}>Verwijderen</Button>
+              </div>
+            ) : (
+              <label className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed px-3 py-3 text-sm text-muted-foreground hover:border-primary/50">
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                {uploading ? 'Foto uploaden…' : 'Kies een foto van je gerecht of actie'}
+                <input type="file" accept="image/*" className="sr-only" disabled={uploading}
+                  onChange={e => { void uploadPhoto(e.target.files?.[0]); e.target.value = ''; }} />
+              </label>
+            )}
+            <p className="text-xs text-muted-foreground">Liggend werkt het best. We verkleinen hem automatisch voor de mail.</p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Pdf (optioneel)</p>
+            {pdf ? (
+              <div className="flex items-center gap-3 rounded-md border p-2 text-sm">
+                <FileText className="h-4 w-4 shrink-0 text-primary" />
+                <a href={pdf.url} target="_blank" rel="noopener" className="flex-1 truncate underline">{pdf.name}</a>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setPdf(null)}>Verwijderen</Button>
+              </div>
+            ) : (
+              <label className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed px-3 py-3 text-sm text-muted-foreground hover:border-primary/50">
+                {uploadingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                {uploadingPdf ? 'Pdf uploaden…' : 'Voeg een pdf toe, bijvoorbeeld je menukaart of flyer'}
+                <input type="file" accept="application/pdf,.pdf" className="sr-only" disabled={uploadingPdf}
+                  onChange={e => { void uploadPdf(e.target.files?.[0]); e.target.value = ''; }} />
+              </label>
+            )}
+            <p className="text-xs text-muted-foreground">In de mail komt een knop "Bekijk de pdf". Maximaal 10 MB.</p>
+          </div>
           <Select value={promoType} onValueChange={setPromoType}>
             <SelectTrigger>
               <SelectValue />
@@ -198,7 +218,7 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
           </Select>
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium">
-              Kosten: <span className="text-primary">€{selectedOption.price},00</span>
+              Kosten: <span className="text-primary">€{NEWSLETTER_PRICE},00</span>
             </p>
             <Button onClick={handleSubmit} disabled={submitting || !canSubmit()}>
               {submitting ? (
@@ -219,8 +239,9 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
           <div className="space-y-2">
             {placements.map(p => (
               <Card key={p.id}>
-                <CardContent className="p-3 flex items-center justify-between">
-                  <div>
+                <CardContent className="p-3 flex items-center justify-between gap-3">
+                  {p.image_url && <img src={p.image_url} alt="" className="h-12 w-16 shrink-0 rounded object-cover" loading="lazy" />}
+                  <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm">{p.title}</p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(p.created_at).toLocaleDateString('nl')}

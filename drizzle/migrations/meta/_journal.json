@@ -148,6 +148,216 @@
       "when": 1794463494191,
       "tag": "0020_reservation_integrations",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1794473180952,
+      "tag": "0021_performance_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1794473842584,
+      "tag": "0022_dishes_dish_group_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1794473959437,
+      "tag": "0023_create_push_tokens",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794502234794,
+      "tag": "0024_register_push_token_function",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1794514471012,
+      "tag": "0026_outreach_agent",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1794574825064,
+      "tag": "0029_owner_free_tag",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1794574832174,
+      "tag": "0030_alert_frequency_monthly",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1794574833174,
+      "tag": "0031_paid_tag_sync",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1794574834174,
+      "tag": "0032_owner_opening_hours",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794574835174,
+      "tag": "0033_owner_delete_dishes",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794578808650,
+      "tag": "0034_0031_paid_tag_sync",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1794578819868,
+      "tag": "0035_0032_owner_opening_hours",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1794578824635,
+      "tag": "0036_0033_owner_delete_dishes",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1794580922433,
+      "tag": "0037_admin_restaurant_owner_pro_override",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1794580923433,
+      "tag": "0038_owner_contact",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1794587950666,
+      "tag": "0039_owner_contact_details",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1794649074920,
+      "tag": "0040_newsletter_national",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1794649229391,
+      "tag": "0041_promo_slots",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1794649330484,
+      "tag": "0042_uitgelicht_auction",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1794752126914,
+      "tag": "0043_newsletter_placement_photo",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1794752142294,
+      "tag": "0044_restaurant_positions_all_pages",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1794752893852,
+      "tag": "0045_security_backups_and_badges",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1794752945279,
+      "tag": "0046_apply_promo_auction_mail",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1794752956206,
+      "tag": "0047_apply_uitgelicht_offers",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1794752978925,
+      "tag": "0048_apply_core_landing_pages",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1794753022103,
+      "tag": "0049_apply_owner_simulations",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1794753831391,
+      "tag": "0050_uitgelicht_dish_list",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1794754246137,
+      "tag": "0051_support_chat_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1794769968093,
+      "tag": "0052_admin_automation",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1794770034135,
+      "tag": "0053_simulation_visitors",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +9,7 @@ import { VoiceSearch } from '@/components/search/VoiceSearch';
 import { supabase } from '@/integrations/supabase/client';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { toTitleCase } from '@/lib/utils';
+import { sortCities, filterCities } from '@/lib/cityOrder';
 import type { Database } from '@/integrations/supabase/types';
 
 type Dish = Database['public']['Tables']['dishes']['Row'];
@@ -64,6 +65,10 @@ export function SearchBar({
   const [allRestaurants, setAllRestaurants] = useState<RestaurantSuggestionRow[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showCityDropdown, setShowCityDropdown] = useState(false);
+  // Typing in the city list filters it; cleared every time the list closes.
+  const [cityQuery, setCityQuery] = useState('');
+  useEffect(() => { if (!showCityDropdown) setCityQuery(''); }, [showCityDropdown]);
+  const shownCities = useMemo(() => filterCities(cities, cityQuery), [cities, cityQuery]);
   const inputRef = useRef<HTMLInputElement>(null);
   const suppressSuggestionsRef = useRef(false);
   const suggestionsRef = useRef<HTMLDivElement>(null);
@@ -95,16 +100,8 @@ export function SearchBar({
           .order('rating', { ascending: false })
           .limit(500),
       ]);
-      // Sort: popular cities first (in defined order), then the rest alphabetically
-      const POPULAR_SLUGS = ['amsterdam', 'rotterdam', 'den-haag', 'utrecht', 'eindhoven', 'breda'];
-      const all = citiesRes.data || [];
-      const popular = POPULAR_SLUGS
-        .map(slug => all.find(c => c.slug === slug))
-        .filter((c): c is City => Boolean(c));
-      const rest = all
-        .filter(c => !POPULAR_SLUGS.includes(c.slug))
-        .sort((a, b) => a.name.localeCompare(b.name, 'nl'));
-      setCities([...popular, ...rest]);
+      // The 7 largest cities first, then the rest alphabetically (src/lib/cityOrder.ts).
+      setCities(sortCities(citiesRes.data || []));
       setAllRestaurants(restaurantsRes.data || []);
     };
     fetchData();
@@ -696,6 +693,21 @@ export function SearchBar({
                 </button>
               </div>
               
+              <div className="p-3 border-b border-border/50">
+                <input
+                  type="search"
+                  value={cityQuery}
+                  onChange={e => setCityQuery(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && shownCities[0]) { e.preventDefault(); handleCitySelect(shownCities[0].id); }
+                    if (e.key === 'Escape') setShowCityDropdown(false);
+                  }}
+                  placeholder="Typ een stad"
+                  aria-label="Zoek een stad"
+                  
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-base outline-none focus:border-primary"
+                />
+              </div>
               {/* Cities List */}
               <div 
                 className="overflow-y-auto overscroll-contain"
@@ -721,7 +733,10 @@ export function SearchBar({
                     {t('cities.all')}
                   </span>
                 </button>
-                {cities.map((city) => (
+                {shownCities.length === 0 && (
+                  <p className="px-4 py-4 text-sm text-muted-foreground">Geen stad gevonden voor "{cityQuery}"</p>
+                )}
+                {shownCities.map((city) => (
                   <button
                     key={city.id}
                     onClick={() => handleCitySelect(city.id)}
@@ -778,7 +793,22 @@ export function SearchBar({
                 border: '2px solid hsl(var(--border))',
               }}
             >
-              <div className="overflow-y-auto overscroll-contain" style={{ maxHeight: cityDropdownPosition.maxHeight - 4 }}>
+              <div className="p-3 border-b border-border/50">
+                <input
+                  type="search"
+                  value={cityQuery}
+                  onChange={e => setCityQuery(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && shownCities[0]) { e.preventDefault(); handleCitySelect(shownCities[0].id); }
+                    if (e.key === 'Escape') setShowCityDropdown(false);
+                  }}
+                  placeholder="Typ een stad"
+                  aria-label="Zoek een stad"
+                  autoFocus
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-base outline-none focus:border-primary"
+                />
+              </div>
+              <div className="overflow-y-auto overscroll-contain" style={{ maxHeight: cityDropdownPosition.maxHeight - 72 }}>
                 <button
                   onClick={() => handleCitySelect('all')}
                   className={`w-full px-4 py-3.5 text-left hover:bg-muted active:bg-muted/80 transition-colors ${
@@ -787,7 +817,10 @@ export function SearchBar({
                 >
                   {t('cities.all')}
                 </button>
-                {cities.map((city) => (
+                {shownCities.length === 0 && (
+                  <p className="px-4 py-4 text-sm text-muted-foreground">Geen stad gevonden voor "{cityQuery}"</p>
+                )}
+                {shownCities.map((city) => (
                   <button
                     key={city.id}
                     onClick={() => handleCitySelect(city.id)}

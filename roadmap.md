@@ -1,4 +1,11 @@
 # Parkeerinformatie
+- [x] support_chat_rls toegepast als 0051; RLS en alle gesprek-/berichtregels gecontroleerd; nieuwe databasescan zonder kritieke meldingen. Publicatie aanvragen.
+- [x] newsletter_placement_photo en restaurant_positions_all_pages toegepast als 0043/0044; foto/PDF-kolommen en functie gecontroleerd.
+- [x] Drie kritieke toegangsmeldingen aangepakt; 0046–0049 toegepast (363 kernpagina's, wekelijkse taak); vijf functies gedeployed; publicatie aangevraagd.
+- [x] Evenementvrijgave na bevestigde checkout-/factuurbetaling gebouwd; vijf controles geslaagd, stripe-webhook gedeployed. Geen echte evenementbetaling uitgevoerd; twee aanwezige evenementen hebben nog geen geregistreerde betaling.
+- [x] newsletter_national, promo_slots en uitgelicht_auction achtereenvolgens toegepast als 0040/0041/0042; zes aangevraagde edge functions gedeployed; negen schemacontroles geslaagd. Ontbrekende tabelrechten toegevoegd voor publiek lezen van markten, eigenaren lezen van plekken/biedingen en servicebeheer.
+- [x] 0040_hide_junk_dishes gegevensopschoning uitgevoerd via gegevensquery (684 inactief, 9 goedgekeurd beschermd, niets verwijderd); alle 74 edge functions gedeployed inclusief stripe-webhook.
+- [x] Gratis Owner Pro: adminschakelaar per restaurant, Stripe-sync behoudt toegang; 7 beveiligings-/gedragstests geslaagd, ingelogd toekennen/intrekken/verversen gecontroleerd; Testkeuken heeft Pro.
 - [x] Onbekende openingstijden: badges onderdrukt, neutrale melding op restaurantpagina; 15 tests geslaagd, 44 echte kaarten en Tensai Ramen op desktop/mobiel gecontroleerd.
 - [x] Claim hervat na tab sluiten/verversen, mailbestemming en inloggen; dashboardcodeveld zichtbaar, verzendpauze bevestigd; 12 tests; tijdelijke restaurants/claims/codes verwijderd.
 - [x] Claimcodemail via geverifieerde mailvoorziening; 11 tests, echte verzending 06:52 UTC, gekoppelde logregels, duidelijke foutmelding en testrestaurant/testclaim opgeruimd.
