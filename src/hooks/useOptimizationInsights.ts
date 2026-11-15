@@ -238,7 +238,7 @@ export function useOptimizationInsights(restaurantId: string | undefined) {
           return priorityOrder[a.priority] - priorityOrder[b.priority];
         }),
         overallScore,
-        isPremium: false // Would check subscription status
+        isPremium: (restaurant as { owner_tier?: string }).owner_tier === 'pro'
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load insights');

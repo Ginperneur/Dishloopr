@@ -296,7 +296,7 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
           {pendingCount > 0 && <span className="text-sm text-muted-foreground">Je keuzes worden pas bewaard als je op Tags opslaan klikt.</span>}
         </div>
 
-        <div className="border-t pt-4">
+        {(restaurant as { owner_tier?: string }).owner_tier !== 'pro' && <div className="border-t pt-4">
           <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
             <Crown className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
             <div className="space-y-1">
@@ -307,7 +307,7 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
               </p>
             </div>
           </div>
-        </div>
+        </div>}
       </CardContent>
     </Card>
   );
