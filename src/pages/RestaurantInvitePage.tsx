@@ -26,7 +26,8 @@ async function loadInvite(slug: string) {
   if (positions.error) throw positions.error;
   return {
     restaurant: r,
-    positions: positions.data ?? [],
+    // Best 10 positions; the function returns up to 50 for the Uitgelicht page picker.
+    positions: (positions.data ?? []).slice(0, 10),
     missing: missingItems({ dishPrices: (dishes.data ?? []).map(d => d.price), opening_hours: r.opening_hours,
       images: r.images, ambience_tags: r.ambience_tags, parking_info: r.parking_info }),
   };

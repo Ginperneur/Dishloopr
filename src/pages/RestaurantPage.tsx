@@ -130,6 +130,7 @@ export default function RestaurantPage() {
       findAlternatives({
         sourceRestaurantId: restaurant.id,
         reason: getUnavailabilityReason,
+        cityId: restaurant.city_id,
         dishIds: restaurant.dishes?.map(d => d.id) || [],
         priceLevel: restaurant.price_level,
         cuisines: restaurant.cuisines || [],

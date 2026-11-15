@@ -11,7 +11,7 @@ export interface OutreachData {
   city: string | null;
   dishCount: number;
   /** Best ranking page, if any: "Carbonara", 3, 12 */
-  topDish?: { dish: string; position: number; total: number } | null;
+  topDish?: { dish: string; position: number; total: number; placesLeft?: number | null } | null;
   inviteUrl: string;      // personal landing page /voor-restaurants/:slug
   claimUrl: string;       // /claim/:slug, also works for hidden restaurants
   pricingUrl: string;     // /voor-restaurants/pakketten
@@ -43,10 +43,15 @@ function flyerText(d: OutreachData): string[] {
 function rankingLine(d: OutreachData): string | null {
   if (!d.topDish || !d.city) return null;
   const { dish, position, total } = d.topDish;
+  const left = d.topDish.placesLeft;
+  // Scarcity: only mention places when we know the number and some are still free.
+  const places = typeof left === "number" && left > 0
+    ? ` Op die pagina ${left === 1 ? "is nog 1 van de 5 plekken" : `zijn nog ${left} van de 5 plekken`} Uitgelicht vrij.`
+    : "";
   if (position <= 5) {
-    return `Zoekt iemand op ${dish.toLowerCase()} in ${d.city}, dan sta je nu op plek ${position} van ${total}. Een mooie plek om vast te houden.`;
+    return `Zoekt iemand op ${dish.toLowerCase()} in ${d.city}, dan sta je nu op plek ${position} van ${total}. Een mooie plek om vast te houden.${places}`;
   }
-  return `Zoekt iemand op ${dish.toLowerCase()} in ${d.city}, dan sta je nu op plek ${position} van ${total}. De meeste gasten kijken niet verder dan de eerste vijf.`;
+  return `Zoekt iemand op ${dish.toLowerCase()} in ${d.city}, dan sta je nu op plek ${position} van ${total}. De meeste gasten kijken niet verder dan de eerste vijf.${places}`;
 }
 
 const freeBullets = [

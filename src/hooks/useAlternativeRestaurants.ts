@@ -21,6 +21,8 @@ interface UseAlternativeRestaurantsReturn {
   findAlternatives: (params: {
     sourceRestaurantId: string;
     reason: RoutingReason;
+    /** City of the restaurant the guest is looking at: alternatives stay in that city. */
+    cityId?: string | null;
     dishIds?: string[];
     priceLevel?: number;
     cuisines?: string[];
@@ -40,6 +42,7 @@ export function useAlternativeRestaurants(): UseAlternativeRestaurantsReturn {
   const findAlternatives = useCallback(async ({
     sourceRestaurantId,
     reason,
+    cityId,
     dishIds = [],
     priceLevel,
     cuisines = [],
@@ -49,6 +52,8 @@ export function useAlternativeRestaurants(): UseAlternativeRestaurantsReturn {
   }: {
     sourceRestaurantId: string;
     reason: RoutingReason;
+    /** City of the restaurant the guest is looking at: alternatives stay in that city. */
+    cityId?: string | null;
     dishIds?: string[];
     priceLevel?: number;
     cuisines?: string[];
@@ -60,64 +65,42 @@ export function useAlternativeRestaurants(): UseAlternativeRestaurantsReturn {
     setError(null);
 
     try {
-      // Start with restaurants that accept routed demand
+      // 1. Paid routing (Vraag doorsturen): restaurants that bought a slot for one of these dishes in
+      //    this city. When there are any, only they are shown (at most 3, marked as sponsored).
+      if (cityId && dishIds.length > 0) {
+        const { data: sponsors } = await supabase.rpc('routing_sponsors' as never, { p_city: cityId, p_dish_ids: dishIds } as never);
+        const sponsorIds = [...new Set(((sponsors ?? []) as { restaurant_id: string }[]).map(s => s.restaurant_id))]
+          .filter(id => id !== sourceRestaurantId);
+        if (sponsorIds.length > 0) {
+          const { data: paid } = await supabase
+            .from('restaurants')
+            .select('*, cities!inner(name)')
+            .eq('is_active', true)
+            .in('id', sponsorIds);
+          if (paid && paid.length > 0) {
+            const scored = await scoreRestaurants(paid, dishIds, priceLevel, cuisines, ambienceTags, userLat, userLng, true);
+            setAlternatives(scored.slice(0, 3).map(r => ({ ...r, isSponsoredPick: true })));
+            return;
+          }
+        }
+      }
+
+      // 2. No paying restaurant: the best free matches in the same city.
       let query = supabase
         .from('restaurants')
         .select('*, cities!inner(name)')
         .eq('is_active', true)
-        .eq('accepts_routed_demand', true)
         .neq('id', sourceRestaurantId)
-        .limit(20);
-
-      const { data: candidateRestaurants, error: fetchError } = await query;
-
+        .limit(40);
+      if (cityId) query = query.eq('city_id', cityId);
+      const { data: candidates, error: fetchError } = await query;
       if (fetchError) throw fetchError;
-
-      if (!candidateRestaurants || candidateRestaurants.length === 0) {
-        // Fallback: get any active restaurants if none opt-in
-        const { data: fallbackRestaurants, error: fallbackError } = await supabase
-          .from('restaurants')
-          .select('*, cities!inner(name)')
-          .eq('is_active', true)
-          .neq('id', sourceRestaurantId)
-          .limit(20);
-
-        if (fallbackError) throw fallbackError;
-        
-        if (!fallbackRestaurants || fallbackRestaurants.length === 0) {
-          setAlternatives([]);
-          setLoading(false);
-          return;
-        }
-
-        // Score fallback restaurants
-        const scored = await scoreRestaurants(
-          fallbackRestaurants,
-          dishIds,
-          priceLevel,
-          cuisines,
-          ambienceTags,
-          userLat,
-          userLng
-        );
-
-        setAlternatives(mixPaidAndOrganic(scored));
-        setLoading(false);
+      if (!candidates || candidates.length === 0) {
+        setAlternatives([]);
         return;
       }
-
-      // Score candidate restaurants
-      const scored = await scoreRestaurants(
-        candidateRestaurants,
-        dishIds,
-        priceLevel,
-        cuisines,
-        ambienceTags,
-        userLat,
-        userLng
-      );
-
-      setAlternatives(mixPaidAndOrganic(scored));
+      const scored = await scoreRestaurants(candidates, dishIds, priceLevel, cuisines, ambienceTags, userLat, userLng);
+      setAlternatives(scored.slice(0, 5));
     } catch (err) {
       console.error('Error finding alternatives:', err);
       setError('Kon geen alternatieven vinden');
@@ -126,33 +109,6 @@ export function useAlternativeRestaurants(): UseAlternativeRestaurantsReturn {
     }
   }, []);
 
-  /**
-   * Mix up to 5 results: a few purely organic (best dish/cuisine match) plus a
-   * few paying restaurants (is_featured/is_top_listing) that still score > 0
-   * organically — never a paying restaurant with no real match. Paid picks are
-   * flagged via `isSponsoredPick` so the UI can disclose them honestly.
-   */
-  const mixPaidAndOrganic = (
-    scored: AlternativeRestaurant[],
-    maxTotal = 5,
-    maxPaid = 2
-  ): AlternativeRestaurant[] => {
-    const organic = scored.filter((r) => !r.is_featured && !r.is_top_listing);
-    const paid = scored.filter((r) => r.is_featured || r.is_top_listing);
-
-    const paidPicks = paid.slice(0, Math.min(maxPaid, maxTotal));
-    const organicSlots = maxTotal - paidPicks.length;
-    const organicPicks = organic.slice(0, organicSlots);
-
-    const result = [
-      ...organicPicks,
-      ...paidPicks.map((r) => ({ ...r, isSponsoredPick: true })),
-    ];
-    // Re-sort by matchScore so paid picks don't always trail; they already only
-    // entered the pool because they scored > 0 on real relevance.
-    return result.sort((a, b) => b.matchScore - a.matchScore).slice(0, maxTotal);
-  };
-
   const scoreRestaurants = async (
     restaurants: any[],
     dishIds: string[],
@@ -160,7 +116,8 @@ export function useAlternativeRestaurants(): UseAlternativeRestaurantsReturn {
     cuisines: string[],
     ambienceTags: string[],
     userLat?: number,
-    userLng?: number
+    userLng?: number,
+    keepAll = false
   ): Promise<AlternativeRestaurant[]> => {
     // Get dish matches if we have dish IDs
     let dishMatches: Record<string, string[]> = {};
@@ -262,8 +219,9 @@ export function useAlternativeRestaurants(): UseAlternativeRestaurantsReturn {
     });
 
     // Sort by score descending
+    // Paid slots are always shown (they bought the dish in this city); free ones need a real match.
     return scored
-      .filter(r => r.matchScore > 0)
+      .filter(r => keepAll || r.matchScore > 0)
       .sort((a, b) => b.matchScore - a.matchScore);
   };
 

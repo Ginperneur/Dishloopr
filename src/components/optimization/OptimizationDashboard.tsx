@@ -16,7 +16,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DishVisibilityDiagnostics } from './DishVisibilityDiagnostics';
 import { TagAnalysis } from './TagAnalysis';
 import { OptimizationSuggestions } from './OptimizationSuggestions';
-import { SimulationMode } from './SimulationMode';
 import { useOptimizationInsights } from '@/hooks/useOptimizationInsights';
 import { useOwnerProCheckout } from '@/hooks/useOwnerProCheckout';
 import { Loader2 } from 'lucide-react';
@@ -28,7 +27,7 @@ interface OptimizationDashboardProps {
 
 export function OptimizationDashboard({ restaurantId, restaurantName }: OptimizationDashboardProps) {
   const { t } = useTranslation();
-  const { data, loading, error, simulateChange } = useOptimizationInsights(restaurantId);
+  const { data, loading, error } = useOptimizationInsights(restaurantId);
   const [activeTab, setActiveTab] = useState('overview');
   const { startCheckout, loading: checkoutLoading } = useOwnerProCheckout();
 
@@ -223,12 +222,7 @@ export function OptimizationDashboard({ restaurantId, restaurantName }: Optimiza
               </CardContent>
             </Card>
 
-            {/* Simulation mode */}
-            <SimulationMode 
-              restaurantId={restaurantId}
-              isPremium={data.isPremium}
-              onSimulate={simulateChange}
-            />
+            {/* "Wat als?" simulations live under Menu (3 free, then paid; one place for everyone). */}
           </div>
 
           {/* Quick suggestions */}

@@ -1,4 +1,5 @@
 import { safeOrigin } from "../_shared/auth.ts";
+import { billingParams } from "../_shared/billing.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
@@ -47,6 +48,8 @@ serve(async (req) => {
       scope,
       targetCityId,
       targetProvince,
+      imageUrl,
+      pdfUrl,
     } = await req.json();
 
     if (!restaurantId || !title) {
@@ -56,19 +59,27 @@ serve(async (req) => {
       });
     }
 
+    // Only all of the Netherlands is sold for now: the newsletter goes to every subscriber, so a city
+    // or province placement could not be delivered as promised. Old clients sending another scope get national.
     const allowedScopes = ["city", "province", "national"] as const;
-    const finalScope: typeof allowedScopes[number] = allowedScopes.includes(scope)
-      ? scope
-      : "city";
+    const finalScope: typeof allowedScopes[number] = "national";
+    void scope; void targetCityId; void targetProvince;
 
-    if (finalScope === "city" && !targetCityId) {
-      return new Response(JSON.stringify({ error: "targetCityId is required for city scope" }), {
+    // An optional photo, only from the restaurant's own folder in Dishloopr storage.
+    if (!/^[0-9a-f-]{36}$/i.test(String(restaurantId))) {
+      return new Response(JSON.stringify({ error: "Ongeldig restaurant" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const photo = typeof imageUrl === "string" && imageUrl.trim() ? imageUrl.trim() : null;
+    if (photo && !new RegExp(`^https://[a-z0-9]+\\.supabase\\.co/storage/v1/object/public/restaurant-images/${restaurantId}/[A-Za-z0-9/_.-]+$`).test(photo)) {
+      return new Response(JSON.stringify({ error: "Ongeldige foto: upload hem opnieuw" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    if (finalScope === "province" && !targetProvince) {
-      return new Response(JSON.stringify({ error: "targetProvince is required for province scope" }), {
+
+    const pdf = typeof pdfUrl === "string" && pdfUrl.trim() ? pdfUrl.trim() : null;
+    if (pdf && !new RegExp(`^https://[a-z0-9]+\\.supabase\\.co/storage/v1/object/public/restaurant-images/${restaurantId}/[A-Za-z0-9/_.-]+\\.pdf$`).test(pdf)) {
+      return new Response(JSON.stringify({ error: "Ongeldige pdf: upload hem opnieuw" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -80,47 +91,29 @@ serve(async (req) => {
       { auth: { persistSession: false } },
     );
 
-    // Only admins or the restaurant's verified managers (finance rights) may buy placements
-    const { data: callerIsAdmin } = await supabaseAdmin.rpc("has_role", { _user_id: user.id, _role: "admin" });
-    if (!callerIsAdmin) {
-      const { data: hasAccess } = await supabaseAdmin.rpc("has_restaurant_access", {
-        _user_id: user.id, _restaurant_id: restaurantId, _min_role: "finance",
+    // Admins, the verified owner, or a team member with finance rights may buy placements.
+    // (has_restaurant_access alone missed owners verified through a claim, who got a 403.)
+    const [{ data: callerIsAdmin }, { data: isOwner }, { data: hasAccess }] = await Promise.all([
+      supabaseAdmin.rpc("has_role", { _user_id: user.id, _role: "admin" }),
+      supabaseAdmin.rpc("is_verified_owner", { _user_id: user.id, _restaurant_id: restaurantId }),
+      supabaseAdmin.rpc("has_restaurant_access", { _user_id: user.id, _restaurant_id: restaurantId, _min_role: "finance" }),
+    ]);
+    if (callerIsAdmin !== true && isOwner !== true && hasAccess !== true) {
+      return new Response(JSON.stringify({ error: "Alleen de geverifieerde eigenaar kan een nieuwsbriefplaatsing kopen" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
-      if (hasAccess !== true) {
-        return new Response(JSON.stringify({ error: "Forbidden: no access to this restaurant" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
     }
 
-    // Look up scope-specific Stripe price ID + EUR amount from app_settings
-    const priceKey =
-      finalScope === "city"
-        ? "newsletter_price_id_city"
-        : finalScope === "province"
-          ? "newsletter_price_id_province"
-          : "newsletter_price_id_national";
-
+    // Prices are set here, so the owner can't influence them. A Stripe price ID in app_settings
+    // (newsletter_price_id_<scope>) is no longer required: those prices were removed from the
+    // Stripe catalogue, which made every placement fail. The amount is created inline instead.
     const priceMap: Record<typeof allowedScopes[number], number> = {
-      city: 15,
+      city: 20,
       province: 20,
-      national: 40,
+      national: 20,
     };
-
-    const { data: setting } = await supabaseAdmin
-      .from("app_settings")
-      .select("value")
-      .eq("key", priceKey)
-      .maybeSingle();
-
-    const stripePriceId = setting?.value;
-    if (!stripePriceId) {
-      return new Response(
-        JSON.stringify({ error: `Stripe price not configured for scope ${finalScope}` }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
+    const scopeLabel = { city: "één stad", province: "één provincie", national: "heel Nederland" }[finalScope];
 
     // Create placement record
     const { data: placement, error: placementError } = await supabaseAdmin
@@ -133,8 +126,10 @@ serve(async (req) => {
         promo_type: promoType || "actie",
         edition_id: editionId || null,
         scope: finalScope,
-        target_city_id: finalScope === "city" ? targetCityId : null,
-        target_province: finalScope === "province" ? targetProvince : null,
+        target_city_id: null,
+        target_province: null,
+        image_url: photo,
+        pdf_url: pdf,
         price_paid: priceMap[finalScope],
         status: "pending_payment",
       })
@@ -157,14 +152,20 @@ serve(async (req) => {
     const origin = safeOrigin(req);
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card", "ideal"],
       line_items: [
         {
-          price: stripePriceId,
           quantity: 1,
+          price_data: {
+            currency: "eur",
+            unit_amount: priceMap[finalScope] * 100,
+            tax_behavior: "exclusive",
+            product_data: { name: `Nieuwsbriefplaatsing, ${scopeLabel}`, description: String(title).slice(0, 200) },
+          },
         },
       ],
       mode: "payment",
+      customer_email: user.email,
+      ...billingParams({ mode: "payment", description: `Nieuwsbriefplaatsing ${restaurantName ?? ""}: ${title}` }),
       success_url: `${origin}/owner-dashboard?newsletter=success&placementId=${placement.id}`,
       cancel_url: `${origin}/owner-dashboard?newsletter=cancelled`,
       metadata: {
@@ -173,8 +174,7 @@ serve(async (req) => {
         restaurant_id: restaurantId,
         user_id: user.id,
         scope: finalScope,
-        target_city_id: targetCityId || "",
-        target_province: targetProvince || "",
+
       },
     });
 

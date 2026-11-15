@@ -1331,6 +1331,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           custom_filter: Json | null
+          edition_id: string | null
           failed_count: number | null
           html_content: string
           id: string
@@ -1349,6 +1350,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           custom_filter?: Json | null
+          edition_id?: string | null
           failed_count?: number | null
           html_content: string
           id?: string
@@ -1367,6 +1369,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           custom_filter?: Json | null
+          edition_id?: string | null
           failed_count?: number | null
           html_content?: string
           id?: string
@@ -1380,7 +1383,15 @@ export type Database = {
           total_recipients?: number | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "email_campaigns_edition_id_fkey"
+            columns: ["edition_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_editions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       error_logs: {
         Row: {
@@ -2139,6 +2150,8 @@ export type Database = {
           description: string | null
           edition_id: string | null
           id: string
+          image_url: string | null
+          pdf_url: string | null
           price_paid: number
           promo_type: string
           restaurant_id: string
@@ -2158,6 +2171,8 @@ export type Database = {
           description?: string | null
           edition_id?: string | null
           id?: string
+          image_url?: string | null
+          pdf_url?: string | null
           price_paid?: number
           promo_type?: string
           restaurant_id: string
@@ -2177,6 +2192,8 @@ export type Database = {
           description?: string | null
           edition_id?: string | null
           id?: string
+          image_url?: string | null
+          pdf_url?: string | null
           price_paid?: number
           promo_type?: string
           restaurant_id?: string
@@ -2787,6 +2804,126 @@ export type Database = {
         }
         Relationships: []
       }
+      owner_simulation_credits: {
+        Row: {
+          credits: number
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          credits?: number
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          credits?: number
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_simulation_credits_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "owner_simulation_credits_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      owner_simulation_purchases: {
+        Row: {
+          created_at: string
+          quantity: number
+          restaurant_id: string
+          stripe_session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          quantity: number
+          restaurant_id: string
+          stripe_session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          quantity?: number
+          restaurant_id?: string
+          stripe_session_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_simulation_purchases_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "owner_simulation_purchases_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      owner_simulations: {
+        Row: {
+          charge: string
+          created_at: string
+          id: string
+          kind: string
+          params: Json
+          restaurant_id: string
+          result: Json
+          user_id: string | null
+        }
+        Insert: {
+          charge?: string
+          created_at?: string
+          id?: string
+          kind: string
+          params?: Json
+          restaurant_id: string
+          result?: Json
+          user_id?: string | null
+        }
+        Update: {
+          charge?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          params?: Json
+          restaurant_id?: string
+          result?: Json
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_simulations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "owner_simulations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       owner_weekly_recommendations: {
         Row: {
           actions: Json
@@ -3072,6 +3209,70 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_bids: {
+        Row: {
+          amount_cents: number
+          clearing_cents: number | null
+          created_at: string
+          id: string
+          market_id: string
+          page_slug: string | null
+          pay_by: string | null
+          restaurant_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          clearing_cents?: number | null
+          created_at?: string
+          id?: string
+          market_id: string
+          page_slug?: string | null
+          pay_by?: string | null
+          restaurant_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          clearing_cents?: number | null
+          created_at?: string
+          id?: string
+          market_id?: string
+          page_slug?: string | null
+          pay_by?: string | null
+          restaurant_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_bids_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "promo_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_bids_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "promo_bids_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       promo_code_redemptions: {
         Row: {
           created_at: string
@@ -3148,6 +3349,129 @@ export type Database = {
           valid_until?: string | null
         }
         Relationships: []
+      }
+      promo_markets: {
+        Row: {
+          city_id: string
+          created_at: string
+          dish_id: string
+          id: string
+          product: string
+          slots: number
+        }
+        Insert: {
+          city_id: string
+          created_at?: string
+          dish_id: string
+          id?: string
+          product: string
+          slots?: number
+        }
+        Update: {
+          city_id?: string
+          created_at?: string
+          dish_id?: string
+          id?: string
+          product?: string
+          slots?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_markets_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_markets_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["city_id"]
+          },
+          {
+            foreignKeyName: "promo_markets_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_markets_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "seo_page_kandidaten"
+            referencedColumns: ["dish_id"]
+          },
+        ]
+      }
+      promo_slots: {
+        Row: {
+          bid_id: string | null
+          created_at: string
+          id: string
+          market_id: string
+          price_cents: number
+          reserved_until: string | null
+          restaurant_id: string
+          status: string
+          stripe_subscription_id: string | null
+          term_end: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bid_id?: string | null
+          created_at?: string
+          id?: string
+          market_id: string
+          price_cents: number
+          reserved_until?: string | null
+          restaurant_id: string
+          status?: string
+          stripe_subscription_id?: string | null
+          term_end?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bid_id?: string | null
+          created_at?: string
+          id?: string
+          market_id?: string
+          price_cents?: number
+          reserved_until?: string | null
+          restaurant_id?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          term_end?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_slots_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "promo_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_slots_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "promo_slots_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_tokens: {
         Row: {
@@ -6955,6 +7279,27 @@ export type Database = {
           },
         ]
       }
+      uitgelicht_dishes: {
+        Row: {
+          created_at: string
+          dish_slug: string
+          enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dish_slug: string
+          enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dish_slug?: string
+          enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_badges: {
         Row: {
           badge_level: number | null
@@ -7863,6 +8208,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      core_landing_dish_slugs: { Args: never; Returns: string[] }
       create_biweekly_newsletter_draft: { Args: never; Returns: string }
       deduplicate_dishes: { Args: never; Returns: Json }
       deduplicate_restaurant_dishes: { Args: never; Returns: Json }
@@ -7875,6 +8221,10 @@ export type Database = {
         Returns: boolean
       }
       dl_norm: { Args: { t: string }; Returns: string }
+      ensure_core_landing_pages: {
+        Args: { p_min_restaurants?: number }
+        Returns: number
+      }
       founding_partner_live: { Args: { p_status: string }; Returns: boolean }
       founding_partners_for_page: {
         Args: { p_page_slug: string }
@@ -7975,6 +8325,15 @@ export type Database = {
         Args: { p_restaurant_id: string; p_slot_id: string }
         Returns: number
       }
+      grant_simulation_credits: {
+        Args: {
+          p_quantity: number
+          p_restaurant: string
+          p_session: string
+          p_user: string
+        }
+        Returns: boolean
+      }
       has_restaurant_access: {
         Args: {
           _min_role?: Database["public"]["Enums"]["manager_role"]
@@ -8004,6 +8363,10 @@ export type Database = {
       is_verified_owner: {
         Args: { _restaurant_id: string; _user_id: string }
         Returns: boolean
+      }
+      landing_page_restaurant_count: {
+        Args: { p_page_slug: string }
+        Returns: number
       }
       log_search: {
         Args: {
@@ -8105,6 +8468,7 @@ export type Database = {
           weekday: number
         }[]
       }
+      owner_simulation_quota: { Args: { p_restaurant: string }; Returns: Json }
       owner_stats_between: {
         Args: { p_from: string; p_restaurant_id: string; p_to: string }
         Returns: {
@@ -8131,6 +8495,131 @@ export type Database = {
           term: string
         }[]
       }
+      place_promo_bid: {
+        Args: {
+          p_amount_cents: number
+          p_city: string
+          p_dish: string
+          p_product: string
+          p_restaurant: string
+        }
+        Returns: string
+      }
+      place_uitgelicht_bid: {
+        Args: {
+          p_amount_cents: number
+          p_page_slug: string
+          p_restaurant: string
+        }
+        Returns: string
+      }
+      promo_action_mail: {
+        Args: { p_bid: string; p_product: string; p_slot: string }
+        Returns: {
+          email: string
+          label: string
+          restaurant_name: string
+        }[]
+      }
+      promo_auction_reminders: {
+        Args: never
+        Returns: {
+          auction_date: string
+          email: string
+          highest_bid_cents: number
+          label: string
+          my_cents: number
+          open_bids: number
+          product: string
+          restaurant_name: string
+          role: string
+          user_id: string
+        }[]
+      }
+      promo_base_cents: { Args: { p_product: string }; Returns: number }
+      promo_can_manage: { Args: { p_restaurant: string }; Returns: boolean }
+      promo_daily: {
+        Args: never
+        Returns: {
+          action: string
+          bid_id: string
+          price_cents: number
+          restaurant_id: string
+          slot_id: string
+          stripe_subscription_id: string
+          user_id: string
+        }[]
+      }
+      promo_demand: {
+        Args: { p_city: string; p_dish: string }
+        Returns: {
+          searches_per_month: number
+          suppliers: number
+        }[]
+      }
+      promo_dish_on_menu: {
+        Args: { p_dish: string; p_restaurant: string }
+        Returns: boolean
+      }
+      promo_fill_free_slots: {
+        Args: { p_market: string }
+        Returns: {
+          bid_id: string
+          clearing_cents: number
+          restaurant_id: string
+          user_id: string
+        }[]
+      }
+      promo_item_label: {
+        Args: {
+          p_city: string
+          p_dish: string
+          p_page_slug: string
+          p_product: string
+        }
+        Returns: string
+      }
+      promo_list_price: {
+        Args: { p_city: string; p_dish: string; p_product: string }
+        Returns: number
+      }
+      promo_market_id: {
+        Args: { p_city: string; p_dish: string; p_product: string }
+        Returns: string
+      }
+      promo_market_status: {
+        Args: {
+          p_city: string
+          p_dish: string
+          p_product: string
+          p_restaurant: string
+        }
+        Returns: Json
+      }
+      promo_quarter_end: { Args: { d: string }; Returns: string }
+      promo_reserve_slot: {
+        Args: {
+          p_city: string
+          p_dish: string
+          p_product: string
+          p_restaurant: string
+          p_user: string
+        }
+        Returns: Json
+      }
+      promo_settle: {
+        Args: never
+        Returns: {
+          action: string
+          bid_id: string
+          price_cents: number
+          restaurant_id: string
+          slot_id: string
+          stripe_subscription_id: string
+          user_id: string
+        }[]
+      }
+      promo_taken: { Args: { p_market: string }; Returns: number }
       public_launch_date: { Args: never; Returns: string }
       public_package_links: {
         Args: never
@@ -8211,6 +8700,23 @@ export type Database = {
           metric: string
           totaal: number
         }[]
+      }
+      routing_sponsors: {
+        Args: { p_city: string; p_dish_ids: string[] }
+        Returns: {
+          dish_id: string
+          restaurant_id: string
+        }[]
+      }
+      run_owner_simulation: {
+        Args: {
+          p_dish?: string
+          p_kind: string
+          p_price_level?: number
+          p_restaurant: string
+          p_tag?: string
+        }
+        Returns: Json
       }
       save_reservation_integration: {
         Args: {
@@ -8394,6 +8900,12 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      simulation_ctr: { Args: { p_position: number }; Returns: number }
+      simulation_filter_has: {
+        Args: { p_filter: Json; p_value: string }
+        Returns: boolean
+      }
+      simulation_free_limit: { Args: never; Returns: number }
       snapshot_restaurant_positions: { Args: never; Returns: number }
       sync_owner_pro_restaurants: {
         Args: { _user_id: string }
@@ -8403,6 +8915,74 @@ export type Database = {
       track_founding_metrics: { Args: { p_items: Json }; Returns: number }
       track_reservation_funnel: { Args: { p_items: Json }; Returns: number }
       track_restaurant_metrics: { Args: { p_items: Json }; Returns: number }
+      uitgelicht_daily: {
+        Args: never
+        Returns: {
+          action: string
+          bid_id: string
+          price_cents: number
+          restaurant_id: string
+          slot_id: string
+          stripe_subscription_id: string
+          user_id: string
+        }[]
+      }
+      uitgelicht_list_price: { Args: { p_page_slug: string }; Returns: number }
+      uitgelicht_min_restaurants: { Args: never; Returns: number }
+      uitgelicht_on_page: {
+        Args: { p_page_slug: string; p_restaurant: string }
+        Returns: boolean
+      }
+      uitgelicht_page: {
+        Args: { p_page_slug: string }
+        Returns: {
+          city_id: string
+          dish_id: string
+        }[]
+      }
+      uitgelicht_page_eligible: {
+        Args: { p_page_slug: string }
+        Returns: boolean
+      }
+      uitgelicht_page_offers: {
+        Args: { p_slug: string }
+        Returns: {
+          dish_name: string
+          list_price_cents: number
+          page_slug: string
+          places_left: number
+          position: number
+          searches_per_month: number
+          total: number
+        }[]
+      }
+      uitgelicht_page_status: {
+        Args: { p_page_slug: string; p_restaurant: string }
+        Returns: Json
+      }
+      uitgelicht_protected: {
+        Args: { p_created: string; p_period_end: string; p_plan: string }
+        Returns: boolean
+      }
+      uitgelicht_reserve: {
+        Args: { p_page_slug: string; p_restaurant: string }
+        Returns: Json
+      }
+      uitgelicht_settle: {
+        Args: never
+        Returns: {
+          action: string
+          bid_id: string
+          price_cents: number
+          restaurant_id: string
+          slot_id: string
+          stripe_subscription_id: string
+          user_id: string
+        }[]
+      }
+      uitgelicht_taken: { Args: { p_page_slug: string }; Returns: number }
+      uitgelicht_window_end: { Args: never; Returns: string }
+      unsubscribe_newsletter: { Args: { p_id: string }; Returns: boolean }
       unsubscribe_restaurant_contact: {
         Args: { p_token: string }
         Returns: string
@@ -8410,6 +8990,7 @@ export type Database = {
       update_user_badges: { Args: { p_user_id: string }; Returns: undefined }
       verify_cron_secret: { Args: { p_secret: string }; Returns: boolean }
       visibility_menu_minimum: { Args: never; Returns: number }
+      withdraw_promo_bid: { Args: { p_bid: string }; Returns: undefined }
     }
     Enums: {
       app_role: "user" | "owner" | "admin" | "moderator"

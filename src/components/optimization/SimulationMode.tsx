@@ -1,288 +1,192 @@
-import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Wand2, 
-  TrendingUp, 
-  TrendingDown,
-  ArrowRight,
-  Search,
-  Sparkles,
-  Lock,
-  Info
-} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { Loader2, Search, Wand2, CreditCard } from 'lucide-react';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
-import { useOwnerProCheckout } from '@/hooks/useOwnerProCheckout';
-import { Loader2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { simulationSummary, type SimulationQuota, type SimulationResult } from '@/lib/simulation';
 
-interface SimulationResult {
-  currentPosition: number;
-  projectedPosition: number;
-  visibilityChange: number;
-  competitorComparison: string;
-  confidence: number;
-}
+// run_owner_simulation and friends are newer than the generated types.
+const db = supabase as unknown as SupabaseClient;
 
-interface SimulationModeProps {
+type Kind = 'add_dish' | 'change_price' | 'remove_tag';
+
+interface Props {
   restaurantId: string;
-  isPremium: boolean;
-  onSimulate: (
-    changeType: 'add_dish' | 'remove_tag' | 'change_price',
-    params: { dishId?: string; tag?: string; newPriceLevel?: number }
-  ) => Promise<SimulationResult | null>;
+  /** The restaurant's own tags, for "tag verwijderen". */
+  tags?: string[];
+  priceLevel?: number | null;
+  /** Kept for older callers; the quota now comes from the database. */
+  isPremium?: boolean;
+  /** Kept for older callers; simulations now run in the database. */
+  onSimulate?: unknown;
 }
 
-interface Dish {
-  id: string;
-  name: string;
-  search_count: number;
-}
+const PRICE_LABEL: Record<number, string> = { 1: '€', 2: '€€', 3: '€€€', 4: '€€€€' };
 
-export function SimulationMode({ restaurantId, isPremium, onSimulate }: SimulationModeProps) {
-  const { t } = useTranslation();
-  const [simulationType, setSimulationType] = useState<'add_dish' | 'remove_tag' | 'change_price'>('add_dish');
-  const [availableDishes, setAvailableDishes] = useState<Dish[]>([]);
-  const [selectedDishId, setSelectedDishId] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState('');
+/** "What if" on real search data: 3 free per restaurant, then 1.99 euro each; Owner Pro unlimited. */
+export function SimulationMode({ restaurantId, tags = [], priceLevel = null }: Props) {
+  const qc = useQueryClient();
+  const [kind, setKind] = useState<Kind>('add_dish');
+  const [dishQuery, setDishQuery] = useState('');
+  const [dishId, setDishId] = useState('');
+  const [tag, setTag] = useState('');
+  const [price, setPrice] = useState('');
   const [result, setResult] = useState<SimulationResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [simulationsUsed, setSimulationsUsed] = useState(0);
+  const [running, setRunning] = useState(false);
+  const [buying, setBuying] = useState(false);
+  const [qty, setQty] = useState(1);
 
-  const maxFreeSimulations = 3;
+  const { data: quota } = useQuery({
+    queryKey: ['simulation-quota', restaurantId],
+    queryFn: async () => {
+      const { data, error } = await db.rpc('owner_simulation_quota', { p_restaurant: restaurantId });
+      if (error) throw error;
+      return data as SimulationQuota;
+    },
+  });
 
-  useEffect(() => {
-    const fetchDishes = async () => {
-      // Fetch dishes not yet associated with this restaurant
-      const { data: restaurantDishes } = await supabase
-        .from('restaurant_dishes')
-        .select('dish_id')
-        .eq('restaurant_id', restaurantId);
+  const { data: dishes = [] } = useQuery({
+    queryKey: ['simulation-dishes', restaurantId],
+    queryFn: async () => {
+      const [{ data: own }, { data: all }] = await Promise.all([
+        supabase.from('restaurant_dishes').select('dish_id').eq('restaurant_id', restaurantId),
+        supabase.from('dishes').select('id, name, slug, canonical_slug, search_count').eq('is_active', true)
+          .order('search_count', { ascending: false }).limit(300),
+      ]);
+      const mine = new Set((own ?? []).map(r => r.dish_id));
+      // Only main dishes (the ones with a dish page), not menu variants.
+      return (all ?? []).filter(d => !mine.has(d.id) && (!d.canonical_slug || d.canonical_slug === d.slug));
+    },
+  });
+  const shownDishes = useMemo(() => {
+    const q = dishQuery.trim().toLowerCase();
+    return (q ? dishes.filter(d => d.name.toLowerCase().includes(q)) : dishes).slice(0, 12);
+  }, [dishes, dishQuery]);
 
-      const existingDishIds = (restaurantDishes || []).map(rd => rd.dish_id);
+  useEffect(() => { setResult(null); }, [kind]);
 
-      const { data: dishes } = await supabase
-        .from('dishes')
-        .select('id, name, search_count')
-        .eq('is_active', true)
-        .order('search_count', { ascending: false })
-        .limit(100);
+  const canRun = quota && (quota.unlimited || quota.free_left > 0 || quota.credits > 0);
+  const ready = kind === 'add_dish' ? !!dishId : kind === 'change_price' ? !!price : !!tag;
 
-      setAvailableDishes(
-        (dishes || []).filter(d => !existingDishIds.includes(d.id))
-      );
-    };
-
-    fetchDishes();
-  }, [restaurantId]);
-
-  const filteredDishes = availableDishes.filter(d =>
-    d.name.toLowerCase().includes(searchQuery.toLowerCase())
-  ).slice(0, 10);
-
-  const handleSimulate = async () => {
-    if (!isPremium && simulationsUsed >= maxFreeSimulations) return;
-    
-    setLoading(true);
-    try {
-      const simResult = await onSimulate(simulationType, { dishId: selectedDishId });
-      setResult(simResult);
-      setSimulationsUsed(prev => prev + 1);
-    } finally {
-      setLoading(false);
+  const run = async () => {
+    setRunning(true);
+    const { data, error } = await db.rpc('run_owner_simulation', {
+      p_restaurant: restaurantId, p_kind: kind,
+      p_dish: kind === 'add_dish' ? dishId : null,
+      p_tag: kind === 'remove_tag' ? tag : null,
+      p_price_level: kind === 'change_price' ? Number(price) : null,
+    });
+    setRunning(false);
+    if (error) {
+      toast.error(error.message);
+      qc.invalidateQueries({ queryKey: ['simulation-quota', restaurantId] });
+      return;
     }
+    setResult(data as SimulationResult);
+    qc.setQueryData(['simulation-quota', restaurantId], (data as SimulationResult).quota);
   };
 
-  const canSimulate = isPremium || simulationsUsed < maxFreeSimulations;
-  const { startCheckout, loading: checkoutLoading } = useOwnerProCheckout();
+  const buy = async () => {
+    setBuying(true);
+    const { data, error } = await supabase.functions.invoke('create-simulation-checkout', { body: { restaurant_id: restaurantId, quantity: qty } });
+    if (error || !data?.url) {
+      const reason = data?.error ?? await (error as { context?: Response } | null)?.context?.json?.().then((b: { error?: string }) => b?.error).catch(() => null);
+      toast.error(reason || 'Afrekenen lukte niet. Probeer het opnieuw.');
+      setBuying(false);
+      return;
+    }
+    window.location.href = data.url;
+  };
+
+  const summary = result ? simulationSummary(result, priceLevel) : null;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Wand2 className="h-5 w-5 text-primary" />
-          Simulatie Modus
-          {!isPremium && (
-            <Badge variant="secondary" className="ml-2">
-              {maxFreeSimulations - simulationsUsed} gratis over
+        <CardTitle className="flex flex-wrap items-center gap-2 text-base">
+          <Wand2 className="h-5 w-5 text-primary" />Wat als?
+          {quota && (
+            <Badge variant="secondary" className="ml-auto">
+              {quota.unlimited ? 'Onbeperkt met Owner Pro'
+                : quota.free_left > 0 ? `${quota.free_left} gratis over`
+                : quota.credits > 0 ? `${quota.credits} ${quota.credits === 1 ? 'simulatie' : 'simulaties'} tegoed`
+                : 'Gratis simulaties op'}
             </Badge>
           )}
         </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground mb-6">
-          Voorspel hoe wijzigingen aan je profiel je zichtbaarheid zullen beïnvloeden.
+        <p className="text-sm text-muted-foreground">
+          Zie vooraf wat een wijziging oplevert, op basis van echte zoekopdrachten in jouw stad. De eerste 3 zijn gratis, daarna €1,99 per simulatie.
         </p>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <Select value={kind} onValueChange={v => setKind(v as Kind)}>
+          <SelectTrigger className="min-h-11"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="add_dish">Gerecht toevoegen aan mijn menu</SelectItem>
+            <SelectItem value="change_price">Andere prijsklasse</SelectItem>
+            <SelectItem value="remove_tag">Tag verwijderen</SelectItem>
+          </SelectContent>
+        </Select>
 
-        {!canSimulate ? (
-          <div className="text-center py-8">
-            <Lock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Simulatie limiet bereikt</h3>
-            <p className="text-muted-foreground mb-4">
-              Upgrade naar Premium voor onbeperkte simulaties
-            </p>
-            <Button onClick={() => startCheckout('monthly')} disabled={checkoutLoading !== null}>
-              {checkoutLoading ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Sparkles className="h-4 w-4 mr-2" />
-              )}
-              Upgrade naar Owner Pro
-            </Button>
+        {kind === 'add_dish' && (
+          <div className="space-y-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input value={dishQuery} onChange={e => setDishQuery(e.target.value)} placeholder="Zoek een gerecht" className="min-h-11 pl-9" />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {shownDishes.map(d => (
+                <Button key={d.id} type="button" size="sm" variant={dishId === d.id ? 'default' : 'outline'} onClick={() => setDishId(d.id)}>{d.name}</Button>
+              ))}
+            </div>
           </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Simulation type selector */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Wat wil je simuleren?</label>
-              <Select 
-                value={simulationType} 
-                onValueChange={(v) => {
-                  setSimulationType(v as any);
-                  setResult(null);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="add_dish">Gerecht toevoegen</SelectItem>
-                  <SelectItem value="remove_tag" disabled={!isPremium}>
-                    Tag verwijderen {!isPremium && '(Premium)'}
-                  </SelectItem>
-                  <SelectItem value="change_price" disabled={!isPremium}>
-                    Prijsniveau wijzigen {!isPremium && '(Premium)'}
-                  </SelectItem>
-                </SelectContent>
+        )}
+        {kind === 'change_price' && (
+          <Select value={price} onValueChange={setPrice}>
+            <SelectTrigger className="min-h-11"><SelectValue placeholder={`Nu: ${priceLevel ? PRICE_LABEL[priceLevel] : 'onbekend'}. Kies de nieuwe prijsklasse`} /></SelectTrigger>
+            <SelectContent>{[1, 2, 3, 4].filter(l => l !== priceLevel).map(l => <SelectItem key={l} value={String(l)}>{PRICE_LABEL[l]}</SelectItem>)}</SelectContent>
+          </Select>
+        )}
+        {kind === 'remove_tag' && (
+          tags.length ? (
+            <Select value={tag} onValueChange={setTag}>
+              <SelectTrigger className="min-h-11"><SelectValue placeholder="Kies een van je tags" /></SelectTrigger>
+              <SelectContent>{tags.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+            </Select>
+          ) : <p className="text-sm text-muted-foreground">Je restaurant heeft nog geen tags.</p>
+        )}
+
+        {canRun ? (
+          <Button onClick={run} disabled={!ready || running} className="min-h-11">
+            {running && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Simuleer
+          </Button>
+        ) : quota ? (
+          <div className="space-y-3 rounded-lg border p-4">
+            <p className="text-sm">Je 3 gratis simulaties zijn gebruikt. Een simulatie kost €1,99; met Owner Pro simuleer je onbeperkt.</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Select value={String(qty)} onValueChange={v => setQty(Number(v))}>
+                <SelectTrigger className="min-h-11 w-[150px]"><SelectValue /></SelectTrigger>
+                <SelectContent>{[1, 3, 5, 10].map(n => <SelectItem key={n} value={String(n)}>{n} {n === 1 ? 'simulatie' : 'simulaties'}</SelectItem>)}</SelectContent>
               </Select>
+              <Button onClick={buy} disabled={buying} className="min-h-11">
+                {buying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
+                Koop voor €{(1.99 * qty).toFixed(2).replace('.', ',')}
+              </Button>
             </div>
+          </div>
+        ) : null}
 
-            {/* Dish selector for add_dish simulation */}
-            {simulationType === 'add_dish' && (
-              <div>
-                <label className="text-sm font-medium mb-2 block">Welk gerecht?</label>
-                <div className="relative mb-2">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Zoek gerecht..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-                <div className="max-h-48 overflow-auto space-y-1 border rounded-lg p-2">
-                  {filteredDishes.map(dish => (
-                    <button
-                      key={dish.id}
-                      onClick={() => {
-                        setSelectedDishId(dish.id);
-                        setResult(null);
-                      }}
-                      className={`w-full text-left p-2 rounded-lg transition-colors flex items-center justify-between ${
-                        selectedDishId === dish.id
-                          ? 'bg-primary text-primary-foreground'
-                          : 'hover:bg-muted'
-                      }`}
-                    >
-                      <span>{dish.name}</span>
-                      <span className="text-xs opacity-70">
-                        {dish.search_count} zoekopdrachten/maand
-                      </span>
-                    </button>
-                  ))}
-                  {filteredDishes.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      Geen gerechten gevonden
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <Button 
-              onClick={handleSimulate}
-              disabled={loading || (simulationType === 'add_dish' && !selectedDishId)}
-              className="w-full"
-            >
-              {loading ? (
-                'Simuleren...'
-              ) : (
-                <>
-                  <Wand2 className="h-4 w-4 mr-2" />
-                  Simuleer wijziging
-                </>
-              )}
-            </Button>
-
-            {/* Simulation result */}
-            <AnimatePresence>
-              {result && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="p-4 rounded-lg bg-muted/50 border"
-                >
-                  <h4 className="font-medium mb-4 flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                    Simulatieresultaat
-                  </h4>
-
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="text-center p-3 rounded-lg bg-background">
-                      <p className="text-xs text-muted-foreground mb-1">Verwachte positie</p>
-                      <p className="text-2xl font-bold">#{result.projectedPosition}</p>
-                    </div>
-                    <div className="text-center p-3 rounded-lg bg-background">
-                      <p className="text-xs text-muted-foreground mb-1">Zichtbaarheid</p>
-                      <p className={`text-2xl font-bold flex items-center justify-center gap-1 ${
-                        result.visibilityChange > 0 ? 'text-green-600' : 
-                        result.visibilityChange < 0 ? 'text-red-600' : ''
-                      }`}>
-                        {result.visibilityChange > 0 ? (
-                          <TrendingUp className="h-5 w-5" />
-                        ) : result.visibilityChange < 0 ? (
-                          <TrendingDown className="h-5 w-5" />
-                        ) : null}
-                        {result.visibilityChange > 0 ? '+' : ''}{result.visibilityChange}%
-                      </p>
-                    </div>
-                  </div>
-
-                  <p className="text-sm text-muted-foreground mb-3">
-                    {result.competitorComparison}
-                  </p>
-
-                  <div>
-                    <div className="flex items-center justify-between text-xs mb-1">
-                      <span>Betrouwbaarheid</span>
-                      <span>{result.confidence}%</span>
-                    </div>
-                    <Progress value={result.confidence} className="h-1.5" />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Info disclaimer */}
-            <div className="flex items-start gap-2 text-xs text-muted-foreground">
-              <Info className="h-4 w-4 shrink-0 mt-0.5" />
-              <p>
-                Simulaties zijn schattingen gebaseerd op huidige marktdata en kunnen 
-                afwijken van werkelijke resultaten.
-              </p>
-            </div>
+        {summary && (
+          <div className="space-y-2 rounded-lg bg-muted/50 p-4" role="status">
+            <p className="font-semibold">{summary.headline}</p>
+            {summary.lines.map(l => <p key={l} className="text-sm text-muted-foreground">{l}</p>)}
+            <p className="text-xs text-muted-foreground">{summary.confidence}</p>
           </div>
         )}
       </CardContent>

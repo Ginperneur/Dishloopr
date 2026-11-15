@@ -154,7 +154,9 @@ async function sendBatch(
   for (let i = 0; i < emails.length; i += CONCURRENT_SENDS) {
     const chunk = emails.slice(i, i + CONCURRENT_SENDS);
     const results = await Promise.allSettled(
-      chunk.map((r) => sendEmail(apiKey, r.email, subject, html))
+      // Newsletters carry a personal unsubscribe link: {{unsubscribe_url}} becomes this subscriber's link.
+      chunk.map((r) => sendEmail(apiKey, r.email, subject,
+        html.replaceAll("{{unsubscribe_url}}", `https://dishloopr.nl/nieuwsbrief/afmelden?id=${encodeURIComponent(r.id)}`)))
     );
     for (const result of results) {
       if (result.status === "fulfilled" && result.value) {
