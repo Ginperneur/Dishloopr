@@ -281,6 +281,20 @@
       "when": 1794649330484,
       "tag": "0042_uitgelicht_auction",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1794752126914,
+      "tag": "0043_newsletter_placement_photo",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1794752142294,
+      "tag": "0044_restaurant_positions_all_pages",
+      "breakpoints": true
     }
   ]
 }

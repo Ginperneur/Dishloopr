@@ -2150,6 +2150,8 @@ export type Database = {
           description: string | null
           edition_id: string | null
           id: string
+          image_url: string | null
+          pdf_url: string | null
           price_paid: number
           promo_type: string
           restaurant_id: string
@@ -2169,6 +2171,8 @@ export type Database = {
           description?: string | null
           edition_id?: string | null
           id?: string
+          image_url?: string | null
+          pdf_url?: string | null
           price_paid?: number
           promo_type?: string
           restaurant_id: string
@@ -2188,6 +2192,8 @@ export type Database = {
           description?: string | null
           edition_id?: string | null
           id?: string
+          image_url?: string | null
+          pdf_url?: string | null
           price_paid?: number
           promo_type?: string
           restaurant_id?: string
