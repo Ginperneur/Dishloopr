@@ -8763,6 +8763,18 @@ export type Database = {
           dish_id: string
         }[]
       }
+      uitgelicht_page_offers: {
+        Args: { p_slug: string }
+        Returns: {
+          dish_name: string
+          list_price_cents: number
+          page_slug: string
+          places_left: number
+          position: number
+          searches_per_month: number
+          total: number
+        }[]
+      }
       uitgelicht_page_status: {
         Args: { p_page_slug: string; p_restaurant: string }
         Returns: Json
