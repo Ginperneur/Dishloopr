@@ -42,6 +42,7 @@ import {
   Ticket,
 } from 'lucide-react';
 import { MyPackagesCard } from '@/components/owner/MyPackagesCard';
+import { UitgelichtOffers } from '@/components/owner/UitgelichtOffers';
 import { ProGrowthInsights } from '@/components/owner/ProGrowthInsights';
 import { Layout } from '@/components/layout/Layout';
 import { SEOHead } from '@/components/seo/SEOHead';
@@ -951,7 +952,10 @@ export default function OwnerDashboard() {
                   {r && (
                     <>
                       {section('Uitgelicht', Crown, (
-                        <MyPackagesCard restaurantId={r.id} restaurantSlug={r.slug} restaurantName={r.name} />
+                        <div className="space-y-4">
+                          <MyPackagesCard restaurantId={r.id} restaurantSlug={r.slug} restaurantName={r.name} />
+                          <UitgelichtOffers restaurantSlug={r.slug} />
+                        </div>
                       ))}
                       {section('Vraag doorsturen', Zap, isVerified
                         ? <RoutingSlotsManager restaurantId={r.id} cityId={r.city_id ?? null} />

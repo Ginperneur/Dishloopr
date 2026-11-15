@@ -48,6 +48,10 @@ for (const seg of ["zichtbaar", "onzichtbaar_menu"]) {
   check(`${seg}: no flyer line without attachment`, !renderOutreach(seg, base).text.includes("bijlage"));
 }
 for (const m of [v, h]) check("signature", m.text.includes("Met vriendelijke groet,\nGinuwine Ayanne\nDishloopr") && m.html.includes("Met vriendelijke groet,<br>Ginuwine Ayanne<br>Dishloopr"));
+const scarce = renderOutreach("zichtbaar", { ...base, topDish: { dish: "Carbonara", position: 7, total: 14, placesLeft: 2 } });
+check("places left mentioned", scarce.text.includes("nog 2 van de 5 plekken Uitgelicht vrij"));
+const full = renderOutreach("zichtbaar", { ...base, topDish: { dish: "Carbonara", position: 7, total: 14, placesLeft: 0 } });
+check("no places line when full", !full.text.includes("plekken Uitgelicht vrij"));
 const noRank = renderOutreach("zichtbaar", { ...base, topDish: null, dishCount: 0 });
 check("zichtbaar: renders without ranking or dishes", !noRank.text.includes("sta je nu op plek") && !noRank.text.includes(" 0 gerechten"));
 Deno.exit(ok ? 0 : 1);

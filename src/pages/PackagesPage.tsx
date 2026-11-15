@@ -113,9 +113,11 @@ export default function PackagesPage() {
   const { data: pages = [] } = useQuery({
     queryKey: ['packages-pages', restaurant?.slug],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('restaurant_positions', { p_slug: restaurant!.slug });
+      // Position, searches per month and places left per page, so owners see value and scarcity.
+      const { data, error } = await (supabase.rpc as any)('uitgelicht_page_offers', { p_slug: restaurant!.slug });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as { page_slug: string; dish_name: string; position: number; total: number;
+        searches_per_month: number; places_left: number; list_price_cents: number }[];
     },
     enabled: Boolean(restaurant?.slug),
   });
@@ -133,6 +135,15 @@ export default function PackagesPage() {
     },
     enabled: Boolean(pageSlug),
   });
+
+  // A link from the dashboard (?page=) opens Uitgelicht with that dish page already chosen.
+  const wantedPage = params.get('page');
+  useEffect(() => {
+    if (wantedPage && pages.some(p => p.page_slug === wantedPage)) {
+      setPageSlug(wantedPage);
+      setFounding('month');
+    }
+  }, [wantedPage, pages]);
 
   // After the Founding Partner window: price per page by demand, and bids when a page is full.
   const afterWindow = !foundingWindowOpen();
@@ -314,9 +325,26 @@ export default function PackagesPage() {
               <Select value={pageSlug} onValueChange={setPageSlug}>
                 <SelectTrigger className="min-h-11"><SelectValue placeholder="Kies een gerechtpagina" /></SelectTrigger>
                 <SelectContent>
-                  {pages.map(p => <SelectItem key={p.page_slug} value={p.page_slug}>{p.dish_name} (nu #{p.position} van {p.total})</SelectItem>)}
+                  {pages.map(p => (
+                    <SelectItem key={p.page_slug} value={p.page_slug} disabled={!afterWindow && p.places_left === 0}>
+                      {p.dish_name}: nu #{p.position} van {p.total}
+                      {p.searches_per_month > 0 ? `, ${Math.round(p.searches_per_month).toLocaleString('nl-NL')} zoekopdrachten per maand` : ''}
+                      {p.places_left === 0 ? ', vol' : `, nog ${p.places_left} ${p.places_left === 1 ? 'plek' : 'plekken'}`}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+              {pageSlug && (() => {
+                const sel = pages.find(p => p.page_slug === pageSlug);
+                if (!sel) return null;
+                return (
+                  <div className="rounded-lg bg-primary/5 p-3 text-sm">
+                    <p>Je staat nu op <strong>#{sel.position} van {sel.total}</strong> op deze pagina.
+                      {' '}Met Uitgelicht sta je bovenaan{sel.searches_per_month > 0 ? <> voor zo'n <strong>{Math.round(sel.searches_per_month).toLocaleString('nl-NL')} zoekopdrachten per maand</strong></> : ''}.
+                    </p>
+                  </div>
+                );
+              })()}
               {pageSlug && typeof placesLeft === 'number' && (
                 <p className={`text-sm ${placesLeft > 0 ? 'text-muted-foreground' : 'text-destructive'}`}>
                   {placesLeft > 0 ? `Nog ${placesLeft} van de 5 plekken vrij op deze pagina.` : 'Alle 5 plekken op deze pagina zijn vergeven.'}

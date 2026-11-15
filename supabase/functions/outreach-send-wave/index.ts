@@ -82,11 +82,11 @@ async function unsubscribeToken(db: SupabaseClient, restaurantId: string): Promi
 
 async function topDish(db: SupabaseClient, t: Target) {
   if (!t.is_active) return null;
-  const { data } = await db.rpc("restaurant_positions", { p_slug: t.slug });
-  const rows = ((data as { dish_name: string; position: number; total: number }[]) ?? [])
+  const { data } = await db.rpc("uitgelicht_page_offers", { p_slug: t.slug });
+  const rows = ((data as { dish_name: string; position: number; total: number; places_left: number }[]) ?? [])
     .filter((r) => r.position && r.total >= 3)
     .sort((a, b) => a.position - b.position || b.total - a.total);
-  return rows[0] ? { dish: rows[0].dish_name, position: rows[0].position, total: rows[0].total } : null;
+  return rows[0] ? { dish: rows[0].dish_name, position: rows[0].position, total: rows[0].total, placesLeft: rows[0].places_left } : null;
 }
 
 async function render(db: SupabaseClient, t: Target, menuMinimum: number, flyer: Flyer) {
