@@ -2804,6 +2804,126 @@ export type Database = {
         }
         Relationships: []
       }
+      owner_simulation_credits: {
+        Row: {
+          credits: number
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          credits?: number
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          credits?: number
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_simulation_credits_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "owner_simulation_credits_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      owner_simulation_purchases: {
+        Row: {
+          created_at: string
+          quantity: number
+          restaurant_id: string
+          stripe_session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          quantity: number
+          restaurant_id: string
+          stripe_session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          quantity?: number
+          restaurant_id?: string
+          stripe_session_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_simulation_purchases_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "owner_simulation_purchases_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      owner_simulations: {
+        Row: {
+          charge: string
+          created_at: string
+          id: string
+          kind: string
+          params: Json
+          restaurant_id: string
+          result: Json
+          user_id: string | null
+        }
+        Insert: {
+          charge?: string
+          created_at?: string
+          id?: string
+          kind: string
+          params?: Json
+          restaurant_id: string
+          result?: Json
+          user_id?: string | null
+        }
+        Update: {
+          charge?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          params?: Json
+          restaurant_id?: string
+          result?: Json
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_simulations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "owner_simulations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       owner_weekly_recommendations: {
         Row: {
           actions: Json
@@ -8067,6 +8187,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      core_landing_dish_slugs: { Args: never; Returns: string[] }
       create_biweekly_newsletter_draft: { Args: never; Returns: string }
       deduplicate_dishes: { Args: never; Returns: Json }
       deduplicate_restaurant_dishes: { Args: never; Returns: Json }
@@ -8079,6 +8200,10 @@ export type Database = {
         Returns: boolean
       }
       dl_norm: { Args: { t: string }; Returns: string }
+      ensure_core_landing_pages: {
+        Args: { p_min_restaurants?: number }
+        Returns: number
+      }
       founding_partner_live: { Args: { p_status: string }; Returns: boolean }
       founding_partners_for_page: {
         Args: { p_page_slug: string }
@@ -8178,6 +8303,15 @@ export type Database = {
       get_waitlist_position: {
         Args: { p_restaurant_id: string; p_slot_id: string }
         Returns: number
+      }
+      grant_simulation_credits: {
+        Args: {
+          p_quantity: number
+          p_restaurant: string
+          p_session: string
+          p_user: string
+        }
+        Returns: boolean
       }
       has_restaurant_access: {
         Args: {
@@ -8309,6 +8443,7 @@ export type Database = {
           weekday: number
         }[]
       }
+      owner_simulation_quota: { Args: { p_restaurant: string }; Returns: Json }
       owner_stats_between: {
         Args: { p_from: string; p_restaurant_id: string; p_to: string }
         Returns: {
@@ -8353,6 +8488,29 @@ export type Database = {
         }
         Returns: string
       }
+      promo_action_mail: {
+        Args: { p_bid: string; p_product: string; p_slot: string }
+        Returns: {
+          email: string
+          label: string
+          restaurant_name: string
+        }[]
+      }
+      promo_auction_reminders: {
+        Args: never
+        Returns: {
+          auction_date: string
+          email: string
+          highest_bid_cents: number
+          label: string
+          my_cents: number
+          open_bids: number
+          product: string
+          restaurant_name: string
+          role: string
+          user_id: string
+        }[]
+      }
       promo_base_cents: { Args: { p_product: string }; Returns: number }
       promo_can_manage: { Args: { p_restaurant: string }; Returns: boolean }
       promo_daily: {
@@ -8386,6 +8544,15 @@ export type Database = {
           restaurant_id: string
           user_id: string
         }[]
+      }
+      promo_item_label: {
+        Args: {
+          p_city: string
+          p_dish: string
+          p_page_slug: string
+          p_product: string
+        }
+        Returns: string
       }
       promo_list_price: {
         Args: { p_city: string; p_dish: string; p_product: string }
@@ -8515,6 +8682,16 @@ export type Database = {
           dish_id: string
           restaurant_id: string
         }[]
+      }
+      run_owner_simulation: {
+        Args: {
+          p_dish?: string
+          p_kind: string
+          p_price_level?: number
+          p_restaurant: string
+          p_tag?: string
+        }
+        Returns: Json
       }
       save_reservation_integration: {
         Args: {
@@ -8698,6 +8875,12 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      simulation_ctr: { Args: { p_position: number }; Returns: number }
+      simulation_filter_has: {
+        Args: { p_filter: Json; p_value: string }
+        Returns: boolean
+      }
+      simulation_free_limit: { Args: never; Returns: number }
       snapshot_restaurant_positions: { Args: never; Returns: number }
       sync_owner_pro_restaurants: {
         Args: { _user_id: string }
@@ -8729,6 +8912,18 @@ export type Database = {
         Returns: {
           city_id: string
           dish_id: string
+        }[]
+      }
+      uitgelicht_page_offers: {
+        Args: { p_slug: string }
+        Returns: {
+          dish_name: string
+          list_price_cents: number
+          page_slug: string
+          places_left: number
+          position: number
+          searches_per_month: number
+          total: number
         }[]
       }
       uitgelicht_page_status: {
