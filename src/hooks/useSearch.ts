@@ -335,9 +335,11 @@ export function useSearch() {
       };
 
       // Also map to restaurant-level columns
-      const restaurantLevelMap: Record<string, string> = {
-        'vegan': 'is_fully_vegan',
-        'halal': 'is_fully_halal',
+      // A fully vegan restaurant is also fully vegetarian.
+      const restaurantLevelMap: Record<string, string[]> = {
+        'vegan': ['is_fully_vegan'],
+        'vegetarian': ['is_fully_vegetarian', 'is_fully_vegan'],
+        'halal': ['is_fully_halal'],
       };
 
       // Build OR filter conditions for each dietary option on restaurant_dishes
@@ -371,9 +373,7 @@ export function useSearch() {
       }
 
       // Also get IDs from restaurant-level flags (is_fully_halal, is_fully_vegan, etc.)
-      const restaurantOrConds = filters.dietaryOptions
-        .map(opt => restaurantLevelMap[opt])
-        .filter(Boolean)
+      const restaurantOrConds = [...new Set(filters.dietaryOptions.flatMap(opt => restaurantLevelMap[opt] ?? []))]
         .map(col => `${col}.eq.true`);
 
       if (restaurantOrConds.length > 0) {
