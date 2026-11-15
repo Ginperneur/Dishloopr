@@ -1,13 +1,3 @@
--- Admin automation and a daily summary.
---  * admin_digest(): every queue that waits for an admin, with open items, new in the last 24 hours
---    and the oldest item, for the daily mail (admin-daily-digest, 06:00 UTC).
---  * apply_pending_edit(): applies or rejects an owner's name/description change. Until now these
---    were stored but never applied (there was no admin screen for them).
---  * admin-automation (hourly) handles what is safe without a person: text checks by AI for
---    description changes and newsletter placements, duplicate restaurant suggestions, and
---    high-confidence dish suggestions for unclaimed restaurants. Everything else stays for an admin.
--- Idempotent on purpose (Lovable may apply it under another number, or twice).
-
 ALTER TABLE public.restaurant_pending_edits ADD COLUMN IF NOT EXISTS checked_at timestamptz;
 ALTER TABLE public.newsletter_placements ADD COLUMN IF NOT EXISTS checked_at timestamptz;
 
@@ -37,8 +27,6 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
 $$;
 REVOKE ALL ON FUNCTION public.admin_digest() FROM public, anon, authenticated;
 
--- Applies an owner's change (name, description_nl) or rejects it. Admins from the app, or the
--- automation with the service role.
 CREATE OR REPLACE FUNCTION public.apply_pending_edit(p_id uuid, p_decision text, p_note text DEFAULT NULL)
 RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE e public.restaurant_pending_edits;
