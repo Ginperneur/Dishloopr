@@ -22,10 +22,13 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const db = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "") as unknown as SupabaseClient;
   try {
+    let caller: { id: string; email?: string } | null = null;
     if (!(await isInternalCaller(req, db))) {
-      const user = await getCaller(req);
-      if (!user || !(await isAdmin(db, user.id))) return json({ error: "Forbidden" }, 403);
+      caller = await getCaller(req);
+      if (!caller || !(await isAdmin(db, caller.id))) return json({ error: "Forbidden" }, 403);
     }
+    const body = await req.json().catch(() => ({}));
+    const onlyMe = body.only_me === true && !!caller?.email;
     const { data: rows, error } = await db.rpc("admin_digest");
     if (error) throw error;
     const now = Date.now();
@@ -45,14 +48,14 @@ Deno.serve(async (req) => {
     const { data: admins } = await db.from("user_roles").select("user_id").eq("role", "admin");
     const ids = (admins ?? []).map((a: { user_id: string }) => a.user_id);
     const { data: profiles } = ids.length ? await db.from("profiles").select("email").in("id", ids) : { data: [] };
-    const emails = [...new Set(((profiles ?? []) as { email: string | null }[]).map(p => p.email).filter((e): e is string => !!e))];
+    const emails = onlyMe ? [caller!.email!] : [...new Set(((profiles ?? []) as { email: string | null }[]).map(p => p.email).filter((e): e is string => !!e))];
 
     const date = new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", timeZone: "Europe/Amsterdam" });
     const day = new Date().toISOString().slice(0, 10);
     let sent = 0;
     for (const email of emails) {
       try {
-        await sendTemplateEmail("admin-digest", email, { templateData: { date, queues, automated }, idempotencyKey: `admin-digest-${day}-${email}` });
+        await sendTemplateEmail("admin-digest", email, { templateData: { date, queues, automated }, idempotencyKey: onlyMe ? `admin-digest-test-${Date.now()}` : `admin-digest-${day}-${email}` });
         sent++;
       } catch (e) {
         console.error("admin-daily-digest send", e);
