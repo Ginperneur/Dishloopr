@@ -27,6 +27,7 @@ import { BulkRestaurantUpload } from '@/components/admin/BulkRestaurantUpload';
 import { ClaimRequestsQueue } from '@/components/admin/ClaimRequestsQueue';
 import { OptoutRequestsManager } from '@/components/admin/OptoutRequestsManager';
 import { ContactMessagesManager } from '@/components/admin/ContactMessagesManager';
+import { PendingEditsQueue } from '@/components/admin/PendingEditsQueue';
 import { PresaleManager } from '@/components/admin/PresaleManager';
 import { OutreachManager } from '@/components/admin/OutreachManager';
 import { ClaimsVerificationManager } from '@/components/admin/ClaimsVerificationManager';
@@ -135,6 +136,7 @@ const sectionTitles: Record<string, { title: string; description: string }> = {
   'claims': { title: "Claims", description: "Restaurant claims verwerken" },
   'support': { title: "Support Chat", description: "Escalaties van de AI-klantenservice" },
   'optouts': { title: "Afmeldingen", description: "Opt-out- en aanpasverzoeken van restaurants" },
+  'edits': { title: "Wijzigingen", description: "Naam- en beschrijvingswijzigingen van eigenaren die de automatische controle niet goedkeurde" },
   'contact': { title: "Contactberichten", description: "Vragen, meldingen en klachten van eigenaren en bezoekers" },
   'suggestions': { title: "Suggesties", description: "Door bezoekers ingediende restaurant-suggesties" },
   'sponsored': { title: "Sponsored", description: "Gesponsorde producten beheren" },
@@ -190,7 +192,9 @@ export default function AdminPanel() {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [userModalOpen, setUserModalOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState('today');
+  const [activeSection, setActiveSection] = useState(() => {
+    try { return new URLSearchParams(window.location.search).get('section') || 'today'; } catch { return 'today'; }
+  });
   
   // Pagination states
   const [restaurantPage, setRestaurantPage] = useState(1);
@@ -452,6 +456,7 @@ export default function AdminPanel() {
               {activeSection === 'suggestions' && <RestaurantSuggestionsQueue />}
               {activeSection === 'optouts' && <OptoutRequestsManager />}
               {activeSection === 'contact' && <ContactMessagesManager />}
+              {activeSection === 'edits' && <PendingEditsQueue />}
               {activeSection === 'presale' && <PresaleManager />}
               {activeSection === 'outreach' && <OutreachManager />}
               {activeSection === 'kpi' && <KpiDashboard />}
