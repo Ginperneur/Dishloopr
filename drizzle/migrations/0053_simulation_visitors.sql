@@ -1,10 +1,3 @@
--- Simulations counted log rows: every dish page view, every filter change and bots all added up,
--- so "ramen: 980 searches per month" could be a handful of people. Now they count visitors:
--- one per browser session per day, sessions with more than 60 logs on a day (bots, scripts,
--- testing) left out, and the dish must match as a whole word ("ramen", not part of another word).
--- The site stops logging admins and known bots (src/lib/searchLog.ts).
--- Idempotent on purpose (Lovable may apply it under another number, or twice).
-
 CREATE OR REPLACE FUNCTION public.simulation_search_visits(p_city text)
 RETURNS TABLE (visitor text, dag date, query_norm text, filters jsonb)
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
@@ -36,7 +29,6 @@ BEGIN
          price_level, owner_tier INTO r FROM public.restaurants WHERE id = p_restaurant;
   SELECT lower(name) INTO v_city FROM public.cities WHERE id = r.city_id;
 
-  -- Who pays: Pro unlimited, then free ones, then a credit.
   IF r.owner_tier = 'pro' THEN v_charge := 'pro';
   ELSE
     SELECT count(*) INTO v_free FROM public.owner_simulations WHERE restaurant_id = p_restaurant AND charge = 'free';

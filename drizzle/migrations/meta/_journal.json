@@ -351,6 +351,13 @@
       "when": 1794769968093,
       "tag": "0052_admin_automation",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1794770034135,
+      "tag": "0053_simulation_visitors",
+      "breakpoints": true
     }
   ]
 }

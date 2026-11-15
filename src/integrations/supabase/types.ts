@@ -8927,6 +8927,15 @@ export type Database = {
         Returns: boolean
       }
       simulation_free_limit: { Args: never; Returns: number }
+      simulation_search_visits: {
+        Args: { p_city: string }
+        Returns: {
+          dag: string
+          filters: Json
+          query_norm: string
+          visitor: string
+        }[]
+      }
       snapshot_restaurant_positions: { Args: never; Returns: number }
       sync_owner_pro_restaurants: {
         Args: { _user_id: string }
