@@ -22,7 +22,7 @@ export function simulationSummary(r: SimulationResult, currentPrice?: number | n
     return {
       headline: `Met ${r.dish.toLowerCase()} sta je op plek ${r.position} van ${r.total}`,
       lines: [
-        `Er wordt in je stad zo'n ${n(r.searches_per_month)} keer per maand op ${r.dish.toLowerCase()} gezocht.`,
+        `Zo'n ${n(r.searches_per_month)} bezoekers per maand zoeken in je stad naar ${r.dish.toLowerCase()}.`,
         r.extra_visitors_per_month > 0
           ? `Op die plek levert dat naar schatting ${n(r.extra_visitors_per_month)} extra bezoekers per maand op je pagina op.`
           : 'Op die plek levert dat nog weinig extra bezoekers op; hogere reviews brengen je hoger.',

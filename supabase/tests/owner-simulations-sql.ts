@@ -6,9 +6,12 @@ const repo = Deno.args[0] ?? ".";
 const db = new PGlite();
 await db.exec(await Deno.readTextFile(new URL("./stubs.sql", import.meta.url)));
 await db.exec(`ALTER TABLE restaurants ADD COLUMN is_featured boolean, ADD COLUMN is_top_listing boolean, ADD COLUMN price_level int;
-  ALTER TABLE dishes ADD COLUMN dish_group text; ALTER TABLE search_logs ADD COLUMN filters jsonb DEFAULT '{}'::jsonb;`);
+  ALTER TABLE dishes ADD COLUMN dish_group text; ALTER TABLE search_logs ADD COLUMN filters jsonb DEFAULT '{}'::jsonb, ADD COLUMN session_id text;`);
 const sql = await Deno.readTextFile(`${repo}/supabase/migrations/20261115130000_owner_simulations.sql`);
 await db.exec(sql); await db.exec(sql);
+// Counting by visitor (one per session per day, heavy sessions out, whole-word dish match).
+const visitors = await Deno.readTextFile(`${repo}/supabase/migrations/20261115170000_simulation_visitors.sql`);
+await db.exec(visitors); await db.exec(visitors);
 let ok = true;
 const check = (l: string, p: boolean, g?: unknown) => { ok &&= p; console.log(p ? "PASS" : "FAIL", l, p ? "" : JSON.stringify(g)); };
 const id = (n: number) => `00000000-0000-0000-0000-${String(n).padStart(12, "0")}`;
@@ -20,6 +23,10 @@ await db.exec(`INSERT INTO cities VALUES ('${C}', 'Utrecht');
   INSERT INTO restaurants (id, name, slug, city_id, rating, is_featured) VALUES ('${id(300)}', 'A', 'a', '${C}', 4.8, false), ('${id(301)}', 'B', 'b', '${C}', 4.0, false), ('${id(302)}', 'F', 'f', '${C}', 3.0, true);
   INSERT INTO restaurant_dishes (restaurant_id, dish_id, status) SELECT r, '${RAMEN}', 'approved_by_admin' FROM unnest(ARRAY['${id(300)}','${id(301)}','${id(302)}']::uuid[]) r;
   INSERT INTO search_logs (query_norm, city) SELECT 'ramen', 'Utrecht' FROM generate_series(1, 300);
+  INSERT INTO search_logs (query_norm, city, session_id) SELECT 'ramen', 'Utrecht', 'same-visitor' FROM generate_series(1, 10);
+  INSERT INTO search_logs (query_norm, city, session_id) SELECT 'ramen', 'Utrecht', 'bot-session' FROM generate_series(1, 70);
+  INSERT INTO search_logs (query_norm, city) SELECT 'ramenbar', 'Utrecht' FROM generate_series(1, 3);
+  INSERT INTO search_logs (query_norm, city) SELECT 'tonkotsu ramen', 'Utrecht' FROM generate_series(1, 3);
   INSERT INTO search_logs (query_norm, city, filters) SELECT 'sushi', 'Utrecht', '{"prijs": ["2"]}' FROM generate_series(1, 60);
   INSERT INTO search_logs (query_norm, city, filters) SELECT 'sushi', 'Utrecht', '{"prijs": ["3"]}' FROM generate_series(1, 30);
   INSERT INTO search_logs (query_norm, city, filters) SELECT 'x', 'Utrecht', '{"sfeer": ["Romantisch"]}' FROM generate_series(1, 45);
@@ -30,7 +37,7 @@ const fails = async (f: () => Promise<unknown>) => { try { await f(); return fal
 
 const a = await run("add_dish", RAMEN, null, null);
 check("add_dish: position after featured and better-rated (#3 of 4)", a.position === 3 && a.total === 4, a);
-check("add_dish: searches per month (300/3) and extra visitors at #3 (10%)", Number(a.searches_per_month) === 100 && Number(a.extra_visitors_per_month) === 10, a);
+check("add_dish: 304 visitors / 3 (one visitor 10x = 1, bot session out, 'ramenbar' no match, 'tonkotsu ramen' match)", Number(a.searches_per_month) === 101.3 && Number(a.extra_visitors_per_month) === 10, a);
 const p = await run("change_price", null, null, 3);
 check("change_price 2 -> 3: lose 20/month, gain 10/month, 30 price searches/month", Number(p.lose_per_month) === 20 && Number(p.gain_per_month) === 10 && Number(p.price_filter_searches_per_month) === 30, p);
 const t = await run("remove_tag", null, "romantisch", null);
