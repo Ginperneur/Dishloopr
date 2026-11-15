@@ -82,6 +82,9 @@ Deno.serve(async (req) => {
       if (!(pages ?? []).some((p: { page_slug: string }) => p.page_slug === page_slug)) {
         return json({ error: "Je restaurant staat niet op deze gerechtpagina" }, 400);
       }
+      // Uitgelicht only on pages Dishloopr chose (dish on the Uitgelicht list, at least 6 restaurants).
+      const { data: eligible } = await admin.rpc("uitgelicht_page_eligible", { p_page_slug: page_slug });
+      if (eligible !== true) return json({ error: "Op deze gerechtpagina is Uitgelicht niet beschikbaar" }, 400);
       if (foundingWindowOpen()) {
         const { data: left } = await admin.rpc("founding_places_left", { p_page_slug: page_slug });
         if (typeof left === "number" && left <= 0) {

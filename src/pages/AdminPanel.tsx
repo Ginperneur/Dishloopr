@@ -38,6 +38,7 @@ import { ActivityLog } from '@/components/admin/ActivityLog';
 import { SettingsManager } from '@/components/admin/SettingsManager';
 import { CollectionsManager } from '@/components/admin/CollectionsManager';
 import { SeoLandingPagesManager } from '@/components/admin/SeoLandingPagesManager';
+import { UitgelichtDishesManager } from '@/components/admin/UitgelichtDishesManager';
 import { DishApprovalManager } from '@/components/admin/DishApprovalManager';
 import { ChainsManager } from '@/components/admin/ChainsManager';
 import { GeocodeManager } from '@/components/admin/GeocodeManager';
@@ -659,9 +660,12 @@ export default function AdminPanel() {
               )}
               {activeSection === 'notifications' && <NotificationManager />}
               {activeSection === 'seo' && (
-                <Card>
-                  <CardContent className="pt-6"><SeoLandingPagesManager /></CardContent>
-                </Card>
+                <div className="space-y-6">
+                  <UitgelichtDishesManager />
+                  <Card>
+                    <CardContent className="pt-6"><SeoLandingPagesManager /></CardContent>
+                  </Card>
+                </div>
               )}
               {activeSection === 'newsletter' && (
                 <Card>

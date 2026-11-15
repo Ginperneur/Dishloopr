@@ -319,7 +319,10 @@ export default function PackagesPage() {
               </div>
             </div>
           ) : pages.length === 0 ? (
-            <p className="text-sm">{restaurant.name} staat nog niet op een gerechtpagina. Neem contact op via info@dishloopr.com.</p>
+            <p className="text-sm">
+              Uitgelicht is er voor de gerechtpagina's van hoofdgerechten met minstens 6 restaurants, zoals pizza, sushi of biefstuk in je stad.
+              {' '}{restaurant.name} staat nog niet op zo'n pagina. Voeg je gerechten toe in je dashboard onder Menu, of mail info@dishloopr.com.
+            </p>
           ) : (
             <div className="space-y-4">
               <Select value={pageSlug} onValueChange={setPageSlug}>
