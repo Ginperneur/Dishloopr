@@ -1,4 +1,5 @@
 # Parkeerinformatie
+- [ ] Zes aangevraagde migraties 0044–0049 in volgorde uitvoeren, vijf functies deployen en publiceren; 0046_promo_auction_mail ontbreekt in de aangeleverde projectbestanden.
 - [x] Evenementvrijgave na bevestigde checkout-/factuurbetaling gebouwd; vijf controles geslaagd, stripe-webhook gedeployed. Geen echte evenementbetaling uitgevoerd; twee aanwezige evenementen hebben nog geen geregistreerde betaling.
 - [x] newsletter_national, promo_slots en uitgelicht_auction achtereenvolgens toegepast als 0040/0041/0042; zes aangevraagde edge functions gedeployed; negen schemacontroles geslaagd. Ontbrekende tabelrechten toegevoegd voor publiek lezen van markten, eigenaren lezen van plekken/biedingen en servicebeheer.
 - [x] 0040_hide_junk_dishes gegevensopschoning uitgevoerd via gegevensquery (684 inactief, 9 goedgekeurd beschermd, niets verwijderd); alle 74 edge functions gedeployed inclusief stripe-webhook.
