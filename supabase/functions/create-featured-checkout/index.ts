@@ -2,6 +2,7 @@ import { safeOrigin } from "../_shared/auth.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
+import { withVat } from "../_shared/vat.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -166,7 +167,7 @@ serve(async (req) => {
     }
 
     // Create Stripe session
-    const session = await stripe.checkout.sessions.create({
+    const session = await stripe.checkout.sessions.create(await withVat(stripe, {
       customer: customerId,
       customer_email: customerId ? undefined : user.email!,
       payment_method_types: ["card", "ideal", "bancontact"],
@@ -186,7 +187,7 @@ serve(async (req) => {
         total_monthly_price: String(totalMonthlyPrice),
         user_id: user.id,
       },
-    });
+    }));
 
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
 

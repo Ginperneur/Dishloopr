@@ -1,6 +1,7 @@
 import { safeOrigin, serviceClient, getCaller, isAdmin } from "../_shared/auth.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { billingParams } from "../_shared/billing.ts";
+import { withVat } from "../_shared/vat.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -150,7 +151,7 @@ Deno.serve(async (req) => {
     };
 
     const origin = safeOrigin(req);
-    const session = await stripe.checkout.sessions.create({
+    const session = await stripe.checkout.sessions.create(await withVat(stripe, {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [lineItem],
@@ -166,7 +167,7 @@ Deno.serve(async (req) => {
         : { payment_intent_data: { metadata, description: `${option.name}: ${restaurant.name}`.slice(0, 500) } }),
       success_url: `${origin}/owner-dashboard?package_checkout=success`,
       cancel_url: `${origin}/voor-restaurants/pakketten?slug=${encodeURIComponent(restaurant.slug)}`,
-    });
+    }));
 
     return json({ url: session.url });
   } catch (e) {

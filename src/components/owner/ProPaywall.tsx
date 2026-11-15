@@ -102,7 +102,7 @@ export function ProPaywall({ featureName, description, benefits, previewVariant 
               </div>
               <div className="flex items-baseline gap-1 mb-1">
                 <span className="text-2xl font-bold">€29</span>
-                <span className="text-xs opacity-80">/maand</span>
+                <span className="text-xs opacity-80">/maand excl. btw</span>
               </div>
               <div className="flex items-center gap-1 text-xs font-semibold opacity-95">
                 {loading === 'monthly' ? (
@@ -128,7 +128,7 @@ export function ProPaywall({ featureName, description, benefits, previewVariant 
               </div>
               <div className="flex items-baseline gap-1 mb-1">
                 <span className="text-2xl font-bold">€290</span>
-                <span className="text-xs text-muted-foreground">/jaar</span>
+                <span className="text-xs text-muted-foreground">/jaar excl. btw</span>
               </div>
               <div className="flex items-center gap-1 text-xs font-semibold text-foreground">
                 {loading === 'yearly' ? (

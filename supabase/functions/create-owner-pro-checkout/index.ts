@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 import { billingParams } from "../_shared/billing.ts";
+import { withVat } from "../_shared/vat.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -52,7 +53,7 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://dishloopr.com";
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await stripe.checkout.sessions.create(await withVat(stripe, {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [priceId
@@ -76,7 +77,7 @@ serve(async (req) => {
         metadata: { user_id: user.id, type: "owner_pro", billing_interval: interval },
       },
       metadata: { user_id: user.id, type: "owner_pro", billing_interval: interval },
-    });
+    }));
 
     log("Checkout session created", { sessionId: session.id, interval });
 

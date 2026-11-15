@@ -42,7 +42,7 @@ const PromoAuction = ({ kind = 'reminder_holder', restaurantName = 'je restauran
         {kind === 'reminder_holder' && <>
           <Text>
             Over {daysLeft} {daysLeft === 1 ? 'dag' : 'dagen'}, op {dateNl(auctionDate)}, is de veiling voor deze plek. Er {openBids === 1 ? 'ligt 1 bod' : `liggen ${openBids} biedingen`} van
-            andere restaurants{highestBidCents ? `, het hoogste is ${euro(highestBidCents)} per maand` : ''}. Je betaalt nu {euro(myCents)} per maand.
+            andere restaurants{highestBidCents ? `, het hoogste is ${euro(highestBidCents)} per maand excl. btw` : ''}. Je betaalt nu {euro(myCents)} per maand excl. btw.
           </Text>
           <Text>
             Wil je je plek zeker houden? Bied het bedrag dat je plek je maximaal waard is. Je betaalt nooit je eigen bod: alle winnaars betalen
@@ -52,14 +52,14 @@ const PromoAuction = ({ kind = 'reminder_holder', restaurantName = 'je restauran
 
         {kind === 'reminder_bidder' && <>
           <Text>
-            Over {daysLeft} {daysLeft === 1 ? 'dag' : 'dagen'}, op {dateNl(auctionDate)}, doet je bod van {euro(myCents)} per maand mee aan de veiling.
+            Over {daysLeft} {daysLeft === 1 ? 'dag' : 'dagen'}, op {dateNl(auctionDate)}, doet je bod van {euro(myCents)} per maand excl. btw mee aan de veiling.
             {highestBidCents && highestBidCents > (myCents ?? 0) ? ` Het hoogste bod is nu ${euro(highestBidCents)}.` : ''}
           </Text>
           <Text>Je kunt je bod tot die dag verhogen, verlagen of intrekken. Win je, dan betaal je het hoogste bod dat net niet won, nooit meer dan je eigen bod.</Text>
         </>}
 
         {kind === 'won' && <>
-          <Text>Je krijgt deze plek voor {euro(priceCents)} per maand. Rond binnen 7 dagen af, anders gaat de plek naar het volgende bod.</Text>
+          <Text>Je krijgt deze plek voor {euro(priceCents)} per maand excl. btw. Rond binnen 7 dagen af, anders gaat de plek naar het volgende bod.</Text>
         </>}
 
         {kind === 'outbid' && <>
@@ -70,7 +70,7 @@ const PromoAuction = ({ kind = 'reminder_holder', restaurantName = 'je restauran
         </>}
 
         {kind === 'reprice' && <>
-          <Text>Je houdt je plek. Vanaf je volgende factuur betaal je {euro(priceCents)} per maand, op basis van de vraag en de veiling van dit kwartaal.</Text>
+          <Text>Je houdt je plek. Vanaf je volgende factuur betaal je {euro(priceCents)} per maand excl. btw, op basis van de vraag en de veiling van dit kwartaal.</Text>
         </>}
 
         <Section style={{ padding: '8px 0 16px' }}>

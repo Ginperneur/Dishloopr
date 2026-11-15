@@ -125,7 +125,7 @@ export default function EventsPage() {
         <aside className="mt-12 rounded-xl border bg-muted/40 p-6">
           <h2 className="font-display text-lg font-semibold">Heb je een restaurant?</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Zet je eigen special of evenement op Dishloopr voor €5 per maand. Elke maand zie je hoe vaak het bekeken is.
+            Zet je eigen special of evenement op Dishloopr voor €5 per maand excl. btw. Elke maand zie je hoe vaak het bekeken is.
           </p>
           <Button asChild variant="outline" className="mt-4 min-h-11"><Link to="/voor-restaurants/pakketten">Bekijk de pakketten</Link></Button>
         </aside>

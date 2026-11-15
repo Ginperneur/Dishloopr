@@ -59,7 +59,7 @@ export function UpgradeToProCard({ restaurantId }: { restaurantId: string }) {
                 ) : (
                   <Crown className="h-4 w-4 mr-1" />
                 )}
-                {CHECKOUT_ENABLED.pro ? 'Maandelijks · €29' : `Maandelijks · ${COMING_SOON_LABEL}`}
+                {CHECKOUT_ENABLED.pro ? 'Maandelijks · €29 excl. btw' : `Maandelijks · ${COMING_SOON_LABEL}`}
               </Button>
               <Button
                 variant="outline"
@@ -71,7 +71,7 @@ export function UpgradeToProCard({ restaurantId }: { restaurantId: string }) {
                 {loading === 'yearly' ? (
                   <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                 ) : null}
-                {CHECKOUT_ENABLED.pro ? 'Jaarlijks · €290' : `Jaarlijks · ${COMING_SOON_LABEL}`}
+                {CHECKOUT_ENABLED.pro ? 'Jaarlijks · €290 excl. btw' : `Jaarlijks · ${COMING_SOON_LABEL}`}
               </Button>
             </div>
             {!CHECKOUT_ENABLED.pro && (

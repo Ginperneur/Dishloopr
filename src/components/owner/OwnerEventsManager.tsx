@@ -304,7 +304,7 @@ export function OwnerEventsManager({ restaurantId, restaurantName }: OwnerEvents
                           {CHECKOUT_ENABLED.event ? (
                             <Button size="sm" className="min-h-11" onClick={() => startCheckout(event)} disabled={checkoutId === event.id}>
                               {checkoutId === event.id && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
-                              Zet online voor €5 per maand
+                              Zet online voor €5 per maand excl. btw
                             </Button>
                           ) : (
                             <p className="text-xs text-muted-foreground">Wacht op vrijgave door Dishloopr.</p>
