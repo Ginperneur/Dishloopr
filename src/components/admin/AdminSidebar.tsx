@@ -27,6 +27,7 @@ interface AdminSidebarProps {
   pendingSupport?: number;
   pendingTagRequests?: number;
   pendingEventReleases?: number;
+  pendingContact?: number;
 }
 
 const navGroups = [
@@ -74,7 +75,7 @@ const navGroups = [
       { id: 'support', label: 'Support Chat', icon: MessageSquare, badgeKey: 'pendingSupport' as const },
       { id: 'suggestions', label: 'Suggesties', icon: Inbox },
       { id: 'optouts', label: 'Afmeldingen', icon: Inbox },
-      { id: 'contact', label: 'Contactberichten', icon: Inbox },
+      { id: 'contact', label: 'Contactberichten', icon: Inbox, badgeKey: 'pendingContact' as const },
     ],
   },
   {
@@ -125,7 +126,7 @@ const navGroups = [
   },
 ];
 
-export function AdminSidebar({ activeSection, onSectionChange, pendingReviews = 0, pendingClaims = 0, pendingSupport = 0, pendingTagRequests = 0, pendingEventReleases = 0 }: AdminSidebarProps) {
+export function AdminSidebar({ activeSection, onSectionChange, pendingReviews = 0, pendingClaims = 0, pendingSupport = 0, pendingTagRequests = 0, pendingEventReleases = 0, pendingContact = 0 }: AdminSidebarProps) {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
 
@@ -135,6 +136,7 @@ export function AdminSidebar({ activeSection, onSectionChange, pendingReviews = 
     pendingSupport,
     pendingTagRequests,
     pendingEventReleases,
+    pendingContact,
   };
 
   return (
