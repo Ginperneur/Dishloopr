@@ -700,7 +700,8 @@ export default function OwnerDashboard() {
                           <>
                             <ContactDetailsEditor restaurantId={r.id} restaurantName={r.name} phone={r.phone ?? null}
                               websiteUrl={r.website_url ?? null} address={r.address ?? null}
-                              onSaved={(next) => setSelectedRestaurant({ ...r, ...next } as any)} />
+                              onSaved={(next) => setSelectedRestaurant({ ...r, ...next } as any)}
+                              onAddressSaved={(address) => setSelectedRestaurant({ ...r, address } as any)} />
                             {section('Naam, beschrijving en openingstijden', Clock, (
                               <>
                                 <BasicInfoEditor restaurantId={r.id} currentName={r.name} currentOpeningHours={r.opening_hours}
