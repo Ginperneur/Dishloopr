@@ -7279,6 +7279,27 @@ export type Database = {
           },
         ]
       }
+      uitgelicht_dishes: {
+        Row: {
+          created_at: string
+          dish_slug: string
+          enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dish_slug: string
+          enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dish_slug?: string
+          enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_badges: {
         Row: {
           badge_level: number | null
@@ -8343,6 +8364,10 @@ export type Database = {
         Args: { _restaurant_id: string; _user_id: string }
         Returns: boolean
       }
+      landing_page_restaurant_count: {
+        Args: { p_page_slug: string }
+        Returns: number
+      }
       log_search: {
         Args: {
           p_city?: string
@@ -8903,6 +8928,7 @@ export type Database = {
         }[]
       }
       uitgelicht_list_price: { Args: { p_page_slug: string }; Returns: number }
+      uitgelicht_min_restaurants: { Args: never; Returns: number }
       uitgelicht_on_page: {
         Args: { p_page_slug: string; p_restaurant: string }
         Returns: boolean
@@ -8913,6 +8939,10 @@ export type Database = {
           city_id: string
           dish_id: string
         }[]
+      }
+      uitgelicht_page_eligible: {
+        Args: { p_page_slug: string }
+        Returns: boolean
       }
       uitgelicht_page_offers: {
         Args: { p_slug: string }
