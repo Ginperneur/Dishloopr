@@ -295,6 +295,13 @@
       "when": 1794752142294,
       "tag": "0044_restaurant_positions_all_pages",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1794752893852,
+      "tag": "0045_security_backups_and_badges",
+      "breakpoints": true
     }
   ]
 }
