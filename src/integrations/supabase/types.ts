@@ -2804,6 +2804,126 @@ export type Database = {
         }
         Relationships: []
       }
+      owner_simulation_credits: {
+        Row: {
+          credits: number
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          credits?: number
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          credits?: number
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_simulation_credits_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "owner_simulation_credits_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      owner_simulation_purchases: {
+        Row: {
+          created_at: string
+          quantity: number
+          restaurant_id: string
+          stripe_session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          quantity: number
+          restaurant_id: string
+          stripe_session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          quantity?: number
+          restaurant_id?: string
+          stripe_session_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_simulation_purchases_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "owner_simulation_purchases_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      owner_simulations: {
+        Row: {
+          charge: string
+          created_at: string
+          id: string
+          kind: string
+          params: Json
+          restaurant_id: string
+          result: Json
+          user_id: string | null
+        }
+        Insert: {
+          charge?: string
+          created_at?: string
+          id?: string
+          kind: string
+          params?: Json
+          restaurant_id: string
+          result?: Json
+          user_id?: string | null
+        }
+        Update: {
+          charge?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          params?: Json
+          restaurant_id?: string
+          result?: Json
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_simulations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "owner_simulations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       owner_weekly_recommendations: {
         Row: {
           actions: Json
@@ -8184,6 +8304,15 @@ export type Database = {
         Args: { p_restaurant_id: string; p_slot_id: string }
         Returns: number
       }
+      grant_simulation_credits: {
+        Args: {
+          p_quantity: number
+          p_restaurant: string
+          p_session: string
+          p_user: string
+        }
+        Returns: boolean
+      }
       has_restaurant_access: {
         Args: {
           _min_role?: Database["public"]["Enums"]["manager_role"]
@@ -8314,6 +8443,7 @@ export type Database = {
           weekday: number
         }[]
       }
+      owner_simulation_quota: { Args: { p_restaurant: string }; Returns: Json }
       owner_stats_between: {
         Args: { p_from: string; p_restaurant_id: string; p_to: string }
         Returns: {
@@ -8553,6 +8683,16 @@ export type Database = {
           restaurant_id: string
         }[]
       }
+      run_owner_simulation: {
+        Args: {
+          p_dish?: string
+          p_kind: string
+          p_price_level?: number
+          p_restaurant: string
+          p_tag?: string
+        }
+        Returns: Json
+      }
       save_reservation_integration: {
         Args: {
           p_config?: Json
@@ -8735,6 +8875,12 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      simulation_ctr: { Args: { p_position: number }; Returns: number }
+      simulation_filter_has: {
+        Args: { p_filter: Json; p_value: string }
+        Returns: boolean
+      }
+      simulation_free_limit: { Args: never; Returns: number }
       snapshot_restaurant_positions: { Args: never; Returns: number }
       sync_owner_pro_restaurants: {
         Args: { _user_id: string }
