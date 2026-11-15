@@ -1,41 +1,22 @@
--- Uitgelicht only on dish pages Dishloopr chooses: the dish is on the Uitgelicht list (main dishes
--- guests pick a restaurant for, managed in Admin) and at least 6 restaurants are on the page (with
--- fewer, 5 places on top are worth little). All dish pages stay online for guests and search
--- engines; only selling new places is limited. Existing places are kept.
--- Starting list: Italian, meat and grill, Asian, fish and other; no street food, snacks, sides,
--- desserts or single ingredients.
--- Idempotent on purpose (Lovable may apply it under another number, or twice).
-
 CREATE TABLE IF NOT EXISTS public.uitgelicht_dishes (
   dish_slug text PRIMARY KEY,
   enabled boolean NOT NULL DEFAULT true,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+GRANT SELECT ON public.uitgelicht_dishes TO anon, authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.uitgelicht_dishes TO authenticated;
+GRANT ALL ON public.uitgelicht_dishes TO service_role;
 ALTER TABLE public.uitgelicht_dishes ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Anyone can read the Uitgelicht list" ON public.uitgelicht_dishes;
 CREATE POLICY "Anyone can read the Uitgelicht list" ON public.uitgelicht_dishes FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Admins manage the Uitgelicht list" ON public.uitgelicht_dishes;
 CREATE POLICY "Admins manage the Uitgelicht list" ON public.uitgelicht_dishes FOR ALL
   USING (public.has_role(auth.uid(), 'admin')) WITH CHECK (public.has_role(auth.uid(), 'admin'));
-GRANT SELECT ON public.uitgelicht_dishes TO anon, authenticated;
-GRANT INSERT, UPDATE, DELETE ON public.uitgelicht_dishes TO authenticated;
-
--- Canonical dish slugs (what the dish pages use).
-INSERT INTO public.uitgelicht_dishes (dish_slug) VALUES
-  ('pizza'), ('pasta'), ('carbonara'), ('lasagne'), ('risotto'),
-  ('hamburger'), ('biefstuk'), ('spare-ribs'), ('schnitzel'), ('fried-chicken'),
-  ('sushi'), ('ramen'), ('pho'), ('pad-thai'), ('curry'), ('poke-bowl'), ('dumplings'), ('bibimbap'),
-  ('korean-fried-chicken'), ('peking-eend'), ('nasi-goreng'), ('bami-goreng'), ('rendang'), ('satay'),
-  ('roti'), ('butter-chicken'), ('tikka-masala'), ('biryani'),
-  ('mosselen'), ('oesters'), ('kibbeling'), ('fish-and-chips'), ('ceviche'),
-  ('tapas'), ('paella'), ('stamppot'), ('pannenkoek'), ('eggs-benedict')
-ON CONFLICT (dish_slug) DO NOTHING;
 
 CREATE OR REPLACE FUNCTION public.uitgelicht_min_restaurants()
 RETURNS int LANGUAGE sql IMMUTABLE AS $$ SELECT 6 $$;
 
--- Restaurants listed on a dish page (same matching as the page: hub by dish_group, else canonical_slug).
 CREATE OR REPLACE FUNCTION public.landing_page_restaurant_count(p_page_slug text)
 RETURNS int LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   WITH pg AS (
@@ -62,7 +43,6 @@ $$;
 GRANT EXECUTE ON FUNCTION public.uitgelicht_page_eligible(text) TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.landing_page_restaurant_count(text) TO anon, authenticated, service_role;
 
--- Offers (packages page, dashboard, outreach): only pages where Uitgelicht is for sale.
 CREATE OR REPLACE FUNCTION public.uitgelicht_page_offers(p_slug text)
 RETURNS TABLE (page_slug text, dish_name text, "position" int, total int, searches_per_month numeric,
                places_left int, list_price_cents int)
@@ -77,7 +57,6 @@ $$;
 REVOKE ALL ON FUNCTION public.uitgelicht_page_offers(text) FROM public;
 GRANT EXECUTE ON FUNCTION public.uitgelicht_page_offers(text) TO anon, authenticated, service_role;
 
--- Bids only on eligible pages.
 CREATE OR REPLACE FUNCTION public.place_uitgelicht_bid(p_page_slug text, p_restaurant uuid, p_amount_cents int)
 RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE v_g record; v_market uuid; v_list int; v_id uuid;
