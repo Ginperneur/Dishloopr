@@ -26,7 +26,7 @@ export interface OutreachData {
 
 export interface RenderedMail { subject: string; html: string; text: string }
 
-const LAUNCH = "1 december";
+export const LAUNCH = "1 december";
 const FLYER_ATTACHED = "In de bijlage vind je onze flyer met alles op een rij: hoe gasten je vinden, wat claimen je oplevert en alle prijzen.";
 const FLYER_LINKED = "Alles op een rij, met hoe gasten je vinden, wat claimen je oplevert en alle prijzen, staat in onze flyer.";
 
@@ -54,7 +54,7 @@ function rankingLine(d: OutreachData): string | null {
   return `Zoekt iemand op ${dish.toLowerCase()} in ${d.city}, dan sta je nu op plek ${position} van ${total}. De meeste gasten kijken niet verder dan de eerste vijf.${places}`;
 }
 
-const freeBullets = [
+export const freeBullets = [
   "je profiel, openingstijden en foto's in eigen beheer",
   "je signature dish onder \"Bekend om\"",
   "je menu bevestigen en aanvullen",
@@ -69,10 +69,10 @@ const paidBullets = [
 ];
 
 // Plain text part: drop tags, then undo escapeHtml so names read normally.
-const strip = (s: string) =>
+export const strip = (s: string) =>
   s.replace(/<[^>]+>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
 
-function shell(bodyHtml: string, d: OutreachData): string {
+export function shell(bodyHtml: string, d: OutreachData): string {
   return `<!doctype html><html lang="nl"><body style="margin:0;padding:0;background:#f6f4f0">
 <div style="max-width:560px;margin:0 auto;padding:28px 20px;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#1f1f1f">
 ${bodyHtml}
@@ -84,13 +84,13 @@ Gegevens laten aanpassen of verwijderen? <a href="${escapeHtml(d.optoutUrl)}" st
 </div></body></html>`;
 }
 
-const button = (href: string, label: string) =>
+export const button = (href: string, label: string) =>
   `<p style="margin:22px 0"><a href="${escapeHtml(href)}" style="background:#e8562a;color:#fff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;display:inline-block">${label}</a></p>`;
 
-const ul = (items: string[]) =>
+export const ul = (items: string[]) =>
   `<ul style="padding-left:20px;margin:8px 0 16px">${items.map((i) => `<li style="margin:4px 0">${i}</li>`).join("")}</ul>`;
 
-function textFooter(d: OutreachData): string {
+export function textFooter(d: OutreachData): string {
   return `\n\nMet vriendelijke groet,\n${d.senderName}\nDishloopr\n\nJe krijgt deze mail omdat ${d.name} op Dishloopr staat en dit adres openbaar op jullie website of bedrijfsprofiel staat.\nAfmelden: ${d.unsubscribeUrl}\nGegevens aanpassen of verwijderen: ${d.optoutUrl}\n`;
 }
 

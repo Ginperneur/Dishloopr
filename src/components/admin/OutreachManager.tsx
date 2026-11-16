@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ClaimFollowupPanel } from '@/components/admin/ClaimFollowupPanel';
 import {
   CATEGORY_LABEL, MAIL_STATUS_LABEL, pendingForWave, segmentMatrix, targetsCsv,
   type OutreachReply, type OutreachSettings, type OutreachTarget,
@@ -122,6 +123,7 @@ export function OutreachManager() {
       <Tabs defaultValue="inbox">
         <TabsList>
           <TabsTrigger value="inbox">Inbox ({replies.filter(r => r.status === 'te_beoordelen').length})</TabsTrigger>
+          <TabsTrigger value="opvolging">Opvolging</TabsTrigger>
           <TabsTrigger value="segments">Segmenten</TabsTrigger>
           <TabsTrigger value="mail">Mail en instellingen</TabsTrigger>
         </TabsList>
@@ -152,6 +154,8 @@ export function OutreachManager() {
         <TabsContent value="mail">{settings && <MailSettings settings={settings} onChange={setSettings} onSave={saveSettings} saving={busy === 'settings'} targets={targets} />}</TabsContent>
 
         <TabsContent value="inbox"><Inbox replies={replies} targets={targets} onChanged={refresh} /></TabsContent>
+
+        <TabsContent value="opvolging"><ClaimFollowupPanel /></TabsContent>
       </Tabs>
     </div>
   );
