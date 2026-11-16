@@ -10,11 +10,15 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https',
   },
+  // WebView-achtergrond gelijk aan de site (gebroken wit #F7F4F1), zodat er
+  // tussen splash en eerste render nooit een wit vlak verschijnt.
+  backgroundColor: '#F7F4F1',
   plugins: {
     SplashScreen: {
-      launchShowDuration: 1500,
-      launchAutoHide: true,
-      backgroundColor: '#F26522',
+      // De app verbergt de splash zelf zodra de eerste pagina staat
+      // (NativeSplashGate), met een vangnet na 8 seconden.
+      launchAutoHide: false,
+      backgroundColor: '#F7F4F1',
       showSpinner: false,
       androidScaleType: 'CENTER_CROP',
       splashFullScreen: true,

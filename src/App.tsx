@@ -15,7 +15,7 @@ const OnboardingDialog = lazy(() => import("@/components/onboarding/OnboardingDi
 import { CookieConsent } from "@/components/legal/CookieConsent";
 import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 import { RestaurantMetricsObserver } from '@/components/analytics/RestaurantMetricsObserver';
-import { NativeBridge } from '@/components/native/NativeBridge';
+import { NativeBridge, NativeSplashGate } from '@/components/native/NativeBridge';
 
 // Eagerly load the landing route only; search loads on first use.
 import Index from "./pages/Index";
@@ -169,6 +169,7 @@ const App = () => (
                   <Route path="/vote/:shareCode" element={<VotePage />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+                <NativeSplashGate />
               </Suspense>
             </BrowserRouter>
             </ConfirmProvider>
