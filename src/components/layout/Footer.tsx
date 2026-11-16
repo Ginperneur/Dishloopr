@@ -19,7 +19,7 @@ export function Footer() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { resolvedTheme } = useTheme();
-  const logo = resolvedTheme === 'dark' ? logoDark : logoLight;
+  const logo = resolvedTheme === 'dark' ? logoDarkAsset.url : logoLightAsset.url;
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);

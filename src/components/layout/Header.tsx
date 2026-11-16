@@ -25,7 +25,7 @@ import { useHasFeatured } from '@/hooks/useHasFeatured';
 export function Header() {
   const { t, i18n } = useTranslation();
   const { resolvedTheme } = useTheme();
-  const logo = resolvedTheme === 'dark' ? logoDark : logoLight;
+  const logo = resolvedTheme === 'dark' ? logoDarkAsset.url : logoLightAsset.url;
   const { user, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
