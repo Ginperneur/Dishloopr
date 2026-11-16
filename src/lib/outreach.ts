@@ -13,6 +13,48 @@ export interface OutreachSettings {
   enabled: boolean; wave: number; batch_size: number; daily_cap: number;
   skip_natural_persons: boolean; menu_minimum: number;
   flyer_mode: 'bijlage' | 'link' | 'uit'; flyer_warning: string | null;
+  reminders_enabled: boolean; reminder_interval_days: number; reminder_max: number;
+}
+
+/** One row per restaurant from admin_claim_followup(). */
+export interface ClaimFollowupRow {
+  restaurant_id: string; name: string; slug: string; stad: string | null; email: string | null;
+  segment: 'zichtbaar' | 'onzichtbaar_menu'; mail_status: string; claim_status: string;
+  golf_mails: number; herinneringen: number;
+  eerste_mail_op: string | null; laatst_gemaild_op: string | null;
+  gereageerd_op: string | null; reactie_categorie: string | null; claim_loopt: boolean;
+  views_totaal: number; views_30d: number; views_sinds_mail: number;
+  volgende_herinnering_op: string | null;
+  opvolg_status: 'geclaimd' | 'claim_loopt' | 'gereageerd' | 'afgemeld' | 'niet_mailbaar' | 'nog_niet_gemaild' | 'reeks_klaar' | 'wacht' | 'herinnering_klaar';
+}
+
+export const FOLLOWUP_STATUS_LABEL: Record<ClaimFollowupRow['opvolg_status'], string> = {
+  geclaimd: 'Geclaimd',
+  claim_loopt: 'Claim loopt',
+  gereageerd: 'Heeft gereageerd',
+  afgemeld: 'Afgemeld',
+  niet_mailbaar: 'Niet mailbaar',
+  nog_niet_gemaild: 'Nog niet gemaild',
+  reeks_klaar: 'Alle herinneringen verstuurd',
+  wacht: 'Wacht op volgende herinnering',
+  herinnering_klaar: 'Herinnering klaar',
+};
+
+/** Statuses of restaurants that were mailed and still wait for a claim, reply or reminder. */
+export const OPEN_FOLLOWUP_STATUSES: ClaimFollowupRow['opvolg_status'][] = ['wacht', 'herinnering_klaar', 'reeks_klaar'];
+
+/** Counts for the follow-up stat cards. */
+export function followupSummary(rows: Pick<ClaimFollowupRow, 'golf_mails' | 'opvolg_status' | 'views_sinds_mail'>[]) {
+  const gemaild = rows.filter(r => r.golf_mails > 0);
+  const open = gemaild.filter(r => OPEN_FOLLOWUP_STATUSES.includes(r.opvolg_status));
+  return {
+    gemaild: gemaild.length,
+    open: open.length,
+    herinneringKlaar: rows.filter(r => r.opvolg_status === 'herinnering_klaar').length,
+    gereageerd: rows.filter(r => r.opvolg_status === 'gereageerd').length,
+    geclaimdNaMail: gemaild.filter(r => r.opvolg_status === 'geclaimd' || r.opvolg_status === 'claim_loopt').length,
+    viewsSindsMail: open.reduce((sum, r) => sum + (r.views_sinds_mail ?? 0), 0),
+  };
 }
 
 export interface OutreachReply {
