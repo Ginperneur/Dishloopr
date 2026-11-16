@@ -6,7 +6,7 @@ import { SplashScreen } from '@capacitor/splash-screen';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { WifiOff } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { deepLinkToRoute, isNativeApp, nativePlatform } from '@/lib/native';
+import { deepLinkToRoute, isNativeApp, pushEnabled } from '@/lib/native';
 import { registerForPush } from '@/lib/nativePush';
 
 /**
@@ -85,10 +85,11 @@ function NativeBridgeInner() {
     };
   }, []);
 
-  // Push: ask only once someone is signed in, never on first launch.
+  // Push (off until a sender exists, see pushEnabled): ask only once someone is
+  // signed in, never on first launch.
   useEffect(() => {
     if (!user) return;
-    if (nativePlatform() === 'android' && import.meta.env.VITE_ANDROID_PUSH_ENABLED !== 'true') return;
+    if (!pushEnabled()) return;
     registerForPush(user.id).catch((err) => console.warn('[push] registration failed', err));
   }, [user]);
 

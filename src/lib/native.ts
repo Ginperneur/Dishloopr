@@ -12,6 +12,19 @@ export const nativePlatform = (): 'ios' | 'android' | 'web' =>
   Capacitor.getPlatform() as 'ios' | 'android' | 'web';
 
 /**
+ * Push stays off until there is something that sends notifications (APNs key and
+ * the iOS push entitlement, Firebase for Android, and a send function). Until then
+ * the app never asks for permission. Turn it on per platform at build time with
+ * VITE_IOS_PUSH_ENABLED=true / VITE_ANDROID_PUSH_ENABLED=true.
+ */
+export const pushEnabled = (): boolean => {
+  const platform = nativePlatform();
+  if (platform === 'ios') return import.meta.env.VITE_IOS_PUSH_ENABLED === 'true';
+  if (platform === 'android') return import.meta.env.VITE_ANDROID_PUSH_ENABLED === 'true';
+  return false;
+};
+
+/**
  * Origin to put in links that leave the device (auth e-mails, shares).
  * Those links must open a real web page, never the app's local origin.
  */

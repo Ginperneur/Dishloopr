@@ -11,3 +11,7 @@ capacitor-cordova-ios-plugins
 # Generated Config files
 App/App/capacitor.config.json
 App/App/config.xml
+
+# iCloud Drive maakt bij elke cap sync conflictkopieen ("config 2.xml")
+App/App/config *.xml
+App/App/capacitor.config *.json

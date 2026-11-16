@@ -50,7 +50,12 @@ Dit zijn de native haakjes die we in de React-code zetten; ze geven de app
 de "minimum functionality" die Apple wil zien:
 
 1. **"Bij mij in de buurt"** — `@capacitor/geolocation` → restaurants sorteren op afstand
-2. **Push-notificaties** — registratie + token opslaan in Supabase
+2. **Push-notificaties** — registratie + token opslaan in Supabase. Staat in
+   versie 1 uit: de app vraagt geen toestemming zolang er niets meldingen
+   verstuurt. Aanzetten per platform bij het bouwen met
+   `VITE_IOS_PUSH_ENABLED=true` (vereist APNs-key + push-entitlement in Xcode)
+   of `VITE_ANDROID_PUSH_ENABLED=true` (vereist Firebase), plus een
+   verzendfunctie die `push_tokens` gebruikt.
 3. **Offline-melding** — `@capacitor/network` → nette offline-status
 4. **Native login-redirect** — Supabase deep link `com.dishloopr.app://` instellen
 
