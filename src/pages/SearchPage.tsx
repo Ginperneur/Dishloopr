@@ -7,7 +7,7 @@ import { X, Map, LayoutGrid, Navigation, Loader2, ArrowUp, UtensilsCrossed, Book
 import { Layout } from '@/components/layout/Layout';
 import { SearchBar } from '@/components/search/SearchBar';
 import { DatabaseRestaurantCard } from '@/components/restaurant/DatabaseRestaurantCard';
-import { sortByCoverage, groupByCoverage, coverageOf, capitalizeTerm } from '@/lib/multiDishSearch';
+import { sortByCoverage, groupByCoverage, coverageOf, capitalizeTerm, splitDishQuery } from '@/lib/multiDishSearch';
 import { FilterPopover } from '@/components/search/FilterPopover';
 import { SeoLandingLinks } from '@/components/search/SeoLandingLinks';
 import { Button } from '@/components/ui/button';
@@ -87,6 +87,17 @@ export default function SearchPage() {
     if (parsedQuery) params.set('dish', parsedQuery); else params.delete('dish');
     setSearchParams(params, { replace: true });
   }, [detectedCity, parsedQuery]);
+
+  // "biefstuk en garnalen" → dish=biefstuk, garnalen, so the search bar shows
+  // one chip per dish. Only when parsedQuery belongs to the current URL query
+  // (a stale result from the previous search never overwrites a new one).
+  useEffect(() => {
+    if (!parsedQuery || !dishQuery || dishQuery === parsedQuery) return;
+    if (splitDishQuery(dishQuery).join(', ') !== parsedQuery) return;
+    const params = new URLSearchParams(searchParams);
+    params.set('dish', parsedQuery);
+    setSearchParams(params, { replace: true });
+  }, [parsedQuery, dishQuery]);
   
   const [selectedCityId, setSelectedCityId] = useState(resolvedCityId);
   
