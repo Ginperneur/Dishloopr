@@ -67,7 +67,7 @@ export default function EmailConfirmPage() {
         >
           <div className="text-center mb-6 md:mb-8">
             <Link to="/" className="inline-block mb-4 md:mb-6">
-              <img src={logo} alt="Dishloopr" className="h-12 md:h-16 w-auto mx-auto" />
+              <img src={logoAsset.url} alt="Dishloopr" className="h-12 md:h-16 w-auto mx-auto" />
             </Link>
           </div>
 
