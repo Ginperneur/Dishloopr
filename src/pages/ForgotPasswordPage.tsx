@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import logoAsset from '@/assets/dishloopr-logo.png.asset.json';
+import logo from '@/assets/dishloopr-logo.png';
 
 const emailSchema = z.object({
   email: z.string().email('Ongeldig e-mailadres'),
@@ -67,7 +67,7 @@ export default function ForgotPasswordPage() {
         >
           <div className="text-center mb-6 md:mb-8">
             <Link to="/" className="inline-block mb-4 md:mb-6">
-              <img src={logoAsset.url} alt="Dishloopr" className="h-12 md:h-16 w-auto mx-auto" />
+              <img src={logo} alt="Dishloopr" className="h-12 md:h-16 w-auto mx-auto" />
             </Link>
             <h1 className="text-xl md:text-2xl font-bold">Wachtwoord vergeten?</h1>
             <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
