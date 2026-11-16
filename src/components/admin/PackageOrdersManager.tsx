@@ -51,7 +51,7 @@ export function PackageOrdersManager() {
   const cancelUnpaid = async (count: number) => {
     const ok = await confirm({
       title: 'Launch gaat niet door?',
-      description: `Dit annuleert ${count} Founding Partner-abonnement(en) die nog niet betaald hebben. Er wordt niets afgeschreven. Dit kun je niet terugdraaien.`,
+      description: `Dit annuleert ${count} Uitgelicht-abonnement(en) die nog niet betaald hebben. Er wordt niets afgeschreven. Dit kun je niet terugdraaien.`,
       confirmLabel: 'Annuleer alle onbetaalde',
       destructive: true,
     });
@@ -102,8 +102,8 @@ export function PackageOrdersManager() {
   const foundingBilling = founding.filter(o => o.status !== 'trialing');
   const rows = [
     { label: 'Owner Pro', count: data.proMonthly + data.proYearly, mrr: data.proMonthly * OWNER_PRO_PRICES.monthly.amount + data.proYearly * OWNER_PRO_PRICES.yearly.amount / 12 },
-    { label: 'Founding Partner (betalend)', count: foundingBilling.length, mrr: foundingBilling.reduce((s, o) => s + monthlyValue(o), 0) },
-    { label: 'Founding Partner (start bij launch)', count: founding.length - foundingBilling.length, mrr: founding.filter(o => o.status === 'trialing').reduce((s, o) => s + monthlyValue(o), 0), pending: true },
+    { label: 'Uitgelicht (betalend)', count: foundingBilling.length, mrr: foundingBilling.reduce((s, o) => s + monthlyValue(o), 0) },
+    { label: 'Uitgelicht (start bij launch)', count: founding.length - foundingBilling.length, mrr: founding.filter(o => o.status === 'trialing').reduce((s, o) => s + monthlyValue(o), 0), pending: true },
     { label: 'Menuservice per maand', count: menu.filter(o => o.plan === 'month').length, mrr: menu.reduce((s, o) => s + monthlyValue(o), 0) },
     { label: 'Evenementen', count: data.paidEvents, mrr: data.paidEvents * 5 },
   ];
@@ -151,8 +151,8 @@ export function PackageOrdersManager() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Founding Partner en Menuservice</CardTitle>
-          <CardDescription>Bestellingen komen binnen via Stripe. Max. 5 Founding Partners per gerechtpagina.</CardDescription>
+          <CardTitle>Uitgelicht en Menuservice</CardTitle>
+          <CardDescription>Bestellingen komen binnen via Stripe. Max. 5 Uitgelicht-plekken per gerechtpagina. Gekocht tot en met 5 januari 2027 geeft de Founding Partner-status.</CardDescription>
         </CardHeader>
         <CardContent>
           {sorted.length === 0 ? (
@@ -168,7 +168,7 @@ export function PackageOrdersManager() {
                       <div className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleDateString('nl-NL')}</div>
                     </TableCell>
                     <TableCell>
-                      {o.package === 'founding_partner' ? 'Founding Partner' : 'Menuservice'} · {o.plan === 'once' ? 'eenmalig' : o.plan === 'year' ? 'per jaar' : 'per maand'}
+                      {o.package === 'founding_partner' ? 'Uitgelicht' : 'Menuservice'} · {o.plan === 'once' ? 'eenmalig' : o.plan === 'year' ? 'per jaar' : 'per maand'}
                       {o.page_slug && <div className="text-xs text-muted-foreground">/{o.page_slug}</div>}
                       {o.commitment_until && <div className="text-xs text-muted-foreground">Vast tot {new Date(o.commitment_until).toLocaleDateString('nl-NL')}</div>}
                     </TableCell>

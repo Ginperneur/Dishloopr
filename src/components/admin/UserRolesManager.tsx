@@ -34,8 +34,30 @@ interface UserRole {
 }
 
 interface UserRolesManagerProps {
-  users: any[];
   onUpdate?: () => void;
+}
+
+interface ProfileRow {
+  id: string;
+  name: string | null;
+  email: string | null;
+}
+
+/** All profiles (id, name, email), read in pages so the list is complete. */
+async function fetchAllProfiles(): Promise<ProfileRow[]> {
+  const all: ProfileRow[] = [];
+  const size = 1000;
+  for (let from = 0; ; from += size) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, name, email')
+      .order('created_at', { ascending: false })
+      .range(from, from + size - 1);
+    if (error) throw error;
+    all.push(...((data || []) as ProfileRow[]));
+    if (!data || data.length < size) break;
+  }
+  return all;
 }
 
 const ROLE_INFO = {
@@ -45,7 +67,8 @@ const ROLE_INFO = {
   admin: { label: 'Admin', icon: Shield, color: 'bg-red-500/10 text-red-600' }
 };
 
-export function UserRolesManager({ users, onUpdate }: UserRolesManagerProps) {
+export function UserRolesManager({ onUpdate }: UserRolesManagerProps) {
+  const [users, setUsers] = useState<ProfileRow[]>([]);
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,6 +83,16 @@ export function UserRolesManager({ users, onUpdate }: UserRolesManagerProps) {
 
   const fetchRoles = async () => {
     setLoading(true);
+    // Load profiles here, so this page works without first opening Gebruikers.
+    let profileList = users;
+    if (profileList.length === 0) {
+      try {
+        profileList = await fetchAllProfiles();
+        setUsers(profileList);
+      } catch {
+        toast.error('Fout bij ophalen gebruikers');
+      }
+    }
     const { data, error } = await supabase
       .from('user_roles')
       .select('*')
@@ -68,9 +101,9 @@ export function UserRolesManager({ users, onUpdate }: UserRolesManagerProps) {
     if (error) {
       toast.error('Fout bij ophalen rollen');
     } else {
-      // Map roles with user info from the users prop
+      // Map roles with user info from the loaded profiles
       const rolesWithProfiles = (data || []).map(role => {
-        const userProfile = users.find(u => u.id === role.user_id);
+        const userProfile = profileList.find(u => u.id === role.user_id);
         return {
           ...role,
           profiles: userProfile ? { name: userProfile.name, email: userProfile.email } : undefined
