@@ -7,6 +7,7 @@ import { X, Map, LayoutGrid, Navigation, Loader2, ArrowUp, UtensilsCrossed, Book
 import { Layout } from '@/components/layout/Layout';
 import { SearchBar } from '@/components/search/SearchBar';
 import { DatabaseRestaurantCard } from '@/components/restaurant/DatabaseRestaurantCard';
+import { sortByCoverage, groupByCoverage, coverageOf, capitalizeTerm } from '@/lib/multiDishSearch';
 import { FilterPopover } from '@/components/search/FilterPopover';
 import { SeoLandingLinks } from '@/components/search/SeoLandingLinks';
 import { Button } from '@/components/ui/button';
@@ -225,8 +226,16 @@ export default function SearchPage() {
     return results.filter(r => isOpenNow((r as any).opening_hours) === true);
   }, [results, filters.openNow]);
 
+  // Zoeken op meerdere gerechten ("biefstuk, garnalen"): restaurants met alle
+  // gerechten blijven bovenaan, welke sortering ook gekozen is.
+  const searchTerms = useMemo(
+    () => (parsedQuery ? parsedQuery.split(',').map(s => s.trim()).filter(Boolean) : []),
+    [parsedQuery],
+  );
+  const isMultiDish = searchTerms.length > 1;
+
   // Apply sorting (including distance-based)
-  const sortedResults = [...openNowFiltered].sort((a, b) => {
+  const compareResults = (a: (typeof results)[number], b: (typeof results)[number]): number => {
     switch (sortBy) {
       case 'highestRated':
         return Number(b.rating) - Number(a.rating);
@@ -248,7 +257,10 @@ export default function SearchPage() {
       default:
         return 0; // Keep original order (best match from search)
     }
-  });
+  };
+  const sortedResults = isMultiDish
+    ? sortByCoverage(openNowFiltered, compareResults)
+    : [...openNowFiltered].sort(compareResults);
 
   const searchReady = !loading && (!!dishQuery || cityParam !== 'all');
   const searchCity = cities.find(c => c.id === selectedCityId)?.name || '';
@@ -309,6 +321,32 @@ export default function SearchPage() {
     [userLocation?.lat, userLocation?.lng],
   );
   const hasMore = displayCount < sortedResults.length;
+
+  // Multi-dish: lijst in groepen per aantal gevonden gerechten, met kop.
+  const resultGroups = isMultiDish
+    ? groupByCoverage(displayedResults)
+    : [{ covered: 0, items: displayedResults }];
+  const coverageCounts: Record<number, number> = {};
+  if (isMultiDish) sortedResults.forEach(r => { coverageCounts[coverageOf(r)] = (coverageCounts[coverageOf(r)] || 0) + 1; });
+  const noFullMatch = isMultiDish && sortedResults.length > 0 && coverageOf(sortedResults[0]) < searchTerms.length;
+  // Koppen lezen als zin: "Biefstuk én garnalen".
+  const termA = capitalizeTerm(searchTerms[0] ?? '');
+  const termB = searchTerms[1] ?? '';
+  const coverageHeading = (covered: number) => {
+    const total = searchTerms.length;
+    if (covered >= total) {
+      return total === 2
+        ? { title: t('search.multiDish.bothTitle', { a: termA, b: termB, defaultValue: `${termA} én ${termB}` }),
+            subtitle: t('search.multiDish.bothSubtitle', { defaultValue: 'Deze restaurants hebben beide gerechten.' }) }
+        : { title: t('search.multiDish.allTitle', { total, defaultValue: `Alle ${total} gerechten` }),
+            subtitle: t('search.multiDish.allSubtitle', { defaultValue: 'Deze restaurants hebben alles wat je zocht.' }) };
+    }
+    return total === 2
+      ? { title: t('search.multiDish.eitherTitle', { a: termA, b: termB, defaultValue: `${termA} óf ${termB}` }),
+          subtitle: t('search.multiDish.eitherSubtitle', { defaultValue: 'Deze restaurants hebben een van de twee, niet allebei.' }) }
+      : { title: t('search.multiDish.someTitle', { covered, total, defaultValue: `${covered} van de ${total} gerechten` }),
+          subtitle: t('search.multiDish.someSubtitle', { defaultValue: 'Deze restaurants hebben een deel van wat je zocht.' }) };
+  };
   
   const loadMore = () => {
     setDisplayCount(prev => Math.min(prev + 12, sortedResults.length));
@@ -742,22 +780,58 @@ export default function SearchPage() {
                 Resultaten voor <span className="font-semibold text-foreground">{didYouMean.charAt(0).toUpperCase() + didYouMean.slice(1)}</span>
               </p>
             )}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6"
-            >
-              {displayedResults.map((restaurant, index) => (
-                <motion.div
-                  key={restaurant.id}
-                  initial={index < 3 ? false : { opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: Math.min(index * 0.05, 0.3) }}
+            {noFullMatch && (
+              <p className="mb-6 rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+                {searchTerms.length === 2
+                  ? t('search.multiDish.noneBoth', { a: termA, b: termB, defaultValue: `Geen restaurant heeft ${termA} én ${termB}. Hieronder restaurants met een van de twee.` })
+                  : t('search.multiDish.noneAll', { total: searchTerms.length, defaultValue: `Geen restaurant heeft alle ${searchTerms.length} gerechten. Hieronder restaurants met een deel ervan.` })}
+              </p>
+            )}
+            {resultGroups.map((group, groupIndex) => {
+              const offset = resultGroups.slice(0, groupIndex).reduce((n, g) => n + g.items.length, 0);
+              const heading = isMultiDish ? coverageHeading(group.covered) : null;
+              return (
+                <section
+                  key={`${group.covered}-${groupIndex}`}
+                  aria-label={heading?.title}
+                  className={heading && groupIndex > 0 ? 'mt-10 border-t pt-8' : undefined}
                 >
-                  <DatabaseRestaurantCard restaurant={restaurant} isSponsored={restaurant.isSponsored} priority={index === 0} />
-                </motion.div>
-              ))}
-            </motion.div>
+                  {heading && (
+                    <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                      <div>
+                        <h2 className="text-lg font-semibold text-foreground md:text-xl">{heading.title}</h2>
+                        <p className="text-sm text-muted-foreground">{heading.subtitle}</p>
+                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        {(() => {
+                          const n = coverageCounts[group.covered] ?? group.items.length;
+                          return `${n} ${n === 1 ? 'restaurant' : 'restaurants'}`;
+                        })()}
+                      </span>
+                    </div>
+                  )}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6"
+                  >
+                    {group.items.map((restaurant, i) => {
+                      const index = offset + i;
+                      return (
+                        <motion.div
+                          key={restaurant.id}
+                          initial={index < 3 ? false : { opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: Math.min(i * 0.05, 0.3) }}
+                        >
+                          <DatabaseRestaurantCard restaurant={restaurant} isSponsored={restaurant.isSponsored} priority={index === 0} />
+                        </motion.div>
+                      );
+                    })}
+                  </motion.div>
+                </section>
+              );
+            })}
             
             {/* Load More Button */}
             {hasMore && (
