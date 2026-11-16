@@ -19,6 +19,30 @@ export function NativeBridge() {
   return <NativeBridgeInner />;
 }
 
+// The splash stays up (launchAutoHide: false) until the first page has rendered,
+// so the app never flashes an empty WebView. The fallback keeps a failed chunk
+// load from leaving the splash on screen forever.
+const SPLASH_FALLBACK_MS = 8000;
+let splashHidden = false;
+function hideSplash() {
+  if (splashHidden) return;
+  splashHidden = true;
+  SplashScreen.hide({ fadeOutDuration: 200 }).catch(() => {});
+}
+
+/**
+ * Mount inside the router's Suspense boundary: it only mounts once the lazy
+ * route chunk has loaded, and hides the splash after that first paint.
+ */
+export function NativeSplashGate() {
+  useEffect(() => {
+    if (!isNativeApp()) return;
+    const frame = requestAnimationFrame(() => hideSplash());
+    return () => cancelAnimationFrame(frame);
+  }, []);
+  return null;
+}
+
 function NativeBridgeInner() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -27,11 +51,12 @@ function NativeBridgeInner() {
   const pathRef = useRef(location.pathname);
   pathRef.current = location.pathname;
 
-  // Splash + status bar once the web app is up.
+  // Status bar once the web app is up; splash fallback in case the first page never renders.
   useEffect(() => {
-    SplashScreen.hide().catch(() => {});
     const dark = document.documentElement.classList.contains('dark');
     StatusBar.setStyle({ style: dark ? Style.Dark : Style.Light }).catch(() => {});
+    const fallback = window.setTimeout(hideSplash, SPLASH_FALLBACK_MS);
+    return () => window.clearTimeout(fallback);
   }, []);
 
   // Deep links (com.dishloopr.app://… and dishloopr.nl links) and Android back button.
