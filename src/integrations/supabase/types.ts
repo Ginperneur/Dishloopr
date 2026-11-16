@@ -831,75 +831,105 @@ export type Database = {
       discovery_results: {
         Row: {
           address: string | null
+          category: string | null
           city_id: string | null
+          confidence: number | null
           discovered_at: string
+          external_id: string | null
           id: string
           lat: number | null
+          licenses: string[] | null
           lng: number | null
           matched_restaurant_id: string | null
           name: string
+          phone: string | null
           photo_reference: string | null
-          place_id: string
+          place_id: string | null
+          postcode: string | null
           price_level: number | null
           rating: number | null
           raw_data: Json | null
           reject_reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          source: string
           source_grid_point_id: string | null
           source_search_term: string | null
           status: string
+          triage: string | null
+          triage_reason: string | null
           types: string[] | null
           user_ratings_total: number | null
           venue_category: string
+          website: string | null
         }
         Insert: {
           address?: string | null
+          category?: string | null
           city_id?: string | null
+          confidence?: number | null
           discovered_at?: string
+          external_id?: string | null
           id?: string
           lat?: number | null
+          licenses?: string[] | null
           lng?: number | null
           matched_restaurant_id?: string | null
           name: string
+          phone?: string | null
           photo_reference?: string | null
-          place_id: string
+          place_id?: string | null
+          postcode?: string | null
           price_level?: number | null
           rating?: number | null
           raw_data?: Json | null
           reject_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          source?: string
           source_grid_point_id?: string | null
           source_search_term?: string | null
           status?: string
+          triage?: string | null
+          triage_reason?: string | null
           types?: string[] | null
           user_ratings_total?: number | null
           venue_category?: string
+          website?: string | null
         }
         Update: {
           address?: string | null
+          category?: string | null
           city_id?: string | null
+          confidence?: number | null
           discovered_at?: string
+          external_id?: string | null
           id?: string
           lat?: number | null
+          licenses?: string[] | null
           lng?: number | null
           matched_restaurant_id?: string | null
           name?: string
+          phone?: string | null
           photo_reference?: string | null
-          place_id?: string
+          place_id?: string | null
+          postcode?: string | null
           price_level?: number | null
           rating?: number | null
           raw_data?: Json | null
           reject_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          source?: string
           source_grid_point_id?: string | null
           source_search_term?: string | null
           status?: string
+          triage?: string | null
+          triage_reason?: string | null
           types?: string[] | null
           user_ratings_total?: number | null
           venue_category?: string
+          website?: string | null
         }
         Relationships: [
           {
@@ -5905,6 +5935,7 @@ export type Database = {
           name: string
           needs_manual_review: boolean | null
           opening_hours: Json | null
+          overture_id: string | null
           owner_pro_override: boolean
           owner_tier: string
           parking_info: Json | null
@@ -5986,6 +6017,7 @@ export type Database = {
           name: string
           needs_manual_review?: boolean | null
           opening_hours?: Json | null
+          overture_id?: string | null
           owner_pro_override?: boolean
           owner_tier?: string
           parking_info?: Json | null
@@ -6067,6 +6099,7 @@ export type Database = {
           name?: string
           needs_manual_review?: boolean | null
           opening_hours?: Json | null
+          overture_id?: string | null
           owner_pro_override?: boolean
           owner_tier?: string
           parking_info?: Json | null

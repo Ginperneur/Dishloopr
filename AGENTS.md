@@ -12,6 +12,7 @@
 - Restaurants hidden for their menu (restaurants_verborgen, menu reason) stay claimable via claimable_restaurant(slug) and owners can read their own hidden restaurant; a trigger on restaurant_dishes makes them active once menu_dish_count (drinks excluded) reaches outreach_settings.menu_minimum (default 5).
 
 - Never store Google Places or Geocoding content (names, addresses, coordinates, ratings, opening hours, photos, raw responses); only `google_place_id` may be kept. Geocode through `_shared/pdokGeocode.ts` (PDOK/BAG) and show only Dishloopr's own review score. See `docs/google-places-compliance.md`.
+- Restaurant discovery runs on Overture Maps Places: `scripts/overture-discovery/discover.py` writes a triaged CSV, admins upload it in the Discovery tab (`discovery_results.source = 'overture'`), and approving creates the restaurant with a PDOK address and `restaurants.overture_id`; Google rows stay unapprovable.
 
 # Restaurant parking
 

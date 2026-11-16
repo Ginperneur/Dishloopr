@@ -90,6 +90,10 @@ export default function AboutPage() {
             Simpel, snel en persoonlijk.
           </p>
         </motion.div>
+
+        <p className="mt-10 text-center text-xs text-muted-foreground max-w-2xl mx-auto">
+          {t('about.dataSources', 'Databronnen: restaurantlocaties deels uit Overture Maps Foundation (CDLA Permissive 2.0), adressen via PDOK/BAG, kaarten © OpenStreetMap-bijdragers. Menu\'s en gegevens worden aangevuld door restaurants zelf.')}
+        </p>
       </div>
     </Layout>
   );

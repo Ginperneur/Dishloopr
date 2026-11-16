@@ -1,4 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
+import { geocodeWithPdok } from "../_shared/pdokGeocode.ts";
+import { restaurantFromOverture } from "../_shared/overtureRestaurant.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -56,20 +58,67 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const { discoveryResultId, restaurantId: existingRestaurantId } = body;
 
-    // Creating restaurants from discovery_results is stopped: those rows hold names,
-    // addresses, coordinates and ratings copied from Google Places, which the Google Maps
-    // Platform EEA terms do not allow us to store (docs/google-places-compliance.md).
-    // The pipeline still runs for existing restaurants without calling Google.
+    let created = false;
     if (discoveryResultId && !existingRestaurantId) {
-      return new Response(JSON.stringify({
-        success: false,
-        disabled: true,
-        error: 'Goedkeuren uit Google-discovery is gestopt vanwege de Google-voorwaarden. Discovery komt terug op Overture Maps.',
-      }), { status: 410, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      const { data: dr, error: drErr } = await admin
+        .from('discovery_results')
+        .select('id, source, external_id, name, address, postcode, lat, lng, website, phone, city_id, status')
+        .eq('id', discoveryResultId)
+        .single();
+      if (drErr || !dr) throw new Error('Discovery result niet gevonden');
+
+      // Google rows hold names, addresses, coordinates and ratings copied from Google Places,
+      // which the Google Maps Platform EEA terms do not allow us to store, so they cannot
+      // become restaurants (docs/google-places-compliance.md). Overture rows can.
+      if (dr.source !== 'overture') {
+        return new Response(JSON.stringify({
+          success: false,
+          disabled: true,
+          error: 'Goedkeuren uit Google-discovery is gestopt vanwege de Google-voorwaarden. Importeer deze stad via Overture.',
+        }), { status: 410, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      if (!dr.external_id) throw new Error('Overture-kandidaat zonder overture_id');
+
+      const { data: existing } = await admin
+        .from('restaurants')
+        .select('id')
+        .eq('overture_id', dr.external_id)
+        .maybeSingle();
+
+      if (existing) {
+        restaurantId = existing.id;
+        await admin.from('discovery_results').update({
+          status: 'duplicate',
+          matched_restaurant_id: existing.id,
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: userRes.user.id,
+        }).eq('id', dr.id);
+        steps.push({ step: 'create_restaurant', ok: true, detail: 'Bestond al (zelfde Overture-plek)' });
+      } else {
+        const { data: city } = await admin.from('cities').select('name').eq('id', dr.city_id).maybeSingle();
+        const geo = await geocodeWithPdok({ address: dr.address, postalCode: dr.postcode, city: city?.name ?? null })
+          .catch((e) => ({ ok: false as const, reason: `pdok_error: ${e?.message ?? e}` }));
+        steps.push({ step: 'geocode', ok: geo.ok, detail: geo.ok ? 'PDOK/BAG' : `Overture-coördinaten gebruikt (${geo.reason})` });
+
+        const row = restaurantFromOverture(dr, city?.name ?? null, geo);
+        const { data: ins, error: insErr } = await admin.from('restaurants').insert(row).select('id').single();
+        if (insErr) throw new Error(`Insert restaurant: ${insErr.message}`);
+        restaurantId = ins.id;
+        created = true;
+
+        await admin.from('discovery_results').update({
+          status: 'approved',
+          matched_restaurant_id: ins.id,
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: userRes.user.id,
+        }).eq('id', dr.id);
+        steps.push({ step: 'create_restaurant', ok: true, detail: 'Aangemaakt uit Overture' });
+      }
+    } else {
+      if (!existingRestaurantId) throw new Error('discoveryResultId of restaurantId vereist');
+      restaurantId = existingRestaurantId;
+      steps.push({ step: 'create_restaurant', ok: true, detail: 'Using existing restaurant' });
     }
-    if (!existingRestaurantId) throw new Error('restaurantId vereist');
-    restaurantId = existingRestaurantId;
-    steps.push({ step: 'create_restaurant', ok: true, detail: 'Using existing restaurant' });
 
     const { data: rest } = await admin
       .from('restaurants')
@@ -158,13 +207,19 @@ Deno.serve(async (req) => {
     // ============================================
     const { data: finalRest } = await admin
       .from('restaurants')
-      .select('cuisines, address, geo_lat')
+      .select('cuisines, address, geo_lat, city_id')
       .eq('id', restaurantId!)
       .single();
 
     const hasMinimum = finalRest && finalRest.address && finalRest.address !== 'Onbekend' && finalRest.geo_lat;
     if (hasMinimum) {
       await admin.from('restaurants').update({ is_active: true }).eq('id', restaurantId!);
+      // A city created by an Overture import starts inactive so no empty city page goes live;
+      // it switches on with its first active restaurant that has dishes (listable restaurants
+      // need an approved dish, so a city without any would show an empty page).
+      if (finalRest.city_id && dishesAdded > 0) {
+        await admin.from('cities').update({ is_active: true }).eq('id', finalRest.city_id).eq('is_active', false);
+      }
       steps.push({ step: 'activate', ok: true, detail: 'Geactiveerd' });
     } else {
       steps.push({ step: 'activate', ok: false, detail: 'Onvoldoende data, blijft inactief' });
@@ -173,7 +228,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       restaurantId,
-      created: false,
+      created,
       dishesAdded,
       steps,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
