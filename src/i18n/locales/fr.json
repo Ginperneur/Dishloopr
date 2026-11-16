@@ -285,7 +285,19 @@
     "featuredTitleHeading": "Restaurants en vedette",
     "restaurantsInCity": "Restaurants à {{city}}",
     "scrollTop": "Retour en haut",
-    "ariaCrumb": "Fil d'Ariane"
+    "ariaCrumb": "Fil d'Ariane",
+    "multiDish": {
+      "bothTitle": "{{a}} et {{b}}",
+      "bothSubtitle": "Ces restaurants proposent les deux plats.",
+      "allTitle": "Tous les {{total}} plats",
+      "allSubtitle": "Ces restaurants ont tout ce que vous cherchiez.",
+      "eitherTitle": "{{a}} ou {{b}}",
+      "eitherSubtitle": "Ces restaurants proposent l'un des deux, mais pas les deux.",
+      "someTitle": "{{covered}} plats sur {{total}}",
+      "someSubtitle": "Ces restaurants proposent une partie de ce que vous cherchiez.",
+      "noneBoth": "Aucun restaurant ne propose {{a}} et {{b}}. Ci-dessous, des restaurants qui proposent l'un des deux.",
+      "noneAll": "Aucun restaurant ne propose les {{total}} plats. Ci-dessous, des restaurants qui en proposent une partie."
+    }
   },
   "common": {
     "loading": "Chargement...",
