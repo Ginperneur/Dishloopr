@@ -2474,6 +2474,66 @@ export type Database = {
           },
         ]
       }
+      outreach_reminders: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          provider_id: string | null
+          restaurant_id: string
+          segment: string
+          sent_at: string | null
+          status: string
+          step: number
+          subject: string
+          to_email: string
+          views_mentioned: number | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          provider_id?: string | null
+          restaurant_id: string
+          segment: string
+          sent_at?: string | null
+          status?: string
+          step: number
+          subject: string
+          to_email: string
+          views_mentioned?: number | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          provider_id?: string | null
+          restaurant_id?: string
+          segment?: string
+          sent_at?: string | null
+          status?: string
+          step?: number
+          subject?: string
+          to_email?: string
+          views_mentioned?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_reminders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "outreach_reminders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       outreach_replies: {
         Row: {
           aanbevolen_actie: string | null
@@ -2571,6 +2631,9 @@ export type Database = {
           flyer_warning: string | null
           id: boolean
           menu_minimum: number
+          reminder_interval_days: number
+          reminder_max: number
+          reminders_enabled: boolean
           skip_natural_persons: boolean
           updated_at: string
           wave: number
@@ -2584,6 +2647,9 @@ export type Database = {
           flyer_warning?: string | null
           id?: boolean
           menu_minimum?: number
+          reminder_interval_days?: number
+          reminder_max?: number
+          reminders_enabled?: boolean
           skip_natural_persons?: boolean
           updated_at?: string
           wave?: number
@@ -2597,6 +2663,9 @@ export type Database = {
           flyer_warning?: string | null
           id?: boolean
           menu_minimum?: number
+          reminder_interval_days?: number
+          reminder_max?: number
+          reminders_enabled?: boolean
           skip_natural_persons?: boolean
           updated_at?: string
           wave?: number
@@ -8126,6 +8195,31 @@ export type Database = {
       admin_apply_restaurant_categorization: {
         Args: { _data: Json }
         Returns: number
+      }
+      admin_claim_followup: {
+        Args: never
+        Returns: {
+          claim_loopt: boolean
+          claim_status: string
+          eerste_mail_op: string
+          email: string
+          gereageerd_op: string
+          golf_mails: number
+          herinneringen: number
+          laatst_gemaild_op: string
+          mail_status: string
+          name: string
+          opvolg_status: string
+          reactie_categorie: string
+          restaurant_id: string
+          segment: string
+          slug: string
+          stad: string
+          views_30d: number
+          views_sinds_mail: number
+          views_totaal: number
+          volgende_herinnering_op: string
+        }[]
       }
       admin_digest: {
         Args: never
