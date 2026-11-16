@@ -18,6 +18,7 @@ import { OWNER_PRO_PRICES } from '@/lib/proPricing';
 import { useOwnerProCheckout } from '@/hooks/useOwnerProCheckout';
 import { Input } from '@/components/ui/input';
 import { formatEuroCents } from '@/lib/promoSlots';
+import { VatTotal } from '@/components/common/VatTotal';
 
 type PackageOption = 'founding_month' | 'founding_year' | 'menu_once' | 'menu_month';
 
@@ -207,12 +208,12 @@ export default function PackagesPage() {
   const promo = foundingWindowOpen();
   const uit = promo
     ? (uitBilling === 'month'
-      ? { amount: '€59', per: 'per maand', was: 'Normaal €99 per maand', note: 'Je bespaart €480 per jaar.' }
-      : { amount: '€590', per: 'per jaar', was: 'Normaal €990 per jaar', note: `Dat is ${euro(590 / 12)} per maand, je bespaart €400 per jaar.` })
-    : { amount: 'vanaf €99', per: 'per maand', note: 'De prijs per gerechtpagina hangt af van de vraag. Pagina vol? Dan bied je mee.' };
+      ? { amount: '€59', per: 'per maand excl. btw', was: 'Normaal €99 per maand', note: 'Je bespaart €480 per jaar.' }
+      : { amount: '€590', per: 'per jaar excl. btw', was: 'Normaal €990 per jaar', note: `Dat is ${euro(590 / 12)} per maand, je bespaart €400 per jaar.` })
+    : { amount: 'vanaf €99', per: 'per maand excl. btw', note: 'De prijs per gerechtpagina hangt af van de vraag. Pagina vol? Dan bied je mee.' };
   const pro = proBilling === 'month'
-    ? { amount: `€${OWNER_PRO_PRICES.monthly.amount}`, per: 'per maand', note: `Of €${OWNER_PRO_PRICES.yearly.amount} per jaar, 2 maanden gratis.` }
-    : { amount: `€${OWNER_PRO_PRICES.yearly.amount}`, per: 'per jaar', was: `${euro(OWNER_PRO_PRICES.monthly.amount * 12)} per jaar`, note: `Dat is ${euro(OWNER_PRO_PRICES.yearly.amount / 12)} per maand, 2 maanden gratis.` };
+    ? { amount: `€${OWNER_PRO_PRICES.monthly.amount}`, per: 'per maand excl. btw', note: `Of €${OWNER_PRO_PRICES.yearly.amount} per jaar, 2 maanden gratis.` }
+    : { amount: `€${OWNER_PRO_PRICES.yearly.amount}`, per: 'per jaar excl. btw', was: `${euro(OWNER_PRO_PRICES.monthly.amount * 12)} per jaar`, note: `Dat is ${euro(OWNER_PRO_PRICES.yearly.amount / 12)} per maand, 2 maanden gratis.` };
   const needLogin = () => toast.info('Log eerst in met je eigenaarsaccount.');
 
   const claimTo = restaurant ? `/claim/${restaurant.slug}` : '/claim';
@@ -224,7 +225,7 @@ export default function PackagesPage() {
         <header className="mx-auto max-w-3xl text-center">
           <h1 className="font-display text-4xl font-bold leading-[1.05] tracking-tight md:text-6xl">Begin gratis, groei wanneer jij wilt.</h1>
           <p className="mt-4 text-lg text-muted-foreground">
-            {restaurant ? `Voor ${restaurant.name}. ` : ''}Claimen is altijd gratis. Geen verborgen kosten, alle prijzen exclusief btw.
+            {restaurant ? `Voor ${restaurant.name}. ` : ''}Claimen is altijd gratis. Geen verborgen kosten. Alle prijzen zijn exclusief 21% btw; bij het afrekenen zie je het totaalbedrag.
           </p>
         </header>
 
@@ -269,7 +270,7 @@ export default function PackagesPage() {
           <Card>
             <CardLabel icon={BookOpen}>Menuservice</CardLabel>
             <BillingToggle id="menu-billing" value={menuBilling} onChange={setMenuBilling} left="Per maand" right="Eenmalig" />
-            <BigPrice {...(menuBilling === 'month' ? { amount: '€19', per: 'per maand', note: 'Altijd actueel, wij houden hem bij.' } : { amount: '€79', per: 'eenmalig', note: 'Wij zetten je kaart één keer online.' })} />
+            <BigPrice {...(menuBilling === 'month' ? { amount: '€19', per: 'per maand excl. btw', note: 'Altijd actueel, wij houden hem bij.' } : { amount: '€79', per: 'eenmalig excl. btw', note: 'Wij zetten je kaart één keer online.' })} />
             <Features items={['Je volledige menukaart online', 'Vertaald in het Engels, Duits en Frans', 'Als QR-menu', 'Voor je eigen website']} />
             {CHECKOUT_ENABLED.packages ? (
               <Button size="lg" variant="outline" className="min-h-12 w-full rounded-full" disabled={busy !== null}
@@ -293,7 +294,7 @@ export default function PackagesPage() {
               <CardLabel icon={CalendarDays}>Specials en evenementen</CardLabel>
               {!CHECKOUT_ENABLED.event && <Badge variant="secondary">Online betalen binnenkort</Badge>}
             </div>
-            <p className="flex items-baseline gap-1.5"><span className="font-display text-4xl font-bold">€5</span><span className="text-sm text-muted-foreground">per maand per evenement, maandelijks opzegbaar</span></p>
+            <p className="flex items-baseline gap-1.5"><span className="font-display text-4xl font-bold">€5</span><span className="text-sm text-muted-foreground">per maand per evenement excl. btw, maandelijks opzegbaar</span></p>
             <Features items={['Je special of evenement op de evenementenpagina en op je restaurantpagina', 'Eenmalig op een datum of elke week terugkerend', 'Elke maand een mail met hoe vaak het in beeld was en is bekeken']} />
           </div>
           <Button asChild size="lg" variant="outline" className="min-h-12 w-full rounded-full md:w-auto">
@@ -355,7 +356,7 @@ export default function PackagesPage() {
               )}
               {afterWindow && pageSlug && typeof pagePrice === 'number' && (
                 <p className="text-sm">
-                  Prijs voor deze pagina: <strong>{formatEuroCents(pageStatus?.my_bid?.status === 'won' ? (pageStatus.my_bid.clearing_cents ?? pagePrice) : pagePrice)}</strong> per maand
+                  Prijs voor deze pagina: <strong>{formatEuroCents(pageStatus?.my_bid?.status === 'won' ? (pageStatus.my_bid.clearing_cents ?? pagePrice) : pagePrice)}</strong> per maand excl. btw
                   {pageStatus && pageStatus.open_bids > 0 && <span className="text-muted-foreground">. {pageStatus.open_bids} {pageStatus.open_bids === 1 ? 'bod' : 'biedingen'} op de wachtlijst, hoogste {formatEuroCents(pageStatus.highest_bid_cents ?? 0)}</span>}
                 </p>
               )}
@@ -363,8 +364,8 @@ export default function PackagesPage() {
                 <div className="space-y-2 rounded-lg border p-3">
                   <p className="text-sm">
                     {pageStatus?.my_bid?.status === 'open'
-                      ? `Je staat op de wachtlijst met ${formatEuroCents(pageStatus.my_bid.amount_cents)} per maand. Pas je bod aan of wacht op de veiling.`
-                      : 'Deze pagina is vol of er wachten al bieders. Bied het bedrag dat je maximaal per maand wilt betalen.'}
+                      ? `Je staat op de wachtlijst met ${formatEuroCents(pageStatus.my_bid.amount_cents)} per maand excl. btw. Pas je bod aan of wacht op de veiling.`
+                      : 'Deze pagina is vol of er wachten al bieders. Bied het bedrag dat je maximaal per maand wilt betalen, excl. btw.'}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Komt er een plek vrij, dan gaat die naar het hoogste bod. Elk kwartaal is er een veiling: de hoogste bieders krijgen een plek
@@ -372,13 +373,14 @@ export default function PackagesPage() {
                     {pageStatus?.next_auction && ` Volgende veiling: ${new Date(pageStatus.next_auction).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}.`}
                     {' '}<Link to="/voor-restaurants/plekken-en-bieden" className="text-primary underline">Zo werkt bieden</Link>
                   </p>
-                  {user ? (
+                  {user ? (<>
                     <div className="flex gap-2">
                       <Input inputMode="decimal" placeholder={typeof pagePrice === 'number' ? `Minimaal ${formatEuroCents(pagePrice)}` : 'Bedrag per maand'}
                         value={bidEuro} onChange={e => setBidEuro(e.target.value)} className="min-h-11" aria-label="Je bod per maand in euro" />
                       <Button variant="outline" className="min-h-11" disabled={!bidEuro} onClick={placeBid}>Bied</Button>
                     </div>
-                  ) : <p className="text-sm">Log in om te bieden.</p>}
+                    {Number(bidEuro.replace(',', '.')) > 0 && <VatTotal exCents={Math.round(Number(bidEuro.replace(',', '.')) * 100)} per="per maand als je wint (je betaalt nooit meer dan je bod)" />}
+                  </>) : <p className="text-sm">Log in om te bieden.</p>}
                 </div>
               ) : (
                 <Button className="min-h-11 w-full" disabled={!pageSlug || (!afterWindow && placesLeft === 0) || busy !== null}
@@ -386,6 +388,12 @@ export default function PackagesPage() {
                   {busy ? 'Even geduld…' : pageStatus?.my_bid?.status === 'won' ? 'Rond je gewonnen plek af' : 'Verder naar betalen'}
                 </Button>
               )}
+              {!mustBid && pageSlug && (() => {
+                const ex = afterWindow
+                  ? (pageStatus?.my_bid?.status === 'won' ? (pageStatus.my_bid.clearing_cents ?? pagePrice) : pagePrice)
+                  : (founding === 'year' ? 59000 : 5900);
+                return typeof ex === 'number' ? <VatTotal exCents={ex} per={!afterWindow && founding === 'year' ? 'per jaar' : 'per maand'} /> : null;
+              })()}
               <p className="text-xs text-muted-foreground">Je betaalt direct bij het afrekenen; je plek staat meteen live.</p>
             </div>
           )}

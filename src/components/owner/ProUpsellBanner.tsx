@@ -35,7 +35,7 @@ export function ProUpsellBanner({ onSeeMore }: ProUpsellBannerProps) {
             Inzichten & Markt zijn vergrendeld
           </h3>
           <p className="text-sm text-muted-foreground">
-            Eén abonnement van <span className="font-semibold text-foreground">€29/maand</span> ontgrendelt
+            Eén abonnement van <span className="font-semibold text-foreground">€29/maand excl. btw</span> ontgrendelt
             <span className="font-semibold text-foreground"> beide</span> tabbladen — geen aparte kosten per functie.
           </p>
 

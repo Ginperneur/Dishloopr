@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { simulationSummary, type SimulationQuota, type SimulationResult } from '@/lib/simulation';
+import { VatTotal } from '@/components/common/VatTotal';
 
 // run_owner_simulation and friends are newer than the generated types.
 const db = supabase as unknown as SupabaseClient;
@@ -121,7 +122,7 @@ export function SimulationMode({ restaurantId, tags = [], priceLevel = null }: P
           )}
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Zie vooraf wat een wijziging oplevert, op basis van echte zoekopdrachten in jouw stad. De eerste 3 zijn gratis, daarna €1,99 per simulatie.
+          Zie vooraf wat een wijziging oplevert, op basis van echte zoekopdrachten in jouw stad. De eerste 3 zijn gratis, daarna €1,99 excl. btw per simulatie.
         </p>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -168,7 +169,7 @@ export function SimulationMode({ restaurantId, tags = [], priceLevel = null }: P
           </Button>
         ) : quota ? (
           <div className="space-y-3 rounded-lg border p-4">
-            <p className="text-sm">Je 3 gratis simulaties zijn gebruikt. Een simulatie kost €1,99; met Owner Pro simuleer je onbeperkt.</p>
+            <p className="text-sm">Je 3 gratis simulaties zijn gebruikt. Een simulatie kost €1,99 excl. btw; met Owner Pro simuleer je onbeperkt.</p>
             <div className="flex flex-wrap items-center gap-2">
               <Select value={String(qty)} onValueChange={v => setQty(Number(v))}>
                 <SelectTrigger className="min-h-11 w-[150px]"><SelectValue /></SelectTrigger>
@@ -176,9 +177,10 @@ export function SimulationMode({ restaurantId, tags = [], priceLevel = null }: P
               </Select>
               <Button onClick={buy} disabled={buying} className="min-h-11">
                 {buying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
-                Koop voor €{(1.99 * qty).toFixed(2).replace('.', ',')}
+                Koop voor €{(1.99 * qty).toFixed(2).replace('.', ',')} excl. btw
               </Button>
             </div>
+            <VatTotal exCents={199 * qty} />
           </div>
         ) : null}
 
