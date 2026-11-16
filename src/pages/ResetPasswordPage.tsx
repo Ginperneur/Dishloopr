@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import logo from '@/assets/dishloopr-logo.png';
+import logoAsset from '@/assets/dishloopr-logo.png.asset.json';
 import { PasswordStrengthMeter, type PasswordCheck } from '@/components/auth/PasswordStrengthMeter';
 
 const passwordSchema = z.object({

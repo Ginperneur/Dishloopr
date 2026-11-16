@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import logo from '@/assets/dishloopr-logo.png';
+import logoAsset from '@/assets/dishloopr-logo.png.asset.json';
 
 const emailSchema = z.object({
   email: z.string().email('Ongeldig e-mailadres'),

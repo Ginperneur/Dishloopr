@@ -6,7 +6,7 @@ import { Layout } from '@/components/layout/Layout';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import logo from '@/assets/dishloopr-logo.png';
+import logoAsset from '@/assets/dishloopr-logo.png.asset.json';
 
 type ConfirmationStatus = 'loading' | 'success' | 'error';
 

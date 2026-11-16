@@ -14,7 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { lovable } from '@/integrations/lovable/index';
-import logo from '@/assets/dishloopr-logo.png';
+import logoAsset from '@/assets/dishloopr-logo.png.asset.json';
 import { signupErrorMessage } from '@/lib/authErrors';
 import { PasswordStrengthMeter, type PasswordCheck } from '@/components/auth/PasswordStrengthMeter';
 import { isNativeApp } from '@/lib/native';
