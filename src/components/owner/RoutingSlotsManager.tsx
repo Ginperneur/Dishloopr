@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CityCombobox } from '@/components/common/CityCombobox';
 import { formatEuroCents, routingAction, type MarketStatus } from '@/lib/promoSlots';
+import { VatTotal } from '@/components/common/VatTotal';
 
 // promo_* tables and functions are newer than the generated types.
 const db = supabase as unknown as SupabaseClient;
@@ -140,7 +141,7 @@ export function RoutingSlotsManager({ restaurantId, cityId }: Props) {
             ) : status && action ? (
               <>
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <p className="text-2xl font-bold">{formatEuroCents(status.list_price_cents)} <span className="text-sm font-normal text-muted-foreground">per maand</span></p>
+                  <p className="text-2xl font-bold">{formatEuroCents(status.list_price_cents)} <span className="text-sm font-normal text-muted-foreground">per maand excl. btw</span></p>
                   <Badge variant={status.taken >= status.slots ? 'destructive' : 'secondary'}>
                     {status.taken >= status.slots ? 'Alle plekken bezet' : `${status.slots - status.taken} van ${status.slots} plekken vrij`}
                   </Badge>
@@ -153,9 +154,12 @@ export function RoutingSlotsManager({ restaurantId, cityId }: Props) {
                 {action.kind === 'active' && <p className="text-sm font-medium text-emerald-700">{action.text}</p>}
                 {action.kind === 'ending' && <p className="text-sm text-muted-foreground">{action.text}</p>}
                 {(action.kind === 'buy' || action.kind === 'pay_won') && (
-                  <Button onClick={checkout} disabled={busy} className="min-h-11">
-                    {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{action.text}
-                  </Button>
+                  <div className="space-y-1">
+                    <Button onClick={checkout} disabled={busy} className="min-h-11">
+                      {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{action.text}
+                    </Button>
+                    <VatTotal exCents={action.kind === 'pay_won' ? (status.my_bid?.clearing_cents ?? status.my_bid?.amount_cents ?? 0) : status.list_price_cents} per="per maand" />
+                  </div>
                 )}
                 {action.kind === 'bid' && (
                   <div className="space-y-2">
@@ -167,6 +171,7 @@ export function RoutingSlotsManager({ restaurantId, cityId }: Props) {
                         <Gavel className="mr-2 h-4 w-4" />{status.my_bid ? 'Bod aanpassen' : 'Bied'}
                       </Button>
                     </div>
+                    {Number(bid.replace(',', '.')) > 0 && <VatTotal exCents={Math.round(Number(bid.replace(',', '.')) * 100)} per="per maand als je wint (je betaalt nooit meer dan je bod)" />}
                   </div>
                 )}
               </>
@@ -177,7 +182,7 @@ export function RoutingSlotsManager({ restaurantId, cityId }: Props) {
         <div className="rounded-lg bg-muted/50 p-4 text-xs text-muted-foreground space-y-1">
           <p className="font-medium text-foreground">Hoe het werkt</p>
           <p>Een vrije plek koop je direct voor de lijstprijs, per maand opzegbaar. Gerechten en steden met veel vraag zijn duurder.</p>
-          <p>Alles bezet? Bied het bedrag dat je maximaal per maand wilt betalen. Komt er een plek vrij, dan gaat die naar het hoogste bod.</p>
+          <p>Alles bezet? Bied het bedrag dat je maximaal per maand wilt betalen, excl. btw. Komt er een plek vrij, dan gaat die naar het hoogste bod.</p>
           <p>Elk kwartaal is er een veiling. De 3 hoogste houden of krijgen een plek en betalen allemaal hetzelfde: het hoogste bod dat net niet won, minimaal de lijstprijs. Zonder biedingen loopt je plek gewoon door tegen de lijstprijs.</p>
           <p><Link to="/voor-restaurants/plekken-en-bieden" className="font-medium text-primary underline">Lees de volledige uitleg met rekenvoorbeeld</Link></p>
         </div>
@@ -186,7 +191,7 @@ export function RoutingSlotsManager({ restaurantId, cityId }: Props) {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold">Jouw plekken en biedingen</p>
-              {total > 0 && <p className="text-sm text-muted-foreground">Totaal {formatEuroCents(total)} per maand</p>}
+              {total > 0 && <p className="text-sm text-muted-foreground">Totaal {formatEuroCents(total)} per maand excl. btw</p>}
             </div>
             {mine.map(m => (
               <div key={m.key} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3">

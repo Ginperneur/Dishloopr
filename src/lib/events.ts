@@ -33,7 +33,7 @@ export const WEEKDAYS = [
   { value: 7, short: 'zo', long: 'zondag' },
 ] as const;
 
-export const EVENT_PRICE_LABEL = '€5 per maand per evenement';
+export const EVENT_PRICE_LABEL = '€5 per maand per evenement, excl. btw';
 
 export interface EventSchedule {
   recurrence: string;

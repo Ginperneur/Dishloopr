@@ -84,7 +84,7 @@ export function MyPackagesCard({ restaurantId, restaurantSlug, restaurantName }:
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base"><Flag className="h-5 w-5 text-primary" />Uitgelicht</CardTitle>
           <CardDescription>
-            Sta gegarandeerd bovenaan je gerechtpagina in het blok "Uitgelicht". Normaal €99 per maand; koop je 'm nu of
+            Sta gegarandeerd bovenaan je gerechtpagina in het blok "Uitgelicht". Normaal €99 per maand excl. btw; koop je 'm nu of
             uiterlijk 5 januari 2027, dan word je Founding Partner en betaal je €59 tot en met 31 december 2027:
             je bespaart €480 per jaar, of €400 met het jaarabonnement. Max. 5 plekken per gerechtpagina.
           </CardDescription>
@@ -121,7 +121,7 @@ export function MyPackagesCard({ restaurantId, restaurantSlug, restaurantName }:
                 <div className="rounded-md bg-muted/50 p-3"><MousePointer className="h-4 w-4 text-muted-foreground" /><p className="mt-1 text-xl font-bold tabular-nums">{nf.format(s.klik)}</p><p className="text-xs text-muted-foreground">keer aangeklikt</p></div>
               </div>
               <p className="mt-3 text-xs text-muted-foreground">
-                {o.plan === 'year' ? '€590 per jaar' : '€59 per maand'}, vaste prijs zolang je klant blijft.
+                {o.plan === 'year' ? '€590 per jaar' : '€59 per maand'} excl. btw, vaste prijs zolang je klant blijft.
                 {o.commitment_until && ` Minimale looptijd tot ${date(o.commitment_until)}.`}
               </p>
             </div>

@@ -63,9 +63,9 @@ const freeBullets = [
 ];
 
 const paidBullets = [
-  "<b>Uitgelicht</b>: een vaste plek bovenaan bij jouw gerecht in jouw stad, met maximaal 5 restaurants per gerecht per stad. Stap je nu of uiterlijk 5 januari in, dan word je Founding Partner: je betaalt €59 per maand in plaats van €99 (of €590 per jaar in plaats van €990), tot en met 31 december 2027. Je plek staat direct live en je Founding Partner badge blijft voor altijd op je pagina staan.",
-  "<b>Owner Pro</b> (€29 per maand): zie welke zoektermen gasten naar jou brengen, hoeveel mensen bellen, reserveren of je website bezoeken, en hoe je het doet ten opzichte van de buurt. Met een wekelijkse tip op basis van wat er in jouw stad gezocht wordt.",
-  "<b>Specials en evenementen</b> (€5 per maand per evenement): zet je ladies night, pubquiz of wijnproeverij op Dishloopr en op je eigen pagina.",
+  "<b>Uitgelicht</b>: een vaste plek bovenaan bij jouw gerecht in jouw stad, met maximaal 5 restaurants per gerecht per stad. Stap je nu of uiterlijk 5 januari in, dan word je Founding Partner: je betaalt €59 per maand in plaats van €99 (of €590 per jaar in plaats van €990), excl. btw, tot en met 31 december 2027. Je plek staat direct live en je Founding Partner badge blijft voor altijd op je pagina staan.",
+  "<b>Owner Pro</b> (€29 per maand excl. btw): zie welke zoektermen gasten naar jou brengen, hoeveel mensen bellen, reserveren of je website bezoeken, en hoe je het doet ten opzichte van de buurt. Met een wekelijkse tip op basis van wat er in jouw stad gezocht wordt.",
+  "<b>Specials en evenementen</b> (€5 per maand per evenement, excl. btw): zet je ladies night, pubquiz of wijnproeverij op Dishloopr en op je eigen pagina.",
 ];
 
 // Plain text part: drop tags, then undo escapeHtml so names read normally.

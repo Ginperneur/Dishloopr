@@ -82,13 +82,13 @@ Deno.serve(async (req) => {
               items: [{ id: item.id, price_data: { currency: "eur", unit_amount: a.price_cents, tax_behavior: "exclusive", recurring: { interval: "month" }, product } }],
               proration_behavior: "none",
             });
-            await notify(db, a, "Nieuwe prijs voor je plek", `Vanaf je volgende factuur betaal je ${euro(a.price_cents)} per maand voor ${NAME[a.product]}.`);
+            await notify(db, a, "Nieuwe prijs voor je plek", `Vanaf je volgende factuur betaal je ${euro(a.price_cents)} per maand excl. btw voor ${NAME[a.product]}.`);
           }
         } else if (a.action === "cancel" && a.stripe_subscription_id) {
           await stripe.subscriptions.update(a.stripe_subscription_id, { cancel_at_period_end: true });
           await notify(db, a, "Je bent overboden", `Andere restaurants boden meer voor je plek bij ${NAME[a.product]}. Je plek loopt af aan het eind van je betaalde periode. Je kunt opnieuw bieden.`);
         } else if (a.action === "won") {
-          await notify(db, a, "Je hebt een plek gewonnen", `Rond binnen 7 dagen af voor ${euro(a.price_cents)} per maand bij ${NAME[a.product]}${a.product === "uitgelicht" ? " (Pakketten)" : " (Promoties)"}.`);
+          await notify(db, a, "Je hebt een plek gewonnen", `Rond binnen 7 dagen af voor ${euro(a.price_cents)} per maand excl. btw bij ${NAME[a.product]}${a.product === "uitgelicht" ? " (Pakketten)" : " (Promoties)"}.`);
         }
         results.push({ action: a.action, ok: true });
       } catch (e) {

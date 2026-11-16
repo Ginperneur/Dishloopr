@@ -34,7 +34,7 @@ const STEPS = [
   {
     icon: BarChart3,
     title: 'Bekijk je Inzichten',
-    body: 'Onder Inzichten zie je weergaven, kliks, zoektermen en optimalisatietips. Inzichten + Markt zit in Owner Pro (€29/maand of €290/jaar).',
+    body: 'Onder Inzichten zie je weergaven, kliks, zoektermen en optimalisatietips. Inzichten + Markt zit in Owner Pro (€29/maand of €290/jaar, excl. btw).',
   },
   {
     icon: Rocket,

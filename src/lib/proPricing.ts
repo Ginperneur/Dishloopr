@@ -5,7 +5,7 @@ export const OWNER_PRO_PRICES = {
     amount: 29,
     currency: 'EUR',
     interval: 'month' as const,
-    label: '€29 / maand',
+    label: '€29 / maand excl. btw',
   },
   yearly: {
     priceId: 'price_1TdPeD3EXkDnjHC3J5T79Qe7',
@@ -13,7 +13,7 @@ export const OWNER_PRO_PRICES = {
     amount: 290,
     currency: 'EUR',
     interval: 'year' as const,
-    label: '€290 / jaar',
+    label: '€290 / jaar excl. btw',
     savingsLabel: '2 maanden gratis',
   },
 } as const;

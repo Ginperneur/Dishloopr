@@ -43,7 +43,7 @@ export function ProGate({ restaurantId, enforced = false, showBadge = true, chil
           </div>
           <h3 className="font-semibold mb-2">Owner Pro functie</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Upgrade naar Pro (€29/maand of €290/jaar) om deze tools te ontgrendelen.
+            Upgrade naar Pro (€29/maand of €290/jaar, excl. btw) om deze tools te ontgrendelen.
           </p>
           <Button
             size="sm"

@@ -4,6 +4,7 @@ import { safeOrigin, getCaller } from "../_shared/auth.ts";
 import { billingParams } from "../_shared/billing.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
+import { withVat } from "../_shared/vat.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,7 +35,7 @@ Deno.serve(async (req) => {
     const customerId = customers.data[0]?.id;
     const meta = { type: "simulation_credits", restaurant_id, user_id: user.id };
     const origin = safeOrigin(req);
-    const session = await stripe.checkout.sessions.create({
+    const session = await stripe.checkout.sessions.create(await withVat(stripe, {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       mode: "payment",
@@ -48,7 +49,7 @@ Deno.serve(async (req) => {
       payment_intent_data: { metadata: meta },
       success_url: `${origin}/owner-dashboard?tab=menu&simulation=success`,
       cancel_url: `${origin}/owner-dashboard?tab=menu`,
-    });
+    }));
     return json({ url: session.url });
   } catch (e) {
     console.error("create-simulation-checkout", e);
