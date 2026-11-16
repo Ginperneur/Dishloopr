@@ -1,4 +1,23 @@
 import { useState, useCallback } from 'react';
+import { Geolocation } from '@capacitor/geolocation';
+import { isNativeApp } from '@/lib/native';
+
+/** Native app: use the OS location permission flow instead of the WebView prompt. */
+async function requestNativeLocation(): Promise<{ latitude: number; longitude: number }> {
+  let perm = await Geolocation.checkPermissions();
+  if (perm.location === 'prompt' || perm.location === 'prompt-with-rationale') {
+    perm = await Geolocation.requestPermissions({ permissions: ['location', 'coarseLocation'] });
+  }
+  if (perm.location === 'denied' && perm.coarseLocation !== 'granted') {
+    throw new Error('Locatietoegang geweigerd. Sta locatie toe in Instellingen > Dishloopr.');
+  }
+  try {
+    const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+    return { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+  } catch {
+    throw new Error('Kon je locatie niet bepalen, probeer opnieuw');
+  }
+}
 
 interface GeolocationState {
   latitude: number | null;
@@ -21,6 +40,14 @@ export function useGeolocation(): UseGeolocationReturn {
   });
 
   const requestLocation = useCallback(() => {
+    if (isNativeApp()) {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+      requestNativeLocation()
+        .then(({ latitude, longitude }) => setState({ latitude, longitude, error: null, loading: false }))
+        .catch((err: Error) => setState({ latitude: null, longitude: null, error: err.message, loading: false }));
+      return;
+    }
+
     if (!navigator.geolocation) {
       setState(prev => ({
         ...prev,
