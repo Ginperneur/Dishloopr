@@ -133,6 +133,9 @@ export function RevenueDashboard() {
 
   return (
     <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Dit zijn de oudere producten (featured spots, gesponsorde gerechten en nieuwsbrief). Uitgelicht, Owner Pro en Menuservice staan in het tabblad Overzicht.
+      </p>
       {/* Revenue Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card>
@@ -141,7 +144,7 @@ export function RevenueDashboard() {
               <DollarSign className="h-4 w-4 text-emerald-600" />
             </div>
             <p className="text-2xl font-bold text-emerald-600">€{data.totalMonthlyRevenue.toFixed(0)}</p>
-            <p className="text-xs text-muted-foreground">MRR (maandelijks)</p>
+            <p className="text-xs text-muted-foreground">MRR oude producten (featured en nieuwsbrief)</p>
           </CardContent>
         </Card>
         <Card>
