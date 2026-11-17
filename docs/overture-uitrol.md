@@ -70,5 +70,5 @@ Prompt 3 (functies):
 | Overture, PDOK, websitecheck | $0 |
 | Haiku-check | $2,27 (betaald) |
 | Firecrawl, ~13.000 credits voor 5.937 restaurants | binnen één maand Standard ($83 tot $99) |
-| Gemini via Google (gerechten + classificatie), ~$0,01 per restaurant | ~$60 |
+| Gemini via Google (gerechten met gemini-3.8-flash + classificatie), ~$0,015 per restaurant tot 31-12-2026, daarna het dubbele | ~$90 |
 | Optioneel: gerechten classificeren | ~$15 tot $25 |

@@ -12,8 +12,12 @@ const check = (label: string, got: unknown, want: unknown) => {
 const env = (vars: Record<string, string>) => (n: string) => vars[n];
 
 check("Gemini-sleutel gaat naar Google zonder model-prefix",
-  aiChatTarget("google/gemini-2.5-flash", env({ GEMINI_API_KEY: "g", LOVABLE_API_KEY: "l" })),
-  { provider: "google", url: GEMINI_OPENAI_URL, key: "g", model: "gemini-2.5-flash" });
+  aiChatTarget("google/gemini-3-flash-preview", env({ GEMINI_API_KEY: "g", LOVABLE_API_KEY: "l" })),
+  { provider: "google", url: GEMINI_OPENAI_URL, key: "g", model: "gemini-3-flash-preview" });
+check("gemini-2.5-flash wordt bij Google gemini-3.8-flash (oud model niet meer voor nieuwe gebruikers)",
+  aiChatTarget("google/gemini-2.5-flash", env({ GEMINI_API_KEY: "g" }))?.model, "gemini-3.8-flash");
+check("via de Lovable-gateway blijft de oude modelnaam",
+  aiChatTarget("google/gemini-2.5-flash", env({ LOVABLE_API_KEY: "l" }))?.model, "google/gemini-2.5-flash");
 check("alleen Lovable-sleutel gaat via de gateway met prefix",
   aiChatTarget("google/gemini-3-flash-preview", env({ LOVABLE_API_KEY: "l" })),
   { provider: "lovable", url: LOVABLE_GATEWAY_URL, key: "l", model: "google/gemini-3-flash-preview" });

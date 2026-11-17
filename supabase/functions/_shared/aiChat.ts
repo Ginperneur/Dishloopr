@@ -17,11 +17,18 @@ export interface AiChatTarget {
   model: string;
 }
 
+// Models Google no longer serves to new API users (checked 17-11-2026): calls with our own key
+// use the stable successor Google names in its error. The Lovable gateway keeps the old names.
+export const GOOGLE_MODEL_REPLACEMENTS: Record<string, string> = {
+  'gemini-2.5-flash': 'gemini-3.8-flash',
+};
+
 // `model` uses the gateway naming ("google/gemini-2.5-flash"); Google wants it without the prefix.
 export function aiChatTarget(model: string, env: (name: string) => string | undefined = (n) => Deno.env.get(n)): AiChatTarget | null {
   const gemini = env('GEMINI_API_KEY');
   if (gemini) {
-    return { provider: 'google', url: GEMINI_OPENAI_URL, key: gemini, model: model.replace(/^google\//, '') };
+    const name = model.replace(/^google\//, '');
+    return { provider: 'google', url: GEMINI_OPENAI_URL, key: gemini, model: GOOGLE_MODEL_REPLACEMENTS[name] ?? name };
   }
   const lovable = env('LOVABLE_API_KEY');
   if (lovable) {
