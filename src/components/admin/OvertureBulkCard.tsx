@@ -1,11 +1,11 @@
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Loader2, Play, Square, Upload } from 'lucide-react';
+import { Loader2, Play, Power, Square, Upload } from 'lucide-react';
 import { parseCsvTable } from '@/lib/overtureImport';
 
 const DISH_COLUMNS = ['overture_id', 'dish_slug', 'dish_name', 'canonical_slug', 'course', 'tier', 'price'];
@@ -24,11 +24,36 @@ async function bulk<T>(body: Record<string, unknown>): Promise<T> {
 // 2. import the screened Python scrape (scripts/overture-discovery/build_dish_import.py);
 // 3. scrape the rest with the website pipeline, screened automatically by dish-screening.
 // Restaurants switch on by themselves through the restaurant_dishes trigger.
+interface PipelineState { enabled: boolean; last_tick_at: string | null; last_result: Record<string, unknown> | null }
+
+// overture_pipeline is newer than the generated Supabase types.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const pipelineTable = () => (supabase as any).from('overture_pipeline');
+
 export function OvertureBulkCard({ onDone }: { onDone: () => Promise<void> | void }) {
   const [busy, setBusy] = useState<null | 'create' | 'import' | 'scrape'>(null);
   const [log, setLog] = useState<string[]>([]);
+  const [pipeline, setPipeline] = useState<PipelineState | null>(null);
   const stop = useRef(false);
   const say = (line: string) => setLog((l) => [line, ...l].slice(0, 12));
+
+  const loadPipeline = useCallback(async () => {
+    const { data } = await pipelineTable().select('enabled, last_tick_at, last_result').eq('id', 1).maybeSingle();
+    setPipeline(data ?? null);
+  }, []);
+  useEffect(() => {
+    loadPipeline();
+    const t = setInterval(loadPipeline, 30_000);
+    return () => clearInterval(t);
+  }, [loadPipeline]);
+
+  const togglePipeline = async () => {
+    const next = !pipeline?.enabled;
+    const { error } = await pipelineTable().update({ enabled: next, updated_at: new Date().toISOString() }).eq('id', 1);
+    if (error) { toast.error(error.message); return; }
+    toast.success(next ? 'Server-pijplijn staat aan' : 'Server-pijplijn staat uit');
+    await loadPipeline();
+  };
 
   const run = async (kind: 'create' | 'import' | 'scrape', fn: () => Promise<void>) => {
     stop.current = false;
@@ -125,6 +150,25 @@ export function OvertureBulkCard({ onDone }: { onDone: () => Promise<void> | voi
             <Button variant="outline" onClick={() => { stop.current = true; }}>
               <Square className="mr-2 h-4 w-4" /> Stoppen
             </Button>
+          )}
+        </div>
+        <div className="rounded-md border p-3 text-sm space-y-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <Button variant={pipeline?.enabled ? 'destructive' : 'default'} onClick={togglePipeline} disabled={!pipeline}>
+              <Power className="mr-2 h-4 w-4" />
+              {pipeline?.enabled ? 'Server-pijplijn uitzetten' : 'Server-pijplijn aanzetten'}
+            </Button>
+            <span className="text-muted-foreground">
+              {pipeline ? (pipeline.enabled ? 'Aan: elke minuut een stap op de server, tabblad mag dicht.' : 'Uit.') : 'Nog niet beschikbaar (migratie 0056).'}
+            </span>
+          </div>
+          <p className="text-muted-foreground">
+            Doet zelf stap 1 en daarna stap 3, zonder open tabblad. Zet hem pas aan nadat de Python-gerechten (stap 2) zijn geïmporteerd.
+          </p>
+          {pipeline?.last_tick_at && (
+            <p className="text-muted-foreground">
+              Laatste stap {new Date(pipeline.last_tick_at).toLocaleTimeString('nl-NL')}: {JSON.stringify(pipeline.last_result)}
+            </p>
           )}
         </div>
         {log.length > 0 && (
