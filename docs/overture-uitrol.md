@@ -83,8 +83,9 @@ Voor de 5.937 "zeker goed" is er een bulkroute in Admin, Wachtrijen, Discovery, 
 5. **Server-pijplijn (aanbevolen voor stap 1 en 3).** Knop "Server-pijplijn aanzetten" in dezelfde
    kaart (tabel `overture_pipeline`, migratie `0056_overture_pipeline`). pg_cron roept elke minuut
    `overture-bulk` met actie `tick` aan: eerst resterende "zeker goed" aanmaken, daarna per stap 6
-   verborgen restaurants door de websiteroute, en sinds 17-11-2026 per stap ook 10 "sterk, extra
-   controle" erbij (zelfde route als zeker goed). Geen open tabblad nodig; uitzetten stopt de kosten.
+   verborgen restaurants door de websiteroute. "Sterk, extra controle" heeft een eigen knop
+   ("Sterk ook meenemen", kolom `include_sterk`, migratie 0060): aan = per stap 10 sterk erbij,
+   daarna dezelfde route als zeker goed. Geen open tabblad nodig; uitzetten stopt de kosten.
    Zet hem pas aan na stap 3 (Python-import), anders betaal je voor restaurants die Python al dekt.
 
 Gemeten op 10 restaurants in Almere: Python alleen 4 van 10 met 5+ gerechten, website alleen 6,
