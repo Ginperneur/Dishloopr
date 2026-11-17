@@ -1,0 +1,197 @@
+// Bulk route for Overture candidates (docs/overture-uitrol.md):
+//   create         pending Overture rows of one triage → restaurants, hidden until 5 dishes
+//   import_dishes  screened Python scrape rows (keyed by overture_id) → approved dishes
+//   scrape_queue   hidden bulk restaurants still under 5 dishes and never scraped → for the
+//                  admin card, which runs scrape-menu + dish-screening on each
+// Restaurants go live by themselves: the restaurant_dishes trigger unhides a restaurant hidden
+// for its menu once menu_dish_count() reaches visibility_menu_minimum().
+import { requireAdminOrInternal, serviceClient, getCaller } from "../_shared/auth.ts";
+import { geocodeWithPdok } from "../_shared/pdokGeocode.ts";
+import { restaurantFromOverture } from "../_shared/overtureRestaurant.ts";
+import {
+  BULK_HIDDEN_REASON, TRIAGES, chunks, cleanDishRows, linkRecord, newDishRecord, type DishImportRow,
+} from "../_shared/overtureBulk.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const admin = serviceClient();
+  const deny = await requireAdminOrInternal(req, admin, corsHeaders);
+  if (deny) return deny;
+
+  try {
+    const body = await req.json().catch(() => ({}));
+    if (body.action === "create") return json(await createBatch(admin, body, (await getCaller(req))?.id ?? null));
+    if (body.action === "import_dishes") return json(await importDishes(admin, body));
+    if (body.action === "scrape_queue") return json(await scrapeQueue(admin, body));
+    return json({ error: "Onbekende actie (create, import_dishes, scrape_queue)" }, 400);
+  } catch (e) {
+    console.error("overture-bulk", e);
+    return json({ error: e instanceof Error ? e.message : String(e) }, 500);
+  }
+});
+
+// deno-lint-ignore no-explicit-any
+type Db = any;
+
+async function createBatch(admin: Db, body: { triage?: string; limit?: number }, reviewerId: string | null) {
+  const triage = TRIAGES.includes(body.triage as typeof TRIAGES[number]) ? body.triage! : "verified";
+  const limit = Math.min(Math.max(Number(body.limit) || 15, 1), 40);
+  const { data: rows, error } = await admin
+    .from("discovery_results")
+    .select("id, external_id, name, address, postcode, lat, lng, website, phone, city_id")
+    .eq("source", "overture").eq("status", "pending").eq("triage", triage)
+    .order("created_at").limit(limit);
+  if (error) throw error;
+
+  const cityNames = new Map<string, string | null>();
+  let created = 0, duplicates = 0;
+  const failed: { name: string; error: string }[] = [];
+  const now = new Date().toISOString();
+
+  for (const dr of rows ?? []) {
+    try {
+      const { data: existing } = await admin.from("restaurants").select("id").eq("overture_id", dr.external_id).maybeSingle();
+      if (existing) {
+        await admin.from("discovery_results").update({
+          status: "duplicate", matched_restaurant_id: existing.id, reviewed_at: now, reviewed_by: reviewerId,
+        }).eq("id", dr.id);
+        duplicates++;
+        continue;
+      }
+      if (!cityNames.has(dr.city_id)) {
+        const { data: city } = await admin.from("cities").select("name").eq("id", dr.city_id).maybeSingle();
+        cityNames.set(dr.city_id, city?.name ?? null);
+      }
+      const cityName = cityNames.get(dr.city_id) ?? null;
+      const geo = await geocodeWithPdok({ address: dr.address, postalCode: dr.postcode, city: cityName })
+        .catch((e: unknown) => ({ ok: false as const, reason: `pdok_error: ${e instanceof Error ? e.message : e}` }));
+      const { data: ins, error: insErr } = await admin.from("restaurants")
+        .insert(restaurantFromOverture(dr, cityName, geo)).select("id").single();
+      if (insErr) throw new Error(insErr.message);
+      const { error: hideErr } = await admin.from("restaurants_verborgen")
+        .upsert({ id: ins.id, reden: BULK_HIDDEN_REASON, was_active: false }, { onConflict: "id" });
+      if (hideErr) throw new Error(`verbergen: ${hideErr.message}`);
+      await admin.from("discovery_results").update({
+        status: "approved", matched_restaurant_id: ins.id, reviewed_at: now, reviewed_by: reviewerId,
+      }).eq("id", dr.id);
+      created++;
+    } catch (e) {
+      // A bad row must not come back in every batch: it moves to "twijfel" (triage review), where
+      // it stays pending in the Review Queue for a human, with the error as its reason.
+      const msg = e instanceof Error ? e.message : String(e);
+      failed.push({ name: dr.name, error: msg });
+      await admin.from("discovery_results")
+        .update({ triage: "review", triage_reason: `Bulk aanmaken mislukt: ${msg}`.slice(0, 300) })
+        .eq("id", dr.id);
+    }
+  }
+
+  const { count: remaining } = await admin.from("discovery_results")
+    .select("id", { count: "exact", head: true })
+    .eq("source", "overture").eq("status", "pending").eq("triage", triage);
+  return { triage, created, duplicates, failed, remaining: remaining ?? 0 };
+}
+
+async function importDishes(admin: Db, body: { rows?: DishImportRow[] }) {
+  const rows = cleanDishRows(Array.isArray(body.rows) ? body.rows.slice(0, 1000) : []);
+  if (!rows.length) return { restaurants: 0, missing_restaurants: 0, dishes_created: 0, links_added: 0, links_existing: 0 };
+
+  // overture_id → restaurant
+  const restaurantByOverture = new Map<string, string>();
+  for (const ids of chunks([...new Set(rows.map((r) => r.overture_id))], 200)) {
+    const { data, error } = await admin.from("restaurants").select("id, overture_id").in("overture_id", ids);
+    if (error) throw error;
+    for (const r of data ?? []) restaurantByOverture.set(r.overture_id, r.id);
+  }
+  const usable = rows.filter((r) => restaurantByOverture.has(r.overture_id));
+  const missing = new Set(rows.filter((r) => !restaurantByOverture.has(r.overture_id)).map((r) => r.overture_id)).size;
+
+  // dish slug → id, creating the missing dishes (never touching existing ones)
+  const dishBySlug = new Map<string, string>();
+  const slugs = [...new Set(usable.map((r) => r.dish_slug))];
+  const loadDishes = async (list: string[]) => {
+    for (const part of chunks(list, 200)) {
+      const { data, error } = await admin.from("dishes").select("id, slug").in("slug", part);
+      if (error) throw error;
+      for (const d of data ?? []) dishBySlug.set(d.slug, d.id);
+    }
+  };
+  await loadDishes(slugs);
+  const firstBySlug = new Map<string, DishImportRow>();
+  for (const r of usable) if (!dishBySlug.has(r.dish_slug) && !firstBySlug.has(r.dish_slug)) firstBySlug.set(r.dish_slug, r);
+  let dishesCreated = 0;
+  for (const part of chunks([...firstBySlug.values()].map(newDishRecord), 200)) {
+    const { data, error } = await admin.from("dishes").upsert(part, { onConflict: "slug", ignoreDuplicates: true }).select("id, slug");
+    if (error) throw error;
+    dishesCreated += data?.length ?? 0;
+    for (const d of data ?? []) dishBySlug.set(d.slug, d.id);
+  }
+  await loadDishes(slugs.filter((s) => !dishBySlug.has(s)));
+
+  // links that do not exist yet; an existing link keeps its own status and owner edits
+  const restaurantIds = [...new Set(usable.map((r) => restaurantByOverture.get(r.overture_id)!))];
+  const existing = new Set<string>();
+  for (const ids of chunks(restaurantIds, 100)) {
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await admin.from("restaurant_dishes").select("restaurant_id, dish_id")
+        .in("restaurant_id", ids).range(from, from + 999);
+      if (error) throw error;
+      for (const l of data ?? []) existing.add(`${l.restaurant_id}|${l.dish_id}`);
+      if (!data || data.length < 1000) break;
+    }
+  }
+  const now = new Date().toISOString();
+  const links = [];
+  let linksExisting = 0;
+  for (const r of usable) {
+    const rid = restaurantByOverture.get(r.overture_id)!;
+    const did = dishBySlug.get(r.dish_slug);
+    if (!did) continue;
+    const key = `${rid}|${did}`;
+    if (existing.has(key)) { linksExisting++; continue; }
+    existing.add(key);
+    links.push(linkRecord(r, rid, did, now));
+  }
+  for (const part of chunks(links, 300)) {
+    const { error } = await admin.from("restaurant_dishes").insert(part);
+    if (error) throw error;
+  }
+  return {
+    restaurants: restaurantIds.length, missing_restaurants: missing, dishes_created: dishesCreated,
+    links_added: links.length, links_existing: linksExisting,
+  };
+}
+
+async function scrapeQueue(admin: Db, body: { limit?: number; exclude?: string[] }) {
+  const limit = Math.min(Math.max(Number(body.limit) || 20, 1), 100);
+  // Restaurants the card already tried this run (a scrape that failed before logging a run).
+  const exclude = new Set(Array.isArray(body.exclude) ? body.exclude.slice(0, 20000) : []);
+  const queue: { id: string; name: string; website_url: string }[] = [];
+  let hiddenTotal = 0;
+  for (let from = 0; queue.length < limit; from += 500) {
+    const { data: hidden, error } = await admin.from("restaurants_verborgen").select("id")
+      .eq("reden", BULK_HIDDEN_REASON).order("id").range(from, from + 499);
+    if (error) throw error;
+    if (!hidden?.length) break;
+    hiddenTotal += hidden.length;
+    const ids = hidden.map((h: { id: string }) => h.id);
+    const { data: scraped } = await admin.from("menu_scrape_runs").select("restaurant_id").in("restaurant_id", ids);
+    const done = new Set((scraped ?? []).map((s: { restaurant_id: string }) => s.restaurant_id));
+    const todo = ids.filter((id: string) => !done.has(id) && !exclude.has(id));
+    if (todo.length) {
+      const { data: rests } = await admin.from("restaurants").select("id, name, website_url")
+        .in("id", todo).not("website_url", "is", null);
+      for (const r of rests ?? []) if (queue.length < limit) queue.push(r);
+    }
+    if (hidden.length < 500) break;
+  }
+  return { queue, hidden_seen: hiddenTotal };
+}

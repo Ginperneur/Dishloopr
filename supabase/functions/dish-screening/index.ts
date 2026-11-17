@@ -20,6 +20,11 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const batchSize = Math.min(Math.max(Number(body.batchSize) || 200, 1), 1000);
+    // Optional: screen only these restaurants (the Overture bulk route screens what it just scraped,
+    // so old needs_review rows elsewhere cannot fill the batch).
+    const restaurantIds: string[] = Array.isArray(body.restaurantIds)
+      ? body.restaurantIds.filter((x: unknown) => typeof x === "string").slice(0, 200)
+      : [];
 
     // Build trusted vocab
     const vocab = new Set<string>();
@@ -38,11 +43,12 @@ Deno.serve(async (req) => {
     }
 
     // Fetch links to screen
-    const { data: links, error: linksErr } = await supabase
+    let linkQuery = supabase
       .from("restaurant_dishes")
       .select("id, dish_id, status, dish:dishes(id, name, slug, canonical_slug, course)")
-      .in("status", ["suggested", "needs_review"])
-      .limit(batchSize);
+      .in("status", restaurantIds.length ? ["suggested"] : ["suggested", "needs_review"]);
+    if (restaurantIds.length) linkQuery = linkQuery.in("restaurant_id", restaurantIds);
+    const { data: links, error: linksErr } = await linkQuery.limit(batchSize);
     if (linksErr) throw linksErr;
 
     let approved = 0, rejected = 0, review = 0, skipped = 0;
