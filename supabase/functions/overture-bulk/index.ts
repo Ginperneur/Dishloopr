@@ -4,8 +4,8 @@
 //   scrape_queue   hidden bulk restaurants still under 5 dishes and never scraped → for the
 //                  admin card, which runs scrape-menu + dish-screening on each
 //   tick           one unattended step, run every minute by pg_cron while overture_pipeline.enabled:
-//                  first the remaining "zeker goed" rows (create), then the website route
-//                  (scrape-menu + dish-screening) for a few hidden restaurants
+//                  first the remaining "zeker goed" rows (create), then per tick 10 "sterk" rows
+//                  plus the website route (scrape-menu + dish-screening) for a few hidden restaurants
 // Restaurants go live by themselves: the restaurant_dishes trigger unhides a restaurant hidden
 // for its menu once menu_dish_count() reaches visibility_menu_minimum().
 import { requireAdminOrInternal, serviceClient, getCaller } from "../_shared/auth.ts";
@@ -208,6 +208,9 @@ async function tick(admin: Db) {
   if (created.created + created.duplicates + created.failed.length > 0) {
     result = { stap: "aanmaken", ...created };
   } else {
+    // "Sterk, extra controle" (decided 17-11-2026: same route as zeker goed) is created alongside
+    // the website route, a small batch per tick, so it never holds the website route back.
+    const sterk = await createBatch(admin, { triage: "approve", limit: 10 }, null);
     const perTick = Math.min(Math.max(Number(cfg.per_tick) || 6, 1), 12);
     const { queue } = await scrapeQueue(admin, { limit: perTick });
     // Claim first: a placeholder run keeps the next tick (or the admin card) off these restaurants.
@@ -229,7 +232,12 @@ async function tick(admin: Db) {
         n + (x?.results?.added ?? 0) + (x?.results?.existing ?? 0), 0);
       await call("dish-screening", { restaurantIds: part.map((r) => r.id), batchSize: 600 });
     }
-    result = { stap: queue.length ? "websiteroute" : "klaar", gescand: queue.length, gerechten: added };
+    const sterkBusy = sterk.created + sterk.duplicates + sterk.failed.length > 0;
+    result = {
+      stap: queue.length ? "websiteroute" : (sterkBusy ? "sterk aanmaken" : "klaar"),
+      gescand: queue.length, gerechten: added,
+      sterk_aangemaakt: sterk.created, sterk_te_gaan: sterk.remaining,
+    };
   }
 
   result.seconden = Math.round((Date.now() - started) / 1000);
