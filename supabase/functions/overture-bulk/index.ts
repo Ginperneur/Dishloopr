@@ -3,6 +3,9 @@
 //   import_dishes  screened Python scrape rows (keyed by overture_id) → approved dishes
 //   scrape_queue   hidden bulk restaurants still under 5 dishes and never scraped → for the
 //                  admin card, which runs scrape-menu + dish-screening on each
+//   tick           one unattended step, run every minute by pg_cron while overture_pipeline.enabled:
+//                  first the remaining "zeker goed" rows (create), then the website route
+//                  (scrape-menu + dish-screening) for a few hidden restaurants
 // Restaurants go live by themselves: the restaurant_dishes trigger unhides a restaurant hidden
 // for its menu once menu_dish_count() reaches visibility_menu_minimum().
 import { requireAdminOrInternal, serviceClient, getCaller } from "../_shared/auth.ts";
@@ -31,7 +34,8 @@ Deno.serve(async (req) => {
     if (body.action === "create") return json(await createBatch(admin, body, (await getCaller(req))?.id ?? null));
     if (body.action === "import_dishes") return json(await importDishes(admin, body));
     if (body.action === "scrape_queue") return json(await scrapeQueue(admin, body));
-    return json({ error: "Onbekende actie (create, import_dishes, scrape_queue)" }, 400);
+    if (body.action === "tick") return json(await tick(admin));
+    return json({ error: "Onbekende actie (create, import_dishes, scrape_queue, tick)" }, 400);
   } catch (e) {
     console.error("overture-bulk", e);
     return json({ error: bulkErrorMessage(e) }, 500);
@@ -190,4 +194,46 @@ async function scrapeQueue(admin: Db, body: { limit?: number; exclude?: string[]
     if (hidden.length < 500) break;
   }
   return { queue, hidden_seen: hiddenTotal };
+}
+
+// One unattended step. pg_cron calls this every minute (x-cron-secret); it does nothing while the
+// switch in overture_pipeline is off, so the admin decides when Gemini and Firecrawl may be spent.
+async function tick(admin: Db) {
+  const { data: cfg } = await admin.from("overture_pipeline").select("enabled, per_tick").eq("id", 1).maybeSingle();
+  if (!cfg?.enabled) return { skipped: "uit" };
+  const started = Date.now();
+  let result: Record<string, unknown>;
+
+  const created = await createBatch(admin, { triage: "verified", limit: 25 }, null);
+  if (created.created + created.duplicates + created.failed.length > 0) {
+    result = { stap: "aanmaken", ...created };
+  } else {
+    const perTick = Math.min(Math.max(Number(cfg.per_tick) || 6, 1), 12);
+    const { queue } = await scrapeQueue(admin, { limit: perTick });
+    // Claim first: a placeholder run keeps the next tick (or the admin card) off these restaurants.
+    if (queue.length) {
+      await admin.from("menu_scrape_runs").insert(queue.map((r) => ({
+        restaurant_id: r.id, status: "bulk_started", source: "overture_bulk", scraped_url: r.website_url,
+      })));
+    }
+    const base = Deno.env.get("SUPABASE_URL")!;
+    const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const call = (fn: string, body: unknown) => fetch(`${base}/functions/v1/${fn}`, {
+      method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).then((r) => r.json().catch(() => ({}))).catch((e) => ({ error: bulkErrorMessage(e) }));
+    let added = 0;
+    for (const part of chunks(queue, 3)) {
+      const res = await Promise.all(part.map((r) => call("scrape-menu", { restaurantId: r.id, websiteUrl: r.website_url })));
+      added += res.reduce((n: number, x: { results?: { added?: number; existing?: number } }) =>
+        n + (x?.results?.added ?? 0) + (x?.results?.existing ?? 0), 0);
+      await call("dish-screening", { restaurantIds: part.map((r) => r.id), batchSize: 600 });
+    }
+    result = { stap: queue.length ? "websiteroute" : "klaar", gescand: queue.length, gerechten: added };
+  }
+
+  result.seconden = Math.round((Date.now() - started) / 1000);
+  await admin.from("overture_pipeline")
+    .update({ last_tick_at: new Date().toISOString(), last_result: result }).eq("id", 1);
+  return result;
 }

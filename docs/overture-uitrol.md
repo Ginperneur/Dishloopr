@@ -80,6 +80,12 @@ Voor de 5.937 "zeker goed" is er een bulkroute in Admin, Wachtrijen, Discovery, 
 4. **Websiteroute voor de rest.** Restaurants die daarna nog verborgen zijn en nooit gescand,
    gaan door `scrape-menu` (Firecrawl + Gemini) en meteen door `dish-screening`.
 
+5. **Server-pijplijn (aanbevolen voor stap 1 en 3).** Knop "Server-pijplijn aanzetten" in dezelfde
+   kaart (tabel `overture_pipeline`, migratie `0056_overture_pipeline`). pg_cron roept elke minuut
+   `overture-bulk` met actie `tick` aan: eerst resterende "zeker goed" aanmaken, daarna per stap 6
+   verborgen restaurants door de websiteroute. Geen open tabblad nodig; uitzetten stopt de kosten.
+   Zet hem pas aan na stap 3 (Python-import), anders betaal je voor restaurants die Python al dekt.
+
 Gemeten op 10 restaurants in Almere: Python alleen 4 van 10 met 5+ gerechten, website alleen 6,
 samen 8.
 
