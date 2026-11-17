@@ -1,3 +1,4 @@
+import { aiChatTarget } from "../_shared/aiChat.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
 
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
@@ -30,9 +31,9 @@ Deno.serve(async (req) => {
   if (!__rl.allowed && __rl.response) return __rl.response;
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
+    const ai = aiChatTarget("google/gemini-3-flash-preview");
+    if (!ai) {
+      return new Response(JSON.stringify({ error: "GEMINI_API_KEY or LOVABLE_API_KEY not configured" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -135,14 +136,14 @@ Antwoord ALLEEN met een JSON array. Elk element heeft:
 BELANGRIJK: Geef precies 1 keuken, 1 sfeer, 1 concept en 1 beleving per restaurant. Alleen maaltijdtypes mag je er meerdere geven.
 Wees specifiek en realistisch. Als je het niet zeker weet op basis van de naam, kies dan de meest waarschijnlijke optie.`;
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiResponse = await fetch(ai.url, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${ai.key}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: ai.model,
         messages: [
           { role: "system", content: "Je classificeert Nederlandse restaurants. Antwoord altijd met valide JSON." },
           { role: "user", content: prompt },

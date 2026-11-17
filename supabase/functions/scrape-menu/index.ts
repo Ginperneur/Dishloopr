@@ -1,3 +1,4 @@
+import { aiChatTarget } from '../_shared/aiChat.ts';
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
 
@@ -240,22 +241,22 @@ Deno.serve(async (req) => {
     console.log(`Scraped ${markdown.length} chars from ${urlToScrape}`);
 
     // Step 3: AI extraction
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
+    const ai = aiChatTarget('google/gemini-2.5-flash');
+    if (!ai) {
       await logRun({ status: 'ai_not_configured', errorMessage: 'AI service niet geconfigureerd', scrapedUrl: urlToScrape });
       return new Response(JSON.stringify({ error: 'AI service niet geconfigureerd' }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiResponse = await fetch(ai.url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${ai.key}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: ai.model,
         messages: [
           {
             role: 'system',

@@ -1,6 +1,6 @@
 import { Layout } from '@/components/layout/Layout';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, TrendingUp, MessageSquare, BarChart3, Search, MapPin, Clock, Phone, Globe, Star, Loader2, Shield, AlertCircle } from 'lucide-react';
+import { CheckCircle, TrendingUp, MessageSquare, BarChart3, Search, MapPin, Phone, Globe, Loader2, Shield, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,19 +18,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { SEOHead } from '@/components/seo/SEOHead';
 
+// Search results come from our own database only (google-places-search with includeGoogle: false).
 interface GooglePlaceResult {
   place_id: string;
   name: string;
   address: string;
-  geo_lat: number | null;
-  geo_lng: number | null;
   phone: string | null;
   website: string | null;
-  rating: number | null;
-  review_count: number | null;
   price_level: number;
-  opening_hours: string[] | null;
-  photo_references?: string[];
   // Local database fields
   is_local?: boolean;
   restaurant_id?: string;
@@ -116,7 +111,7 @@ export default function ClaimPage() {
 
     try {
       const { data, error } = await supabase.functions.invoke('google-places-search', {
-        body: { query: searchQuery, city: searchCity || undefined }
+        body: { query: searchQuery, city: searchCity || undefined, includeGoogle: false }
       });
 
       if (error) throw error;
@@ -159,119 +154,39 @@ export default function ClaimPage() {
     const notes = formData.get('notes') as string;
 
     try {
-      let restaurantId: string | undefined;
-
-      // If this is a local restaurant from our database, use its ID directly
-      if (selectedPlace.is_local && selectedPlace.restaurant_id) {
-        console.log('Using local restaurant:', selectedPlace.restaurant_id);
-        
-        // Check if already verified
-        const { data: existingRestaurant } = await supabase
-          .from('restaurants')
-          .select('id, claimed_by_owner_id, claim_status')
-          .eq('id', selectedPlace.restaurant_id)
-          .maybeSingle();
-
-        if (existingRestaurant?.claim_status === 'verified_owner') {
-          toast.error('Dit restaurant is al geclaimd en geverifieerd. Neem contact op als je denkt dat dit onjuist is.');
-          setIsSubmitting(false);
-          return;
-        }
-
-        restaurantId = existingRestaurant?.id;
-      } else {
-        // Google Places result - check if restaurant exists in our database by name
-        const { data: existingRestaurant } = await supabase
-          .from('restaurants')
-          .select('id, claimed_by_owner_id, claim_status')
-          .eq('name', selectedPlace.name)
-          .maybeSingle();
-
-        if (existingRestaurant?.claim_status === 'verified_owner') {
-          toast.error('Dit restaurant is al geclaimd en geverifieerd. Neem contact op als je denkt dat dit onjuist is.');
-          setIsSubmitting(false);
-          return;
-        }
-
-        restaurantId = existingRestaurant?.id;
+      // Claims only attach to restaurants already on Dishloopr. New restaurants go through
+      // /add-restaurant, where the owner enters the details themselves: Google Places content
+      // may not be copied into our database (docs/google-places-compliance.md).
+      if (!selectedPlace.is_local || !selectedPlace.restaurant_id) {
+        toast.info('Dit restaurant staat nog niet op Dishloopr. Voeg het toe als nieuw restaurant.');
+        setIsSubmitting(false);
+        navigate('/add-restaurant');
+        return;
       }
 
-      // If restaurant doesn't exist, create it
+      const { data: existingRestaurant } = await supabase
+        .from('restaurants')
+        .select('id, claimed_by_owner_id, claim_status')
+        .eq('id', selectedPlace.restaurant_id)
+        .maybeSingle();
+
+      if (existingRestaurant?.claim_status === 'verified_owner') {
+        toast.error('Dit restaurant is al geclaimd en geverifieerd. Neem contact op als je denkt dat dit onjuist is.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      const restaurantId = existingRestaurant?.id;
       if (!restaurantId) {
-        const cityName = extractCityFromAddress(selectedPlace.address);
-        let cityId: string;
-
-        const { data: existingCity } = await supabase
-          .from('cities')
-          .select('id')
-          .eq('name', cityName)
-          .maybeSingle();
-
-        if (existingCity) {
-          cityId = existingCity.id;
-        } else {
-          const { data: newCity, error: cityError } = await supabase
-            .from('cities')
-            .insert({
-              name: cityName,
-              slug: cityName.toLowerCase().replace(/\s+/g, '-'),
-              country_code: 'NL'
-            })
-            .select('id')
-            .single();
-
-          if (cityError) throw cityError;
-          cityId = newCity.id;
-        }
-
-        const { data: newRestaurant, error: restaurantError } = await supabase
-          .from('restaurants')
-          .insert({
-            name: selectedPlace.name,
-            slug: generateSlug(selectedPlace.name),
-            address: selectedPlace.address,
-            city_id: cityId,
-            geo_lat: selectedPlace.geo_lat,
-            geo_lng: selectedPlace.geo_lng,
-            phone: selectedPlace.phone,
-            website_url: selectedPlace.website,
-            rating: selectedPlace.rating || 0,
-            review_count: selectedPlace.review_count || 0,
-            price_level: selectedPlace.price_level || 2,
-            opening_hours: selectedPlace.opening_hours ? { weekday_text: selectedPlace.opening_hours } : null,
-            is_active: true,
-            claim_status: 'claimed_unverified'
-          })
-          .select('id')
-          .single();
-
-        if (restaurantError) throw restaurantError;
-        restaurantId = newRestaurant.id;
-
-        // Fetch and store Google Places photos automatically
-        if (selectedPlace.place_id && selectedPlace.photo_references?.length) {
-          supabase.functions.invoke('fetch-google-photos', {
-            body: { 
-              place_id: selectedPlace.place_id,
-              photo_references: selectedPlace.photo_references,
-              restaurant_id: restaurantId,
-              max_photos: 5
-            }
-          }).then(({ error }) => {
-            if (error) {
-              console.error('Failed to fetch Google photos:', error);
-            } else {
-              console.log('Google photos fetched successfully');
-            }
-          });
-        }
-      } else {
-        // Update existing restaurant claim status
-        await supabase
-          .from('restaurants')
-          .update({ claim_status: 'claimed_unverified' })
-          .eq('id', restaurantId);
+        toast.error('Restaurant niet gevonden. Probeer opnieuw te zoeken.');
+        setIsSubmitting(false);
+        return;
       }
+
+      await supabase
+        .from('restaurants')
+        .update({ claim_status: 'claimed_unverified' })
+        .eq('id', restaurantId);
 
       // Continue in the two-route verification flow (business e-mail or manual proof)
       const { data: target } = await supabase
@@ -355,27 +270,6 @@ export default function ClaimPage() {
     } finally {
       setVerifyingCode(false);
     }
-  };
-
-  const extractCityFromAddress = (address: string): string => {
-    const parts = address.split(',').map(p => p.trim());
-    for (let i = parts.length - 1; i >= 0; i--) {
-      const part = parts[i];
-      if (/^\d{4}\s?[A-Z]{2}/.test(part) || part === 'Nederland' || part === 'Netherlands') {
-        continue;
-      }
-      return part.replace(/^\d{4}\s?[A-Z]{2}\s*/, '').trim() || 'Amsterdam';
-    }
-    return 'Amsterdam';
-  };
-
-  const generateSlug = (name: string): string => {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim();
   };
 
   const priceLabels = ['€', '€€', '€€€', '€€€€'];
@@ -673,12 +567,6 @@ export default function ClaimPage() {
                               </p>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
-                              {place.rating && (
-                                <span className="flex items-center gap-1 text-sm">
-                                  <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                                  {place.rating}
-                                </span>
-                              )}
                               <span className="text-sm text-muted-foreground">
                                 {priceLabels[place.price_level - 1] || '€€'}
                               </span>
@@ -695,7 +583,8 @@ export default function ClaimPage() {
                       animate={{ opacity: 1 }}
                       className="mt-6 text-center text-muted-foreground"
                     >
-                      Geen restaurants gevonden. Probeer een andere zoekopdracht.
+                      Geen restaurants gevonden. Staat je restaurant nog niet op Dishloopr?{' '}
+                      <Link to="/add-restaurant" className="text-primary hover:underline">Voeg het toe</Link>.
                     </motion.p>
                   )}
                 </AnimatePresence>
@@ -749,28 +638,9 @@ export default function ClaimPage() {
                             </div>
                           )}
                           
-                          {selectedPlace.opening_hours && selectedPlace.opening_hours.length > 0 && (
-                            <div className="flex items-start gap-2 text-muted-foreground">
-                              <Clock className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                              <div className="text-xs space-y-0.5">
-                                {selectedPlace.opening_hours.slice(0, 3).map((hours, i) => (
-                                  <div key={i}>{hours}</div>
-                                ))}
-                                {selectedPlace.opening_hours.length > 3 && (
-                                  <div className="text-muted-foreground/60">...</div>
-                                )}
-                              </div>
-                            </div>
-                          )}
                         </div>
 
                         <div className="flex items-center gap-4 pt-2 border-t border-border">
-                          {selectedPlace.rating && (
-                            <span className="flex items-center gap-1 text-sm">
-                              <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                              {selectedPlace.rating} ({selectedPlace.review_count} reviews)
-                            </span>
-                          )}
                           <span className="text-sm">
                             {priceLabels[selectedPlace.price_level - 1] || '€€'}
                           </span>

@@ -24,7 +24,6 @@ import { QUEUE_SNAPSHOT_KEY, fetchQueueSnapshot, snapshotToBadges } from '@/comp
 import { RestaurantDetailModal } from '@/components/admin/RestaurantDetailModal';
 import { AddRestaurantModal } from '@/components/admin/AddRestaurantModal';
 import { SponsoredProductsManager } from '@/components/admin/SponsoredProductsManager';
-import { BulkRestaurantUpload } from '@/components/admin/BulkRestaurantUpload';
 import { ClaimRequestsQueue } from '@/components/admin/ClaimRequestsQueue';
 import { OptoutRequestsManager } from '@/components/admin/OptoutRequestsManager';
 import { ContactMessagesManager } from '@/components/admin/ContactMessagesManager';
@@ -43,7 +42,6 @@ import { UitgelichtDishesManager } from '@/components/admin/UitgelichtDishesMana
 import { DishApprovalManager } from '@/components/admin/DishApprovalManager';
 import { ChainsManager } from '@/components/admin/ChainsManager';
 import { GeocodeManager } from '@/components/admin/GeocodeManager';
-import { GoogleEnrichManager } from '@/components/admin/GoogleEnrichManager';
 import { AIMetadataEnrichment } from '@/components/admin/AIMetadataEnrichment';
 import { PhotosManager } from '@/components/admin/PhotosManager';
 import { RestaurantDishesManager } from '@/components/admin/RestaurantDishesManager';
@@ -584,14 +582,12 @@ export default function AdminPanel() {
               {activeSection === 'manual-menu' && <ManualMenuUpload />}
               {activeSection === 'empty-dishes' && <EmptyDishesManager onNavigateToTab={handleNavigateToTab} />}
               {activeSection === 'data-export' && <DataExportManager />}
-              {activeSection === 'bulk-import' && <BulkRestaurantUpload onSuccess={fetchData} />}
               {activeSection === 'audit' && <RestaurantAudit />}
               {activeSection === 'discovery' && <RestaurantDiscovery />}
               {activeSection === 'broken-images' && <BrokenImageChecker />}
               {activeSection === 'duplicates' && <DuplicateMerger />}
               {activeSection === 'completeness' && <CompletenessScore />}
               {activeSection === 'geocode' && <GeocodeManager />}
-              {activeSection === 'google-enrich' && <GoogleEnrichManager />}
               {activeSection === 'ai-classify' && <AIMetadataEnrichment />}
               {activeSection === 'photos' && <PhotosManager />}
               {activeSection === 'seo-health' && <SeoHealthMonitor />}

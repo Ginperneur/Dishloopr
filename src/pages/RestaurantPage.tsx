@@ -351,8 +351,6 @@ export default function RestaurantPage() {
                   <div className="flex flex-wrap items-center gap-2 md:gap-4 text-sm md:text-base text-muted-foreground mb-3">
                     <RatingSummary
                       size="md"
-                      googleRating={(restaurant as any).google_rating}
-                      googleReviewsCount={(restaurant as any).google_reviews_count}
                       ownReviewCount={ownReviewCount}
                       ownAverage={ownAverage}
                     />

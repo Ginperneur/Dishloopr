@@ -171,7 +171,7 @@ export async function loadLandingRestaurants(page: SeoLandingPage) {
   for (let i = 0; i < matchedIds.length; i += 200) idBlocks.push(matchedIds.slice(i, i + 200));
   const cityRestaurants = (await Promise.all(idBlocks.map(block =>
     readAllPages<LandingRestaurant>((from, to) => supabase.from('restaurants')
-      .select('id, name, slug, address, rating, review_count, price_level, images, cuisines, ambience_tags, meal_types, is_featured, is_top_listing, geo_lat, geo_lng, opening_hours, google_rating, google_reviews_count')
+      .select('id, name, slug, address, rating, review_count, price_level, images, cuisines, ambience_tags, meal_types, is_featured, is_top_listing, geo_lat, geo_lng, opening_hours')
       .in('id', block).eq('city_id', cityId).eq('is_active', true).order('id').range(from, to)),
   ))).flat();
   const restaurants = cityRestaurants.filter(r => best.has(r.id)).map(r => {

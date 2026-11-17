@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -19,6 +20,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
 import { openConfirm } from '@/components/ui/confirm-dialog';
+import { OvertureImportCard } from './OvertureImportCard';
 interface GridPoint {
   id: string;
   name: string;
@@ -47,7 +49,15 @@ interface DiscoveryResult {
   photo_reference: string | null;
   city_id: string | null;
   venue_category?: string | null;
+  source?: string;
+  triage?: string | null;
+  triage_reason?: string | null;
+  category?: string | null;
+  website?: string | null;
+  confidence?: number | null;
 }
+
+type QueueSourceFilter = 'all' | 'overture_verified' | 'overture_approve' | 'overture_review' | 'google';
 
 export function RestaurantDiscovery() {
   const [gridPoints, setGridPoints] = useState<GridPoint[]>([]);
@@ -87,11 +97,12 @@ export function RestaurantDiscovery() {
   const [rejectedResults, setRejectedResults] = useState<(DiscoveryResult & { reject_reason: string | null })[]>([]);
 
   // Cities for filter
-  const [cities, setCities] = useState<{ id: string; name: string }[]>([]);
+  const [cities, setCities] = useState<{ id: string; name: string; is_active: boolean }[]>([]);
   const [gridCityFilter, setGridCityFilter] = useState<string>('all');
   const [queueCityFilter, setQueueCityFilter] = useState<string>('all');
   const [bulkCityFilter, setBulkCityFilter] = useState<string>('all');
   const [queueLimit, setQueueLimit] = useState<number>(100);
+  const [queueSourceFilter, setQueueSourceFilter] = useState<QueueSourceFilter>('all');
   const [queueCategoryFilter, setQueueCategoryFilter] = useState<'all' | 'restaurant' | 'cafe' | 'bakery'>('all');
   const [bulkCategories, setBulkCategories] = useState<Array<'restaurant' | 'cafe' | 'bakery'>>(['restaurant', 'cafe', 'bakery']);
 
@@ -226,6 +237,18 @@ export function RestaurantDiscovery() {
     return () => clearTimeout(t);
   }, [queueSearchInput]);
 
+  // Overture rows carry a triage label from scripts/overture-discovery; Google rows cannot be approved.
+  // Typed loosely on purpose: the generated Supabase builder types blow up TS inference here.
+  const applySourceFilter = <Q,>(q: Q, f: QueueSourceFilter): Q => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const b = q as any;
+    if (f === 'google') return b.eq('source', 'google');
+    if (f === 'overture_verified') return b.eq('source', 'overture').eq('triage', 'verified');
+    if (f === 'overture_approve') return b.eq('source', 'overture').eq('triage', 'approve');
+    if (f === 'overture_review') return b.eq('source', 'overture').eq('triage', 'review');
+    return q;
+  };
+
   const loadData = async () => {
     const seq = ++loadSeqRef.current;
     setLoading(true);
@@ -242,6 +265,7 @@ export function RestaurantDiscovery() {
     if (queueCategoryFilter !== 'all') {
       queueQuery = queueQuery.eq('venue_category', queueCategoryFilter);
     }
+    queueQuery = applySourceFilter(queueQuery, queueSourceFilter);
     const qSearch = queueSearch.trim();
     if (qSearch) {
       const safe = qSearch.replace(/[%,]/g, ' ');
@@ -261,7 +285,7 @@ export function RestaurantDiscovery() {
       supabase.from('discovery_grid_points').select('*').order('name'),
       queueQuery,
       supabase.from('discovery_results').select('*').eq('status', 'rejected').order('reviewed_at', { ascending: false }).limit(200),
-      supabase.from('cities').select('id, name').eq('is_active', true).order('name'),
+      supabase.from('cities').select('id, name, is_active').order('name'),
       countByStatus('pending'),
       countByStatus('approved'),
       countByStatus('duplicate'),
@@ -288,7 +312,7 @@ export function RestaurantDiscovery() {
   useEffect(() => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queueCityFilter, queueLimit, queueCategoryFilter, queueSearch]);
+  }, [queueCityFilter, queueLimit, queueCategoryFilter, queueSearch, queueSourceFilter]);
 
   const handleGenerateGrid = async () => {
     setGenerating(true);
@@ -426,6 +450,7 @@ export function RestaurantDiscovery() {
         .order('discovered_at', { ascending: false })
         .limit(500);
       if (queueCityFilter !== 'all') q = q.eq('city_id', queueCityFilter);
+      q = applySourceFilter(q, queueSourceFilter);
       const { data } = await q;
       targets = (data || []).map((r) => ({ id: r.id, name: r.name, payload: { discoveryResultId: r.id } }));
     } else {
@@ -611,7 +636,8 @@ export function RestaurantDiscovery() {
         .from('discovery_results')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'pending')
-        .lt('user_ratings_total', bulkRejectMinReviews);
+        .lt('user_ratings_total', bulkRejectMinReviews)
+        .eq('source', 'google');
       if (queueCityFilter !== 'all') qLow = qLow.eq('city_id', queueCityFilter);
       const { count: cLow, error: eLow } = await qLow;
       if (eLow) throw eLow;
@@ -622,7 +648,8 @@ export function RestaurantDiscovery() {
           .from('discovery_results')
           .select('*', { count: 'exact', head: true })
           .eq('status', 'pending')
-          .is('user_ratings_total', null);
+          .is('user_ratings_total', null)
+          .eq('source', 'google');
         if (queueCityFilter !== 'all') qNull = qNull.eq('city_id', queueCityFilter);
         const { count: cNull, error: eNull } = await qNull;
         if (eNull) throw eNull;
@@ -648,7 +675,8 @@ export function RestaurantDiscovery() {
         .from('discovery_results')
         .update(payload)
         .eq('status', 'pending')
-        .lt('user_ratings_total', bulkRejectMinReviews);
+        .lt('user_ratings_total', bulkRejectMinReviews)
+        .eq('source', 'google');
       if (queueCityFilter !== 'all') qLow = qLow.eq('city_id', queueCityFilter);
       const { data: dLow, error: eLow } = await qLow.select('id');
       if (eLow) throw eLow;
@@ -659,7 +687,8 @@ export function RestaurantDiscovery() {
           .from('discovery_results')
           .update(payload)
           .eq('status', 'pending')
-          .is('user_ratings_total', null);
+          .is('user_ratings_total', null)
+          .eq('source', 'google');
         if (queueCityFilter !== 'all') qNull = qNull.eq('city_id', queueCityFilter);
         const { data: dNull, error: eNull } = await qNull.select('id');
         if (eNull) throw eNull;
@@ -700,6 +729,15 @@ export function RestaurantDiscovery() {
 
   return (
     <div className="space-y-6">
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Google-scans staan stil, discovery loopt via Overture Maps</AlertTitle>
+        <AlertDescription>
+          De Google-voorwaarden staan niet toe dat we namen, adressen, ratings of foto's uit Google Places opslaan.
+          Google-rijen in de wachtrij kunnen daarom niet meer worden goedgekeurd. Nieuwe steden importeer je hieronder
+          uit Overture Maps; die rijen kun je wel goedkeuren. Zie docs/google-places-compliance.md.
+        </AlertDescription>
+      </Alert>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="pb-2"><CardDescription>Grid Punten</CardDescription></CardHeader>
@@ -768,12 +806,13 @@ export function RestaurantDiscovery() {
         </TabsList>
 
         <TabsContent value="queue" className="space-y-4">
+          <OvertureImportCard cities={cities} onImported={loadData} />
           <Card>
             <CardHeader className="flex flex-row items-start justify-between gap-4 flex-wrap">
               <div>
                 <CardTitle>Ontdekte Restaurants — Review Queue</CardTitle>
                 <CardDescription>
-                  Nieuwe restaurants gevonden via Google Places. Goedkeuren = volledige pipeline: import → verrijk → AI-classificeer → menu scrapen → activeren.
+                  Kandidaten uit Overture Maps (sterk of twijfel) en oude Google-rijen. Goedkeuren = volledige pipeline: aanmaken → adres via PDOK → AI-classificeer → menu scrapen → activeren. "Zeker goed" is bewezen via de eigen website (adres plus menu of reserveren); "sterk, extra controle" eerst nalopen.
                   {stats.pending > pendingResults.length && (
                     <span className="block mt-1 text-xs">
                       Toont {pendingResults.length} van {stats.pending.toLocaleString('nl-NL')} — laad meer hieronder.
@@ -791,6 +830,18 @@ export function RestaurantDiscovery() {
                     {cities.map((c) => (
                       <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+                <Select value={queueSourceFilter} onValueChange={(v) => setQueueSourceFilter(v as QueueSourceFilter)}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Filter bron" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Alle bronnen</SelectItem>
+                    <SelectItem value="overture_verified">Overture: zeker goed</SelectItem>
+                    <SelectItem value="overture_approve">Overture: sterk, extra controle</SelectItem>
+                    <SelectItem value="overture_review">Overture: twijfelgevallen</SelectItem>
+                    <SelectItem value="google">Google (niet goed te keuren)</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={queueCategoryFilter} onValueChange={(v: any) => setQueueCategoryFilter(v)}>
@@ -920,21 +971,47 @@ export function RestaurantDiscovery() {
                         </TableCell>
                         <TableCell className="font-medium">
                           <div>{r.name}</div>
-                          <a
-                            href={`https://www.google.com/maps/place/?q=place_id:${r.place_id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1"
-                          >
-                            Google Maps <ExternalLink className="h-3 w-3" />
-                          </a>
+                          {r.source === 'overture' ? (
+                            r.website ? (
+                              <a
+                                href={/^https?:\/\//i.test(r.website) ? r.website : `https://${r.website}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1"
+                              >
+                                Website <ExternalLink className="h-3 w-3" />
+                              </a>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">Geen website</span>
+                            )
+                          ) : r.place_id ? (
+                            <a
+                              href={`https://www.google.com/maps/place/?q=place_id:${r.place_id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1"
+                            >
+                              Google Maps <ExternalLink className="h-3 w-3" />
+                            </a>
+                          ) : null}
                         </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="text-xs whitespace-nowrap">
-                          {r.venue_category === 'cafe' && 'Koffie/Lunch'}
-                          {r.venue_category === 'bakery' && 'Bakkerij'}
-                          {(!r.venue_category || r.venue_category === 'restaurant') && 'Restaurant'}
-                        </Badge>
+                        {r.source === 'overture' ? (
+                          <div className="space-y-1">
+                            <Badge variant={r.triage === 'review' ? 'secondary' : 'default'} className="text-xs whitespace-nowrap">
+                              {r.triage === 'verified' ? 'Zeker goed' : r.triage === 'approve' ? 'Sterk, extra controle' : 'Twijfel'}
+                            </Badge>
+                            <div className="text-xs text-muted-foreground max-w-[220px]">
+                              {r.category}{r.triage_reason ? ` · ${r.triage_reason}` : ''}
+                            </div>
+                          </div>
+                        ) : (
+                          <Badge variant="outline" className="text-xs whitespace-nowrap">
+                            {r.venue_category === 'cafe' && 'Koffie/Lunch'}
+                            {r.venue_category === 'bakery' && 'Bakkerij'}
+                            {(!r.venue_category || r.venue_category === 'restaurant') && 'Restaurant'}
+                          </Badge>
+                        )}
                       </TableCell>
                         <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
                           {r.address || '—'}
@@ -1106,14 +1183,29 @@ export function RestaurantDiscovery() {
                       <TableRow key={r.id}>
                         <TableCell className="font-medium">
                           <div>{r.name}</div>
-                          <a
-                            href={`https://www.google.com/maps/place/?q=place_id:${r.place_id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1"
-                          >
-                            Google Maps <ExternalLink className="h-3 w-3" />
-                          </a>
+                          {r.source === 'overture' ? (
+                            r.website ? (
+                              <a
+                                href={/^https?:\/\//i.test(r.website) ? r.website : `https://${r.website}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1"
+                              >
+                                Website <ExternalLink className="h-3 w-3" />
+                              </a>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">Geen website</span>
+                            )
+                          ) : r.place_id ? (
+                            <a
+                              href={`https://www.google.com/maps/place/?q=place_id:${r.place_id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1"
+                            >
+                              Google Maps <ExternalLink className="h-3 w-3" />
+                            </a>
+                          ) : null}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
                           {r.address || '—'}
