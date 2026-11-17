@@ -13,6 +13,7 @@
 
 - Never store Google Places or Geocoding content (names, addresses, coordinates, ratings, opening hours, photos, raw responses); only `google_place_id` may be kept. Geocode through `_shared/pdokGeocode.ts` (PDOK/BAG) and show only Dishloopr's own review score. See `docs/google-places-compliance.md`.
 - Restaurant discovery runs on Overture Maps Places: `scripts/overture-discovery/discover.py` writes a triaged CSV, admins upload it in the Discovery tab (`discovery_results.source = 'overture'`), and approving creates the restaurant with a PDOK address and `restaurants.overture_id`; Google rows stay unapprovable.
+- AI chat calls (menu extraction, restaurant and dish classification) go through `_shared/aiChat.ts`: Google's Gemini API directly when `GEMINI_API_KEY` is set (paid tier, required in the EEA), the Lovable gateway otherwise; never enable Google Search or Maps grounding there.
 
 # Restaurant parking
 

@@ -2,7 +2,7 @@
 // the rows written by discover.py, city and restaurant slugs, website normalising, and the
 // restaurants row built from an Overture candidate (with and without a PDOK geocode).
 // Usage from the repo root: deno run --config supabase/tests/deno.json supabase/tests/overture-import.ts
-import { citySlug, missingColumns, parseCsv, parseCsvTable, toDiscoveryRows } from "../../src/lib/overtureImport.ts";
+import { citySlug, groupByCity, missingColumns, parseCsv, parseCsvTable, toDiscoveryRows } from "../../src/lib/overtureImport.ts";
 import { normalizeWebsite, restaurantFromOverture, restaurantSlug } from "../functions/_shared/overtureRestaurant.ts";
 
 let ok = true;
@@ -101,5 +101,29 @@ try {
   threw = true;
 }
 check("zonder city_id wordt een fout gegooid", threw, true);
+
+// groupByCity
+const cityRows: Record<string, string>[] = [
+  { city: "Zwolle", provincie: "Overijssel", status: "approve" },
+  { city: "zwolle", provincie: "", status: "review" },
+  { city: "ZWOLLE", provincie: "", status: "reject" },
+  { city: "Lelystad", provincie: "", status: "reject" },
+  { city: "Lelystad", provincie: "", status: "duplicate" },
+  { city: "", provincie: "Utrecht", status: "approve" },
+  { city: "   ", provincie: "Utrecht", status: "approve" },
+  { status: "approve" },
+  { city: "Apeldoorn", provincie: " Gelderland ", status: "approve" },
+  { city: "Apeldoorn", provincie: "", status: "approve" },
+  { city: "Apeldoorn", provincie: "", status: "review" },
+  { city: "Nijmegen", provincie: "", status: "approve" },
+];
+const groups = groupByCity(cityRows);
+check("groupByCity: volgorde op importable, hoogste eerst", groups.map((g) => g.name), ["Apeldoorn", "Zwolle", "Nijmegen"]);
+check("groupByCity: importable telt alleen approve en review", groups.map((g) => g.importable), [3, 2, 1]);
+check("groupByCity: reject en duplicate blijven in rows", groups.map((g) => g.rows.length), [3, 3, 1]);
+check("groupByCity: naam uit eerste rij, hoofdletters samengevoegd", groups[1].name, "Zwolle");
+check("groupByCity: province uit eerste rij, getrimd", groups.map((g) => g.province), ["Gelderland", "Overijssel", null]);
+check("groupByCity: groep met alleen reject/duplicate ontbreekt", groups.some((g) => g.name === "Lelystad"), false);
+check("groupByCity: lege of ontbrekende city wordt overgeslagen", groups.some((g) => g.name === "Utrecht" || g.name.trim() === ""), false);
 
 Deno.exit(ok ? 0 : 1);

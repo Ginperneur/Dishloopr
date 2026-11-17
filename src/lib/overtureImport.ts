@@ -1,9 +1,10 @@
 // Turns the CSV written by scripts/overture-discovery/discover.py into discovery_results rows.
-// Only 'approve' (strong candidate) and 'review' rows are imported; 'reject' and 'duplicate'
+// Only 'verified', 'approve' (strong candidate) and 'review' rows are imported; 'reject' and 'duplicate'
 // stay out of the queue. Overture data is CDLA Permissive 2.0 / CC0 / Apache 2.0, so storing it
 // is allowed with attribution (unlike Google Places, see docs/google-places-compliance.md).
 
-export type OvertureTriage = 'approve' | 'review';
+// verified = own site names the address and shows a priced menu or dine-in ("zeker goed").
+export type OvertureTriage = 'verified' | 'approve' | 'review';
 
 export interface OvertureDiscoveryRow {
   source: 'overture';
@@ -88,7 +89,7 @@ export function toDiscoveryRows(csvRows: Record<string, string>[], cityId: strin
     const id = orNull(r.overture_id);
     const name = orNull(r.name);
     const problem =
-      status !== 'approve' && status !== 'review' ? `onbekende status "${r.status}"`
+      status !== 'verified' && status !== 'approve' && status !== 'review' ? `onbekende status "${r.status}"`
       : !id ? 'geen overture_id'
       : !name ? 'geen naam'
       : !Number.isFinite(lat) || !Number.isFinite(lng) || lat < 50.5 || lat > 53.8 || lng < 3.2 || lng > 7.3
@@ -124,6 +125,33 @@ export function toDiscoveryRows(csvRows: Record<string, string>[], cityId: strin
     });
   }
   return summary;
+}
+
+export interface CityGroup {
+  name: string;
+  province: string | null;
+  rows: Record<string, string>[];
+  importable: number;
+}
+
+// Nationwide files (discover_nl.py) carry a `city` column already resolved to Dishloopr city
+// names (aliases and province checks applied), plus `provincie` for cities that do not exist yet.
+export function groupByCity(csvRows: Record<string, string>[]): CityGroup[] {
+  const groups = new Map<string, CityGroup>();
+  for (const r of csvRows) {
+    const name = (r.city || '').trim();
+    if (!name) continue;
+    const key = name.toLowerCase();
+    let g = groups.get(key);
+    if (!g) {
+      g = { name, province: orNull(r.provincie), rows: [], importable: 0 };
+      groups.set(key, g);
+    }
+    g.rows.push(r);
+    const st = (r.status || '').toLowerCase();
+    if (st === 'verified' || st === 'approve' || st === 'review') g.importable++;
+  }
+  return [...groups.values()].filter((g) => g.importable > 0).sort((a, b) => b.importable - a.importable);
 }
 
 export function citySlug(name: string): string {

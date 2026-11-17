@@ -25,7 +25,7 @@ ALTER TABLE public.discovery_results
 
 ALTER TABLE public.discovery_results DROP CONSTRAINT IF EXISTS discovery_results_triage_check;
 ALTER TABLE public.discovery_results
-  ADD CONSTRAINT discovery_results_triage_check CHECK (triage IS NULL OR triage IN ('approve', 'review'));
+  ADD CONSTRAINT discovery_results_triage_check CHECK (triage IS NULL OR triage IN ('verified', 'approve', 'review'));
 
 ALTER TABLE public.discovery_results DROP CONSTRAINT IF EXISTS discovery_results_external_id_check;
 ALTER TABLE public.discovery_results

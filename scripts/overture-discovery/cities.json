@@ -1,8 +1,49 @@
 {
   "zwolle": {
     "name": "Zwolle",
-    "bbox": [5.98, 52.44, 6.22, 52.58],
-    "postcode_prefixes": ["800", "801", "802", "803", "804"],
-    "localities": ["Zwolle", "Windesheim", "Wijthmen", "Haerst", "Herfte"]
+    "bbox": [
+      5.98,
+      52.44,
+      6.22,
+      52.58
+    ],
+    "postcode_prefixes": [
+      "800",
+      "801",
+      "802",
+      "803",
+      "804"
+    ],
+    "localities": [
+      "Zwolle",
+      "Windesheim",
+      "Wijthmen",
+      "Haerst",
+      "Herfte"
+    ]
+  },
+  "maastricht": {
+    "name": "Maastricht",
+    "bbox": [
+      5.62,
+      50.79,
+      5.78,
+      50.92
+    ],
+    "postcode_prefixes": [
+      "621",
+      "622"
+    ],
+    "localities": [
+      "Maastricht",
+      "Borgharen",
+      "Itteren",
+      "Heer",
+      "Amby",
+      "Heugem",
+      "Oud-Vroenhoven",
+      "Wolder",
+      "Wyckerveld"
+    ]
   }
 }

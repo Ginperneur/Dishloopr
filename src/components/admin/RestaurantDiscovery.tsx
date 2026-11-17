@@ -57,7 +57,7 @@ interface DiscoveryResult {
   confidence?: number | null;
 }
 
-type QueueSourceFilter = 'all' | 'overture_approve' | 'overture_review' | 'google';
+type QueueSourceFilter = 'all' | 'overture_verified' | 'overture_approve' | 'overture_review' | 'google';
 
 export function RestaurantDiscovery() {
   const [gridPoints, setGridPoints] = useState<GridPoint[]>([]);
@@ -243,6 +243,7 @@ export function RestaurantDiscovery() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const b = q as any;
     if (f === 'google') return b.eq('source', 'google');
+    if (f === 'overture_verified') return b.eq('source', 'overture').eq('triage', 'verified');
     if (f === 'overture_approve') return b.eq('source', 'overture').eq('triage', 'approve');
     if (f === 'overture_review') return b.eq('source', 'overture').eq('triage', 'review');
     return q;
@@ -811,7 +812,7 @@ export function RestaurantDiscovery() {
               <div>
                 <CardTitle>Ontdekte Restaurants — Review Queue</CardTitle>
                 <CardDescription>
-                  Kandidaten uit Overture Maps (sterk of twijfel) en oude Google-rijen. Goedkeuren = volledige pipeline: aanmaken → adres via PDOK → AI-classificeer → menu scrapen → activeren. Controleer sterke kandidaten kort: in de steekproef klopte 60%.
+                  Kandidaten uit Overture Maps (sterk of twijfel) en oude Google-rijen. Goedkeuren = volledige pipeline: aanmaken → adres via PDOK → AI-classificeer → menu scrapen → activeren. "Zeker goed" is bewezen via de eigen website (adres plus menu of reserveren); "sterk, extra controle" eerst nalopen.
                   {stats.pending > pendingResults.length && (
                     <span className="block mt-1 text-xs">
                       Toont {pendingResults.length} van {stats.pending.toLocaleString('nl-NL')} — laad meer hieronder.
@@ -837,7 +838,8 @@ export function RestaurantDiscovery() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Alle bronnen</SelectItem>
-                    <SelectItem value="overture_approve">Overture: sterke kandidaten</SelectItem>
+                    <SelectItem value="overture_verified">Overture: zeker goed</SelectItem>
+                    <SelectItem value="overture_approve">Overture: sterk, extra controle</SelectItem>
                     <SelectItem value="overture_review">Overture: twijfelgevallen</SelectItem>
                     <SelectItem value="google">Google (niet goed te keuren)</SelectItem>
                   </SelectContent>
@@ -996,8 +998,8 @@ export function RestaurantDiscovery() {
                       <TableCell>
                         {r.source === 'overture' ? (
                           <div className="space-y-1">
-                            <Badge variant={r.triage === 'approve' ? 'default' : 'secondary'} className="text-xs whitespace-nowrap">
-                              {r.triage === 'approve' ? 'Sterke kandidaat' : 'Twijfel'}
+                            <Badge variant={r.triage === 'review' ? 'secondary' : 'default'} className="text-xs whitespace-nowrap">
+                              {r.triage === 'verified' ? 'Zeker goed' : r.triage === 'approve' ? 'Sterk, extra controle' : 'Twijfel'}
                             </Badge>
                             <div className="text-xs text-muted-foreground max-w-[220px]">
                               {r.category}{r.triage_reason ? ` · ${r.triage_reason}` : ''}

@@ -8,11 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Loader2, Upload } from 'lucide-react';
-import { citySlug, missingColumns, parseCsvTable, toDiscoveryRows, type OvertureImportSummary } from '@/lib/overtureImport';
+import { citySlug, groupByCity, missingColumns, parseCsvTable, toDiscoveryRows, type OvertureImportSummary } from '@/lib/overtureImport';
 
 interface CityOption { id: string; name: string; is_active: boolean }
 
 const NEW_CITY = '__new__';
+const FILE_CITY = '__file__';
 const CHUNK = 200;
 
 // Uploads a CSV from scripts/overture-discovery into the Review Queue (source = 'overture').
@@ -25,14 +26,25 @@ export function OvertureImportCard({ cities, onImported }: { cities: CityOption[
   const [rawRows, setRawRows] = useState<Record<string, string>[] | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
+  const [hasCityColumn, setHasCityColumn] = useState(false);
+  const [progress, setProgress] = useState<string | null>(null);
 
   const preview: OvertureImportSummary | null = useMemo(
     () => (rawRows ? toDiscoveryRows(rawRows, cityId || 'preview') : null),
     [rawRows, cityId],
   );
+  const cityGroups = useMemo(
+    () => (rawRows && cityId === FILE_CITY ? groupByCity(rawRows) : null),
+    [rawRows, cityId],
+  );
+  const knownCityNames = useMemo(() => new Set(cities.map((c) => c.name.toLowerCase())), [cities]);
   const counts = useMemo(() => {
     const rows = preview?.rows ?? [];
-    return { approve: rows.filter((r) => r.triage === 'approve').length, review: rows.filter((r) => r.triage === 'review').length };
+    return {
+      verified: rows.filter((r) => r.triage === 'verified').length,
+      approve: rows.filter((r) => r.triage === 'approve').length,
+      review: rows.filter((r) => r.triage === 'review').length,
+    };
   }, [preview]);
 
   const onFile = async (file: File | undefined) => {
@@ -46,7 +58,48 @@ export function OvertureImportCard({ cities, onImported }: { cities: CityOption[
       setFileError(`Dit is geen Overture-bestand: kolommen ontbreken (${missing.join(', ')}).`);
       return;
     }
+    const fileHasCity = header.includes('city');
+    setHasCityColumn(fileHasCity);
+    if (fileHasCity) setCityId(FILE_CITY);
+    else if (cityId === FILE_CITY) setCityId('');
     setRawRows(rows);
+  };
+
+  // One file, many cities (discover_nl.py): match each `city` to an existing city by name or
+  // slug; create the missing ones inactive with their province.
+  const importPerCity = async (): Promise<number> => {
+    const groups = groupByCity(rawRows ?? []);
+    const { data: all, error } = await supabase.from('cities').select('id, name, slug');
+    if (error) throw error;
+    const byName = new Map((all ?? []).map((c) => [c.name.toLowerCase(), c.id]));
+    const bySlug = new Map((all ?? []).map((c) => [c.slug, c.id]));
+    let sent = 0;
+    for (let gi = 0; gi < groups.length; gi++) {
+      const g = groups[gi];
+      setProgress(`${gi + 1}/${groups.length} steden: ${g.name}`);
+      const slug = citySlug(g.name);
+      let id = byName.get(g.name.toLowerCase()) ?? bySlug.get(slug);
+      if (!id) {
+        const { data: created, error: cErr } = await supabase
+          .from('cities')
+          .insert({ name: g.name, slug, country_code: 'NL', is_active: false, province: g.province })
+          .select('id')
+          .single();
+        if (cErr) throw new Error(`Stad ${g.name}: ${cErr.message}`);
+        id = created.id;
+        byName.set(g.name.toLowerCase(), id);
+        bySlug.set(slug, id);
+      }
+      const { rows } = toDiscoveryRows(g.rows, id);
+      for (let i = 0; i < rows.length; i += CHUNK) {
+        const { error: uErr } = await supabase
+          .from('discovery_results')
+          .upsert(rows.slice(i, i + CHUNK), { onConflict: 'source,external_id', ignoreDuplicates: true });
+        if (uErr) throw uErr;
+        sent += Math.min(CHUNK, rows.length - i);
+      }
+    }
+    return sent;
   };
 
   const resolveCity = async (): Promise<string> => {
@@ -70,6 +123,15 @@ export function OvertureImportCard({ cities, onImported }: { cities: CityOption[
     if (!rawRows || !cityId) return;
     setImporting(true);
     try {
+      if (cityId === FILE_CITY) {
+        // discover_nl.py already removed restaurants that are on Dishloopr, nationwide.
+        const sent = await importPerCity();
+        toast.success(`${sent} kandidaten in ${cityGroups?.length ?? 0} steden naar de Review Queue gestuurd`);
+        setRawRows(null);
+        setFileName(null);
+        await onImported();
+        return;
+      }
       const targetCity = await resolveCity();
       const { rows } = toDiscoveryRows(rawRows, targetCity);
       let sent = 0;
@@ -95,6 +157,7 @@ export function OvertureImportCard({ cities, onImported }: { cities: CityOption[
       toast.error((e as { message?: string })?.message || 'Importeren mislukt');
     } finally {
       setImporting(false);
+      setProgress(null);
     }
   };
 
@@ -121,6 +184,7 @@ export function OvertureImportCard({ cities, onImported }: { cities: CityOption[
             <Select value={cityId} onValueChange={setCityId}>
               <SelectTrigger><SelectValue placeholder="Kies een stad" /></SelectTrigger>
               <SelectContent>
+                {hasCityColumn && <SelectItem value={FILE_CITY}>Stad per rij uit het bestand</SelectItem>}
                 <SelectItem value={NEW_CITY}>+ Nieuwe stad</SelectItem>
                 {cities.map((c) => (
                   <SelectItem key={c.id} value={c.id}>{c.name}{c.is_active ? '' : ' (inactief)'}</SelectItem>
@@ -141,12 +205,20 @@ export function OvertureImportCard({ cities, onImported }: { cities: CityOption[
         {preview && (
           <div className="space-y-2 text-sm">
             <div className="flex flex-wrap gap-2">
-              <Badge>{counts.approve} sterke kandidaten</Badge>
+              <Badge>{counts.verified} zeker goed</Badge>
+              <Badge variant="secondary">{counts.approve} sterk, extra controle</Badge>
               <Badge variant="secondary">{counts.review} twijfelgevallen</Badge>
               <Badge variant="outline">{preview.skipped.reject} afgewezen (niet geïmporteerd)</Badge>
               {preview.skipped.duplicate > 0 && <Badge variant="outline">{preview.skipped.duplicate} al op Dishloopr</Badge>}
               {preview.skipped.invalid > 0 && <Badge variant="destructive">{preview.skipped.invalid} ongeldig</Badge>}
             </div>
+            {cityGroups && (
+              <p className="text-xs text-muted-foreground">
+                {cityGroups.length} steden in dit bestand, waarvan{' '}
+                {cityGroups.filter((g) => !knownCityNames.has(g.name.toLowerCase())).length} nieuw (worden inactief aangemaakt).
+                Grootste: {cityGroups.slice(0, 5).map((g) => `${g.name} (${g.importable})`).join(', ')}.
+              </p>
+            )}
             {preview.invalid.length > 0 && (
               <ul className="list-disc pl-5 text-xs text-muted-foreground">
                 {preview.invalid.slice(0, 5).map((m) => <li key={m}>{m}</li>)}
@@ -163,6 +235,7 @@ export function OvertureImportCard({ cities, onImported }: { cities: CityOption[
           {importing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />}
           Importeren naar Review Queue
         </Button>
+        {progress && <p className="text-xs text-muted-foreground">{progress}</p>}
       </CardContent>
     </Card>
   );

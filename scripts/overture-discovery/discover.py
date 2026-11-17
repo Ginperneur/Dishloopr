@@ -121,6 +121,10 @@ def similar(a: str, b: str) -> bool:
         return False
     if a == b or a in b or b in a:
         return True
+    # "Monte Nova" vs "MonteNova", "Da Kiko" vs "Dakiko": compare without spaces too.
+    ca, cb = a.replace(" ", ""), b.replace(" ", "")
+    if ca == cb or (min(len(ca), len(cb)) >= 5 and (ca in cb or cb in ca)):
+        return True
     ta, tb = set(a.split()), set(b.split())
     return len(ta & tb) / max(1, min(len(ta), len(tb))) >= 0.75
 
@@ -280,6 +284,53 @@ def dedupe(places: list[dict]) -> list[dict]:
     return kept
 
 
+def apply_website_check(rows: list[dict], slug: str, out_dir: Path) -> None:
+    """Re-triage approve/review rows (and drinks-first rejects) with the venue's own website."""
+    import time
+    import webcheck
+
+    cache_path = out_dir / f".web_{slug}.json"
+    cache = {}
+    if cache_path.exists() and time.time() - cache_path.stat().st_mtime < 7 * 86400:
+        cache = json.loads(cache_path.read_text())
+    wanted = [r["website"] for r in rows if r["website"] and (
+        r["status"] in ("approve", "review")
+        or (r["status"] == "reject" and r["category"] in webcheck.DRINKS_FIRST))]
+    save = lambda c: cache_path.write_text(json.dumps(c))
+    webcheck.check_many(wanted, cache, save=save)
+    if "--retry-unreachable" in sys.argv:
+        before = sum(1 for u in set(wanted) if cache.get(u, {}).get("state") == "unreachable")
+        webcheck.check_many(wanted, cache, save=save, retry_unreachable=True)
+        after = sum(1 for u in set(wanted) if cache.get(u, {}).get("state") == "unreachable")
+        print(f"Tweede poging onbereikbare websites: {before} -> {after} nog onbereikbaar")
+    for r in rows:
+        r["category_triage"] = r["status"]
+        w = cache.get(r["website"]) if r["website"] else None
+        r["status"], r["reason"] = webcheck.decide(r["status"], r["reason"], r["category"] or "", w)
+        if w and w.get("state") == "ok" and w.get("url"):
+            r["website"] = w["url"]  # the address that actually answered, for the menu scraper
+    print(f"Websites gecheckt: {len(set(wanted))}")
+
+    # "Zeker goed": strong candidates whose own site names their address and shows a
+    # priced menu or dine-in. The rest stays a strong candidate that needs an extra check.
+    if "--no-verify" in sys.argv:
+        return
+    vpath = out_dir / f".verify_{slug}.json"
+    vcache = json.loads(vpath.read_text()) if vpath.exists() and time.time() - vpath.stat().st_mtime < 7 * 86400 else {}
+    strong = [r for r in rows if r["status"] == "approve"]
+    webcheck.verify_many(strong, vcache, save=lambda c: vpath.write_text(json.dumps(c)))
+    for r in strong:
+        v = vcache.get(r["overture_id"], {"verified": False, "why": "niet gecontroleerd"})
+        if v["verified"]:
+            r["status"], r["reason"] = "verified", f"zeker goed: {v['why']}"
+        else:
+            r["reason"] = f"{r['reason']}; extra controle nodig: {v['why']}"
+    print(f"Zeker goed: {sum(1 for r in strong if r['status'] == 'verified')} van {len(strong)} sterke kandidaten")
+
+    import haiku_check
+    haiku_check.apply(rows, slug, out_dir)
+
+
 def main() -> None:
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     if not args or args[0] not in CITIES:
@@ -308,7 +359,10 @@ def main() -> None:
             "overture_id": p["id"], "sources": "|".join(p["datasets"] or []),
             "licenses": "|".join(p["licenses"] or []),
         })
-    order = {"approve": 0, "review": 1, "duplicate": 2, "reject": 3}
+    if "--no-web" not in sys.argv:
+        apply_website_check(rows, slug, out_dir)
+
+    order = {"verified": 0, "approve": 1, "review": 2, "duplicate": 3, "reject": 4}
     rows.sort(key=lambda r: (order[r["status"]], r["name"].lower()))
 
     path = out_dir / f"{slug}.csv"
@@ -328,3 +382,6 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+    # Abandoned website-check threads (hung sockets) must not keep the process alive.
+    sys.stdout.flush()
+    os._exit(0)
