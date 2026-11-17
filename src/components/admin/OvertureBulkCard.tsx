@@ -24,7 +24,7 @@ async function bulk<T>(body: Record<string, unknown>): Promise<T> {
 // 2. import the screened Python scrape (scripts/overture-discovery/build_dish_import.py);
 // 3. scrape the rest with the website pipeline, screened automatically by dish-screening.
 // Restaurants switch on by themselves through the restaurant_dishes trigger.
-interface PipelineState { enabled: boolean; last_tick_at: string | null; last_result: Record<string, unknown> | null }
+interface PipelineState { enabled: boolean; include_sterk: boolean; last_tick_at: string | null; last_result: Record<string, unknown> | null }
 
 // overture_pipeline is newer than the generated Supabase types.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -38,7 +38,7 @@ export function OvertureBulkCard({ onDone }: { onDone: () => Promise<void> | voi
   const say = (line: string) => setLog((l) => [line, ...l].slice(0, 12));
 
   const loadPipeline = useCallback(async () => {
-    const { data } = await pipelineTable().select('enabled, last_tick_at, last_result').eq('id', 1).maybeSingle();
+    const { data } = await pipelineTable().select('enabled, include_sterk, last_tick_at, last_result').eq('id', 1).maybeSingle();
     setPipeline(data ?? null);
   }, []);
   useEffect(() => {
@@ -46,6 +46,14 @@ export function OvertureBulkCard({ onDone }: { onDone: () => Promise<void> | voi
     const t = setInterval(loadPipeline, 30_000);
     return () => clearInterval(t);
   }, [loadPipeline]);
+
+  const toggleSterk = async () => {
+    const next = !pipeline?.include_sterk;
+    const { error } = await pipelineTable().update({ include_sterk: next, updated_at: new Date().toISOString() }).eq('id', 1);
+    if (error) { toast.error(error.message); return; }
+    toast.success(next ? 'Sterk gaat mee in de server-pijplijn' : 'Sterk gaat niet meer mee');
+    await loadPipeline();
+  };
 
   const togglePipeline = async () => {
     const next = !pipeline?.enabled;
@@ -160,6 +168,17 @@ export function OvertureBulkCard({ onDone }: { onDone: () => Promise<void> | voi
             </Button>
             <span className="text-muted-foreground">
               {pipeline ? (pipeline.enabled ? 'Aan: elke minuut een stap op de server, tabblad mag dicht.' : 'Uit.') : 'Nog niet beschikbaar (migratie 0056).'}
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button variant={pipeline?.include_sterk ? 'destructive' : 'outline'} onClick={toggleSterk} disabled={!pipeline}>
+              <Power className="mr-2 h-4 w-4" />
+              {pipeline?.include_sterk ? 'Sterk niet meer meenemen' : 'Sterk ook meenemen'}
+            </Button>
+            <span className="text-muted-foreground">
+              {pipeline?.include_sterk
+                ? 'Sterk gaat mee: zelfde route als zeker goed (aanmaken, websiteroute, live bij 5 gerechten).'
+                : 'Sterk gaat niet mee: alleen zeker goed.'}
             </span>
           </div>
           <p className="text-muted-foreground">

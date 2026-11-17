@@ -4,8 +4,8 @@
 //   scrape_queue   hidden bulk restaurants still under 5 dishes and never scraped → for the
 //                  admin card, which runs scrape-menu + dish-screening on each
 //   tick           one unattended step, run every minute by pg_cron while overture_pipeline.enabled:
-//                  first the remaining "zeker goed" rows (create), then per tick 10 "sterk" rows
-//                  plus the website route (scrape-menu + dish-screening) for a few hidden restaurants
+//                  first the remaining "zeker goed" rows (create), then (only with its own switch
+//                  include_sterk) 10 "sterk" rows per tick, plus the website route (scrape-menu + dish-screening) for a few hidden restaurants
 // Restaurants go live by themselves: the restaurant_dishes trigger unhides a restaurant hidden
 // for its menu once menu_dish_count() reaches visibility_menu_minimum().
 import { requireAdminOrInternal, serviceClient, getCaller } from "../_shared/auth.ts";
@@ -199,7 +199,7 @@ async function scrapeQueue(admin: Db, body: { limit?: number; exclude?: string[]
 // One unattended step. pg_cron calls this every minute (x-cron-secret); it does nothing while the
 // switch in overture_pipeline is off, so the admin decides when Gemini and Firecrawl may be spent.
 async function tick(admin: Db) {
-  const { data: cfg } = await admin.from("overture_pipeline").select("enabled, per_tick").eq("id", 1).maybeSingle();
+  const { data: cfg } = await admin.from("overture_pipeline").select("enabled, per_tick, include_sterk").eq("id", 1).maybeSingle();
   if (!cfg?.enabled) return { skipped: "uit" };
   const started = Date.now();
   let result: Record<string, unknown>;
@@ -208,9 +208,11 @@ async function tick(admin: Db) {
   if (created.created + created.duplicates + created.failed.length > 0) {
     result = { stap: "aanmaken", ...created };
   } else {
-    // "Sterk, extra controle" (decided 17-11-2026: same route as zeker goed) is created alongside
-    // the website route, a small batch per tick, so it never holds the website route back.
-    const sterk = await createBatch(admin, { triage: "approve", limit: 10 }, null);
+    // "Sterk, extra controle" has its own switch (include_sterk). When on, a small batch per tick is
+    // created alongside the website route, so it never holds the website route back.
+    const sterk = cfg.include_sterk
+      ? await createBatch(admin, { triage: "approve", limit: 10 }, null)
+      : { created: 0, duplicates: 0, failed: [] as unknown[], remaining: null as number | null };
     const perTick = Math.min(Math.max(Number(cfg.per_tick) || 6, 1), 12);
     const { queue } = await scrapeQueue(admin, { limit: perTick });
     // Claim first: a placeholder run keeps the next tick (or the admin card) off these restaurants.
