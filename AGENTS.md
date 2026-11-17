@@ -15,6 +15,8 @@
 - Restaurant discovery runs on Overture Maps Places: `scripts/overture-discovery/discover.py` writes a triaged CSV, admins upload it in the Discovery tab (`discovery_results.source = 'overture'`), and approving creates the restaurant with a PDOK address and `restaurants.overture_id`; Google rows stay unapprovable.
 - AI chat calls (menu extraction, restaurant and dish classification) go through `_shared/aiChat.ts`: Google's Gemini API directly when `GEMINI_API_KEY` is set (paid tier, required in the EEA), the Lovable gateway otherwise; never enable Google Search or Maps grounding there.
 
+- Overture bulk route (`overture-bulk`): restaurants are created hidden for their menu and go live through the restaurant_dishes trigger at 5 dishes; Python dishes import approved, the website route runs scrape-menu then dish-screening per restaurant.
+
 # Restaurant parking
 
 - Gate public opening-status calculations and schedules with hasOpeningHoursData; empty hours must remain unknown rather than imply closure.

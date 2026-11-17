@@ -21,6 +21,7 @@ import { nl } from 'date-fns/locale';
 
 import { openConfirm } from '@/components/ui/confirm-dialog';
 import { OvertureImportCard } from './OvertureImportCard';
+import { OvertureBulkCard } from './OvertureBulkCard';
 interface GridPoint {
   id: string;
   name: string;
@@ -807,6 +808,7 @@ export function RestaurantDiscovery() {
 
         <TabsContent value="queue" className="space-y-4">
           <OvertureImportCard cities={cities} onImported={loadData} />
+          <OvertureBulkCard onDone={loadData} />
           <Card>
             <CardHeader className="flex flex-row items-start justify-between gap-4 flex-wrap">
               <div>

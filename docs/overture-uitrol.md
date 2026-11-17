@@ -63,6 +63,26 @@ Prompt 3 (functies):
    in de browser (10 tot 20 seconden per restaurant, tab openhouden).
 5. "Sterk, extra controle" (1.856) kort nalopen; "twijfel" alleen als er tijd is.
 
+## 6. Bulkroute voor alle "zeker goed" (vanaf 17-11-2026)
+
+Eén voor één goedkeuren kost 10 tot 20 seconden per restaurant en zet gerechten op "suggested".
+Voor de 5.937 "zeker goed" is er een bulkroute in Admin, Wachtrijen, Discovery, kaart
+"Overture in bulk: zeker goed" (edge function `overture-bulk`):
+
+1. Upload eerst alle provinciebestanden met de importkaart (stap 5.1).
+2. **Alle zeker goed aanmaken.** Maakt de restaurants aan met PDOK-adres, verborgen
+   (`restaurants_verborgen`, reden "menu: ..."). Ze gaan vanzelf live zodra ze 5 goedgekeurde
+   gerechten hebben (drank telt niet): de trigger op `restaurant_dishes` regelt dat.
+3. **Python-gerechten (CSV).** Op de Mac: `menu_scraper_v5.py` met het Overture-id als
+   restaurant-id, daarna `dish_screen_local_v5.py` en
+   `scripts/overture-discovery/build_dish_import.py`. Upload de CSV; de gerechten komen meteen
+   goedgekeurd binnen (alleen screening "approve", menu-only alleen met prijs of sectie).
+4. **Websiteroute voor de rest.** Restaurants die daarna nog verborgen zijn en nooit gescand,
+   gaan door `scrape-menu` (Firecrawl + Gemini) en meteen door `dish-screening`.
+
+Gemeten op 10 restaurants in Almere: Python alleen 4 van 10 met 5+ gerechten, website alleen 6,
+samen 8.
+
 ## Kosten (schatting)
 
 | Onderdeel | Kosten |
