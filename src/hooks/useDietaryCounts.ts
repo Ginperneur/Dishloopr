@@ -22,7 +22,7 @@ export function useDietaryCounts() {
           .select('restaurant_id', { count: 'exact', head: true })
           .neq('status', 'rejected')
           .eq(col, true);
-      // Restaurant-level: matches on is_fully_* fallbacks (vegan/halal only).
+      // Restaurant-level: matches on is_fully_* flags (vegan, vegetarian, halal).
       const restQ = (col: string) =>
         (supabase as any)
           .from('restaurants')
@@ -30,19 +30,23 @@ export function useDietaryCounts() {
           .eq('is_active', true)
           .eq(col, true);
 
-      const [veganDish, gfDish, halalDish, veganRest, halalRest] =
+      const [veganDish, gfDish, halalDish, veganRest, halalRest, vegDish, vegRest] =
         await Promise.all([
           dishQ('is_vegan'),
           dishQ('is_gluten_free'),
           dishQ('is_halal'),
           restQ('is_fully_vegan'),
           restQ('is_fully_halal'),
+          dishQ('is_vegetarian'),
+          restQ('is_fully_vegetarian'),
         ]);
       if (cancelled) return;
       setCounts({
         vegan: (veganDish.count ?? 0) + (veganRest.count ?? 0),
         'gluten-free': gfDish.count ?? 0,
         halal: (halalDish.count ?? 0) + (halalRest.count ?? 0),
+        // Fully vegan restaurants are vegetarian too.
+        vegetarian: (vegDish.count ?? 0) + (vegRest.count ?? 0) + (veganRest.count ?? 0),
         // No dedicated lactose-free source — hide chip.
         'lactose-free': 0,
       });

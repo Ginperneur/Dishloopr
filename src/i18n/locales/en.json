@@ -286,7 +286,19 @@
     "featuredTitleHeading": "Featured restaurants",
     "restaurantsInCity": "Restaurants in {{city}}",
     "scrollTop": "Back to top",
-    "ariaCrumb": "Breadcrumb"
+    "ariaCrumb": "Breadcrumb",
+    "multiDish": {
+      "bothTitle": "{{a}} and {{b}}",
+      "bothSubtitle": "These restaurants have both dishes.",
+      "allTitle": "All {{total}} dishes",
+      "allSubtitle": "These restaurants have everything you searched for.",
+      "eitherTitle": "{{a}} or {{b}}",
+      "eitherSubtitle": "These restaurants have one of the two, not both.",
+      "someTitle": "{{covered}} of the {{total}} dishes",
+      "someSubtitle": "These restaurants have some of what you searched for.",
+      "noneBoth": "No restaurant has {{a}} and {{b}}. Below are restaurants with one of the two.",
+      "noneAll": "No restaurant has all {{total}} dishes. Below are restaurants with some of them."
+    }
   },
   "common": {
     "loading": "Loading...",

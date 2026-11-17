@@ -9,6 +9,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { getCaller, isAdmin, isInternalCaller, serviceClient } from "../_shared/auth.ts";
 import { type OutreachSegment, renderOutreach } from "../_shared/outreach/templates.ts";
+import { outreachSentToday, SENDER_NAME, sendOutreachMail, SITE, unsubscribeToken } from "../_shared/outreach/mailer.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -17,12 +18,6 @@ const cors = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
 
-const SITE = (Deno.env.get("SITE_URL") ?? "https://dishloopr.com").replace(/\/$/, "");
-const FROM = Deno.env.get("OUTREACH_FROM") ?? "Ginuwine Ayanne van Dishloopr <hallo@dishloopr.com>";
-const SENDER_NAME = Deno.env.get("OUTREACH_SENDER_NAME") ?? "Ginuwine Ayanne";
-// Inbound domain routed to Resend (MX). Replies to antwoord+<restaurant id>@domain reach outreach-inbound.
-const REPLY_DOMAIN = Deno.env.get("OUTREACH_REPLY_DOMAIN") ?? "";
-const REPLY_TO = Deno.env.get("OUTREACH_REPLY_TO") ?? "";
 // Owner flyer in the private "marketing" bucket (uploaded in Admin > Outreach); the workspace blocks
 // public buckets, so every batch signs a fresh link. OUTREACH_FLYER_URL overrides it with a fixed URL.
 const FLYER_URL_OVERRIDE = Deno.env.get("OUTREACH_FLYER_URL") || "";
@@ -72,14 +67,6 @@ async function settings(db: SupabaseClient) {
   return data as { enabled: boolean; wave: number; batch_size: number; daily_cap: number; menu_minimum: number; flyer_mode: string };
 }
 
-async function unsubscribeToken(db: SupabaseClient, restaurantId: string): Promise<string> {
-  const { data } = await db.from("restaurant_contacts").select("afmeld_token").eq("restaurant_id", restaurantId).maybeSingle();
-  if (data?.afmeld_token) return String(data.afmeld_token);
-  const token = crypto.randomUUID();
-  await db.from("restaurant_contacts").update({ afmeld_token: token }).eq("restaurant_id", restaurantId);
-  return token;
-}
-
 async function topDish(db: SupabaseClient, t: Target) {
   if (!t.is_active) return null;
   const { data } = await db.rpc("uitgelicht_page_offers", { p_slug: t.slug });
@@ -110,21 +97,11 @@ async function render(db: SupabaseClient, t: Target, menuMinimum: number, flyer:
   return { mail, token };
 }
 
-async function send(apiKey: string, to: string, t: Target, mail: { subject: string; html: string; text: string }, token: string, flyer: Flyer) {
-  const replyTo = REPLY_DOMAIN ? `antwoord+${t.restaurant_id}@${REPLY_DOMAIN}` : REPLY_TO || undefined;
-  const oneClick = `${Deno.env.get("SUPABASE_URL")}/functions/v1/outreach-unsubscribe?t=${encodeURIComponent(token)}`;
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: FROM, to: [to], reply_to: replyTo, subject: mail.subject, html: mail.html, text: mail.text,
-      headers: { "List-Unsubscribe": `<${oneClick}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" },
-      tags: [{ name: "campaign", value: "mail_golf" }, { name: "segment", value: t.segment }],
-      ...(flyer?.mode === "attachment" ? { attachments: [{ filename: FLYER_NAME, path: flyer.url }] } : {}),
-    }),
+function send(apiKey: string, to: string, t: Target, mail: { subject: string; html: string; text: string }, token: string, flyer: Flyer) {
+  return sendOutreachMail({
+    apiKey, to, restaurantId: t.restaurant_id, segment: t.segment, campaign: "mail_golf", mail, token,
+    attachments: flyer?.mode === "attachment" ? [{ filename: FLYER_NAME, path: flyer.url }] : undefined,
   });
-  const body = await res.json().catch(() => ({}));
-  return res.ok ? { ok: true as const, id: String(body.id ?? "") } : { ok: false as const, error: String(body.message ?? res.status) };
 }
 
 const TARGET_COLS = "restaurant_id,name,slug,stad,email,segment,goedgekeurde_gerechten,is_active";
@@ -136,10 +113,7 @@ async function loadTarget(db: SupabaseClient, restaurantId: string): Promise<Tar
 
 async function runBatch(db: SupabaseClient, apiKey: string, limitOverride?: number) {
   const s = await settings(db);
-  const dayStart = new Date(); dayStart.setUTCHours(0, 0, 0, 0);
-  const { count: today } = await db.from("outreach_messages").select("id", { count: "exact", head: true })
-    .gte("created_at", dayStart.toISOString()).neq("status", "failed");
-  const room = Math.max(0, s.daily_cap - (today ?? 0));
+  const room = Math.max(0, s.daily_cap - (await outreachSentToday(db)));
   const limit = Math.min(room, limitOverride ?? s.batch_size, 200);
   if (limit === 0) return { sent: 0, failed: 0, skipped: "daglimiet bereikt", wave: s.wave };
   const { flyer, warning } = await resolveFlyer(db, s.flyer_mode);

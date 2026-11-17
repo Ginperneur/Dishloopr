@@ -2176,6 +2176,7 @@ export type Database = {
       newsletter_placements: {
         Row: {
           admin_notes: string | null
+          checked_at: string | null
           created_at: string
           description: string | null
           edition_id: string | null
@@ -2197,6 +2198,7 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          checked_at?: string | null
           created_at?: string
           description?: string | null
           edition_id?: string | null
@@ -2218,6 +2220,7 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          checked_at?: string | null
           created_at?: string
           description?: string | null
           edition_id?: string | null
@@ -2501,6 +2504,66 @@ export type Database = {
           },
         ]
       }
+      outreach_reminders: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          provider_id: string | null
+          restaurant_id: string
+          segment: string
+          sent_at: string | null
+          status: string
+          step: number
+          subject: string
+          to_email: string
+          views_mentioned: number | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          provider_id?: string | null
+          restaurant_id: string
+          segment: string
+          sent_at?: string | null
+          status?: string
+          step: number
+          subject: string
+          to_email: string
+          views_mentioned?: number | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          provider_id?: string | null
+          restaurant_id?: string
+          segment?: string
+          sent_at?: string | null
+          status?: string
+          step?: number
+          subject?: string
+          to_email?: string
+          views_mentioned?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_reminders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "outreach_reminders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       outreach_replies: {
         Row: {
           aanbevolen_actie: string | null
@@ -2598,6 +2661,9 @@ export type Database = {
           flyer_warning: string | null
           id: boolean
           menu_minimum: number
+          reminder_interval_days: number
+          reminder_max: number
+          reminders_enabled: boolean
           skip_natural_persons: boolean
           updated_at: string
           wave: number
@@ -2611,6 +2677,9 @@ export type Database = {
           flyer_warning?: string | null
           id?: boolean
           menu_minimum?: number
+          reminder_interval_days?: number
+          reminder_max?: number
+          reminders_enabled?: boolean
           skip_natural_persons?: boolean
           updated_at?: string
           wave?: number
@@ -2624,6 +2693,9 @@ export type Database = {
           flyer_warning?: string | null
           id?: boolean
           menu_minimum?: number
+          reminder_interval_days?: number
+          reminder_max?: number
+          reminders_enabled?: boolean
           skip_natural_persons?: boolean
           updated_at?: string
           wave?: number
@@ -5501,6 +5573,7 @@ export type Database = {
       }
       restaurant_pending_edits: {
         Row: {
+          checked_at: string | null
           created_at: string
           id: string
           proposed_changes: Json
@@ -5513,6 +5586,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          checked_at?: string | null
           created_at?: string
           id?: string
           proposed_changes: Json
@@ -5525,6 +5599,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          checked_at?: string | null
           created_at?: string
           id?: string
           proposed_changes?: Json
@@ -8154,9 +8229,49 @@ export type Database = {
         Args: { _data: Json }
         Returns: number
       }
+      admin_claim_followup: {
+        Args: never
+        Returns: {
+          claim_loopt: boolean
+          claim_status: string
+          eerste_mail_op: string
+          email: string
+          gereageerd_op: string
+          golf_mails: number
+          herinneringen: number
+          laatst_gemaild_op: string
+          mail_status: string
+          name: string
+          opvolg_status: string
+          reactie_categorie: string
+          restaurant_id: string
+          segment: string
+          slug: string
+          stad: string
+          views_30d: number
+          views_sinds_mail: number
+          views_totaal: number
+          volgende_herinnering_op: string
+        }[]
+      }
+      admin_digest: {
+        Args: never
+        Returns: {
+          key: string
+          label: string
+          new_24h: number
+          oldest_at: string
+          open_count: number
+          section: string
+        }[]
+      }
       admin_set_restaurant_owner_pro: {
         Args: { p_enabled: boolean; p_restaurant_id: string }
         Returns: string
+      }
+      apply_pending_edit: {
+        Args: { p_decision: string; p_id: string; p_note?: string }
+        Returns: undefined
       }
       audit_and_fix_dish_classifications: { Args: never; Returns: Json }
       auto_enrich_dish_dietary_labels: { Args: never; Returns: Json }
@@ -8939,6 +9054,15 @@ export type Database = {
         Returns: boolean
       }
       simulation_free_limit: { Args: never; Returns: number }
+      simulation_search_visits: {
+        Args: { p_city: string }
+        Returns: {
+          dag: string
+          filters: Json
+          query_norm: string
+          visitor: string
+        }[]
+      }
       snapshot_restaurant_positions: { Args: never; Returns: number }
       sync_owner_pro_restaurants: {
         Args: { _user_id: string }

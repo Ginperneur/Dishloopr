@@ -97,6 +97,8 @@ project_id = "uktafmxojymsojqewzuy"
   verify_jwt = false
   [functions.outreach-send-wave]
     verify_jwt = false
+  [functions.outreach-send-reminders]
+    verify_jwt = false
   [functions.outreach-inbound]
     verify_jwt = false
   [functions.outreach-unsubscribe]

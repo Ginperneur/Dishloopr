@@ -2,6 +2,7 @@ import { safeOrigin } from "../_shared/auth.ts";
 import { billingParams } from "../_shared/billing.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
+import { withVat } from "../_shared/vat.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -102,7 +103,7 @@ Deno.serve(async (req) => {
 
     const origin = safeOrigin(req);
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await stripe.checkout.sessions.create(await withVat(stripe, {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [lineItem],
@@ -123,7 +124,7 @@ Deno.serve(async (req) => {
       // which Stripe refused, so the owner only saw a generic error.
       success_url: `${origin}/owner-dashboard?tag_added=${encodeURIComponent(tag_value)}`,
       cancel_url: `${origin}/owner-dashboard`,
-    });
+    }));
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

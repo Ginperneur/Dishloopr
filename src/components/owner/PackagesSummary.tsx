@@ -40,7 +40,7 @@ export function PackagesSummary({ restaurantId, isPro, onManage, onExplore }: {
       }
       if (isPro) out.push({ key: 'pro', title: 'Owner Pro', detail: 'Inzichten, Markt en alle Pro-functies', status: 'actief' });
       for (const t of (tags.data ?? []) as { id: string; tag_value: string; payment_type: string }[]) {
-        out.push({ key: t.id, title: `Tag: ${t.tag_value}`, detail: t.payment_type === 'owner_pro' ? 'Extra tag, inbegrepen bij Owner Pro' : 'Extra tag, €5 per maand', status: 'actief' });
+        out.push({ key: t.id, title: `Tag: ${t.tag_value}`, detail: t.payment_type === 'owner_pro' ? 'Extra tag, inbegrepen bij Owner Pro' : 'Extra tag, €5 per maand excl. btw', status: 'actief' });
       }
       return out;
     },

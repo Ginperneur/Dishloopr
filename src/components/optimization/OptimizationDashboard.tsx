@@ -176,7 +176,7 @@ export function OptimizationDashboard({ restaurantId, restaurantName }: Optimiza
                   ) : (
                     <Sparkles className="h-4 w-4 mr-2" />
                   )}
-                  €29/maand
+                  €29/maand excl. btw
                 </Button>
               </div>
             </CardContent>

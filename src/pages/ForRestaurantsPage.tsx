@@ -338,7 +338,7 @@ export default function ForRestaurantsPage() {
               </Card>
 
               <p className="text-xs text-muted-foreground text-center mt-6 italic">
-                * Alle prijzen op deze pagina zijn indicatief en kunnen wijzigen tot Stripe-betalingen live gaan. BTW nog niet inbegrepen.
+                * Alle prijzen op deze pagina zijn indicatief en kunnen wijzigen tot Stripe-betalingen live gaan. Alle prijzen excl. btw.
               </p>
             </motion.div>
           </div>

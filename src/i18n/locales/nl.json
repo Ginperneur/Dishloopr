@@ -286,7 +286,19 @@
     "featuredTitleHeading": "Uitgelichte restaurants",
     "restaurantsInCity": "Restaurants in {{city}}",
     "scrollTop": "Terug naar boven",
-    "ariaCrumb": "Kruimelpad"
+    "ariaCrumb": "Kruimelpad",
+    "multiDish": {
+      "bothTitle": "{{a}} én {{b}}",
+      "bothSubtitle": "Deze restaurants hebben beide gerechten.",
+      "allTitle": "Alle {{total}} gerechten",
+      "allSubtitle": "Deze restaurants hebben alles wat je zocht.",
+      "eitherTitle": "{{a}} óf {{b}}",
+      "eitherSubtitle": "Deze restaurants hebben een van de twee, niet allebei.",
+      "someTitle": "{{covered}} van de {{total}} gerechten",
+      "someSubtitle": "Deze restaurants hebben een deel van wat je zocht.",
+      "noneBoth": "Geen restaurant heeft {{a}} én {{b}}. Hieronder restaurants met een van de twee.",
+      "noneAll": "Geen restaurant heeft alle {{total}} gerechten. Hieronder restaurants met een deel ervan."
+    }
   },
   "common": {
     "loading": "Laden...",

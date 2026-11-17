@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAdminCheck } from '@/hooks/useAdminCheck';
 
 export type SearchSource = 'search' | 'dish_page' | 'city_page';
 const SESSION_KEY = 'dl_search_session';
@@ -43,6 +44,11 @@ function readLast(): { id: number; key: string } | null {
   try { return JSON.parse(sessionStorage.getItem(LAST_KEY) || 'null'); } catch { return null; }
 }
 
+/** Crawlers, previews and headless browsers render our pages too; their visits are not searches. */
+export function isBotAgent(ua: string): boolean {
+  return /bot|crawl|spider|slurp|headless|lighthouse|pagespeed|facebookexternalhit|embedly|python|curl|wget/i.test(ua);
+}
+
 export function csvEscape(value: unknown): string {
   let s = value == null ? '' : String(value);
   if (/^[=+\-@]/.test(s)) s = `'${s}`;
@@ -65,6 +71,9 @@ interface LoggerArgs {
 /** Logs a search once per new term/city/filter combo, 1.5s after results are loaded. Never throws. */
 export function useSearchLogger({ source, query, city, filters, resultsCount, ready, loading, loadKey }: LoggerArgs) {
   const key = searchKey(source, query, city, filters);
+  // Admins test the site a lot and bots crawl it; neither should count as demand.
+  const { isAdmin, loading: roleLoading } = useAdminCheck();
+  const skip = roleLoading || isAdmin || (typeof navigator !== 'undefined' && isBotAgent(navigator.userAgent || ''));
   const loggedKey = useRef<string | null>(readLast()?.key ?? null);
   const countRef = useRef(resultsCount);
   countRef.current = resultsCount;
@@ -75,7 +84,7 @@ export function useSearchLogger({ source, query, city, filters, resultsCount, re
   const settled = loading === undefined || (seen.current.loaded && !loading);
 
   useEffect(() => {
-    if (!ready || !settled || key === loggedKey.current) return;
+    if (skip || !ready || !settled || key === loggedKey.current) return;
     const t = setTimeout(() => {
       loggedKey.current = key;
       try {
@@ -97,7 +106,7 @@ export function useSearchLogger({ source, query, city, filters, resultsCount, re
     }, LOG_DEBOUNCE_MS);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, ready, settled]);
+  }, [key, ready, settled, skip]);
 }
 
 /** Fire-and-forget click attribution to the last logged search. */

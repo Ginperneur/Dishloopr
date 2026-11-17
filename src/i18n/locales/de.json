@@ -285,7 +285,19 @@
     "featuredTitleHeading": "Ausgewählte Restaurants",
     "restaurantsInCity": "Restaurants in {{city}}",
     "scrollTop": "Nach oben",
-    "ariaCrumb": "Brotkrumen"
+    "ariaCrumb": "Brotkrumen",
+    "multiDish": {
+      "bothTitle": "{{a}} und {{b}}",
+      "bothSubtitle": "Diese Restaurants haben beide Gerichte.",
+      "allTitle": "Alle {{total}} Gerichte",
+      "allSubtitle": "Diese Restaurants haben alles, was du gesucht hast.",
+      "eitherTitle": "{{a}} oder {{b}}",
+      "eitherSubtitle": "Diese Restaurants haben eins von beiden, nicht beide.",
+      "someTitle": "{{covered}} von {{total}} Gerichten",
+      "someSubtitle": "Diese Restaurants haben einen Teil von dem, was du gesucht hast.",
+      "noneBoth": "Kein Restaurant hat {{a}} und {{b}}. Unten stehen Restaurants mit einem von beiden.",
+      "noneAll": "Kein Restaurant hat alle {{total}} Gerichte. Unten stehen Restaurants mit einem Teil davon."
+    }
   },
   "common": {
     "loading": "Laden...",

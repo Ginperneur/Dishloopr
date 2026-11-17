@@ -13,6 +13,7 @@ import {
 } from '@/lib/ranking';
 import { calculateDistance } from '@/hooks/useGeolocation';
 import { getEmptyRestaurantIds } from '@/lib/listableRestaurants';
+import { splitDishQuery, hasDishConnector, isCompoundDishPhrase, groupByCoverage } from '@/lib/multiDishSearch';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type Dish = Database['public']['Tables']['dishes']['Row'];
@@ -21,6 +22,8 @@ type City = Database['public']['Tables']['cities']['Row'];
 export interface SearchResult extends Restaurant {
   cityName?: string;
   matchedDishes?: string[];
+  /** Bij zoeken op meerdere gerechten: welke gezochte gerechten dit restaurant heeft. */
+  matchedTerms?: string[];
   dishTranslations?: Record<string, string>;
   matchScore: number;
   bayesianRating: number;
@@ -100,6 +103,8 @@ export function useSearch() {
   const [isFuzzyMatch, setIsFuzzyMatchState] = useState(() => lastSnapshot?.isFuzzyMatch ?? false);
   const [parsedQuery, setParsedQueryState] = useState(() => lastSnapshot?.parsedQuery ?? '');
   const parseCacheRef = useRef(new Map<string, ParsedTerm>());
+  // "zoet en zuur"-achtige zoekdelen: is het hele deel zelf een gerechtnaam?
+  const knownDishCacheRef = useRef(new Map<string, boolean>());
   const lastSearchRef = useRef<{ key: string; running: boolean; doneAt: number } | null>(null);
   // city_aliases: plaatsnamen zonder eigen stadspagina (bijv. "Nieuwegein", na
   // samenvoeging bij Utrecht) die bij een zoekopdracht toch naar hun stad
@@ -177,8 +182,18 @@ export function useSearch() {
     const queryLower = query.toLowerCase().trim();
     const now = new Date();
 
-    // Support multi-dish search: split by comma, then parse each term (city detection)
-    const rawTerms = queryLower.split(',').map(t => t.trim()).filter(t => t.length > 0);
+    // Multi-dish search: split on commas and on "en" / "and" / "&" / "+"
+    // ("biefstuk en garnalen"), unless the whole part is itself a dish name.
+    const connectorParts = queryLower.split(',').map(t => t.trim())
+      .filter(t => t && hasDishConnector(t) && !isCompoundDishPhrase(t) && !knownDishCacheRef.current.has(t));
+    if (connectorParts.length) {
+      await Promise.all(connectorParts.map(async (part) => {
+        const pattern = part.replace(/[\\%_]/g, m => `\\${m}`);
+        const { data } = await supabase.from('dishes').select('id').ilike('name', pattern).limit(1);
+        knownDishCacheRef.current.set(part, !!data?.length);
+      }));
+    }
+    const rawTerms = splitDishQuery(queryLower, part => knownDishCacheRef.current.get(part) === true);
     const parsed = await Promise.all(
       rawTerms.map(async (term) => {
         const cached = parseCacheRef.current.get(term);
@@ -211,9 +226,9 @@ export function useSearch() {
     }
     setDetectedCity(detected);
 
-    const queryTerms = parsed
+    const queryTerms = [...new Set(parsed
       .map(p => (p.term ?? '').toLowerCase().trim())
-      .filter(t => t.length > 0);
+      .filter(t => t.length > 0))];
     const isMultiDish = queryTerms.length > 1;
     setParsedQuery(queryTerms.join(', '));
 
@@ -335,9 +350,11 @@ export function useSearch() {
       };
 
       // Also map to restaurant-level columns
-      const restaurantLevelMap: Record<string, string> = {
-        'vegan': 'is_fully_vegan',
-        'halal': 'is_fully_halal',
+      // A fully vegan restaurant is also fully vegetarian.
+      const restaurantLevelMap: Record<string, string[]> = {
+        'vegan': ['is_fully_vegan'],
+        'vegetarian': ['is_fully_vegetarian', 'is_fully_vegan'],
+        'halal': ['is_fully_halal'],
       };
 
       // Build OR filter conditions for each dietary option on restaurant_dishes
@@ -371,9 +388,7 @@ export function useSearch() {
       }
 
       // Also get IDs from restaurant-level flags (is_fully_halal, is_fully_vegan, etc.)
-      const restaurantOrConds = filters.dietaryOptions
-        .map(opt => restaurantLevelMap[opt])
-        .filter(Boolean)
+      const restaurantOrConds = [...new Set(filters.dietaryOptions.flatMap(opt => restaurantLevelMap[opt] ?? []))]
         .map(col => `${col}.eq.true`);
 
       if (restaurantOrConds.length > 0) {
@@ -665,6 +680,9 @@ export function useSearch() {
           chainName: restaurant.chain_id ? chainNameById.get(restaurant.chain_id) : undefined,
           chainLocationsCount: restaurant.chain_id ? chainCountById.get(restaurant.chain_id) : undefined,
           matchedDishes: scored.matchedDishes,
+          matchedTerms: isMultiDish
+            ? queryTerms.filter(term => termRestaurantIds.get(term)?.has(restaurant.id))
+            : undefined,
           dishTranslations,
           matchScore: scored.matchScore,
           bayesianRating: scored.bayesianRating,
@@ -675,14 +693,19 @@ export function useSearch() {
     }
 
     let sorted = sortResults(scoredResults);
-    // Multi-dish: restaurants serving more of the searched dishes always rank first.
+    let rebalanced: SearchResult[];
     if (isMultiDish) {
+      // Multi-dish: restaurants serving more of the searched dishes always rank
+      // first. Sponsored placement is rebalanced within each coverage group, so
+      // a sponsored partial match never jumps above a restaurant serving all.
       sorted = sorted
         .map((r, i) => ({ r, i, c: restaurantTermCoverage.get(r.id) || 0 }))
         .sort((a, b) => b.c - a.c || a.i - b.i)
         .map(x => x.r);
+      rebalanced = groupByCoverage(sorted).flatMap(g => rebalanceSponsoredResults(g.items));
+    } else {
+      rebalanced = rebalanceSponsoredResults(sorted);
     }
-    const rebalanced = rebalanceSponsoredResults(sorted);
 
     setResults(rebalanced);
     finish(); setLoading(false);

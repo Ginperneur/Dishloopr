@@ -166,7 +166,7 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
           Profiel Tags
         </CardTitle>
         <CardDescription>
-          Kies per categorie zelf 1 gratis tag die het best bij je zaak past. Extra tags kosten €5 per maand per tag (max 3), of zitten bij Owner Pro (€29 per maand) inbegrepen.
+          Kies per categorie zelf 1 gratis tag die het best bij je zaak past. Extra tags kosten €5 per maand per tag (max 3), of zitten bij Owner Pro (€29 per maand) inbegrepen. Prijzen excl. btw.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -260,7 +260,7 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
                         ) : (
                           <ShoppingCart className="h-3 w-3 mr-1" />
                         )}
-                        {CHECKOUT_ENABLED.tag ? '€5/mnd' : COMING_SOON_LABEL}
+                        {CHECKOUT_ENABLED.tag ? '€5/mnd excl. btw' : COMING_SOON_LABEL}
                       </Button>
                       <Button
                         size="sm"
@@ -296,18 +296,18 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
           {pendingCount > 0 && <span className="text-sm text-muted-foreground">Je keuzes worden pas bewaard als je op Tags opslaan klikt.</span>}
         </div>
 
-        <div className="border-t pt-4">
+        {(restaurant as { owner_tier?: string }).owner_tier !== 'pro' && <div className="border-t pt-4">
           <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
             <Crown className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
             <div className="space-y-1">
-              <p className="text-sm font-medium">Owner Pro — €29/maand</p>
+              <p className="text-sm font-medium">Owner Pro, €29/maand excl. btw</p>
               <p className="text-xs text-muted-foreground">
                 Met Owner Pro kun je onbeperkt tags beheren, krijg je toegang tot geavanceerde inzichten en meer.
                 Alle extra tags zijn inbegrepen.
               </p>
             </div>
           </div>
-        </div>
+        </div>}
       </CardContent>
     </Card>
   );

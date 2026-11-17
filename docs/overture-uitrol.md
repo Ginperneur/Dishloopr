@@ -3,13 +3,11 @@
 Stand 17-11-2026. Landelijk klaar: 5.937 "zeker goed", 1.856 "sterk, extra controle",
 13.377 "twijfel", in 12 provinciebestanden (`scripts/overture-discovery/output/nl/*.csv`).
 
-## 1. Code naar main
+## 1. Code naar main (gedaan 17-11-2026)
 
-1. Branch `feat/overture-discovery-import` committen en een PR naar `main` openen.
-   Deze branch staat bovenop PR #34 (Google-compliance fase 1).
-2. Eerst PR #34 mergen, daarna deze PR. GitHub toont dan alleen de nieuwe commits.
-3. Na elke merge controleren dat de laatste commit echt op `main` staat
-   (`git merge-base --is-ancestor <commit> origin/main`).
+Eén PR voor `feat/overture-discovery-import` naar `main`. Die bevat ook de Google-compliance
+van PR #34, bijgewerkt op de nieuwe beheerindeling (#44); GitHub markeert #34 daardoor als
+gemerged. Migratie heet nu `0055_overture_discovery` (0052 tot 0054 waren al bezet op main).
 
 ## 2. Gemini-sleutel van Google zelf (in plaats van de Lovable AI-gateway)
 
@@ -35,7 +33,7 @@ Prompt 1 (geheim):
 
 Prompt 2 (migratie):
 
-> Voer de migratie `drizzle/migrations/0052_overture_discovery.sql` uit op de database. Hij is
+> Voer de migratie `drizzle/migrations/0055_overture_discovery.sql` uit op de database. Hij is
 > idempotent geschreven, dus een nieuw nummer of dubbele run is geen probleem. Wijzig de SQL niet.
 > Bevestig daarna dat `discovery_results` de kolommen `source`, `external_id`, `triage` en
 > `triage_reason` heeft, dat `place_id` nullable is, en dat `restaurants.overture_id` bestaat.

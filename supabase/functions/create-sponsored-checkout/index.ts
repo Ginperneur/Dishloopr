@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { safeOrigin } from "../_shared/auth.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
+import { withVat } from "../_shared/vat.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -128,7 +129,7 @@ serve(async (req) => {
     const dishName = (product as any).dishes?.name || 'Gerecht';
     const cityName = (product as any).cities?.name || 'Stad';
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await stripe.checkout.sessions.create(await withVat(stripe, {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       payment_method_types: ["card", "ideal", "bancontact"],
@@ -155,7 +156,7 @@ serve(async (req) => {
         duration_days: duration.toString(),
         user_id: user.id,
       },
-    });
+    }));
 
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
 

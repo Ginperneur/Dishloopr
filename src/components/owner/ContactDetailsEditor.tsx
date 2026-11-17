@@ -19,13 +19,14 @@ interface Props {
   websiteUrl: string | null;
   address: string | null;
   onSaved: (next: { phone: string | null; website_url: string | null }) => void;
+  onAddressSaved?: (address: string) => void;
 }
 
 /**
  * Phone and website are saved straight away by the verified owner (checked again server-side).
  * A new address goes to Dishloopr as a contact message, because the map and search depend on it.
  */
-export function ContactDetailsEditor({ restaurantId, restaurantName, phone, websiteUrl, address, onSaved }: Props) {
+export function ContactDetailsEditor({ restaurantId, restaurantName, phone, websiteUrl, address, onSaved, onAddressSaved }: Props) {
   const { user } = useAuth();
   const [p, setP] = useState(phone ?? '');
   const [w, setW] = useState(websiteUrl ?? '');
@@ -56,25 +57,33 @@ export function ContactDetailsEditor({ restaurantId, restaurantName, phone, webs
     toast.success('Contactgegevens opgeslagen en direct zichtbaar op je pagina');
   };
 
+  // Checked against the Dutch address register: a correct address in the same city is applied at
+  // once (with postcode); anything else goes to Dishloopr to look at.
   const requestAddress = async () => {
-    if (!user?.email || newAddress.trim().length < 8) {
-      toast.error('Vul het volledige nieuwe adres in, met postcode en plaats.');
+    if (newAddress.trim().length < 6) {
+      toast.error('Vul straat, huisnummer en plaats in.');
       return;
     }
     setSendingAddress(true);
-    const { error } = await db.from('contact_messages').insert({
-      name: ((user.user_metadata?.name as string | undefined) || user.email).slice(0, 100),
-      email: user.email,
-      subject: `[${restaurantName}] Adres wijzigen`.slice(0, 200),
-      message: `Huidig adres: ${address ?? 'onbekend'}\nNieuw adres: ${newAddress.trim()}`.slice(0, 5000),
-      category: 'gegevens',
-      restaurant_id: restaurantId,
-      user_id: user.id,
+    const { data, error } = await supabase.functions.invoke('owner-address-change', {
+      body: { restaurant_id: restaurantId, address: newAddress.trim() },
     });
     setSendingAddress(false);
-    if (error) { toast.error('Versturen lukte niet. Probeer het opnieuw.'); return; }
+    if (error || data?.error) {
+      const reason = data?.error ?? await (error as { context?: Response } | null)?.context?.json?.().then((b: { error?: string }) => b?.error).catch(() => null);
+      toast.error(reason || 'Versturen lukte niet. Probeer het opnieuw.');
+      return;
+    }
     setNewAddress('');
-    toast.success('Aanvraag verstuurd. We passen het adres meestal binnen 1 werkdag aan.');
+    if (data.applied) {
+      onAddressSaved?.(data.address);
+      toast.success('Adres bijgewerkt', { description: `${data.address}. Gecontroleerd in het Nederlandse adresregister.` });
+    } else {
+      toast.info('We kijken er even naar', {
+        description: `${data.reason}.${data.suggestion ? ` Bedoel je ${data.suggestion}?` : ''} We passen het meestal binnen 1 werkdag aan.`,
+        duration: 12000,
+      });
+    }
   };
 
   return (
@@ -104,13 +113,13 @@ export function ContactDetailsEditor({ restaurantId, restaurantName, phone, webs
           <Label htmlFor="contact-address" className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />Adres</Label>
           <p className="text-sm">{address || 'Nog geen adres bekend'}</p>
           <p className="text-xs text-muted-foreground">
-            Verhuisd of klopt het niet? Geef het nieuwe adres door. We controleren het kort, omdat de kaart en zoekresultaten ervan afhangen.
+            Verhuisd of klopt het niet? Vul het nieuwe adres in. Staat het in het Nederlandse adresregister en ligt het in je stad, dan is het meteen aangepast; anders kijken wij er even naar.
           </p>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Input id="contact-address" placeholder="Straat 12, 1234 AB Plaats" value={newAddress}
               onChange={e => setNewAddress(e.target.value)} className="min-h-11" />
             <Button variant="outline" onClick={requestAddress} disabled={sendingAddress || !newAddress.trim()} className="min-h-11 shrink-0">
-              {sendingAddress && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Adres doorgeven
+              {sendingAddress && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Adres wijzigen
             </Button>
           </div>
         </div>

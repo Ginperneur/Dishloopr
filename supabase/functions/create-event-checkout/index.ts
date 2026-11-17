@@ -1,6 +1,7 @@
 import { safeOrigin, serviceClient, getCaller, isAdmin } from "../_shared/auth.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { billingParams } from "../_shared/billing.ts";
+import { withVat } from "../_shared/vat.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -45,7 +46,7 @@ Deno.serve(async (req) => {
 
     const metadata = { type: "event_promotion", event_id: event.id, restaurant_id: event.restaurant_id, user_id: user.id };
     const origin = safeOrigin(req);
-    const session = await stripe.checkout.sessions.create({
+    const session = await stripe.checkout.sessions.create(await withVat(stripe, {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [lineItem],
@@ -55,7 +56,7 @@ Deno.serve(async (req) => {
       subscription_data: { metadata, description: `Evenement: ${event.title}`.slice(0, 500) },
       success_url: `${origin}/owner-dashboard?event_checkout=success`,
       cancel_url: `${origin}/owner-dashboard?event_checkout=cancelled`,
-    });
+    }));
 
     return json({ url: session.url });
   } catch (e) {

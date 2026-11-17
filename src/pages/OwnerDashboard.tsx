@@ -700,7 +700,8 @@ export default function OwnerDashboard() {
                           <>
                             <ContactDetailsEditor restaurantId={r.id} restaurantName={r.name} phone={r.phone ?? null}
                               websiteUrl={r.website_url ?? null} address={r.address ?? null}
-                              onSaved={(next) => setSelectedRestaurant({ ...r, ...next } as any)} />
+                              onSaved={(next) => setSelectedRestaurant({ ...r, ...next } as any)}
+                              onAddressSaved={(address) => setSelectedRestaurant({ ...r, address } as any)} />
                             {section('Naam, beschrijving en openingstijden', Clock, (
                               <>
                                 <BasicInfoEditor restaurantId={r.id} currentName={r.name} currentOpeningHours={r.opening_hours}
@@ -975,18 +976,18 @@ export default function OwnerDashboard() {
                         : locked('Vraag doorsturen', 'Verifieer dat je de eigenaar bent om gasten van volle of gesloten restaurants te ontvangen.'), 'promo-routing')}
                       {section('Tags', Tag, (
                         <>
-                          <p className="text-sm text-muted-foreground">Met tags verschijn je bij filters zoals Vegan of Romantisch. Eén tag is gratis, extra tags kosten €5 per maand.</p>
+                          <p className="text-sm text-muted-foreground">Met tags verschijn je bij filters zoals Vegan of Romantisch. Eén tag is gratis, extra tags kosten €5 per maand excl. btw.</p>
                           <TagManager restaurant={r} onUpdate={(updated) => setSelectedRestaurant(updated)} />
                           <TagRequestForm restaurantId={r.id} />
                         </>
                       ))}
                       {section('Evenementen en specials', PartyPopper, isVerified ? (
                         <div className="space-y-6">
-                          <p className="text-sm text-muted-foreground">Een proeverij, kerstmenu of live muziek komt in de eventlijst van je stad en op je pagina, voor €5 per maand per evenement.</p>
+                          <p className="text-sm text-muted-foreground">Een proeverij, kerstmenu of live muziek komt in de eventlijst van je stad en op je pagina, voor €5 per maand per evenement, excl. btw.</p>
                           <OwnerEventsManager restaurantId={r.id} restaurantName={r.name} />
                           <EventsCalendarView restaurantId={r.id} />
                         </div>
-                      ) : locked('Evenementen', 'Zet specials en evenementen op Dishloopr voor €5 per maand per evenement.'))}
+                      ) : locked('Evenementen', 'Zet specials en evenementen op Dishloopr voor €5 per maand per evenement, excl. btw.'))}
                       {section('Nieuwsbrief', Megaphone, <NewsletterPlacement restaurantId={r.id} restaurantName={r.name} />, 'promo-newsletter')}
                       {section('Gerecht in de spotlight', Star, <SponsoredMarketplace restaurantId={r.id} restaurantName={r.name} />, 'promo-sponsored')}
 

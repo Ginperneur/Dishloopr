@@ -15,6 +15,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useActivityLog } from '@/hooks/useActivityLog';
+import { approveClaimRequest } from '@/lib/claimApproval';
 
 interface ClaimRequest {
   id: string;
@@ -103,59 +104,7 @@ export function ClaimRequestsQueue({ onUpdate }: ClaimRequestsQueueProps) {
     setProcessing(true);
 
     try {
-      // Update claim request status
-      const { error: claimError } = await supabase
-        .from('claim_requests')
-        .update({
-          status: 'approved',
-          admin_notes: adminNotes || null,
-          reviewed_at: new Date().toISOString()
-        })
-        .eq('id', request.id);
-
-      if (claimError) throw claimError;
-
-      // Update restaurant with owner and activate if it was a new restaurant submission
-      const { error: restaurantError } = await supabase
-        .from('restaurants')
-        .update({
-          claimed_by_owner_id: request.user_id,
-          claim_status: 'verified_owner',
-          is_active: true, // Activate the restaurant upon approval
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', request.restaurant_id);
-
-      if (restaurantError) throw restaurantError;
-
-      // Add user as primary owner in restaurant_managers
-      const { error: managerError } = await supabase
-        .from('restaurant_managers')
-        .upsert({
-          restaurant_id: request.restaurant_id,
-          user_id: request.user_id,
-          role: 'primary_owner',
-          accepted_at: new Date().toISOString()
-        }, { onConflict: 'restaurant_id,user_id' });
-
-      if (managerError) console.error('Error adding manager:', managerError);
-
-      // Give user the owner role
-      const { data: existingRole } = await supabase
-        .from('user_roles')
-        .select('id')
-        .eq('user_id', request.user_id)
-        .eq('role', 'owner')
-        .maybeSingle();
-
-      if (!existingRole) {
-        await supabase
-          .from('user_roles')
-          .insert({
-            user_id: request.user_id,
-            role: 'owner'
-          });
-      }
+      await approveClaimRequest(request, adminNotes);
 
       await logActivity({
         actionType: 'approve',

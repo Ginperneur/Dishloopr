@@ -70,11 +70,11 @@ export default function PlacesExplainedPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <Card><CardContent className="space-y-2 p-5">
               <p className="flex items-center gap-2 font-semibold"><Crown className="h-5 w-5 text-primary" />Uitgelicht</p>
-              <p className="text-sm text-muted-foreground">Je staat bovenaan een gerechtpagina in je stad, bijvoorbeeld bij pizza in Utrecht. Per pagina zijn er 5 plekken. Prijs vanaf €99 per maand.</p>
+              <p className="text-sm text-muted-foreground">Je staat bovenaan een gerechtpagina in je stad, bijvoorbeeld bij pizza in Utrecht. Per pagina zijn er 5 plekken. Prijs vanaf €99 excl. btw per maand.</p>
             </CardContent></Card>
             <Card><CardContent className="space-y-2 p-5">
               <p className="flex items-center gap-2 font-semibold"><Zap className="h-5 w-5 text-primary" />Vraag doorsturen</p>
-              <p className="text-sm text-muted-foreground">Is een ander restaurant met hetzelfde gerecht gesloten of vol, dan sturen we de gast naar jou door. Per gerecht per stad zijn er 3 plekken. Prijs vanaf €15 per maand per gerecht.</p>
+              <p className="text-sm text-muted-foreground">Is een ander restaurant met hetzelfde gerecht gesloten of vol, dan sturen we de gast naar jou door. Per gerecht per stad zijn er 3 plekken. Prijs vanaf €15 per maand per gerecht, excl. btw.</p>
             </CardContent></Card>
           </div>
           <p className="text-sm text-muted-foreground">
@@ -176,7 +176,7 @@ export default function PlacesExplainedPage() {
         <section className="space-y-3 rounded-2xl border border-primary/30 bg-primary/5 p-6">
           <h2 className="flex items-center gap-2 font-display text-xl font-bold"><ShieldCheck className="h-5 w-5 text-primary" />Founding Partners</h2>
           <p className="text-sm text-muted-foreground">
-            Neem je Uitgelicht tot en met 5 januari 2027, dan word je Founding Partner. Je betaalt €59 per maand (of €590 per jaar) en je plek valt
+            Neem je Uitgelicht tot en met 5 januari 2027, dan word je Founding Partner. Je betaalt €59 per maand (of €590 per jaar), excl. btw, en je plek valt
             tot en met 31 december 2027 buiten de veiling: niemand kan je overbieden en je prijs verandert niet. Je Founding Partner badge blijft altijd staan.
           </p>
         </section>
@@ -199,7 +199,7 @@ export default function PlacesExplainedPage() {
             <p>De gast ziet je restaurant bovenaan met het label Gesponsord of Uitgelicht. Zijn er geen betalende restaurants, dan tonen we gewoon de best passende restaurants.</p>
           </Faq>
           <Faq q="Zijn de prijzen inclusief btw?">
-            <p>Nee, alle prijzen zijn exclusief btw.</p>
+            <p>Nee, alle prijzen zijn exclusief 21% btw. Bij het afrekenen zie je het totaalbedrag, en de btw staat apart op je factuur. Ook biedingen zijn exclusief btw.</p>
           </Faq>
         </section>
 

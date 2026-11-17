@@ -184,7 +184,7 @@ Overture place; 6 have no Overture counterpart, so Overture misses roughly 1 in 
    fallback, `restaurants.overture_id` set) and runs classify, menu scrape,
    reservation detection and activation. Google rows still return 410.
 
-Schema: migration `0052_overture_discovery` (mirrored in `supabase/migrations`).
+Schema: migration `0055_overture_discovery` (mirrored in `supabase/migrations`).
 Tests: `deno run --config supabase/tests/deno.json supabase/tests/overture-import.ts`.
 
 Attribution: shown on the About page (`about.dataSources`).

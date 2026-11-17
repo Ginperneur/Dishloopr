@@ -1,13 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Navigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { 
-  Users, Store, MessageSquare, TrendingUp, MapPin, UtensilsCrossed,
-  Shield, Eye, Trash2, Check, X, Search, Sparkles, FileText,
-  ChevronLeft, ChevronRight, RefreshCw, Settings, Crown, Upload,
-  Image, Globe, Download, ShieldAlert, Zap, Clock, Bell, Menu
+import { Navigate, useSearchParams } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  Shield, Trash2, Check, Search, Sparkles, TrendingUp,
+  ChevronLeft, ChevronRight, RefreshCw,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -20,12 +18,16 @@ import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { AdminSearch } from '@/components/admin/AdminSearch';
+import { ADMIN_GROUPS, resolveSection } from '@/components/admin/adminNav';
+import { QUEUE_SNAPSHOT_KEY, fetchQueueSnapshot, snapshotToBadges } from '@/components/admin/adminQueues';
 import { RestaurantDetailModal } from '@/components/admin/RestaurantDetailModal';
 import { AddRestaurantModal } from '@/components/admin/AddRestaurantModal';
 import { SponsoredProductsManager } from '@/components/admin/SponsoredProductsManager';
 import { ClaimRequestsQueue } from '@/components/admin/ClaimRequestsQueue';
 import { OptoutRequestsManager } from '@/components/admin/OptoutRequestsManager';
 import { ContactMessagesManager } from '@/components/admin/ContactMessagesManager';
+import { PendingEditsQueue } from '@/components/admin/PendingEditsQueue';
 import { PresaleManager } from '@/components/admin/PresaleManager';
 import { OutreachManager } from '@/components/admin/OutreachManager';
 import { ClaimsVerificationManager } from '@/components/admin/ClaimsVerificationManager';
@@ -33,7 +35,6 @@ import { ClaimReviewQueue } from '@/components/admin/ClaimReviewQueue';
 import { DishesManager } from '@/components/admin/DishesManager';
 import { CitiesManager } from '@/components/admin/CitiesManager';
 import { UserRolesManager } from '@/components/admin/UserRolesManager';
-import { ActivityLog } from '@/components/admin/ActivityLog';
 import { SettingsManager } from '@/components/admin/SettingsManager';
 import { CollectionsManager } from '@/components/admin/CollectionsManager';
 import { SeoLandingPagesManager } from '@/components/admin/SeoLandingPagesManager';
@@ -46,7 +47,6 @@ import { PhotosManager } from '@/components/admin/PhotosManager';
 import { RestaurantDishesManager } from '@/components/admin/RestaurantDishesManager';
 import { FeaturedSlotsManager } from '@/components/admin/FeaturedSlotsManager';
 import { AmbiancePricingManager } from '@/components/admin/AmbiancePricingManager';
-import { AdminNotifications } from '@/components/admin/AdminNotifications';
 import { NewsletterManager } from '@/components/admin/NewsletterManager';
 import { RestaurantBulkMailer } from '@/components/admin/RestaurantBulkMailer';
 import { UpgradeReviewRequests } from '@/components/admin/UpgradeReviewRequests';
@@ -89,95 +89,16 @@ import { DishScreeningManager } from '@/components/admin/DishScreeningManager';
 import { SearchLogReport } from '@/components/admin/SearchLogReport';
 
 import { openConfirm } from '@/components/ui/confirm-dialog';
-interface Stats {
-  totalUsers: number;
-  totalRestaurants: number;
-  totalReviews: number;
-  totalCities: number;
-  totalDishes: number;
-  pendingReviews: number;
-  pendingClaims: number;
-  pendingSupport: number;
-  pendingTagRequests: number;
-  pendingEventReleases: number;
-  activeRestaurants: number;
-}
 
 const ITEMS_PER_PAGE = 25;
-
-// Section title mapping
-const sectionTitles: Record<string, { title: string; description: string }> = {
-  'today': { title: 'Vandaag', description: 'Centrale wachtrij — alles wat aandacht nodig heeft' },
-  'kpi': { title: "KPI Dashboard", description: "Platform groei en kerncijfers" },
-  'revenue': { title: "Omzet Dashboard", description: "MRR, betalingen en top-spenders" },
-  'package-orders': { title: "Pakketten & abonnementen", description: "Omzet per product, Founding Partners en Menuservice die nog geleverd moet worden" },
-  'user-insights': { title: "User Insights", description: "Gebruikersactiviteit en retentie" },
-  'search-analytics': { title: "Zoek Analytics", description: "Populaire zoekopdrachten en zero results" },
-  'search-log': { title: "Zoeklog", description: "Alle zoekopdrachten, zonder resultaat en klikken" },
-  'geographic': { title: "Geografische Dekking", description: "Restaurantdichtheid per stad" },
-  'churn': { title: "Churn Risk", description: "Inactieve eigenaren en retentie" },
-  'claim-analytics': { title: "Claim Analyse", description: "Claim funnel en conversie" },
-  'restaurants': { title: "Restaurants", description: "Beheer alle restaurants" },
-  'dishes': { title: "Gerechten", description: "Gerecht-taxonomie beheren" },
-  'dish-approval': { title: "Goedkeuring", description: "Gerechten goedkeuren of afwijzen" },
-  'restaurant-dishes': { title: "Bekend Om", description: "Restaurant-gerecht koppelingen" },
-  'tag-requests': { title: "Tag-aanvragen", description: "Door eigenaren aangevraagde keuken-, sfeer- of conceptlabels" },
-  'event-releases': { title: "Evenementen", description: "Specials en evenementen van eigenaren vrijgeven" },
-  'cities': { title: "Steden", description: "Steden en regio's beheren" },
-  'collections': { title: "Collecties", description: "Curated restaurant collecties" },
-  'chains': { title: "Ketens", description: "Restaurant ketens beheren" },
-  'reviews': { title: "Reviews", description: "Reviews modereren" },
-  'users': { title: "Gebruikers", description: "Geregistreerde gebruikers" },
-  'roles': { title: "Rollen", description: "Gebruikersrollen toewijzen" },
-  'claims': { title: "Claims", description: "Restaurant claims verwerken" },
-  'support': { title: "Support Chat", description: "Escalaties van de AI-klantenservice" },
-  'optouts': { title: "Afmeldingen", description: "Opt-out- en aanpasverzoeken van restaurants" },
-  'contact': { title: "Contactberichten", description: "Vragen, meldingen en klachten van eigenaren en bezoekers" },
-  'suggestions': { title: "Suggesties", description: "Door bezoekers ingediende restaurant-suggesties" },
-  'sponsored': { title: "Sponsored", description: "Gesponsorde producten beheren" },
-  'presale': { title: 'Presale', description: '' },
-  'outreach': { title: 'Outreach', description: 'Mailgolf naar eigenaren, database en gekwalificeerde antwoorden' },
-  'featured-slots': { title: "Featured Spots", description: "Featured slots en sfeer-pricing" },
-  'newsletter': { title: "Nieuwsbrief", description: "Edities en plaatsingen" },
-  'seo': { title: "SEO Pages", description: "City×dish landing pages" },
-  'notifications': { title: "Notificaties", description: "E-mail notificatie wachtrij" },
-  'audit': { title: "Restaurant Audit", description: "Restaurantgegevens controleren" },
-  'discovery': { title: "Restaurant Discovery", description: "Nieuwe restaurants ontdekken via Google Places grid scan" },
-  'broken-images': { title: "Broken Images", description: "Kapotte afbeeldingen opsporen" },
-  'duplicates': { title: "Duplicaten", description: "Dubbele restaurants samenvoegen" },
-  'completeness': { title: "Completeness", description: "Datakwaliteit per restaurant" },
-  'menu-scraper': { title: "Menu Scraper", description: "Gerechten van websites scrapen" },
-  'manual-menu': { title: "Handmatig Menu", description: "Foto of PDF uploaden voor restaurants waar scrapen niet werkt" },
-  'empty-dishes': { title: "0 Gerechten", description: "Restaurants zonder gerechten — direct zien wat aandacht nodig heeft" },
-  'geocode': { title: "Geocode", description: "Coördinaten toekennen" },
-  'ai-classify': { title: "AI Classificatie", description: "Keuken, sfeer & concept via AI" },
-  'photos': { title: "Foto's", description: "Google-foto's ophalen" },
-  'data-export': { title: "Data Export", description: "Data exporteren als CSV" },
-  'seo-health': { title: "SEO Health", description: "SEO-problemen monitoren" },
-  'bulk-actions': { title: "Bulk Acties", description: "Massale status-updates" },
-  'audit-trail': { title: "Audit Trail", description: "Alle admin-acties" },
-  'activity': { title: "Activiteit", description: "Activity log" },
-  'settings': { title: "Instellingen", description: "Platform configuratie" },
-  'error-logs': { title: "Error Logs", description: "Frontend crashes en errors van gebruikers" },
-  'reservation-detect': { title: "Reserveringslinks", description: "Detecteer TheFork/Zenchef/OpenTable links via websites" },
-  'reservation-outreach': { title: "Reservering-mail", description: "Mail eigenaren zonder reserveringslink" },
-  'rate-limits': { title: "API Bescherming", description: "Rate limits, kill-switch en monitoring van AI/API gebruik" },
-  'link-health': { title: "Link Health", description: "Controleer of restaurant-websites nog werken (HEAD-ping)" },
-  'missing-website': { title: "Zonder website", description: "Restaurants zonder website-URL — automatisch aanvullen via Google Places" },
-  'manual-review': { title: "Handmatig nakijken", description: "Restaurants gemarkeerd met needs_manual_review=true — controleer en bevestig" },
-  'dish-screening': { title: "Gerecht-screening", description: "Screen voorgestelde gerechten automatisch (approve/reject/review) met canonical-vocab" },
-};
 
 export default function AdminPanel() {
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdminCheck();
-  const [stats, setStats] = useState<Stats>({
-    totalUsers: 0, totalRestaurants: 0, totalReviews: 0, totalCities: 0,
-    totalDishes: 0, pendingReviews: 0, pendingClaims: 0, pendingSupport: 0, pendingTagRequests: 0, pendingEventReleases: 0, activeRestaurants: 0
-  });
+  const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [users, setUsers] = useState<any[]>([]);
   const [restaurants, setRestaurants] = useState<any[]>([]);
-  const [reviews, setReviews] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -185,25 +106,40 @@ export default function AdminPanel() {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [userModalOpen, setUserModalOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState('today');
-  
+
+  // The open page lives in the URL (?section=), so refresh, back and shared links keep it.
+  const { group: activeGroup, tab: activeTab } = resolveSection(searchParams.get('section'));
+  const activeSection = activeTab.id;
+
   // Pagination states
   const [restaurantPage, setRestaurantPage] = useState(1);
-  const [reviewPage, setReviewPage] = useState(1);
   const [userPage, setUserPage] = useState(1);
-  
+
   // Filter states
   const [restaurantStatusFilter, setRestaurantStatusFilter] = useState<string>('all');
-  const [reviewStatusFilter, setReviewStatusFilter] = useState<string>('all');
 
   const handleNavigateToTab = useCallback((tab: string) => {
-    setActiveSection(tab);
-  }, []);
+    const next = resolveSection(tab).tab.id;
+    setSearchParams(next === 'today' ? {} : { section: next });
+  }, [setSearchParams]);
 
-  // Fetch only stats on mount — heavy data loads lazily per section
+  const handleGroupChange = useCallback((groupId: string) => {
+    const group = ADMIN_GROUPS.find(g => g.id === groupId);
+    if (group) handleNavigateToTab(group.tabs[0].id);
+  }, [handleNavigateToTab]);
+
+  // Open counts for every queue; refreshed every minute and when you switch pages.
+  const { data: snapshot } = useQuery({
+    queryKey: QUEUE_SNAPSHOT_KEY,
+    queryFn: fetchQueueSnapshot,
+    enabled: isAdmin,
+    refetchInterval: 60_000,
+  });
+  const badges = useMemo(() => snapshotToBadges(snapshot ?? null), [snapshot]);
+
   useEffect(() => {
-    if (isAdmin) fetchStats();
-  }, [isAdmin]);
+    if (isAdmin) queryClient.invalidateQueries({ queryKey: QUEUE_SNAPSHOT_KEY });
+  }, [activeSection, isAdmin, queryClient]);
 
   // Lazy-load section data only when needed
   useEffect(() => {
@@ -212,41 +148,8 @@ export default function AdminPanel() {
     if (activeSection === 'users' && users.length === 0) fetchUsers();
   }, [activeSection, isAdmin]);
 
-  const fetchStats = async () => {
-    const [
-      { count: userCount }, { count: restaurantCount }, { count: reviewCount },
-      { count: cityCount }, { count: dishCount }, { count: pendingCount },
-      { count: newClaimsCount }, { count: legacyClaimsCount }, { count: activeCount },
-      { count: supportCount }, { count: tagRequestCount }, { count: eventReleaseCount }
-    ] = await Promise.all([
-      supabase.from('profiles').select('*', { count: 'exact', head: true }),
-      supabase.from('restaurants').select('*', { count: 'exact', head: true }),
-      supabase.from('reviews').select('*', { count: 'exact', head: true }),
-      supabase.from('cities').select('*', { count: 'exact', head: true }),
-      supabase.from('dishes').select('*', { count: 'exact', head: true }),
-      supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-      supabase.from('restaurant_claims').select('*', { count: 'exact', head: true }).in('status', ['pending', 'email_verified', 'phone_verified']),
-      supabase.from('claim_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-      supabase.from('restaurants').select('*', { count: 'exact', head: true }).eq('is_active', true),
-      supabase.from('support_conversations').select('*', { count: 'exact', head: true }).eq('escalated', true).is('resolved_at', null),
-      supabase.from('restaurant_tag_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-      supabase.from('restaurant_events').select('*', { count: 'exact', head: true }).eq('promotion_status', 'unpaid').eq('is_active', true)
-    ]);
-
-    setStats({
-      totalUsers: userCount || 0, totalRestaurants: restaurantCount || 0,
-      totalReviews: reviewCount || 0, totalCities: cityCount || 0,
-      totalDishes: dishCount || 0, pendingReviews: pendingCount || 0,
-      pendingClaims: (newClaimsCount || 0) + (legacyClaimsCount || 0),
-      pendingSupport: supportCount || 0,
-      pendingTagRequests: tagRequestCount || 0,
-      pendingEventReleases: eventReleaseCount || 0,
-      activeRestaurants: activeCount || 0
-    });
-    setLoading(false);
-  };
-
   const fetchRestaurants = async () => {
+    setLoading(true);
     let allRestaurants: any[] = [];
     let from = 0;
     const batchSize = 300;
@@ -258,6 +161,7 @@ export default function AdminPanel() {
       from += batchSize;
     }
     setRestaurants(allRestaurants);
+    setLoading(false);
   };
 
   const fetchUsers = async () => {
@@ -279,7 +183,7 @@ export default function AdminPanel() {
   };
 
   const fetchData = async () => {
-    await fetchStats();
+    await queryClient.invalidateQueries({ queryKey: QUEUE_SNAPSHOT_KEY });
     // Reload section-specific data if currently visible
     if (activeSection === 'restaurants') fetchRestaurants();
     if (activeSection === 'users') fetchUsers();
@@ -306,13 +210,12 @@ export default function AdminPanel() {
     if (error) { toast.error('Verwijderen mislukt: ' + error.message); } else {
       toast.success('Restaurant verwijderd');
       setRestaurants(prev => prev.filter(r => r.id !== id));
-      setStats(prev => ({ ...prev, totalRestaurants: prev.totalRestaurants - 1 }));
     }
   };
 
   // Filtered and paginated data
   const filteredRestaurants = useMemo(() => {
-    let result = restaurants.filter(r => 
+    let result = restaurants.filter(r =>
       r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.address?.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -363,54 +266,31 @@ export default function AdminPanel() {
     );
   }
 
-  const currentSection = sectionTitles[activeSection] || { title: activeSection, description: '' };
+  const showTabs = activeGroup.tabs.length > 1;
 
   return (
     <SidebarProvider>
       <div className="min-h-[100svh] flex w-full bg-background">
-        <AdminSidebar
-          activeSection={activeSection}
-          onSectionChange={setActiveSection}
-          pendingReviews={stats.pendingReviews}
-          pendingClaims={stats.pendingClaims}
-          pendingSupport={stats.pendingSupport}
-          pendingTagRequests={stats.pendingTagRequests}
-          pendingEventReleases={stats.pendingEventReleases}
-        />
+        <AdminSidebar activeGroup={activeGroup.id} onGroupChange={handleGroupChange} badges={badges} />
 
         <div className="flex-1 flex flex-col min-w-0">
           {/* Top bar */}
-          <header className="h-14 border-b border-border/50 bg-card/50 backdrop-blur-sm flex items-center justify-between px-4 sticky top-0 z-30">
-            <div className="flex items-center gap-3">
-              <SidebarTrigger className="h-8 w-8" />
-              <div className="hidden sm:block">
-                <h1 className="text-sm font-semibold leading-tight">{currentSection.title}</h1>
-                <p className="text-[11px] text-muted-foreground leading-tight">{currentSection.description}</p>
-              </div>
+          <header className="h-14 border-b border-border/50 bg-card/50 backdrop-blur-sm flex items-center gap-3 px-4 sticky top-0 z-30">
+            <SidebarTrigger className="h-8 w-8 shrink-0" />
+            <div className="hidden lg:block min-w-0">
+              <h1 className="text-sm font-semibold leading-tight truncate">
+                {activeGroup.label}{showTabs && <span className="text-muted-foreground font-normal"> · {activeTab.label}</span>}
+              </h1>
+              <p className="text-[11px] text-muted-foreground leading-tight truncate">{activeTab.description}</p>
             </div>
-            <div className="flex items-center gap-2">
-              {/* Quick stats in top bar */}
-              <div className="hidden md:flex items-center gap-4 mr-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Store className="h-3.5 w-3.5" />
-                  {stats.totalRestaurants}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Users className="h-3.5 w-3.5" />
-                  {stats.totalUsers}
-                </span>
-                <span className="flex items-center gap-1">
-                  <UtensilsCrossed className="h-3.5 w-3.5" />
-                  {stats.totalDishes}
-                </span>
-                {stats.pendingClaims > 0 && (
-                  <Badge variant="destructive" className="text-[10px] h-5">
-                    {stats.pendingClaims} claims
-                  </Badge>
-                )}
-              </div>
-              <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
-                <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
+            <div className="flex flex-1 items-center justify-end gap-2 min-w-0">
+              <AdminSearch
+                onNavigate={handleNavigateToTab}
+                onOpenRestaurant={(r) => { setSelectedRestaurant(r); setDetailModalOpen(true); }}
+                onOpenUser={(u) => { setSelectedUser(u); setUserModalOpen(true); }}
+              />
+              <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing} aria-label="Vernieuwen">
+                <RefreshCw className={`h-3.5 w-3.5 sm:mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">Vernieuwen</span>
               </Button>
             </div>
@@ -419,11 +299,33 @@ export default function AdminPanel() {
           {/* Content area */}
           <main className="flex-1 overflow-auto">
             <div className="p-4 md:p-6 max-w-[1400px]">
-              {/* Notifications banner */}
-              {activeSection === 'kpi' && (stats.pendingClaims > 0 || stats.pendingReviews > 0) && (
-                <div className="mb-6">
-                  <AdminNotifications onNavigate={handleNavigateToTab} />
-                </div>
+              {showTabs && (
+                <nav aria-label={`${activeGroup.label} onderdelen`} className="mb-5 -mx-1 flex flex-wrap gap-1.5">
+                  {activeGroup.tabs.map(tab => {
+                    const isActive = tab.id === activeSection;
+                    const count = tab.badge ? badges[tab.badge] : 0;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => handleNavigateToTab(tab.id)}
+                        aria-current={isActive ? 'page' : undefined}
+                        className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs transition-colors ${
+                          isActive
+                            ? 'border-primary bg-primary text-primary-foreground font-semibold'
+                            : 'border-border/60 bg-card text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                        }`}
+                      >
+                        {tab.label}
+                        {count > 0 && (
+                          <span className={`rounded-full px-1.5 text-[10px] font-bold ${isActive ? 'bg-primary-foreground/20' : tab.backlog ? 'bg-muted text-muted-foreground' : 'bg-destructive text-destructive-foreground'}`}>
+                            {count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </nav>
               )}
 
               {/* Section content */}
@@ -434,18 +336,23 @@ export default function AdminPanel() {
               {activeSection === 'suggestions' && <RestaurantSuggestionsQueue />}
               {activeSection === 'optouts' && <OptoutRequestsManager />}
               {activeSection === 'contact' && <ContactMessagesManager />}
+              {activeSection === 'edits' && <PendingEditsQueue />}
               {activeSection === 'presale' && <PresaleManager />}
               {activeSection === 'outreach' && <OutreachManager />}
               {activeSection === 'kpi' && <KpiDashboard />}
               {activeSection === 'revenue' && <RevenueDashboard />}
               {activeSection === 'package-orders' && <PackageOrdersManager />}
               {activeSection === 'user-insights' && <UserInsights />}
-              {activeSection === 'search-analytics' && <SearchAnalytics />}
-              {activeSection === 'search-log' && <SearchLogReport />}
+              {activeSection === 'search-analytics' && (
+                <div className="space-y-6">
+                  <SearchAnalytics />
+                  <SearchLogReport />
+                </div>
+              )}
               {activeSection === 'geographic' && <GeographicCoverage />}
               {activeSection === 'churn' && <ChurnRiskDashboard />}
               {activeSection === 'claim-analytics' && <ClaimAnalytics />}
-              
+
               {activeSection === 'restaurants' && (
                 <Card>
                   <CardHeader className="pb-3">
@@ -501,7 +408,7 @@ export default function AdminPanel() {
                                   </div>
                                 </TableCell>
                                 <TableCell className="text-muted-foreground text-sm">{restaurant.cities?.name || '-'}</TableCell>
-                                <TableCell className="text-center">{Number(restaurant.rating).toFixed(1)}</TableCell>
+                                <TableCell className="text-center">{restaurant.rating != null ? Number(restaurant.rating).toFixed(1) : '-'}</TableCell>
                                 <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
                                   <Badge variant={restaurant.is_active ? 'default' : 'secondary'} className="cursor-pointer" onClick={() => updateRestaurantStatus(restaurant.id, 'is_active', !restaurant.is_active)}>
                                     {restaurant.is_active ? 'Actief' : 'Inactief'}
@@ -542,12 +449,17 @@ export default function AdminPanel() {
               )}
 
               {activeSection === 'dishes' && <DishesManager onUpdate={fetchData} />}
-              {activeSection === 'dish-approval' && <DishApprovalManager />}
+              {activeSection === 'dish-approval' && (
+                <div className="space-y-6">
+                  <DishScreeningManager />
+                  <DishApprovalManager />
+                </div>
+              )}
               {activeSection === 'restaurant-dishes' && <RestaurantDishesManager />}
               {activeSection === 'cities' && <CitiesManager onUpdate={fetchData} />}
               {activeSection === 'collections' && <CollectionsManager />}
               {activeSection === 'chains' && <ChainsManager />}
-              
+
               {activeSection === 'claims' && (
                 <Tabs defaultValue="review" className="space-y-4">
                   <TabsList>
@@ -572,7 +484,7 @@ export default function AdminPanel() {
 
               {activeSection === 'reservation-detect' && <ReservationLinkDetector />}
               {activeSection === 'rate-limits' && <RateLimitMonitor />}
-              
+
               {activeSection === 'users' && (
                 <Card>
                   <CardHeader>
@@ -643,12 +555,7 @@ export default function AdminPanel() {
                 </Card>
               )}
 
-              {activeSection === 'roles' && <UserRolesManager users={users} onUpdate={fetchData} />}
-              {activeSection === 'activity' && (
-                <Card>
-                  <CardContent className="pt-6"><ActivityLog /></CardContent>
-                </Card>
-              )}
+              {activeSection === 'roles' && <UserRolesManager onUpdate={fetchData} />}
               {activeSection === 'settings' && (
                 <Card>
                   <CardContent className="pt-6"><SettingsManager /></CardContent>
@@ -690,7 +597,6 @@ export default function AdminPanel() {
               {activeSection === 'link-health' && <LinkHealthChecker />}
               {activeSection === 'missing-website' && <MissingWebsiteUrls />}
               {activeSection === 'manual-review' && <ManualReviewQueue />}
-              {activeSection === 'dish-screening' && <DishScreeningManager />}
             </div>
           </main>
         </div>

@@ -58,6 +58,13 @@ export function SearchBar({
     return chips.length > 0 ? '' : initialQuery;
   });
   const [cityId, setCityId] = useState(initialCity);
+  // Keep chips and city in step when the page rewrites its URL, e.g.
+  // "biefstuk en garnalen in utrecht" → dish=biefstuk, garnalen & city=utrecht.
+  useEffect(() => {
+    const chips = parseQueryToChips(initialQuery);
+    setSelectedDishes(prev => (chipsToQuery(prev) === chipsToQuery(chips) ? prev : chips));
+  }, [initialQuery]);
+  useEffect(() => { setCityId(initialCity); }, [initialCity]);
   const [suggestions, setSuggestions] = useState<DishSuggestion[]>([]);
   const [restaurantSuggestions, setRestaurantSuggestions] = useState<RestaurantSuggestionRow[]>([]);
   const [cuisineSuggestions, setCuisineSuggestions] = useState<string[]>([]);

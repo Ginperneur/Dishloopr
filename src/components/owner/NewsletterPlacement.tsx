@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Newspaper, CreditCard, Loader2, Globe2, ImagePlus, FileText } from 'lucide-react';
 import { toEmailJpeg } from '@/lib/emailImage';
 import { sendAnalyticsEvent } from '@/lib/cookieConsent';
+import { VatTotal } from '@/components/common/VatTotal';
 
 interface Props {
   restaurantId: string;
@@ -142,7 +143,7 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
       </div>
       <p className="text-sm text-muted-foreground">
         Plaats je actie, event of aanbieding in de nieuwsbrief van Dishloopr, die elke twee weken naar alle
-        abonnees in Nederland gaat. Eén plaatsing kost <strong>€{NEWSLETTER_PRICE}</strong>. We controleren je tekst
+        abonnees in Nederland gaat. Eén plaatsing kost <strong>€{NEWSLETTER_PRICE}</strong> excl. btw. We controleren je tekst
         voordat hij meegaat.
       </p>
 
@@ -152,7 +153,7 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
           <p className="text-sm font-medium">Heel Nederland</p>
           <p className="text-xs text-muted-foreground">Alle abonnees van de nieuwsbrief</p>
         </div>
-        <span className="text-sm font-semibold text-primary">€{NEWSLETTER_PRICE}</span>
+        <span className="text-sm font-semibold text-primary">€{NEWSLETTER_PRICE} excl. btw</span>
       </div>
 
       {/* New placement form */}
@@ -217,9 +218,12 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
             </SelectContent>
           </Select>
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium">
-              Kosten: <span className="text-primary">€{NEWSLETTER_PRICE},00</span>
-            </p>
+            <div>
+              <p className="text-sm font-medium">
+                Kosten: <span className="text-primary">€{NEWSLETTER_PRICE},00</span> excl. btw
+              </p>
+              <VatTotal exCents={NEWSLETTER_PRICE * 100} className="text-xs" />
+            </div>
             <Button onClick={handleSubmit} disabled={submitting || !canSubmit()}>
               {submitting ? (
                 <Loader2 className="h-4 w-4 mr-1 animate-spin" />

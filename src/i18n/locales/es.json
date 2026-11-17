@@ -285,7 +285,19 @@
     "featuredTitleHeading": "Restaurantes destacados",
     "restaurantsInCity": "Restaurantes en {{city}}",
     "scrollTop": "Volver arriba",
-    "ariaCrumb": "Migas de pan"
+    "ariaCrumb": "Migas de pan",
+    "multiDish": {
+      "bothTitle": "{{a}} y {{b}}",
+      "bothSubtitle": "Estos restaurantes tienen ambos platos.",
+      "allTitle": "Los {{total}} platos",
+      "allSubtitle": "Estos restaurantes tienen todo lo que buscabas.",
+      "eitherTitle": "{{a}} o {{b}}",
+      "eitherSubtitle": "Estos restaurantes tienen uno de los dos, no ambos.",
+      "someTitle": "{{covered}} de los {{total}} platos",
+      "someSubtitle": "Estos restaurantes tienen una parte de lo que buscabas.",
+      "noneBoth": "Ningún restaurante tiene {{a}} y {{b}}. Abajo hay restaurantes con uno de los dos.",
+      "noneAll": "Ningún restaurante tiene los {{total}} platos. Abajo hay restaurantes con una parte de ellos."
+    }
   },
   "common": {
     "loading": "Cargando...",

@@ -3,6 +3,7 @@ import { template as claimCode } from './claim-code.tsx'
 import { template as eventReport } from './event-report.tsx'
 import { template as foundingReport } from './founding-report.tsx'
 import { template as promoAuction } from './promo-auction.tsx'
+import { template as adminDigest } from './admin-digest.tsx'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -26,4 +27,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'event-report': eventReport,
   'founding-report': foundingReport,
   'promo-auction': promoAuction,
+  'admin-digest': adminDigest,
 }
