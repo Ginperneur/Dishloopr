@@ -1,7 +1,7 @@
 // Checks the pure helpers of the Overture bulk route (supabase/functions/overture-bulk).
 // Usage from the repo root: deno run --config supabase/tests/deno.json supabase/tests/overture-bulk.ts
 import {
-  BULK_HIDDEN_REASON, chunks, cleanDishRows, courseType, linkRecord, newDishRecord, parsePrice,
+  BULK_HIDDEN_REASON, bulkErrorMessage, pendingOvertureBatch, chunks, cleanDishRows, courseType, linkRecord, newDishRecord, parsePrice,
 } from "../functions/_shared/overtureBulk.ts";
 
 let ok = true;
@@ -39,5 +39,24 @@ check("nagerecht wordt dessert", courseType("nagerecht"), "dessert");
 check("onbekende gang wordt hoofdgerecht", courseType("borrel"), "hoofdgerecht");
 
 check("chunks", chunks([1, 2, 3, 4, 5], 2), [[1, 2], [3, 4], [5]]);
+
+const operations: unknown[] = [];
+const query = {
+  select(columns: string) { operations.push(['select', columns]); return this; },
+  eq(column: string, value: string) { operations.push(['eq', column, value]); return this; },
+  order(column: string) {
+    if (!['discovered_at', 'id'].includes(column)) throw new Error(`Unknown discovery column: ${column}`);
+    operations.push(['order', column]); return this;
+  },
+  limit(value: number) { operations.push(['limit', value]); return { data: [{ id: 'candidate-1' }], error: null }; },
+};
+const batch = await pendingOvertureBatch({ from(table: string) { operations.push(['from', table]); return query; } }, 'verified', 1);
+check('pending batch reads discovery table', operations[0], ['from', 'discovery_results']);
+check('pending batch orders by existing discovery timestamp and id', operations.filter((op) => Array.isArray(op) && op[0] === 'order'), [['order', 'discovered_at'], ['order', 'id']]);
+check('pending batch retains Overture, pending and triage filters', operations.filter((op) => Array.isArray(op) && op[0] === 'eq'), [['eq', 'source', 'overture'], ['eq', 'status', 'pending'], ['eq', 'triage', 'verified']]);
+check('pending batch returns candidates', batch.data, [{ id: 'candidate-1' }]);
+check('database error exposes its message rather than object Object', bulkErrorMessage({ code: '42703', message: 'column discovery_results.created_at does not exist' }), 'column discovery_results.created_at does not exist');
+check('standard error keeps its message', bulkErrorMessage(new Error('Request failed')), 'Request failed');
+check('string error stays readable', bulkErrorMessage('Request failed'), 'Request failed');
 
 if (!ok) Deno.exit(1);

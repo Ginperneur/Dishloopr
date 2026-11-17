@@ -8,6 +8,23 @@ export const BULK_HIDDEN_REASON = 'menu: Overture-import, wacht op 5 gerechten';
 
 export const TRIAGES = ['verified', 'approve'] as const;
 
+// Discovery rows use discovered_at, not created_at; id breaks timestamp ties.
+// deno-lint-ignore no-explicit-any
+export function pendingOvertureBatch(admin: any, triage: string, limit: number) {
+  return admin.from('discovery_results')
+    .select('id, external_id, name, address, postcode, lat, lng, website, phone, city_id')
+    .eq('source', 'overture').eq('status', 'pending').eq('triage', triage)
+    .order('discovered_at').order('id').limit(limit);
+}
+
+export function bulkErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+    return error.message;
+  }
+  return String(error);
+}
+
 export interface DishImportRow {
   overture_id: string;
   dish_slug: string;

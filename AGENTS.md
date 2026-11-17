@@ -16,6 +16,7 @@
 - AI chat calls (menu extraction, restaurant and dish classification) go through `_shared/aiChat.ts`: Google's Gemini API directly when `GEMINI_API_KEY` is set (paid tier, required in the EEA), the Lovable gateway otherwise; never enable Google Search or Maps grounding there.
 
 - Overture bulk route (`overture-bulk`): restaurants are created hidden for their menu and go live through the restaurant_dishes trigger at 5 dishes; Python dishes import approved, the website route runs scrape-menu then dish-screening per restaurant.
+- Overture bulk candidate reads order by `discovery_results.discovered_at` then `id`, and extract database error messages explicitly; the discovery table has no `created_at` and plain errors otherwise render as `[object Object]`.
 
 # Restaurant parking
 

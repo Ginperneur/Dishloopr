@@ -9,7 +9,7 @@ import { requireAdminOrInternal, serviceClient, getCaller } from "../_shared/aut
 import { geocodeWithPdok } from "../_shared/pdokGeocode.ts";
 import { restaurantFromOverture } from "../_shared/overtureRestaurant.ts";
 import {
-  BULK_HIDDEN_REASON, TRIAGES, chunks, cleanDishRows, linkRecord, newDishRecord, type DishImportRow,
+  BULK_HIDDEN_REASON, TRIAGES, bulkErrorMessage, pendingOvertureBatch, chunks, cleanDishRows, linkRecord, newDishRecord, type DishImportRow,
 } from "../_shared/overtureBulk.ts";
 
 const corsHeaders = {
@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
     return json({ error: "Onbekende actie (create, import_dishes, scrape_queue)" }, 400);
   } catch (e) {
     console.error("overture-bulk", e);
-    return json({ error: e instanceof Error ? e.message : String(e) }, 500);
+    return json({ error: bulkErrorMessage(e) }, 500);
   }
 });
 
@@ -42,13 +42,9 @@ Deno.serve(async (req) => {
 type Db = any;
 
 async function createBatch(admin: Db, body: { triage?: string; limit?: number }, reviewerId: string | null) {
-  const triage = TRIAGES.includes(body.triage as typeof TRIAGES[number]) ? body.triage! : "verified";
+  const triage = TRIAGES.find((value) => value === body.triage) ?? "verified";
   const limit = Math.min(Math.max(Number(body.limit) || 15, 1), 40);
-  const { data: rows, error } = await admin
-    .from("discovery_results")
-    .select("id, external_id, name, address, postcode, lat, lng, website, phone, city_id")
-    .eq("source", "overture").eq("status", "pending").eq("triage", triage)
-    .order("created_at").limit(limit);
+  const { data: rows, error } = await pendingOvertureBatch(admin, triage, limit);
   if (error) throw error;
 
   const cityNames = new Map<string, string | null>();
@@ -72,7 +68,7 @@ async function createBatch(admin: Db, body: { triage?: string; limit?: number },
       }
       const cityName = cityNames.get(dr.city_id) ?? null;
       const geo = await geocodeWithPdok({ address: dr.address, postalCode: dr.postcode, city: cityName })
-        .catch((e: unknown) => ({ ok: false as const, reason: `pdok_error: ${e instanceof Error ? e.message : e}` }));
+        .catch((e: unknown) => ({ ok: false as const, reason: `pdok_error: ${bulkErrorMessage(e)}` }));
       const { data: ins, error: insErr } = await admin.from("restaurants")
         .insert(restaurantFromOverture(dr, cityName, geo)).select("id").single();
       if (insErr) throw new Error(insErr.message);
@@ -86,7 +82,7 @@ async function createBatch(admin: Db, body: { triage?: string; limit?: number },
     } catch (e) {
       // A bad row must not come back in every batch: it moves to "twijfel" (triage review), where
       // it stays pending in the Review Queue for a human, with the error as its reason.
-      const msg = e instanceof Error ? e.message : String(e);
+      const msg = bulkErrorMessage(e);
       failed.push({ name: dr.name, error: msg });
       await admin.from("discovery_results")
         .update({ triage: "review", triage_reason: `Bulk aanmaken mislukt: ${msg}`.slice(0, 300) })
