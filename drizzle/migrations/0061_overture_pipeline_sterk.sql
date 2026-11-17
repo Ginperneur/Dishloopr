@@ -1,0 +1,1 @@
+ALTER TABLE public.overture_pipeline ADD COLUMN IF NOT EXISTS include_sterk boolean NOT NULL DEFAULT false;

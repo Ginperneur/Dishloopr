@@ -2706,6 +2706,7 @@ export type Database = {
         Row: {
           enabled: boolean
           id: number
+          include_sterk: boolean
           last_result: Json | null
           last_tick_at: string | null
           per_tick: number
@@ -2714,6 +2715,7 @@ export type Database = {
         Insert: {
           enabled?: boolean
           id?: number
+          include_sterk?: boolean
           last_result?: Json | null
           last_tick_at?: string | null
           per_tick?: number
@@ -2722,6 +2724,7 @@ export type Database = {
         Update: {
           enabled?: boolean
           id?: number
+          include_sterk?: boolean
           last_result?: Json | null
           last_tick_at?: string | null
           per_tick?: number
