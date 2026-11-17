@@ -52,7 +52,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { id: 'event-releases', label: 'Evenementen', description: 'Specials en evenementen van eigenaren vrijgeven', badge: 'eventReleases' },
       { id: 'optouts', label: 'Afmeldingen', description: 'Opt-out- en aanpasverzoeken van restaurants', badge: 'optouts' },
       { id: 'suggestions', label: 'Suggesties', description: 'Door bezoekers ingediende restaurants', badge: 'suggestions' },
-      { id: 'discovery', label: 'Discovery', description: 'Nieuwe restaurants uit de Google Places scan beoordelen', badge: 'discovery', backlog: true },
+      { id: 'discovery', label: 'Discovery', description: 'Nieuwe restaurants uit Overture Maps importeren en beoordelen', badge: 'discovery', backlog: true },
       { id: 'manual-review', label: 'Nakijken', description: 'Restaurants gemarkeerd om handmatig te controleren', badge: 'manualReview', backlog: true },
     ],
   },
