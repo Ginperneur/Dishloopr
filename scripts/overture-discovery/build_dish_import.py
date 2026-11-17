@@ -37,7 +37,8 @@ EXTRA_JUNK = re.compile(
     r"\d+k?\s*views?\b|\d+\s*likes?\b|"
     # seen in the Almere test (17-11-2026)
     r"^parkeren\b|bereikbaar|online (boeken|bestellen|reserveren)|^order online$|^direct (online )?boeken|"
-    r"^adres\b|\{\{|^nieuwe locatie$|elke dag van \d|^(lunch|diner)kaart\b.*\d{1,2}[:.]\d{2}",
+    r"^adres\b|\{\{|^nieuwe locatie$|elke dag van \d|^(lunch|diner)kaart\b.*\d{1,2}[:.]\d{2}|"
+    r"^to share$|^voor (de )?maand\b|^(poedersuiker|slagroom) en\b|en/of",
     re.I,
 )
 FRAGMENT = re.compile(r"^(for|and|en|the|van|met|of|or|a|de|het)$", re.I)
@@ -73,6 +74,9 @@ def main() -> None:
                 continue
             name = (r["dish_name"] or "").strip()
             cleaned = TRAILING_CHROME.sub("", name).strip()
+            cleaned = re.sub(r"^\d{2,4}[.)]?\s+", "", cleaned)          # menu numbers: "0083 Ossenhaas"
+            if cleaned.count("(") > cleaned.count(")"):                   # cut-off note: "Koe Loe Kai (kipballetjes"
+                cleaned = cleaned[:cleaned.rfind("(")].strip()
             if cleaned != name and len(cleaned) >= 3:
                 name, slug = cleaned, slugify(cleaned)
             if EXTRA_JUNK.search(name) or FRAGMENT.match(name) or name.lower() == r["restaurant_name"].strip().lower():
