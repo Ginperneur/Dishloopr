@@ -2702,6 +2702,33 @@ export type Database = {
         }
         Relationships: []
       }
+      overture_pipeline: {
+        Row: {
+          enabled: boolean
+          id: number
+          last_result: Json | null
+          last_tick_at: string | null
+          per_tick: number
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          id?: number
+          last_result?: Json | null
+          last_tick_at?: string | null
+          per_tick?: number
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          id?: number
+          last_result?: Json | null
+          last_tick_at?: string | null
+          per_tick?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       owner_anomaly_alerts_log: {
         Row: {
           created_at: string
