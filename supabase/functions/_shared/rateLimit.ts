@@ -83,6 +83,14 @@ export async function enforceRateLimit(
       return { allowed: true };
     }
 
+    // Internal server-to-server calls (service-role key, e.g. the overture-bulk pipeline calling
+    // scrape-menu) are not visitors: they all share one IP, so an IP limit of a few per hour would
+    // block the whole pipeline. The AI kill switch above still applies to them.
+    const bearer = req.headers.get("Authorization")?.replace("Bearer ", "");
+    if (serviceKey && bearer && bearer === serviceKey) {
+      return { allowed: true, identifier: "internal", isUser: false };
+    }
+
     // Identify caller (user-id wins, otherwise IP)
     let identifier = "";
     let isUser = false;
