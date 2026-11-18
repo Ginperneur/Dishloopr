@@ -233,9 +233,10 @@ async function tick(admin: Db) {
     const scanErrors = scans.filter((x: { error?: string }) => x?.error).map((x: { error?: string }) => x.error).slice(0, 3);
     if (due.length) await call("dish-screening", { restaurantIds: due.map((r) => r.id), batchSize: 600 });
 
-    // 2. Sterk (own switch) only with time to spare: PDOK geocoding can be slow.
+    // 2. Sterk (own switch) with time to spare (PDOK geocoding can be slow), and in any case every
+    //    fifth minute, so a full scan round can never starve it.
     let sterk = { created: 0, remaining: null as number | null, failed: 0 };
-    if (cfg.include_sterk && elapsed() < 60_000) {
+    if (cfg.include_sterk && (elapsed() < 60_000 || new Date().getUTCMinutes() % 5 === 0)) {
       const s = await createBatch(admin, { triage: "approve", limit: 5 }, null);
       sterk = { created: s.created, remaining: s.remaining, failed: s.failed.length };
     }
