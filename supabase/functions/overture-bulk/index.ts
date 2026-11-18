@@ -202,24 +202,24 @@ async function tick(admin: Db) {
   const { data: cfg } = await admin.from("overture_pipeline").select("enabled, per_tick, include_sterk").eq("id", 1).maybeSingle();
   if (!cfg?.enabled) return { skipped: "uit" };
   const started = Date.now();
+  const elapsed = () => Date.now() - started;
   let result: Record<string, unknown>;
 
   const created = await createBatch(admin, { triage: "verified", limit: 25 }, null);
   if (created.created + created.duplicates + created.failed.length > 0) {
     result = { stap: "aanmaken", ...created };
   } else {
-    // "Sterk, extra controle" has its own switch (include_sterk). When on, a small batch per tick is
-    // created alongside the website route, so it never holds the website route back.
-    const sterk = cfg.include_sterk
-      ? await createBatch(admin, { triage: "approve", limit: 10 }, null)
-      : { created: 0, duplicates: 0, failed: [] as unknown[], remaining: null as number | null };
+    // 1. Website route first, in one parallel round, so a slow step can never cut scans off.
+    //    overture_scrape_queue() skips claimed restaurants and gives back abandoned claims (15 min).
     const perTick = Math.min(Math.max(Number(cfg.per_tick) || 6, 1), 12);
-    const { queue } = await scrapeQueue(admin, { limit: perTick });
-    // Claim first: a placeholder run keeps the next tick (or the admin card) off these restaurants.
-    if (queue.length) {
-      await admin.from("menu_scrape_runs").insert(queue.map((r) => ({
+    const { data: queue, error: qErr } = await admin.rpc("overture_scrape_queue", { p_limit: perTick });
+    if (qErr) throw new Error(`wachtrij: ${bulkErrorMessage(qErr)}`);
+    const due = (queue ?? []) as { id: string; name: string; website_url: string }[];
+    if (due.length) {
+      const { error: claimErr } = await admin.from("menu_scrape_runs").insert(due.map((r) => ({
         restaurant_id: r.id, status: "bulk_started", source: "overture_bulk", scraped_url: r.website_url,
       })));
+      if (claimErr) throw new Error(`claim: ${bulkErrorMessage(claimErr)}`);
     }
     const base = Deno.env.get("SUPABASE_URL")!;
     const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -227,22 +227,26 @@ async function tick(admin: Db) {
       method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify(body),
     }).then((r) => r.json().catch(() => ({}))).catch((e) => ({ error: bulkErrorMessage(e) }));
-    let added = 0;
-    for (const part of chunks(queue, 3)) {
-      const res = await Promise.all(part.map((r) => call("scrape-menu", { restaurantId: r.id, websiteUrl: r.website_url })));
-      added += res.reduce((n: number, x: { results?: { added?: number; existing?: number } }) =>
-        n + (x?.results?.added ?? 0) + (x?.results?.existing ?? 0), 0);
-      await call("dish-screening", { restaurantIds: part.map((r) => r.id), batchSize: 600 });
+    const scans = await Promise.all(due.map((r) => call("scrape-menu", { restaurantId: r.id, websiteUrl: r.website_url })));
+    const found = scans.reduce((n: number, x: { results?: { added?: number; existing?: number } }) =>
+      n + (x?.results?.added ?? 0) + (x?.results?.existing ?? 0), 0);
+    const scanErrors = scans.filter((x: { error?: string }) => x?.error).map((x: { error?: string }) => x.error).slice(0, 3);
+    if (due.length) await call("dish-screening", { restaurantIds: due.map((r) => r.id), batchSize: 600 });
+
+    // 2. Sterk (own switch) only with time to spare: PDOK geocoding can be slow.
+    let sterk = { created: 0, remaining: null as number | null, failed: 0 };
+    if (cfg.include_sterk && elapsed() < 60_000) {
+      const s = await createBatch(admin, { triage: "approve", limit: 5 }, null);
+      sterk = { created: s.created, remaining: s.remaining, failed: s.failed.length };
     }
-    const sterkBusy = sterk.created + sterk.duplicates + sterk.failed.length > 0;
     result = {
-      stap: queue.length ? "websiteroute" : (sterkBusy ? "sterk aanmaken" : "klaar"),
-      gescand: queue.length, gerechten: added,
+      stap: due.length ? "websiteroute" : (sterk.created ? "sterk aanmaken" : "klaar"),
+      gescand: due.length, gerechten: found, ...(scanErrors.length ? { scanfouten: scanErrors } : {}),
       sterk_aangemaakt: sterk.created, sterk_te_gaan: sterk.remaining,
     };
   }
 
-  result.seconden = Math.round((Date.now() - started) / 1000);
+  result.seconden = Math.round(elapsed() / 1000);
   await admin.from("overture_pipeline")
     .update({ last_tick_at: new Date().toISOString(), last_result: result }).eq("id", 1);
   return result;
