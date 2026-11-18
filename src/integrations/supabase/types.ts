@@ -8567,6 +8567,14 @@ export type Database = {
       }
       menu_dish_count: { Args: { p_restaurant_id: string }; Returns: number }
       outreach_unsubscribe: { Args: { p_token: string }; Returns: string }
+      overture_scrape_queue: {
+        Args: { p_limit?: number }
+        Returns: {
+          id: string
+          name: string
+          website_url: string
+        }[]
+      }
       owner_analytics_allowed: {
         Args: { p_restaurant_id: string }
         Returns: boolean
