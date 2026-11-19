@@ -10,7 +10,10 @@ import { SEOHead, createBreadcrumbSchema, createItemListSchema } from '@/compone
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DatabaseRestaurantCard } from '@/components/restaurant/DatabaseRestaurantCard';
-import { photoFirst } from '@/lib/photoFirst';
+import { orderForBrowse } from '@/lib/browseOrder';
+import { fetchListingSignals } from '@/lib/listingSignals';
+import { bayesianRating } from '@/lib/ranking';
+import { hasOpeningHoursData } from '@/lib/openingHours';
 import { SkeletonCard } from '@/components/ui/skeleton-card';
 import { supabase } from '@/integrations/supabase/client';
 import { getEmptyRestaurantIds } from '@/lib/listableRestaurants';
@@ -59,20 +62,24 @@ export default function CityDetailPage() {
       // Dish-first: exclude restaurants without approved dishes.
       const emptyIds = await getEmptyRestaurantIds();
 
-      // Fetch top restaurants (over-fetch so we can drop empties client-side
-      // and still land on 6 cards).
+      // Top restaurants in the city itself, in the same order as browsing the city in search
+      // (src/lib/browseOrder.ts): photo, full menu, rating, active owner, opening hours.
       const { data: restData } = await supabase
         .from('restaurants')
         .select('*')
         .eq('city_id', cityData.id)
         .eq('is_active', true)
         .ilike('address', `%${cityData.name}%`)
-        .order('rating', { ascending: false })
-        .limit(60);
+        .limit(1000);
 
-      // Restaurants with a photo first; the rest still show, with their dishes in place of the photo.
-      const filteredRest = photoFirst((restData || []).filter((r: any) => !emptyIds.has(r.id)));
-      setTopRestaurants(filteredRest.slice(0, 6));
+      const listable = (restData || []).filter((r) => !emptyIds.has(r.id));
+      const signals = await fetchListingSignals(listable.map((r) => r.id));
+      const ranked = orderForBrowse(
+        listable.map((r) => ({ ...r, bayesianRating: bayesianRating(Number(r.rating), r.review_count), hasHours: hasOpeningHoursData(r.opening_hours) })),
+        signals,
+        { cityName: cityData.name },
+      );
+      setTopRestaurants(ranked.slice(0, 6));
 
       // Total listable count for this city — fetch all IDs, subtract empties.
       const { data: allIds } = await supabase
