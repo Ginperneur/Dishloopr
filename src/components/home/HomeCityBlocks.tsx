@@ -114,7 +114,7 @@ function UitgelichtStad({ city }: { city: VisitorCity }) {
       <section aria-labelledby="uitgelicht-heading" className={slotClass}>
         <div className="flex flex-wrap items-baseline gap-2">
           <h2 id="uitgelicht-heading" className="text-lg font-bold">Uitgelicht in {city.name}</h2>
-          <span className="text-sm text-muted-foreground">nog niemand deze week</span>
+          <span className="text-sm text-muted-foreground">nog geen restaurant deze week</span>
         </div>
         <OwnerCard where={city.name} compact />
       </section>
