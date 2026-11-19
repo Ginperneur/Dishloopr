@@ -6,9 +6,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EventCard } from '@/components/events/EventCard';
 import { usePublicEvents } from '@/hooks/useRestaurantEvents';
 
-export function UpcomingEvents() {
+/** Upcoming events; with a city only that city's, as "Deze week te doen" on the homepage. */
+export function UpcomingEvents({ city }: { city?: { slug: string; name: string } } = {}) {
   const { t } = useTranslation();
-  const { data: events = [], isLoading } = usePublicEvents();
+  const { data: all = [], isLoading } = usePublicEvents();
+  const events = city ? all.filter(e => (e as { restaurant?: { city?: { slug?: string } } }).restaurant?.city?.slug === city.slug) : all;
 
   if (isLoading) {
     return (
@@ -31,8 +33,9 @@ export function UpcomingEvents() {
         <div className="mb-6 flex items-center justify-between">
           <h2 className="flex items-center gap-2 font-display text-xl font-bold md:text-2xl">
             <PartyPopper className="h-5 w-5 text-primary" />
-            {t('events.upcoming', 'Aankomende evenementen')}
+            {city ? `Deze week te doen in ${city.name}` : t('events.upcoming', 'Aankomende evenementen')}
           </h2>
+          {city && <span className="mr-auto ml-2 rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">Door restaurants geplaatst</span>}
           <Button variant="ghost" size="sm" asChild className="text-xs sm:text-sm">
             <Link to="/evenementen" className="flex items-center gap-1 md:gap-2">
               {t('home.viewAll', 'Bekijk alles')}

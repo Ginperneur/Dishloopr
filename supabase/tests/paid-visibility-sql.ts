@@ -12,7 +12,7 @@ await db.exec(await Deno.readTextFile(new URL("./stubs.sql", import.meta.url)));
 await db.exec(`DROP FUNCTION restaurant_positions(text);
   ALTER TABLE cities ADD COLUMN slug text, ADD COLUMN is_active boolean DEFAULT true;
   ALTER TABLE dishes ADD COLUMN dish_group text;
-  ALTER TABLE restaurants ADD COLUMN cuisines text[], ADD COLUMN ambience_tags text[], ADD COLUMN is_featured boolean DEFAULT false, ADD COLUMN is_top_listing boolean DEFAULT false;
+  ALTER TABLE restaurants ADD COLUMN cuisines text[], ADD COLUMN ambience_tags text[], ADD COLUMN is_featured boolean DEFAULT false, ADD COLUMN is_top_listing boolean DEFAULT false, ADD COLUMN geo_lat double precision, ADD COLUMN geo_lng double precision;
   ALTER TABLE seo_landing_pages ADD COLUMN city_id uuid, ADD COLUMN is_active boolean DEFAULT true, ADD COLUMN meta_title text,
     ADD COLUMN meta_description text, ADD COLUMN h1_title text, ADD COLUMN keywords text[], ADD CONSTRAINT slp_slug UNIQUE (slug);
   CREATE TABLE package_orders (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), restaurant_id uuid, user_id uuid, package text NOT NULL,
@@ -219,6 +219,15 @@ await db.query("SELECT place_uitgelicht_bid('pizza-utrecht', $1, 13000)", [rest(
 await service();
 const rem = (await db.query<{ product: string; role: string }>("SELECT product, role FROM promo_auction_reminders()")).rows;
 check("reminders reach the Uitgelicht bidder", rem.some(r => r.product === "uitgelicht" && r.role === "bidder"), rem);
+
+// --- Homepage city ---
+const hc = (await db.query<{ name: string }>("SELECT name FROM homepage_cities()")).rows;
+check("city picker lists Utrecht (pages with 6+ restaurants)", hc.some(c => c.name === "Utrecht"), hc);
+await db.exec(`
+  UPDATE restaurants SET geo_lat = 52.09, geo_lng = 5.12 WHERE id = '${rest(0)}'; UPDATE restaurants SET geo_lat = 52.07, geo_lng = 4.30 WHERE id = '${rest(50)}';`);
+await db.exec(sql);
+check("location near Den Haag finds Den Haag", await one<string>("SELECT name v FROM nearest_city(52.08, 4.31)") === "Den Haag");
+check("a position outside the Netherlands finds nothing", (await db.query("SELECT * FROM nearest_city(48.85, 2.35)")).rows.length === 0);
 
 console.log(ok ? "ALL PASS" : "SOME FAILED");
 if (!ok) Deno.exit(1);

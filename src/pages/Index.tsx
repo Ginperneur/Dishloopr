@@ -6,13 +6,12 @@ import { ArrowRight, Navigation, Loader2, BookmarkCheck, X, Bell, BellOff } from
 import { SearchBar } from '@/components/search/SearchBar';
 import { Layout } from '@/components/layout/Layout';
 import { TrendingDishes } from '@/components/home/TrendingDishes';
-import { FeaturedRestaurants } from '@/components/home/FeaturedRestaurants';
+import { HomeCityBlocks } from '@/components/home/HomeCityBlocks';
 import { SocialProof } from '@/components/home/SocialProof';
 import { RecentlyViewed } from '@/components/home/RecentlyViewed';
 import { ExploreCities } from '@/components/home/ExploreCities';
 import { DatabaseRestaurantCard } from '@/components/restaurant/DatabaseRestaurantCard';
 import { SurpriseMe } from '@/components/ai/SurpriseMe';
-import { FeaturedCollections } from '@/components/collections/CollectionsGrid';
 import { SEOHead, createWebsiteSchema } from '@/components/seo/SEOHead';
 import { Button } from '@/components/ui/button';
 import { SkeletonCard } from '@/components/ui/skeleton-card';
@@ -272,42 +271,9 @@ const Index = () => {
       {/* Recently Viewed */}
       <RecentlyViewed />
 
-      {/* Featured Restaurants — prominent paid-placement slot (revenue driver) */}
-      <FeaturedRestaurants />
-
-      {/* Featured Collections — prominent editorial/paid slot */}
-      {(availabilityLoading || hasCollections) && (
-        <section
-          id="collections"
-          className="py-6 md:py-8 scroll-mt-24"
-          aria-labelledby="featured-collections-heading"
-        >
-          <div className="container px-4 md:px-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="flex items-end justify-between mb-4 md:mb-6 gap-3"
-            >
-              <div>
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-2">
-                  ✨ {t('home.curatedLabel', 'Samengesteld')}
-                </div>
-                <h2 id="featured-collections-heading" className="text-xl sm:text-2xl md:text-3xl font-bold">
-                  {t('home.ourCollections')}
-                </h2>
-              </div>
-              <Button variant="ghost" size="sm" asChild className="text-sm shrink-0">
-                <Link to="/collections" className="flex items-center gap-1 md:gap-2">
-                  {t('home.viewAll')}
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </motion.div>
-            <FeaturedCollections />
-          </div>
-        </section>
-      )}
+      {/* The visitor's city: Stadsspotlight, Topplekken, events, popular pages, Getest door Dishloopr.
+          Replaces the old featured block and the hand-made collections until restaurants are tested. */}
+      <HomeCityBlocks />
 
       {/* Feed tab switcher: For You vs Nearby (P2 hierarchy) */}
       <section
@@ -349,9 +315,8 @@ const Index = () => {
         <div className="-mx-0 px-4">
           <div className="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory py-2">
             {([
-              { label: 'Uitgelicht', href: '#featured', show: true },
+              { label: 'Jouw stad', href: '#stad', show: true },
               { label: 'Trending', href: '#trending', show: true },
-              { label: 'Collecties', href: '#collections', show: hasCollections },
               { label: 'Steden', href: '#cities', show: true },
               { label: 'Events', href: '#events', show: hasEvents },
             ].filter((i) => i.show)).map((item) => (

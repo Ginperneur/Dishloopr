@@ -1154,3 +1154,34 @@ $$;
 REVOKE ALL ON FUNCTION public.promo_item_label(text, uuid, uuid, text) FROM public, anon, authenticated;
 REVOKE ALL ON FUNCTION public.promo_auction_reminders() FROM public, anon, authenticated;
 REVOKE ALL ON FUNCTION public.promo_action_mail(text, uuid, uuid) FROM public, anon, authenticated;
+
+-- ---------------------------------------------------------------------------------------------
+-- 11. The visitor's city on the homepage
+-- ---------------------------------------------------------------------------------------------
+-- Cities with pages to show, biggest first (the city picker).
+CREATE OR REPLACE FUNCTION public.homepage_cities()
+RETURNS TABLE (id uuid, name text, slug text, pages int)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT c.id, c.name, c.slug, count(*)::int
+    FROM public.cities c
+    JOIN public.seo_landing_pages p ON p.city_id = c.id AND p.is_active
+    JOIN public.landing_page_counts n ON n.page_slug = p.slug AND n.restaurant_count >= 6
+   WHERE c.is_active
+   GROUP BY c.id, c.name, c.slug
+   ORDER BY 4 DESC, 2
+$$;
+GRANT EXECUTE ON FUNCTION public.homepage_cities() TO anon, authenticated;
+
+-- "Gebruik mijn locatie": the city of the nearest restaurant. The position is used for this one
+-- lookup and never stored.
+CREATE OR REPLACE FUNCTION public.nearest_city(p_lat double precision, p_lng double precision)
+RETURNS TABLE (id uuid, name text, slug text)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT c.id, c.name, c.slug
+    FROM public.restaurants r JOIN public.cities c ON c.id = r.city_id AND c.is_active
+   WHERE r.is_active AND r.geo_lat IS NOT NULL AND r.geo_lng IS NOT NULL
+     AND p_lat BETWEEN 50 AND 54 AND p_lng BETWEEN 3 AND 8
+   ORDER BY (r.geo_lat - p_lat) ^ 2 + ((r.geo_lng - p_lng) * cos(radians(p_lat))) ^ 2
+   LIMIT 1
+$$;
+GRANT EXECUTE ON FUNCTION public.nearest_city(double precision, double precision) TO anon, authenticated;
