@@ -18,9 +18,10 @@ interface Props {
   restaurantName: string;
 }
 
-// Sold for all of the Netherlands only until the newsletter can be sent per city or province:
-// every subscriber gets the same mail, so a city or province choice would promise nothing.
-export const NEWSLETTER_PRICE = 20;
+// The newsletter goes out per city: one edition per Tuesday, at most 4 restaurants, 30 euro per
+// 1.000 readers in the restaurant's own city (at least 20 euro). Dominant includes one a month.
+type Edition = { edition_date: string; places_left: number; readers: number; price_cents: number };
+const fmtDate = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' });
 
 export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
   const { user } = useAuth();
@@ -33,6 +34,24 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
   const [uploading, setUploading] = useState(false);
   const [pdf, setPdf] = useState<{ url: string; name: string } | null>(null);
   const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [cityId, setCityId] = useState<string | null>(null);
+  const [cityName, setCityName] = useState('je stad');
+  const [editions, setEditions] = useState<Edition[]>([]);
+  const [editionDate, setEditionDate] = useState('');
+  useEffect(() => {
+    let off = false;
+    (async () => {
+      const { data: r } = await supabase.from('restaurants').select('city_id, cities(name)').eq('id', restaurantId).maybeSingle();
+      if (off || !r?.city_id) return;
+      setCityId(r.city_id);
+      setCityName((r.cities as { name?: string } | null)?.name ?? 'je stad');
+      const { data } = await (supabase.rpc as any)('newsletter_city_editions', { p_city: r.city_id });
+      if (!off) setEditions((data ?? []) as Edition[]);
+    })();
+    return () => { off = true; };
+  }, [restaurantId]);
+  const edition = editions.find(e => e.edition_date === editionDate);
+  const priceCents = edition?.price_cents ?? editions[0]?.price_cents ?? 2000;
 
   // One PDF per placement (menu or flyer): linked from the mail, stored next to the photo.
   const uploadPdf = async (file: File | undefined) => {
@@ -106,7 +125,8 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
           imageUrl,
           pdfUrl: pdf?.url ?? null,
           promoType,
-          scope: 'national',
+          scope: 'city',
+          editionDate,
         },
       });
 
@@ -115,6 +135,11 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
         const reason = await (error as { context?: Response }).context?.json?.()
           .then((b: { error?: string }) => b?.error).catch(() => null);
         throw new Error(reason || error.message);
+      }
+      if (data?.included) {
+        toast.success('Geplaatst, inbegrepen bij Dominant. We controleren je tekst voordat hij meegaat.');
+        setSubmitting(false);
+        return;
       }
       if (data?.url) {
         window.location.href = data.url;
@@ -142,19 +167,24 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
         <h3 className="text-lg font-semibold">Nieuwsbrief Plaatsing</h3>
       </div>
       <p className="text-sm text-muted-foreground">
-        Plaats je actie, event of aanbieding in de nieuwsbrief van Dishloopr, die elke twee weken naar alle
-        abonnees in Nederland gaat. Eén plaatsing kost <strong>€{NEWSLETTER_PRICE}</strong> excl. btw. We controleren je tekst
-        voordat hij meegaat.
+        Plaats je actie, event of aanbieding in de nieuwsbrief van {cityName}. Die gaat elke dinsdag naar de abonnees
+        in jouw stad, met maximaal 4 restaurants per editie. Je betaalt €30 per 1.000 lezers, minimaal €20, excl. btw.
+        We controleren je tekst voordat hij meegaat. Bij Dominant zit 1 plaatsing per maand inbegrepen.
       </p>
 
-      <div className="flex items-center gap-3 rounded-lg border border-primary bg-primary/5 p-3">
-        <Globe2 className="h-4 w-4 shrink-0 text-primary" />
-        <div className="flex-1">
-          <p className="text-sm font-medium">Heel Nederland</p>
-          <p className="text-xs text-muted-foreground">Alle abonnees van de nieuwsbrief</p>
-        </div>
-        <span className="text-sm font-semibold text-primary">€{NEWSLETTER_PRICE} excl. btw</span>
-      </div>
+      <fieldset className="space-y-2 rounded-lg border p-3">
+        <legend className="flex items-center gap-2 px-1 text-sm font-medium"><Globe2 className="h-4 w-4 text-primary" />Kies een editie in {cityName}</legend>
+        {!cityId && <p className="text-sm text-muted-foreground">Je restaurant heeft nog geen stad. Vul je adres in onder Profiel.</p>}
+        {editions.map(e => (
+          <label key={e.edition_date} className={`flex min-h-11 items-center gap-3 rounded-md border px-3 ${e.places_left === 0 ? 'opacity-60' : 'cursor-pointer'}`}>
+            <input type="radio" name="edition" value={e.edition_date} disabled={e.places_left === 0}
+              checked={editionDate === e.edition_date} onChange={() => setEditionDate(e.edition_date)} />
+            <span className="flex-1 text-sm first-letter:uppercase">{fmtDate(e.edition_date)}</span>
+            <span className="text-xs text-muted-foreground">{e.places_left === 0 ? 'vol' : `nog ${e.places_left} ${e.places_left === 1 ? 'plek' : 'plekken'}`}</span>
+          </label>
+        ))}
+        {editions[0] && <p className="text-xs text-muted-foreground">{editions[0].readers.toLocaleString('nl-NL')} lezers in {cityName}.</p>}
+      </fieldset>
 
       {/* New placement form */}
       <Card>
@@ -220,11 +250,11 @@ export function NewsletterPlacement({ restaurantId, restaurantName }: Props) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium">
-                Kosten: <span className="text-primary">€{NEWSLETTER_PRICE},00</span> excl. btw
+                Kosten: <span className="text-primary">€{(priceCents / 100).toFixed(2).replace('.', ',')}</span> excl. btw
               </p>
-              <VatTotal exCents={NEWSLETTER_PRICE * 100} className="text-xs" />
+              <VatTotal exCents={priceCents} className="text-xs" />
             </div>
-            <Button onClick={handleSubmit} disabled={submitting || !canSubmit()}>
+            <Button onClick={handleSubmit} disabled={submitting || !canSubmit() || !editionDate}>
               {submitting ? (
                 <Loader2 className="h-4 w-4 mr-1 animate-spin" />
               ) : (

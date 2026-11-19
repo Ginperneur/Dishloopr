@@ -444,7 +444,20 @@ serve(async (req) => {
       }
       // Handle Owner Pro subscription checkout
       // Founding Partner and Menuservice (create-package-checkout)
-      else if ((type === "founding_partner" || type === "menu_service") && restaurantId && metadata.plan) {
+      // Stadsspotlight: the reserved weeks become active once paid.
+      else if (type === "spotlight" && restaurantId && metadata.booking_ids) {
+        const ids = metadata.booking_ids.split(",").filter(Boolean);
+        const { error: spotError } = await supabaseAdmin.from("spotlight_bookings")
+          .update({ status: "active", stripe_session_id: session.id, updated_at: new Date().toISOString() })
+          .in("id", ids).eq("restaurant_id", restaurantId);
+        if (spotError) {
+          logStep("Spotlight activation error", { error: spotError.message });
+          return new Response(JSON.stringify({ error: spotError.message }), { status: 500 });
+        }
+        logStep("Spotlight weeks activated", { restaurantId, weeks: ids.length });
+      }
+      // Founding Partner (Uitgelicht), Topplek, the Groei and Dominant bundles and Menuservice (create-package-checkout)
+      else if (type && ["founding_partner", "menu_service", "topplek", "groei", "dominant"].includes(type) && restaurantId && metadata.plan) {
         const subscriptionId = (session.subscription as string) || null;
         let status = "active";
         let periodEnd: string | null = null;
@@ -455,7 +468,7 @@ serve(async (req) => {
           periodEnd = periodEndIso(sub);
           // The 6-month minimum term belongs to the Founding Partner deal; later monthly Uitgelicht
           // places are cancellable monthly and can be outbid at the quarterly auction.
-          if (type === "founding_partner" && metadata.plan === "month" && metadata.founding_partner === "true") {
+          if ((type === "founding_partner" || type === "groei") && metadata.plan === "month" && metadata.founding_partner === "true") {
             // Minimum term of 6 months, counted from the first paid day (launch).
             commitmentUntil = commitmentEnd((sub.trial_end ?? sub.start_date) * 1000);
           }
@@ -479,8 +492,12 @@ serve(async (req) => {
           logStep("Package order insert error", { error: orderError.message });
           return new Response(JSON.stringify({ error: orderError.message }), { status: 500 });
         }
+        if ((type === "groei" || type === "dominant") && userId) {
+          // Pro is part of both bundles.
+          await supabaseAdmin.rpc("sync_owner_pro_restaurants", { _user_id: userId });
+        }
         if (metadata.bid_id) {
-          // A won Uitgelicht bid is now paid.
+          // A won bid (Uitgelicht or Topplek) is now paid.
           await supabaseAdmin.from("promo_bids").update({ status: "converted", updated_at: new Date().toISOString() }).eq("id", metadata.bid_id);
         }
         if (type === "menu_service") {
@@ -607,7 +624,7 @@ serve(async (req) => {
         await supabaseAdmin.rpc("sync_owner_pro_restaurants", { _user_id: userId });
         logStep("Owner Pro subscription synced", { userId, status: sub.status });
       }
-      if (sub.metadata?.type === "founding_partner" || sub.metadata?.type === "menu_service") {
+      if (["founding_partner", "menu_service", "topplek", "groei", "dominant"].includes(sub.metadata?.type ?? "")) {
         const live = ["active", "trialing", "past_due"].includes(sub.status);
         const { data: order } = await supabaseAdmin.from("package_orders")
           .select("id, commitment_until").eq("stripe_subscription_id", sub.id).maybeSingle();
@@ -623,6 +640,9 @@ serve(async (req) => {
           current_period_end: periodEndIso(sub),
           updated_at: new Date().toISOString(),
         }).eq("stripe_subscription_id", sub.id);
+        if ((sub.metadata?.type === "groei" || sub.metadata?.type === "dominant") && sub.metadata?.user_id) {
+          await supabaseAdmin.rpc("sync_owner_pro_restaurants", { _user_id: sub.metadata.user_id });
+        }
         logStep("Package order synced", { subscriptionId: sub.id, status: sub.status });
       }
       if (sub.metadata?.type === "event_promotion" && sub.metadata?.event_id) {

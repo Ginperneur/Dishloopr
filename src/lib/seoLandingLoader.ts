@@ -123,7 +123,25 @@ export function landingIdentity(page: SeoLandingPage) {
   return { canonical, isHub: Boolean(canonical && canonical === page.dish?.dish_group) };
 }
 
+const RESTAURANT_FIELDS = 'id, name, slug, address, rating, review_count, price_level, images, cuisines, ambience_tags, meal_types, is_featured, is_top_listing, geo_lat, geo_lng, opening_hours';
+
+/** Cuisine and Romantisch pages: the database decides who is on the page (page_restaurant_ids). */
+async function loadKindRestaurants(page: SeoLandingPage) {
+  const { data, error } = await (supabase.rpc as any)('page_restaurant_ids', { p_page_slug: page.slug });
+  if (error) throw error;
+  const ids = ((data ?? []) as { restaurant_id: string }[]).map(r => r.restaurant_id);
+  const blocks: string[][] = [];
+  for (let i = 0; i < ids.length; i += 200) blocks.push(ids.slice(i, i + 200));
+  const restaurants = (await Promise.all(blocks.map(block =>
+    readAllPages<LandingRestaurant>((from, to) => supabase.from('restaurants').select(RESTAURANT_FIELDS)
+      .in('id', block).eq('is_active', true).order('id').range(from, to)),
+  ))).flat();
+  restaurants.sort(compareLandingOrder);
+  return { restaurants, members: [] as LandingMember[] };
+}
+
 export async function loadLandingRestaurants(page: SeoLandingPage) {
+  if (page.page_kind === 'cuisine' || page.page_kind === 'ambience') return loadKindRestaurants(page);
   const { canonical, isHub } = landingIdentity(page);
   if (!canonical || !page.city_id) return { restaurants: [] as LandingRestaurant[], members: [] as LandingMember[] };
   const cityId = page.city_id;
@@ -171,7 +189,7 @@ export async function loadLandingRestaurants(page: SeoLandingPage) {
   for (let i = 0; i < matchedIds.length; i += 200) idBlocks.push(matchedIds.slice(i, i + 200));
   const cityRestaurants = (await Promise.all(idBlocks.map(block =>
     readAllPages<LandingRestaurant>((from, to) => supabase.from('restaurants')
-      .select('id, name, slug, address, rating, review_count, price_level, images, cuisines, ambience_tags, meal_types, is_featured, is_top_listing, geo_lat, geo_lng, opening_hours')
+      .select(RESTAURANT_FIELDS)
       .in('id', block).eq('city_id', cityId).eq('is_active', true).order('id').range(from, to)),
   ))).flat();
   const restaurants = cityRestaurants.filter(r => best.has(r.id)).map(r => {

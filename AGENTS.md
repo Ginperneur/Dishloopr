@@ -32,7 +32,7 @@
 
 - Render restaurant and collection photos through `optimizedImage` in `src/lib/imageUrl.ts` with an explicit width/height, so storage images are served resized as WebP and never shift the layout.
 - Load the support chat and onboarding dialog after idle via `AfterIdle`, and keep below-the-fold homepage sections as lazy chunks, so they never delay the first render.
-- Invite-page positions come from restaurant_positions(), whose order (featured, top listing, rating, id) must stay identical to compareLandingOrder used by /eten pages, so owner-facing ranks always match.
+- Invite-page positions come from restaurant_positions(), whose order (rating, then id) must stay identical to compareLandingOrder used by /eten pages, so owner-facing ranks always match; payment never changes it.
 
 # Reservations
 
@@ -43,3 +43,8 @@
 
 # Event payments
 - Release paid events through the shared event-payment handler only after a signed Stripe payment confirmation; retries preserve the first release time and never override an owner's pause.
+
+# Paid visibility
+- Every page (dish, cuisine or Romantisch x city) sells 1 Topplek and 3 Uitgelicht from 10 restaurants (uitgelicht_min_restaurants), only to restaurants on the page (page_restaurant_ids; bought labels never count). All surfaces read the same source: page_paid_placements, search_paid_placements (max 1 Topplek + 2 Uitgelicht), restaurant_paid_badges and city_toppleks, and every paid place shows PaidLabel plus the /betaalde-plekken link. Prices and bundle surcharges live in src/lib/paidPricing.ts and create-package-checkout.
+- Cuisine and Romantisch pages and landing_page_counts are made nightly by refresh_landing_pages(); cuisines come from cuisine_dishes (3 dishes on the approved menu) or an unbought cuisines value.
+- The homepage city (src/lib/visitorCity.ts) is the chosen or last searched city, or the city of the visitor's location on request; without one the homepage shows no paid places. Stadsspotlight is 3 per city per week; the city newsletter is one edition per Tuesday with max 4 placements, sent only to that city's subscribers.

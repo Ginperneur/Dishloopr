@@ -23,7 +23,9 @@ import { ADMIN_GROUPS, resolveSection } from '@/components/admin/adminNav';
 import { QUEUE_SNAPSHOT_KEY, fetchQueueSnapshot, snapshotToBadges } from '@/components/admin/adminQueues';
 import { RestaurantDetailModal } from '@/components/admin/RestaurantDetailModal';
 import { AddRestaurantModal } from '@/components/admin/AddRestaurantModal';
-import { SponsoredProductsManager } from '@/components/admin/SponsoredProductsManager';
+import { TestVisitsManager } from '@/components/admin/TestVisitsManager';
+import { SpotlightBookingsManager } from '@/components/admin/SpotlightBookingsManager';
+import { CuisineDishesManager } from '@/components/admin/CuisineDishesManager';
 import { ClaimRequestsQueue } from '@/components/admin/ClaimRequestsQueue';
 import { OptoutRequestsManager } from '@/components/admin/OptoutRequestsManager';
 import { ContactMessagesManager } from '@/components/admin/ContactMessagesManager';
@@ -45,8 +47,6 @@ import { GeocodeManager } from '@/components/admin/GeocodeManager';
 import { AIMetadataEnrichment } from '@/components/admin/AIMetadataEnrichment';
 import { PhotosManager } from '@/components/admin/PhotosManager';
 import { RestaurantDishesManager } from '@/components/admin/RestaurantDishesManager';
-import { FeaturedSlotsManager } from '@/components/admin/FeaturedSlotsManager';
-import { AmbiancePricingManager } from '@/components/admin/AmbiancePricingManager';
 import { NewsletterManager } from '@/components/admin/NewsletterManager';
 import { RestaurantBulkMailer } from '@/components/admin/RestaurantBulkMailer';
 import { UpgradeReviewRequests } from '@/components/admin/UpgradeReviewRequests';
@@ -473,13 +473,9 @@ export default function AdminPanel() {
                 </Tabs>
               )}
 
-              {activeSection === 'sponsored' && <SponsoredProductsManager />}
-              {activeSection === 'featured-slots' && (
-                <div className="space-y-6">
-                  <FeaturedSlotsManager />
-                  <AmbiancePricingManager />
-                </div>
-              )}
+              {activeSection === 'test-visits' && <TestVisitsManager />}
+              {activeSection === 'spotlight' && <SpotlightBookingsManager />}
+              {activeSection === 'cuisines' && <CuisineDishesManager />}
               {activeSection === 'reviews' && <ReviewModerationManager />}
 
               {activeSection === 'reservation-detect' && <ReservationLinkDetector />}

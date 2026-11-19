@@ -14,14 +14,14 @@ const corsHeaders = {
 };
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-const NAME = { routing: "Vraag doorsturen", uitgelicht: "Uitgelicht" } as const;
-const LINK = { routing: "https://dishloopr.nl/owner-dashboard?tab=promotions", uitgelicht: "https://dishloopr.nl/voor-restaurants/pakketten" } as const;
-interface Reminder { user_id: string; email: string; restaurant_name: string; product: "routing" | "uitgelicht"; label: string; role: "holder" | "bidder";
+const NAME = { routing: "Vraag doorsturen", uitgelicht: "Uitgelicht", topplek: "Topplek" } as const;
+const LINK = { routing: "https://dishloopr.nl/owner-dashboard?tab=promotions", uitgelicht: "https://dishloopr.nl/voor-restaurants/pakketten", topplek: "https://dishloopr.nl/voor-restaurants/pakketten" } as const;
+interface Reminder { user_id: string; email: string; restaurant_name: string; product: "routing" | "uitgelicht" | "topplek"; label: string; role: "holder" | "bidder";
   my_cents: number; highest_bid_cents: number | null; open_bids: number; auction_date: string }
 const nextQuarterStart = (d: Date) => new Date(Date.UTC(d.getUTCFullYear() + (d.getUTCMonth() >= 9 ? 1 : 0), (Math.floor(d.getUTCMonth() / 3) * 3 + 3) % 12, 1));
 const euro = (c: number) => `€${(c / 100).toLocaleString("nl-NL", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 
-interface Action { product: "routing" | "uitgelicht"; action: "reprice" | "cancel" | "won"; slot_id: string | null; bid_id: string | null; restaurant_id: string; user_id: string; price_cents: number; stripe_subscription_id: string | null }
+interface Action { product: "routing" | "uitgelicht" | "topplek"; action: "reprice" | "cancel" | "won"; slot_id: string | null; bid_id: string | null; restaurant_id: string; user_id: string; price_cents: number; stripe_subscription_id: string | null }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -65,9 +65,11 @@ Deno.serve(async (req) => {
     if (settle) {
       await run("promo_settle", "routing");
       await run("uitgelicht_settle", "uitgelicht");
+      await run("topplek_settle", "topplek");
     }
     await run("promo_daily", "routing");
     await run("uitgelicht_daily", "uitgelicht");
+    await run("topplek_daily", "topplek");
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
     const results: { action: string; ok: boolean; error?: string }[] = [];
@@ -88,7 +90,7 @@ Deno.serve(async (req) => {
           await stripe.subscriptions.update(a.stripe_subscription_id, { cancel_at_period_end: true });
           await notify(db, a, "Je bent overboden", `Andere restaurants boden meer voor je plek bij ${NAME[a.product]}. Je plek loopt af aan het eind van je betaalde periode. Je kunt opnieuw bieden.`);
         } else if (a.action === "won") {
-          await notify(db, a, "Je hebt een plek gewonnen", `Rond binnen 7 dagen af voor ${euro(a.price_cents)} per maand excl. btw bij ${NAME[a.product]}${a.product === "uitgelicht" ? " (Pakketten)" : " (Promoties)"}.`);
+          await notify(db, a, "Je hebt een plek gewonnen", `Rond binnen 7 dagen af voor ${euro(a.price_cents)} per maand excl. btw bij ${NAME[a.product]}${a.product === "routing" ? " (Promoties)" : " (Pakketten)"}.`);
         }
         results.push({ action: a.action, ok: true });
       } catch (e) {
@@ -141,6 +143,6 @@ async function notify(db: SupabaseClient, a: Action, title: string, body: string
   }
   await db.from("owner_notifications").insert({
     user_id: a.user_id, restaurant_id: a.restaurant_id, type: "promo_slot", title, body,
-    link: a.product === "uitgelicht" ? "/voor-restaurants/pakketten" : "/owner-dashboard?tab=promotions",
+    link: a.product === "routing" ? "/owner-dashboard?tab=promotions" : "/voor-restaurants/pakketten",
   });
 }

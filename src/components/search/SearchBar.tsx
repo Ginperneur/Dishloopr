@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
+import { useCityPages } from '@/lib/paidPlacements';
+import { setVisitorCity, useVisitorCity } from '@/lib/visitorCity';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -58,6 +60,10 @@ export function SearchBar({
     return chips.length > 0 ? '' : initialQuery;
   });
   const [cityId, setCityId] = useState(initialCity);
+  // Direct page suggestions ("Pizza in Den Haag"): the chosen city, else the visitor's own city.
+  const { city: visitorCity } = useVisitorCity();
+  const pageCityId = cityId && cityId !== 'all' ? cityId : visitorCity?.id ?? null;
+  const { data: cityPages = [] } = useCityPages(pageCityId);
   // Keep chips and city in step when the page rewrites its URL, e.g.
   // "biefstuk en garnalen in utrecht" → dish=biefstuk, garnalen & city=utrecht.
   useEffect(() => {
@@ -76,6 +82,15 @@ export function SearchBar({
   const [cityQuery, setCityQuery] = useState('');
   useEffect(() => { if (!showCityDropdown) setCityQuery(''); }, [showCityDropdown]);
   const shownCities = useMemo(() => filterCities(cities, cityQuery), [cities, cityQuery]);
+  const pageCityName = cities.find(c => c.id === pageCityId)?.name ?? visitorCity?.name ?? '';
+  const pageSuggestions = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (q.length < 2 || !pageCityName) return [];
+    return cityPages.filter(p => p.subject.toLowerCase().startsWith(q) || (q.length >= 3 && p.subject.toLowerCase().includes(q))).slice(0, 3);
+  }, [query, cityPages, pageCityName]);
+  const pageLabel = (p: { page_kind: string; subject: string }) =>
+    p.page_kind === 'ambience' ? `Romantisch uit eten in ${pageCityName}` : p.page_kind === 'cuisine' ? `${p.subject} eten in ${pageCityName}` : `${p.subject} in ${pageCityName}`;
+  const openPage = (slug: string) => { setShowSuggestions(false); navigate(`/eten/${slug}`); };
   const inputRef = useRef<HTMLInputElement>(null);
   const suppressSuggestionsRef = useRef(false);
   const suggestionsRef = useRef<HTMLDivElement>(null);
@@ -163,11 +178,11 @@ export function SearchBar({
       const filteredCuisines = [...cuisineSet.values()].slice(0, 3);
       setCuisineSuggestions(filteredCuisines);
 
-      setShowSuggestions(!suppressSuggestionsRef.current && (filteredDishes.length > 0 || filteredCuisines.length > 0 || filteredRestaurants.length > 0));
+      setShowSuggestions(!suppressSuggestionsRef.current && (filteredDishes.length > 0 || filteredCuisines.length > 0 || filteredRestaurants.length > 0 || pageSuggestions.length > 0));
     }, 200);
 
     return () => { cancelled = true; clearTimeout(timer); };
-  }, [query, allRestaurants, selectedDishes, cityId]);
+  }, [query, allRestaurants, selectedDishes, cityId, pageSuggestions.length]);
 
   // Close dropdowns on escape
   useEffect(() => {
@@ -188,6 +203,9 @@ export function SearchBar({
     inputRef.current?.blur();
     setShowSuggestions(false);
     setShowCityDropdown(false);
+    // The last searched city becomes the visitor's city on the homepage.
+    const searched = cities.find(c => c.id === cityId);
+    if (searched) setVisitorCity({ id: searched.id, name: searched.name, slug: searched.slug });
     if (onSearch) {
       onSearch(searchQuery, cityId);
     } else {
@@ -486,6 +504,17 @@ export function SearchBar({
                   WebkitOverflowScrolling: 'touch'
                 }}
               >
+                {/* Straight to the page: "Pizza in Den Haag" */}
+                {pageSuggestions.map(p => (
+                  <button key={p.page_slug} type="button" onClick={() => openPage(p.page_slug)}
+                    className="w-full px-4 py-4 text-left hover:bg-muted active:bg-muted transition-colors flex items-center gap-3 border-b border-border/30">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0"><Search className="h-5 w-5 text-primary" /></div>
+                    <div className="min-w-0 flex-1">
+                      <span className="font-medium text-base">{pageLabel(p)}</span>
+                      <span className="text-sm text-muted-foreground ml-1">· {p.restaurant_count} restaurants</span>
+                    </div>
+                  </button>
+                ))}
                 {/* Dish suggestions */}
                 {suggestions.length > 0 && (
                   <>
@@ -585,6 +614,14 @@ export function SearchBar({
                 style={{ maxHeight: dropdownPosition.maxHeight - 4 }}
                 onWheel={(e) => e.stopPropagation()}
               >
+                {pageSuggestions.map(p => (
+                  <button key={p.page_slug} type="button" onClick={() => openPage(p.page_slug)}
+                    className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-3">
+                    <Search className="h-4 w-4 text-primary flex-shrink-0" />
+                    <span className="font-medium">{pageLabel(p)}</span>
+                    <span className="text-sm text-muted-foreground">· {p.restaurant_count}</span>
+                  </button>
+                ))}
                 {/* Dish suggestions */}
                 {suggestions.length > 0 && (
                   <>

@@ -23,6 +23,9 @@ interface Edition {
   sent_at: string | null;
   recipient_count: number;
   created_at: string;
+  /** A city edition goes only to subscribers in that city and carries that city's placements. */
+  city_id?: string | null;
+  edition_date?: string | null;
 }
 
 interface Placement {
@@ -77,6 +80,12 @@ export function NewsletterManager() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [subscriberCount, setSubscriberCount] = useState(0);
   const [newTitle, setNewTitle] = useState('');
+  const [newCity, setNewCity] = useState('');
+  const [newDate, setNewDate] = useState('');
+  const [cityOptions, setCityOptions] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    (supabase.rpc as any)('homepage_cities', {}).then(({ data }: { data: { id: string; name: string }[] | null }) => setCityOptions(data ?? []));
+  }, []);
   const [newIntro, setNewIntro] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -114,8 +123,10 @@ export function NewsletterManager() {
     const { error } = await supabase.from('newsletter_editions').insert({
       title: newTitle,
       intro_text: newIntro || null,
+      city_id: newCity || null,
+      edition_date: newDate || null,
       created_by: (await supabase.auth.getUser()).data.user?.id,
-    });
+    } as never);
     if (error) {
       toast.error('Kon editie niet aanmaken: ' + error.message);
     } else {
@@ -152,8 +163,12 @@ export function NewsletterManager() {
   // Turns an edition into a campaign draft for all subscribers, with its approved placements in it.
   // When that campaign completes, the edition is marked sent and the placements published (DB trigger).
   const createCampaignFromEdition = async (edition: Edition) => {
-    const items = placements.filter(p => p.edition_id === edition.id && p.status === 'approved');
-    const waiting = placements.filter(p => p.edition_id === edition.id && p.status === 'paid').length;
+    // A city edition also picks up the approved placements bought for its city and date.
+    const inEdition = (p: (typeof placements)[number]) => p.edition_id === edition.id
+      || (Boolean(edition.city_id) && (p as { target_city_id?: string | null }).target_city_id === edition.city_id
+          && (p as { edition_date?: string | null }).edition_date === edition.edition_date);
+    const items = placements.filter(p => inEdition(p) && p.status === 'approved');
+    const waiting = placements.filter(p => inEdition(p) && p.status === 'paid').length;
     if (!items.length) {
       toast.error(waiting ? `Keur eerst de ${waiting} betaalde plaatsing(en) goed onder Plaatsingen.` : 'Deze editie heeft nog geen goedgekeurde plaatsingen.');
       return;
@@ -178,6 +193,7 @@ export function NewsletterManager() {
       subject: edition.title,
       html_content: html,
       segment: 'subscribers',
+      custom_filter: edition.city_id ? { city_id: edition.city_id } : null,
       created_by: userId,
       edition_id: edition.id,
     } as never);
@@ -506,6 +522,14 @@ export function NewsletterManager() {
             <CardContent className="space-y-3">
               <Input placeholder="Titel (bijv. 'Week 12 - Lente Special')" value={newTitle} onChange={e => setNewTitle(e.target.value)} />
               <Textarea placeholder="Intro tekst (optioneel)" value={newIntro} onChange={e => setNewIntro(e.target.value)} rows={2} />
+              <div className="flex flex-wrap gap-2">
+                <select aria-label="Stad van de editie" value={newCity} onChange={e => setNewCity(e.target.value)} className="h-9 rounded-md border bg-background px-2 text-sm">
+                  <option value="">Heel Nederland</option>
+                  {cityOptions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+                <Input type="date" aria-label="Datum van de editie (dinsdag)" value={newDate} onChange={e => setNewDate(e.target.value)} className="h-9 w-auto" />
+              </div>
+              <p className="text-xs text-muted-foreground">Een stadseditie gaat alleen naar abonnees in die stad. Plaatsingen voor die stad en datum komen er vanzelf in.</p>
               <Button onClick={createEdition} disabled={!newTitle.trim()} size="sm">
                 <Plus className="h-4 w-4 mr-1" />
                 Aanmaken

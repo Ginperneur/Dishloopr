@@ -66,6 +66,8 @@ interface CollectionRestaurant {
   collection_id: string;
   sort_order: number | null;
   featured_reason: string | null;
+  /** Set when Dishloopr visited and approved it: shown as "Getest door Dishloopr". */
+  tested_at?: string | null;
   restaurant: Restaurant;
 }
 
@@ -234,6 +236,12 @@ export function CollectionsManager() {
     toast.success('Restaurant verwijderd uit collectie');
     setCollectionRestaurants(prev => prev.filter(cr => cr.id !== collectionRestaurantId));
     fetchData(); // Update counts
+  };
+
+  const handleUpdateTested = async (collectionRestaurantId: string, date: string) => {
+    const { error } = await supabase.from('collection_restaurants').update({ tested_at: date || null } as never).eq('id', collectionRestaurantId);
+    if (error) { toast.error('Update mislukt'); return; }
+    setCollectionRestaurants(prev => prev.map(cr => cr.id === collectionRestaurantId ? { ...cr, tested_at: date || null } : cr));
   };
 
   const handleUpdateFeaturedReason = async (collectionRestaurantId: string, reason: string) => {
@@ -985,6 +993,10 @@ export function CollectionsManager() {
                             onChange={(e) => handleUpdateFeaturedReason(cr.id, e.target.value)}
                             className="mt-1 h-7 text-xs"
                           />
+                          <label className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                            Getest op
+                            <Input type="date" value={cr.tested_at || ''} onChange={(e) => handleUpdateTested(cr.id, e.target.value)} className="h-7 w-auto text-xs" />
+                          </label>
                         </div>
                         <Button
                           variant="ghost"

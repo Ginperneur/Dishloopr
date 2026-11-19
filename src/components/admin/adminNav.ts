@@ -89,7 +89,9 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { id: 'dishes', label: 'Gerechten', description: 'Gerecht-taxonomie beheren' },
       { id: 'restaurant-dishes', label: 'Bekend om', description: 'Restaurant-gerecht koppelingen' },
       { id: 'cities', label: 'Steden', description: 'Steden en regio’s beheren' },
-      { id: 'collections', label: 'Collecties', description: 'Samengestelde restaurantcollecties' },
+      { id: 'collections', label: 'Collecties', description: 'Redactionele collecties en Getest door Dishloopr' },
+      { id: 'test-visits', label: 'Testbezoeken', description: 'Aanvragen van eigenaren voor Getest door Dishloopr' },
+      { id: 'cuisines', label: 'Keukens', description: 'Welke gerechten een keuken maken voor de keukenpagina’s' },
       { id: 'seo', label: 'SEO-pagina’s', description: 'Gerecht × stad landingspagina’s en uitgelichte gerechten' },
     ],
   },
@@ -108,9 +110,8 @@ export const ADMIN_GROUPS: AdminGroup[] = [
   {
     id: 'revenue', label: 'Omzet', icon: Crown,
     tabs: [
-      { id: 'package-orders', label: 'Overzicht', description: 'Uitgelicht, Owner Pro, Menuservice en evenementen', badge: 'menuService' },
-      { id: 'featured-slots', label: 'Uitgelicht-plekken', description: 'Plekken per pagina en sfeer-pricing' },
-      { id: 'sponsored', label: 'Sponsored', description: 'Gesponsorde producten beheren' },
+      { id: 'package-orders', label: 'Overzicht', description: 'Topplek, Uitgelicht, bundels, Owner Pro, Menuservice en evenementen', badge: 'menuService' },
+      { id: 'spotlight', label: 'Stadsspotlight', description: 'Boekingen per stad per week' },
       { id: 'revenue', label: 'Oude producten', description: 'Featured spots, gesponsorde gerechten en nieuwsbrief' },
     ],
   },

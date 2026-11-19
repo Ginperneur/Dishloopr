@@ -119,8 +119,10 @@ export default function TermsPage() {
               <h2 className="text-2xl font-semibold mb-4">7c. Betaalde diensten voor restaurants</h2>
               <ol className="text-muted-foreground space-y-4 leading-relaxed">
                 <li>
-                  <strong>Uitgelicht.</strong> Een uitgelichte plek op één gerechtpagina, altijd gemarkeerd
-                  als ‘Uitgelicht’. Per gerechtpagina zijn maximaal 5 plekken beschikbaar. Wij
+                  <strong>Topplek en Uitgelicht.</strong> Een betaalde plek op één gerecht-, keuken- of sfeerpagina,
+                  altijd gemarkeerd als ‘Topplek’ of ‘Uitgelicht’ en ‘Betaald’. Per pagina zijn er 1 Topplek en 3
+                  Uitgelicht-plekken, alleen op pagina’s met minstens 10 restaurants. Wie vóór deze regel een plek
+                  had, houdt die. Een betaalde plek verandert de volgorde van de overige restaurants niet. Wij
                   geven geen garantie op aantallen bezoekers. Dishloopr heeft op 1 december 2026 een soft launch;
                   wie Uitgelicht afneemt uiterlijk op 5 januari 2027 wordt Founding Partner en
                   betaalt de actieprijs tot en met 31 december 2027, waarna automatisch de normale prijs gaat

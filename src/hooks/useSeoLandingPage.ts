@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { loadLandingContext, loadLandingRestaurants, loadLandingNavigation, landingIdentity } from '@/lib/seoLandingLoader';
 import { supabase } from '@/integrations/supabase/client';
+import { usePagePlacements } from '@/lib/paidPlacements';
 import type { Json } from '@/integrations/supabase/types';
 
 export interface FAQ {
@@ -14,6 +15,10 @@ export interface SeoLandingPage {
   slug: string;
   dish_id: string | null;
   city_id: string | null;
+  /** 'dish' (default), 'cuisine' (Italiaans in Utrecht) or 'ambience' (Romantisch uit eten in Utrecht). */
+  page_kind?: 'dish' | 'cuisine' | 'ambience';
+  cuisine?: string | null;
+  ambience?: string | null;
   meta_title: string;
   meta_description: string;
   h1_title: string;
@@ -63,22 +68,14 @@ export function useSeoLandingPage(slug: string | undefined) {
     },
     enabled: Boolean(page && !context.data?.redirectTo), staleTime: 60_000,
   });
-  // Founding Partners (max 5) get a guaranteed "Uitgelicht" place on this page.
-  const founding = useQuery({
-    queryKey: ['seo-landing-founding', slug],
-    queryFn: async () => {
-      const { data, error } = await (supabase.rpc as any)('founding_partners_for_page', { p_page_slug: slug });
-      if (error) throw error;
-      return ((data ?? []) as { restaurant_id: string }[]).map(r => r.restaurant_id);
-    },
-    enabled: Boolean(page && !context.data?.redirectTo), staleTime: 60_000,
-  });
+  // Paid places on this page: 1 Topplek and 3 Uitgelicht (older Founding Partner pages may hold more).
+  const placements = usePagePlacements(page && !context.data?.redirectTo ? slug : null);
   const synthesized = context.data?.synthesized ?? false;
   const resultsLoading = Boolean(page && result.isPending);
   const notFound = context.isSuccess && !context.data.page && !context.data.redirectTo;
   const emptySynthesized = synthesized && result.isSuccess && !result.data.restaurants.length;
   return {
-    page, restaurants: result.data?.restaurants ?? [], foundingIds: founding.data ?? [],
+    page, restaurants: result.data?.restaurants ?? [], placements: placements.data ?? [],
     loading: Boolean(slug && context.isPending), resultsLoading,
     error: notFound || emptySynthesized ? 'Page not found' : context.error || result.error ? 'Failed to load page' : null,
     redirectTo: context.data?.redirectTo ?? null,
@@ -124,7 +121,8 @@ export function useSeoLandingPages() {
   }, []);
 
   const updatePage = async (id: string, updates: Partial<SeoLandingPage>) => {
-    const { faq_content, dish: _dish, city: _city, ...rest } = updates as Partial<SeoLandingPage> & { dish?: unknown; city?: unknown };
+    // page_kind, cuisine and ambience are set by the nightly page job, never edited here.
+    const { faq_content, dish: _dish, city: _city, page_kind: _kind, cuisine: _cuisine, ambience: _ambience, ...rest } = updates as Partial<SeoLandingPage> & { dish?: unknown; city?: unknown };
     const { error } = await supabase
       .from('seo_landing_pages')
       .update({

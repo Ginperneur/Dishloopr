@@ -42,6 +42,7 @@ import { SEOHead, createRestaurantSchema, createBreadcrumbSchema } from '@/compo
 import { useFavorites } from '@/hooks/useFavorites';
 import { useReviews } from '@/hooks/useReviews';
 import { useRestaurant } from '@/hooks/useRestaurant';
+import { badgeText, useRestaurantBadges } from '@/lib/paidPlacements';
 import { useAIRecommendations } from '@/hooks/useAIRecommendations';
 import { useAlternativeRestaurants, type RoutingReason } from '@/hooks/useAlternativeRestaurants';
 import { isOpenNow } from '@/lib/openingHours';
@@ -81,6 +82,7 @@ export default function RestaurantPage() {
   };
   
   const { restaurant, loading: restaurantLoading, error } = useRestaurant(slug);
+  const { data: paidBadges = [] } = useRestaurantBadges(restaurant?.id);
   const { reviews, loading: reviewsLoading, submitting, submitReview, refetch } = useReviews(restaurant?.id);
   const { isFavorite, toggleFavorite } = useFavorites();
   const { smartSuggestions, getSmartSuggestions } = useAIRecommendations();
@@ -301,21 +303,20 @@ export default function RestaurantPage() {
           <ChevronLeft className="h-5 w-5" />
         </Link>
 
-        {/* Badges */}
-        <div className="absolute top-4 right-4 z-10 flex gap-2">
-          {restaurant.is_top_listing && (
-            <Badge className="featured-badge border-0 gap-1">
-              <Trophy className="h-3 w-3" />
-              {t('restaurant.topListing')}
-            </Badge>
-          )}
-          {restaurant.is_featured && !restaurant.is_top_listing && (
-            <Badge className="featured-badge border-0 gap-1">
-              <Sparkles className="h-3 w-3" />
-              {t('restaurant.featured')}
-            </Badge>
-          )}
-        </div>
+        {/* Paid places of this restaurant: each badge links to the page where it holds the place. */}
+        {paidBadges.length > 0 && (
+          <div className="absolute top-4 right-4 z-10 flex max-w-[70%] flex-col items-end gap-2">
+            {paidBadges.slice(0, 2).map(b => (
+              <Link key={b.page_slug} to={`/eten/${b.page_slug}`}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold shadow ${b.kind === 'topplek' ? 'bg-primary text-primary-foreground' : 'bg-background/95 text-foreground'}`}>
+                {badgeText(b)}
+              </Link>
+            ))}
+            {paidBadges.some(b => b.is_founding) && (
+              <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900 shadow">Founding Partner</span>
+            )}
+          </div>
+        )}
       </div>
 
       <div className={`container px-4 md:px-6 py-6 md:py-8 overflow-hidden ${hasReservation ? 'pb-28 lg:pb-8' : 'pb-16 lg:pb-8'}`}>

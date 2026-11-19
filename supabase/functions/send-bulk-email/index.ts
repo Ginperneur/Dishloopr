@@ -54,7 +54,8 @@ async function getRecipients(
   supabase: any,
   segment: string,
   cursor: string | null,
-  batchSize: number
+  batchSize: number,
+  filter: { city_id?: string } | null = null,
 ): Promise<{ emails: { email: string; id: string }[]; nextCursor: string | null }> {
   let query: any;
 
@@ -66,6 +67,8 @@ async function getRecipients(
         .eq("is_active", true)
         .order("id")
         .limit(batchSize);
+      // A city edition goes only to subscribers in that city.
+      if (filter?.city_id) query = query.eq("city_id", filter.city_id);
       if (cursor) query = query.gt("id", cursor);
       break;
 
@@ -282,7 +285,8 @@ serve(async (req: Request): Promise<Response> => {
       supabase,
       c.segment,
       c.last_cursor,
-      BATCH_SIZE
+      BATCH_SIZE,
+      c.custom_filter && typeof c.custom_filter === "object" ? c.custom_filter : null,
     );
 
     if (emails.length === 0) {

@@ -40,22 +40,6 @@ function RestaurantCard({ item, index }: { item: CollectionRestaurant; index: nu
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
               
-              {/* Badges */}
-              <div className="absolute top-2 left-2 flex flex-col gap-1">
-                {restaurant.is_top_listing && (
-                  <Badge className="bg-gradient-to-r from-purple-500 to-indigo-600 border-0">
-                    <Trophy className="h-3 w-3 mr-1" />
-                    Top
-                  </Badge>
-                )}
-                {restaurant.is_featured && !restaurant.is_top_listing && (
-                  <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 border-0">
-                    <Sparkles className="h-3 w-3 mr-1" />
-                    Featured
-                  </Badge>
-                )}
-              </div>
-
               {/* Ranking */}
               <div className="absolute bottom-2 left-2 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
                 #{index + 1}

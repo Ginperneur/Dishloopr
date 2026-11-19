@@ -290,22 +290,22 @@ export default function ForRestaurantsPage() {
                   <CardContent className="p-6 flex flex-col flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <Rocket className="h-5 w-5 text-primary" />
-                      <h3 className="font-semibold text-lg">Uitgelicht / Sponsored</h3>
+                      <h3 className="font-semibold text-lg">Topplek en Uitgelicht</h3>
                     </div>
                     <div className="flex items-baseline gap-1 mb-1">
-                      <p className="text-3xl font-bold">vanaf €49</p>
+                      <p className="text-3xl font-bold">vanaf €99</p>
                       <span className="text-sm text-muted-foreground">/mnd*</span>
                     </div>
-                    <p className="text-xs text-muted-foreground mb-5">Indicatieve prijs · schaarste-gedreven</p>
+                    <p className="text-xs text-muted-foreground mb-5">Uitgelicht vanaf €99, Topplek vanaf €199 per maand. Founding Partners tot 5 januari 2027: Uitgelicht €59.</p>
                     <ul className="space-y-2.5 text-sm mb-6 flex-1">
-                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> Uitgelichte plek per gerecht × stad</li>
-                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> "Uitgelicht" label bij zoekresultaten</li>
-                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> Exclusieve slots (max plaatsen per combi)</li>
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> 1 Topplek en 3 Uitgelicht per gerecht-, keuken- of sfeerpagina</li>
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> Ook bovenaan bij zoeken, op de kaart en op de homepage</li>
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> Altijd herkenbaar als betaald</li>
                       <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> Prijs varieert met vraag &amp; concurrentie</li>
                       <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> Beïnvloedt nooit reviews of ratings</li>
                     </ul>
-                    <Button variant="outline" className="w-full" disabled title="Binnenkort beschikbaar">
-                      Binnenkort beschikbaar
+                    <Button asChild variant="outline" className="w-full">
+                      <Link to="/voor-restaurants/pakketten">Bekijk pakketten</Link>
                     </Button>
                   </CardContent>
                 </Card>
@@ -327,11 +327,11 @@ export default function ForRestaurantsPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <p className="text-2xl font-bold leading-none">€19<span className="text-sm text-muted-foreground">/mnd*</span></p>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">per tag · indicatief</p>
+                      <p className="text-2xl font-bold leading-none">€5<span className="text-sm text-muted-foreground">/mnd*</span></p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">per tag</p>
                     </div>
-                    <Button variant="outline" size="sm" disabled title="Binnenkort beschikbaar">
-                      Binnenkort
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/owner-dashboard?section=promotions">Tag toevoegen</Link>
                     </Button>
                   </div>
                 </CardContent>
