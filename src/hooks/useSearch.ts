@@ -9,10 +9,13 @@ import {
   sortResults,
   rebalanceSponsoredResults,
   bayesianRating,
+  enforceChainDiversity,
   type ScoringContext,
   type DishMatchInfo,
 } from '@/lib/ranking';
-import { photoFirst } from '@/lib/photoFirst';
+import { orderForBrowse } from '@/lib/browseOrder';
+import { fetchListingSignals } from '@/lib/listingSignals';
+import { hasOpeningHoursData } from '@/lib/openingHours';
 import { calculateDistance } from '@/hooks/useGeolocation';
 import { getEmptyRestaurantIds } from '@/lib/listableRestaurants';
 import { splitDishQuery, hasDishConnector, isCompoundDishPhrase, groupByCoverage } from '@/lib/multiDishSearch';
@@ -615,8 +618,15 @@ export function useSearch() {
         bayesianRating: bayesianRating(Number(r.rating), r.review_count),
       }));
       
-      const sorted = photoFirst(sortResults(scoredResults));
-      setResults(sorted);
+      // City browsing: city first, then nearby places; quality score within (src/lib/browseOrder.ts).
+      const signals = await fetchListingSignals(scoredResults.map(r => r.id));
+      const browseCity = cityId && cityId !== 'all' ? cityMap.get(cityId) ?? null : null;
+      const ordered = orderForBrowse(
+        scoredResults.map(r => ({ ...r, hasHours: hasOpeningHoursData(r.opening_hours) })),
+        signals,
+        { cityName: browseCity },
+      );
+      setResults(enforceChainDiversity(ordered));
       finish(); setLoading(false);
       return;
     }

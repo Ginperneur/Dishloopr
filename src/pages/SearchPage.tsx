@@ -55,7 +55,7 @@ export default function SearchPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { search, results, loading, cities, dishes, detectedCity, didYouMean, isFuzzyMatch, parsedQuery } = useSearch();
+  const { search, results, loading: searchLoading, cities, dishes, detectedCity, didYouMean, isFuzzyMatch, parsedQuery } = useSearch();
   const { isSaved, toggle: toggleSavedSearch } = useSavedSearches();
   
   // Accept both `?dish=` (internal) and `?q=` (external/SEO/shared links)
@@ -77,6 +77,9 @@ export default function SearchPage() {
     );
     return match?.id || 'all';
   }, [cityParam, cities]);
+  // A city named in the URL waits for the cities list; show "searching" meanwhile instead of 0 results.
+  const waitingForCity = cityParam !== 'all' && resolvedCityId === 'all' && cities.length === 0;
+  const loading = searchLoading || waitingForCity;
 
   // City detected in the query ("pizza in rotterdam") → move it into the URL.
   useEffect(() => {
@@ -215,10 +218,12 @@ export default function SearchPage() {
   useEffect(() => {
     // Wait until the city from the URL is synced (avoids a stale nationwide run after a URL rewrite)
     if (selectedCityId !== resolvedCityId) return;
+    // A city named in the URL ("tilburg") resolves once the cities are loaded; don't search the whole country first.
+    if (waitingForCity) return;
     search(dishQuery, selectedCityId, filters, featuredOnly);
     if (restoreRef.current) return; // keep restored pagination when coming back
     setDisplayCount(12); // Reset pagination on new search
-  }, [dishQuery, selectedCityId, resolvedCityId, filters, featuredOnly]);
+  }, [dishQuery, selectedCityId, resolvedCityId, filters, featuredOnly, waitingForCity]);
 
   // Handle city change for featured page
   const handleCityChange = (newCityId: string) => {
