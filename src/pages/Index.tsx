@@ -207,8 +207,8 @@ const Index = () => {
       <RecentlyViewed />
 
       {/* One city drives everything below: chosen in the search bar (or with the tiles / location).
-          No city: "In welke stad zoek je?" + "Uitgelicht in Nederland". A city: "Eten in <stad>" +
-          "Uitgelicht in <stad>" on the same place, events, popular pages, the editors' picks. */}
+          No city: "In welke stad zoek je?" + "Spotlight in Nederland". A city: "Eten in <stad>" +
+          "Spotlight in <stad>" on the same place, events, popular pages, the editors' picks. */}
       <HomeCityBlocks />
 
       {/* Trending Dishes — shown before personalized picks */}
