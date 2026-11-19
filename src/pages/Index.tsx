@@ -2,33 +2,22 @@ import { useTranslation } from 'react-i18next';
 import { tTaxonomy } from '@/lib/i18n/taxonomy';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Navigation, Loader2, BookmarkCheck, X, Bell, BellOff } from 'lucide-react';
+import { BookmarkCheck, X, Bell, BellOff } from 'lucide-react';
 import { SearchBar } from '@/components/search/SearchBar';
 import { Layout } from '@/components/layout/Layout';
 import { TrendingDishes } from '@/components/home/TrendingDishes';
 import { HomeCityBlocks } from '@/components/home/HomeCityBlocks';
-import { SocialProof } from '@/components/home/SocialProof';
 import { RecentlyViewed } from '@/components/home/RecentlyViewed';
-import { ExploreCities } from '@/components/home/ExploreCities';
-import { DatabaseRestaurantCard } from '@/components/restaurant/DatabaseRestaurantCard';
 import { SurpriseMe } from '@/components/ai/SurpriseMe';
 import { SEOHead, createWebsiteSchema } from '@/components/seo/SEOHead';
-import { Button } from '@/components/ui/button';
-import { SkeletonCard } from '@/components/ui/skeleton-card';
 import { useTrendingDishes } from '@/hooks/useTrendingDishes';
-import { useGeolocation } from '@/hooks/useGeolocation';
 import { useSavedSearches } from '@/hooks/useSavedSearches';
-import { useContentAvailability } from '@/hooks/useContentAvailability';
-import { useEffect, useState, lazy, Suspense } from 'react';
+import { lazy, Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Below-the-fold sections load as separate chunks
-const UpcomingEvents = lazy(() => import('@/components/home/UpcomingEvents').then((m) => ({ default: m.UpcomingEvents })));
-const SeasonalSuggestions = lazy(() => import('@/components/home/SeasonalSuggestions').then((m) => ({ default: m.SeasonalSuggestions })));
-const HowItWorks = lazy(() => import('@/components/home/HowItWorks').then((m) => ({ default: m.HowItWorks })));
 const PersonalizedRecommendations = lazy(() => import('@/components/ai/PersonalizedRecommendations').then((m) => ({ default: m.PersonalizedRecommendations })));
 import { toast } from 'sonner';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // Popular cuisines to show as quick links in hero.
 // `value` is the lowercase DB/search value (unchanged); `dbLabel` is the capitalized
@@ -48,47 +37,7 @@ const Index = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { dishes: trendingDishes, loading: dishesLoading } = useTrendingDishes();
-  const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, clearLocation } = useGeolocation();
   const { saved: savedSearches, remove: removeSavedSearch, setAlerts: setSavedAlerts } = useSavedSearches();
-  const { hasCollections, hasEvents, loading: availabilityLoading } = useContentAvailability();
-  const [showHowItWorks, setShowHowItWorks] = useState(false);
-  const [nearbyRequested, setNearbyRequested] = useState(false);
-  const [feedTab, setFeedTab] = useState<'foryou' | 'nearby'>('foryou');
-
-  // Show "How it works" only for first-time visitors
-  useEffect(() => {
-    try {
-      const seen = localStorage.getItem('dl_seen_how_it_works');
-      if (!seen) {
-        setShowHowItWorks(true);
-        localStorage.setItem('dl_seen_how_it_works', '1');
-      }
-    } catch {
-      setShowHowItWorks(true);
-    }
-  }, []);
-
-  // Navigate to map view ONLY when user explicitly requested nearby search.
-  // This prevents an infinite redirect loop when geolocation is cached and the
-  // user navigates back to the homepage.
-  useEffect(() => {
-    if (nearbyRequested && latitude && longitude) {
-      setNearbyRequested(false);
-      const lat = latitude.toFixed(5);
-      const lng = longitude.toFixed(5);
-      clearLocation();
-      navigate(`/search?view=map&near=${lat},${lng}`);
-    }
-  }, [nearbyRequested, latitude, longitude, navigate, clearLocation]);
-
-  const handleNearbyClick = () => {
-    setNearbyRequested(true);
-    requestLocation();
-  };
-
-  useEffect(() => {
-    if (geoError) toast.error(geoError);
-  }, [geoError]);
 
   const handleCuisineClick = (cuisine: string) => {
     // Some items are dishes (sushi), others are cuisines (italiaans)
@@ -136,7 +85,7 @@ const Index = () => {
             </p>
           </motion.div>
 
-          <SearchBar variant="hero" />
+          <SearchBar variant="hero" followVisitorCity />
 
           {/* Saved searches — quick re-entry for returning users (P4 retention) */}
           {savedSearches.length > 0 && (
@@ -242,7 +191,7 @@ const Index = () => {
             </div>
           </motion.div>
           
-          {/* AI Surprise Button */}
+          {/* AI Surprise Button. "Bij mij in de buurt" moved into the city picker as "Mijn locatie". */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -250,99 +199,17 @@ const Index = () => {
             className="flex flex-wrap justify-center items-center gap-2 mt-3 md:mt-5"
           >
             <SurpriseMe />
-            <button
-              type="button"
-              onClick={handleNearbyClick}
-              disabled={geoLoading}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border border-border bg-card hover:bg-muted transition-colors min-h-[36px] disabled:opacity-60"
-              aria-label={t('home.ariaNearby', 'Zoek restaurants in mijn buurt')}
-            >
-              {geoLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Navigation className="h-4 w-4 text-primary" />
-              )}
-              <span>{t('home.nearby', 'Bij mij in de buurt')}</span>
-            </button>
           </motion.div>
         </div>
       </section>
 
-      {/* Recently Viewed */}
+      {/* Recently Viewed: returning visitors only, a slim strip above the city */}
       <RecentlyViewed />
 
-      {/* The visitor's city: Stadsspotlight, Topplekken, events, popular pages, Getest door Dishloopr.
-          Replaces the old featured block and the hand-made collections until restaurants are tested. */}
+      {/* One city drives everything below: chosen in the search bar (or with the tiles / location).
+          No city: "In welke stad zoek je?" + "Uitgelicht in Nederland". A city: "Eten in <stad>" +
+          "Uitgelicht in <stad>" on the same place, events, popular pages, the editors' picks. */}
       <HomeCityBlocks />
-
-      {/* Feed tab switcher: For You vs Nearby (P2 hierarchy) */}
-      <section
-        aria-label={t('home.discoverContent', 'Aanbevolen content')}
-        className="container px-4 md:px-6 pt-4 sm:pt-6"
-      >
-        <Tabs
-          value={feedTab}
-          onValueChange={(v) => {
-            if (v === 'nearby') {
-              handleNearbyClick();
-            } else {
-              setFeedTab('foryou');
-            }
-          }}
-        >
-          <TabsList className="w-full max-w-md mx-auto grid grid-cols-2">
-            <TabsTrigger value="foryou" aria-label={t('home.forYou', 'Voor jou')}>
-              {t('home.forYou', 'Voor jou')}
-            </TabsTrigger>
-            <TabsTrigger value="nearby" aria-label={t('home.nearbyTab', 'In de buurt')}>
-              {geoLoading ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-              ) : (
-                <Navigation className="h-3.5 w-3.5 mr-1.5" />
-              )}
-              {t('home.nearbyTab', 'In de buurt')}
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </section>
-
-      {/* Mobile quick-jump strip — reduces perceived page length by giving
-          immediate access to key sections (P2 content hierarchy). */}
-      <nav
-        aria-label={t('home.quickNav', 'Snelle navigatie')}
-        className="sm:hidden sticky top-12 z-30 bg-background/95 backdrop-blur border-b border-border"
-      >
-        <div className="-mx-0 px-4">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory py-2">
-            {([
-              { label: 'Jouw stad', href: '#stad', show: true },
-              { label: 'Trending', href: '#trending', show: true },
-              { label: 'Steden', href: '#cities', show: true },
-              { label: 'Events', href: '#events', show: hasEvents },
-            ].filter((i) => i.show)).map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="shrink-0 snap-start px-3 py-1.5 text-xs font-medium rounded-full bg-card border border-border hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors min-h-[32px] flex items-center"
-              >
-                {item.label}
-              </a>
-            ))}
-          </div>
-        </div>
-      </nav>
-
-      {/* Always-on discovery block — guarantees the page has meaningful content
-          even when featured/trending sections are empty (P0 empty-state fix). */}
-      <div id="cities">
-        <ExploreCities />
-      </div>
-
-      {/* Social Proof Stats */}
-      <SocialProof />
-
-      {/* How it works — only for first-time visitors */}
-      {showHowItWorks && <Suspense fallback={null}><HowItWorks /></Suspense>}
 
       {/* Trending Dishes — shown before personalized picks */}
       <div id="trending" className="scroll-mt-24">
@@ -356,20 +223,13 @@ const Index = () => {
             </div>
           </section>
         ) : (
-          <TrendingDishes dishes={trendingDishes} />
+          <TrendingDishes dishes={trendingDishes} cityName="Nederland" />
         )}
       </div>
 
       {/* Personalized Recommendations for logged-in users */}
       <Suspense fallback={null}><PersonalizedRecommendations /></Suspense>
 
-      {/* Upcoming Events */}
-      <div id="events" className="scroll-mt-24">
-        <Suspense fallback={null}><UpcomingEvents /></Suspense>
-      </div>
-
-      {/* Seasonal Suggestions */}
-      <Suspense fallback={null}><SeasonalSuggestions /></Suspense>
     </Layout>
   );
 };

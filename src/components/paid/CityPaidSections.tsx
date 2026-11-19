@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ImageOff } from 'lucide-react';
@@ -7,9 +8,9 @@ import { useCityPages, useCitySpotlight, useCityToppleks, type CityPage } from '
 import { PaidLabel, WhyPaidLink } from '@/components/paid/PaidLabel';
 import { PaidTracked } from '@/components/paid/PaidTracked';
 
-interface MiniRestaurant { id: string; name: string; slug: string; images: string[] | null; cuisines: string[] | null; rating: number | null }
+export interface MiniRestaurant { id: string; name: string; slug: string; images: string[] | null; cuisines: string[] | null; rating: number | null }
 
-function useRestaurantsByIds(ids: string[]) {
+export function useRestaurantsByIds(ids: string[]) {
   const key = [...ids].sort().join(',');
   return useQuery({
     queryKey: ['mini-restaurants', key],
@@ -22,26 +23,34 @@ function useRestaurantsByIds(ids: string[]) {
   });
 }
 
-function Photo({ r, className }: { r: MiniRestaurant; className: string }) {
+export function Photo({ r, className }: { r: MiniRestaurant; className: string }) {
   const src = r.images?.[0];
   return src
     ? <img src={optimizedImage(src, { width: 480 })} width={480} height={300} alt="" loading="lazy" decoding="async" className={`${className} object-cover`} />
     : <div className={`${className} flex items-center justify-center bg-muted`}><ImageOff className="h-8 w-8 text-muted-foreground/40" aria-hidden="true" /></div>;
 }
 
-/** "Deze week in <stad>": the 3 Stadsspotlight places of this week. Nothing when none are booked. */
-export function CitySpotlightSection({ cityId, cityName }: { cityId: string; cityName: string }) {
+/**
+ * "Deze week in <stad>": the 3 Stadsspotlight places of this week. Nothing when none are booked.
+ * `nested`: inside the homepage "Uitgelicht in <stad>" block, which carries the Betaald label;
+ * `extra` fills an open place (the owner card).
+ */
+export function CitySpotlightSection({ cityId, cityName, nested = false, extra }: { cityId: string; cityName: string; nested?: boolean; extra?: ReactNode }) {
   const { data: items = [] } = useCitySpotlight(cityId);
   const { data: map } = useRestaurantsByIds(items.map(i => i.restaurant_id));
   const rows = items.map(i => ({ ...i, r: map?.get(i.restaurant_id) })).filter(x => x.r);
   if (!rows.length) return null;
   return (
-    <section aria-labelledby="spotlight-heading" className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <h2 id="spotlight-heading" className="text-2xl font-bold md:text-3xl">Deze week in {cityName}</h2>
-        <PaidLabel kind="spotlight" />
-        <WhyPaidLink className="ml-auto" />
-      </div>
+    <section aria-labelledby="spotlight-heading" className={nested ? 'space-y-3' : 'space-y-4'}>
+      {nested ? (
+        <h3 id="spotlight-heading" className="text-sm font-semibold text-muted-foreground">In de spotlight deze week</h3>
+      ) : (
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 id="spotlight-heading" className="text-2xl font-bold md:text-3xl">Deze week in {cityName}</h2>
+          <PaidLabel kind="spotlight" />
+          <WhyPaidLink className="ml-auto" />
+        </div>
+      )}
       <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0">
         {rows.map(({ r, headline, body }) => (
           <PaidTracked key={r!.id} restaurantId={r!.id} pageSlug="spotlight" surface="spotlight">
@@ -56,6 +65,7 @@ export function CitySpotlightSection({ cityId, cityName }: { cityId: string; cit
             </Link>
           </PaidTracked>
         ))}
+        {extra}
       </div>
     </section>
   );
@@ -64,7 +74,7 @@ export function CitySpotlightSection({ cityId, cityName }: { cityId: string; cit
 const pageLabel = (p: Pick<CityPage, 'page_kind' | 'subject'>) => (p.page_kind === 'ambience' ? 'Romantisch' : p.subject);
 
 /** "Topplekken in <stad>": per dish, cuisine or Romantisch page the restaurant holding its Topplek. */
-export function CityToppleksSection({ cityId, cityName, citySlug, limit = 7 }: { cityId: string; cityName: string; citySlug: string; limit?: number }) {
+export function CityToppleksSection({ cityId, cityName, citySlug, limit = 7, nested = false }: { cityId: string; cityName: string; citySlug: string; limit?: number; nested?: boolean }) {
   const { data: tops = [] } = useCityToppleks(cityId);
   const { data: pages = [] } = useCityPages(cityId);
   const shown = tops.slice(0, limit);
@@ -73,13 +83,17 @@ export function CityToppleksSection({ cityId, cityName, citySlug, limit = 7 }: {
   const dishCount = pages.filter(p => p.page_kind === 'dish').length;
   const cuisineCount = pages.filter(p => p.page_kind === 'cuisine').length;
   return (
-    <section aria-labelledby="toppleks-heading" className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <h2 id="toppleks-heading" className="text-2xl font-bold md:text-3xl">Topplekken in {cityName}</h2>
-        <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">Betaald</span>
-        <WhyPaidLink className="ml-auto" />
-      </div>
-      <p className="text-sm text-muted-foreground">Per gerecht het restaurant met de Topplek. Klik door voor alle restaurants met dat gerecht.</p>
+    <section aria-labelledby="toppleks-heading" className={nested ? 'space-y-3' : 'space-y-4'}>
+      {nested ? (
+        <h3 id="toppleks-heading" className="text-sm font-semibold text-muted-foreground">Topplekken per gerecht</h3>
+      ) : (<>
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 id="toppleks-heading" className="text-2xl font-bold md:text-3xl">Topplekken in {cityName}</h2>
+          <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">Betaald</span>
+          <WhyPaidLink className="ml-auto" />
+        </div>
+        <p className="text-sm text-muted-foreground">Per gerecht het restaurant met de Topplek. Klik door voor alle restaurants met dat gerecht.</p>
+      </>)}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
         {shown.map(t => {
           const r = map?.get(t.restaurant_id);

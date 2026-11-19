@@ -238,7 +238,7 @@
   },
   "trending": {
     "title": "Plats tendance",
-    "subtitle": "Populaire dans votre ville",
+    "subtitle": "Les plus recherchés",
     "inCity": "à {{city}}",
     "now": "Tendance maintenant",
     "searches": "recherches",
@@ -680,7 +680,6 @@
   "stats": {
     "restaurants": "Restaurants",
     "reviews": "Avis",
-    "cities": "Villes",
     "dishes": "Plats",
     "aria": "Statistiques Dishloopr"
   },

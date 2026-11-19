@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Utensils, Star, MapPin, Store } from 'lucide-react';
+import { Utensils, Star, Store } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
 import { roundDownHundreds } from '@/lib/utils';
@@ -8,7 +8,6 @@ import { roundDownHundreds } from '@/lib/utils';
 interface Stats {
   restaurants: number;
   reviews: number;
-  cities: number;
   dishes: number;
 }
 
@@ -20,16 +19,14 @@ async function loadStats(): Promise<Stats> {
   if (cachedStats) return cachedStats;
   if (inflight) return inflight;
   inflight = (async () => {
-    const [restaurantsRes, reviewsRes, citiesRes, dishesRes] = await Promise.all([
+    const [restaurantsRes, reviewsRes, dishesRes] = await Promise.all([
       supabase.from('restaurants').select('id', { count: 'exact', head: true }).eq('is_active', true),
       supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('status', 'published'),
-      supabase.from('cities').select('id, restaurants!inner(id)', { count: 'exact', head: true }).eq('restaurants.is_active', true),
       supabase.from('restaurant_dishes').select('id', { count: 'exact', head: true }).in('status', ['approved_by_admin', 'verified_by_owner']),
     ]);
     const result: Stats = {
       restaurants: roundDownHundreds(restaurantsRes.count || 0),
       reviews: reviewsRes.count || 0,
-      cities: roundDownHundreds(citiesRes.count || 0),
       dishes: roundDownHundreds(dishesRes.count || 0),
     };
     cachedStats = result;
@@ -68,7 +65,7 @@ function AnimatedCounter({ value, suffix = '' }: { value: number; suffix?: strin
 
 export function SocialProof() {
   const { t } = useTranslation();
-  const [stats, setStats] = useState<Stats>(() => cachedStats ?? { restaurants: 0, reviews: 0, cities: 0, dishes: 0 });
+  const [stats, setStats] = useState<Stats>(() => cachedStats ?? { restaurants: 0, reviews: 0, dishes: 0 });
   const loaded = stats.restaurants > 0 || stats.dishes > 0;
 
   useEffect(() => {
@@ -86,7 +83,6 @@ export function SocialProof() {
   const items = [
     { icon: Store, value: stats.restaurants, label: t('stats.restaurants', 'Restaurants'), suffix: plus(stats.restaurants), show: stats.restaurants > 0 },
     { icon: Star, value: stats.reviews, label: t('stats.reviews', 'Reviews'), suffix: plus(stats.reviews), show: stats.reviews >= REVIEWS_MIN },
-    { icon: MapPin, value: stats.cities, label: t('stats.cities', 'Steden'), suffix: '', show: stats.cities > 0 },
     { icon: Utensils, value: stats.dishes, label: t('stats.dishes', 'Gerechten'), suffix: plus(stats.dishes), show: stats.dishes > 0 },
   ].filter((item) => item.show);
 

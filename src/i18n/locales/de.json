@@ -238,7 +238,7 @@
   },
   "trending": {
     "title": "Trending Gerichte",
-    "subtitle": "Beliebt in deiner Stadt",
+    "subtitle": "Am meisten gesucht",
     "inCity": "in {{city}}",
     "now": "Trending jetzt",
     "searches": "Suchanfragen",
@@ -680,7 +680,6 @@
   "stats": {
     "restaurants": "Restaurants",
     "reviews": "Bewertungen",
-    "cities": "Städte",
     "dishes": "Gerichte",
     "aria": "Dishloopr-Statistiken"
   },

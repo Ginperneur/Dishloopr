@@ -229,5 +229,16 @@ await db.exec(sql);
 check("location near Den Haag finds Den Haag", await one<string>("SELECT name v FROM nearest_city(52.08, 4.31)") === "Den Haag");
 check("a position outside the Netherlands finds nothing", (await db.query("SELECT * FROM nearest_city(48.85, 2.35)")).rows.length === 0);
 
+// --- Homepage "Uitgelicht in Nederland" (20261120090000_national_uitgelicht.sql): one paying restaurant per city ---
+const nat = noExt(await Deno.readTextFile(`${repo}/supabase/migrations/20261120090000_national_uitgelicht.sql`));
+await db.exec(nat); await db.exec(nat);
+const nu = (await db.query<{ restaurant_id: string; city_name: string }>("SELECT * FROM national_uitgelicht(4)")).rows;
+check("national block shows at most one restaurant per city", new Set(nu.map(r => r.city_name)).size === nu.length, nu);
+check("the Stadsspotlight payer represents Utrecht and names its city",
+  nu.some(r => r.city_name === "Utrecht" && r.restaurant_id === rest(0)), nu);
+await db.exec(`UPDATE spotlight_bookings SET status = 'cancelled' WHERE restaurant_id = '${rest(0)}'`);
+const nu2 = (await db.query<{ restaurant_id: string; city_name: string }>("SELECT * FROM national_uitgelicht(4)")).rows;
+check("without paying restaurants a city is left out", nu2.every(r => r.restaurant_id !== rest(0)) || nu2.length === 0, nu2);
+
 console.log(ok ? "ALL PASS" : "SOME FAILED");
 if (!ok) Deno.exit(1);

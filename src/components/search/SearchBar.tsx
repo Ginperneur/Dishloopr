@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useCityPages } from '@/lib/paidPlacements';
-import { setVisitorCity, useVisitorCity } from '@/lib/visitorCity';
+import { setVisitorCity, useVisitorCity, useLocateVisitorCity, useOpenCityPickerListener } from '@/lib/visitorCity';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, ChevronDown, UtensilsCrossed, Store, X } from 'lucide-react';
+import { Search, MapPin, ChevronDown, UtensilsCrossed, Store, X, LocateFixed, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VoiceSearch } from '@/components/search/VoiceSearch';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,6 +25,8 @@ interface SearchBarProps {
   variant?: 'hero' | 'compact';
   initialQuery?: string;
   initialCity?: string;
+  /** Homepage: the city here is the visitor's city for the whole page (one picker, kept on the device). */
+  followVisitorCity?: boolean;
 }
 
 function parseQueryToChips(query: string): string[] {
@@ -46,7 +48,8 @@ export function SearchBar({
   onSearch, 
   variant = 'hero',
   initialQuery = '',
-  initialCity = 'all'
+  initialCity = 'all',
+  followVisitorCity = false,
 }: SearchBarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -59,9 +62,11 @@ export function SearchBar({
     const chips = initialQuery ? parseQueryToChips(initialQuery) : [];
     return chips.length > 0 ? '' : initialQuery;
   });
-  const [cityId, setCityId] = useState(initialCity);
   // Direct page suggestions ("Pizza in Den Haag"): the chosen city, else the visitor's own city.
   const { city: visitorCity } = useVisitorCity();
+  const [cityId, setCityId] = useState(() => (followVisitorCity ? visitorCity?.id ?? 'all' : initialCity));
+  // On the homepage the bar shows the visitor's city, also when it is chosen elsewhere on the page.
+  useEffect(() => { if (followVisitorCity) setCityId(visitorCity?.id ?? 'all'); }, [followVisitorCity, visitorCity?.id]);
   const pageCityId = cityId && cityId !== 'all' ? cityId : visitorCity?.id ?? null;
   const { data: cityPages = [] } = useCityPages(pageCityId);
   // Keep chips and city in step when the page rewrites its URL, e.g.
@@ -70,7 +75,7 @@ export function SearchBar({
     const chips = parseQueryToChips(initialQuery);
     setSelectedDishes(prev => (chipsToQuery(prev) === chipsToQuery(chips) ? prev : chips));
   }, [initialQuery]);
-  useEffect(() => { setCityId(initialCity); }, [initialCity]);
+  useEffect(() => { if (!followVisitorCity) setCityId(initialCity); }, [initialCity, followVisitorCity]);
   const [suggestions, setSuggestions] = useState<DishSuggestion[]>([]);
   const [restaurantSuggestions, setRestaurantSuggestions] = useState<RestaurantSuggestionRow[]>([]);
   const [cuisineSuggestions, setCuisineSuggestions] = useState<string[]>([]);
@@ -265,10 +270,30 @@ export function SearchBar({
     setCityId(id);
     setShowCityDropdown(false);
     inputRef.current?.blur();
+    if (followVisitorCity) {
+      const c = cities.find(x => x.id === id);
+      setVisitorCity(c ? { id: c.id, name: c.name, slug: c.slug } : null);
+    }
   };
 
+  // "Mijn locatie" (homepage only): the nearest city becomes the visitor's city.
+  const { locate, loading: locating } = useLocateVisitorCity(useCallback(() => setShowCityDropdown(false), []));
+  // "Andere stad" elsewhere on the homepage opens this picker.
+  useOpenCityPickerListener(useCallback(() => {
+    if (!followVisitorCity) return;
+    searchBarRef.current?.scrollIntoView({ block: 'center' });
+    requestAnimationFrame(() => setShowCityDropdown(true));
+  }, [followVisitorCity]));
+  const locationOption = (className: string) => followVisitorCity && (
+    <button type="button" onClick={locate} disabled={locating} className={className}>
+      {locating ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <LocateFixed className="h-4 w-4" aria-hidden="true" />}
+      Mijn locatie
+    </button>
+  );
+
   const selectedCity = cities.find(c => c.id === cityId);
-  const cityLabel = cityId === 'all' ? t('cities.all') : selectedCity?.name || t('cities.all');
+  const noCityLabel = followVisitorCity ? 'Kies je stad' : t('cities.all');
+  const cityLabel = cityId === 'all' ? noCityLabel : selectedCity?.name || noCityLabel;
 
   const isHero = variant === 'hero';
   const hasSuggestions = suggestions.length > 0 || cuisineSuggestions.length > 0 || restaurantSuggestions.length > 0;
@@ -760,6 +785,7 @@ export function SearchBar({
                   WebkitOverflowScrolling: 'touch'
                 }}
               >
+                {locationOption('w-full px-4 py-4 text-left flex items-center gap-3 border-b border-border/30 font-semibold text-primary hover:bg-muted disabled:opacity-60')}
                 <button
                   onClick={() => handleCitySelect('all')}
                   className={`w-full px-4 py-4 text-left flex items-center gap-3 transition-colors border-b border-border/30 ${
@@ -853,6 +879,7 @@ export function SearchBar({
                 />
               </div>
               <div className="overflow-y-auto overscroll-contain" style={{ maxHeight: cityDropdownPosition.maxHeight - 72 }}>
+                {locationOption('w-full px-4 py-3.5 text-left flex items-center gap-2 border-b border-border/50 font-semibold text-primary hover:bg-muted disabled:opacity-60')}
                 <button
                   onClick={() => handleCitySelect('all')}
                   className={`w-full px-4 py-3.5 text-left hover:bg-muted active:bg-muted/80 transition-colors ${
