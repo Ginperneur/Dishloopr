@@ -75,6 +75,7 @@ export async function loadLandingContext(slug: string): Promise<LandingContext> 
     const redirectTo = dish && city ? await canonicalTarget(dish, city.id) : null;
     return {
       page: { ...data, faq_content: Array.isArray(data.faq_content) ? data.faq_content as unknown as SeoLandingPage['faq_content'] : [],
+        page_kind: data.page_kind === 'cuisine' || data.page_kind === 'ambience' ? data.page_kind : 'dish',
         dish: dish ?? undefined, city: city ?? undefined },
       synthesized: false, redirectTo,
     };

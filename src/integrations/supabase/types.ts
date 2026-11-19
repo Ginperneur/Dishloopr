@@ -8590,6 +8590,43 @@ export type Database = {
           restaurant_count: number
         }[]
       }
+      city_landing_pages: {
+        Args: { p_city: string }
+        Returns: {
+          page_kind: string
+          page_slug: string
+          restaurant_count: number
+          subject: string
+        }[]
+      }
+      city_spotlight: {
+        Args: { p_city: string }
+        Returns: {
+          body: string
+          headline: string
+          restaurant_id: string
+        }[]
+      }
+      city_tested_restaurants: {
+        Args: { p_city: string }
+        Returns: {
+          collection_slug: string
+          collection_title: string
+          reason: string
+          restaurant_id: string
+          tested_at: string
+        }[]
+      }
+      city_toppleks: {
+        Args: { p_city: string }
+        Returns: {
+          page_kind: string
+          page_slug: string
+          restaurant_count: number
+          restaurant_id: string
+          subject: string
+        }[]
+      }
       claimable_restaurant: {
         Args: { p_slug: string }
         Returns: {
@@ -8777,6 +8814,15 @@ export type Database = {
         Returns: boolean
       }
       hidden_for_menu: { Args: { p_restaurant_id: string }; Returns: boolean }
+      homepage_cities: {
+        Args: never
+        Returns: {
+          id: string
+          name: string
+          pages: number
+          slug: string
+        }[]
+      }
       is_in_cooling_off: {
         Args: { p_restaurant_id: string; p_slot_id: string }
         Returns: boolean
@@ -8815,6 +8861,40 @@ export type Database = {
         Returns: undefined
       }
       menu_dish_count: { Args: { p_restaurant_id: string }; Returns: number }
+      my_test_visits: {
+        Args: { p_restaurant: string }
+        Returns: {
+          created_at: string
+          decided_at: string
+          feedback: string
+          id: string
+          status: string
+          visited_on: string
+        }[]
+      }
+      nearest_city: {
+        Args: { p_lat: number; p_lng: number }
+        Returns: {
+          id: string
+          name: string
+          slug: string
+        }[]
+      }
+      newsletter_city_editions: {
+        Args: { p_city: string }
+        Returns: {
+          edition_date: string
+          places_left: number
+          price_cents: number
+          readers: number
+        }[]
+      }
+      newsletter_city_price_cents: { Args: { p_city: string }; Returns: number }
+      newsletter_city_readers: { Args: { p_city: string }; Returns: number }
+      newsletter_city_taken: {
+        Args: { p_city: string; p_date: string }
+        Returns: number
+      }
       outreach_unsubscribe: { Args: { p_token: string }; Returns: string }
       overture_scrape_queue: {
         Args: { p_limit?: number }
@@ -8877,6 +8957,15 @@ export type Database = {
           searches: number
         }[]
       }
+      owner_paid_stats: {
+        Args: { p_from?: string; p_restaurant_id: string; p_to?: string }
+        Returns: {
+          metric: string
+          page_slug: string
+          surface: string
+          totaal: number
+        }[]
+      }
       owner_position_history: {
         Args: { p_days?: number; p_restaurant_id: string }
         Returns: {
@@ -8922,6 +9011,14 @@ export type Database = {
           views: number
         }[]
       }
+      page_paid_placements: {
+        Args: { p_page_slug: string }
+        Returns: {
+          is_founding: boolean
+          kind: string
+          restaurant_id: string
+        }[]
+      }
       page_restaurant_ids: {
         Args: { p_page_slug: string }
         Returns: {
@@ -8955,6 +9052,14 @@ export type Database = {
         }
         Returns: string
       }
+      place_topplek_bid: {
+        Args: {
+          p_amount_cents: number
+          p_page_slug: string
+          p_restaurant: string
+        }
+        Returns: string
+      }
       place_uitgelicht_bid: {
         Args: {
           p_amount_cents: number
@@ -8962,6 +9067,92 @@ export type Database = {
           p_restaurant: string
         }
         Returns: string
+      }
+      pp_bids: {
+        Args: { p_kind: string; p_page_slug: string }
+        Returns: {
+          amount_cents: number
+          clearing_cents: number | null
+          created_at: string
+          id: string
+          market_id: string
+          page_slug: string | null
+          pay_by: string | null
+          restaurant_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "promo_bids"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      pp_daily: {
+        Args: { p_kind: string }
+        Returns: {
+          action: string
+          bid_id: string
+          price_cents: number
+          restaurant_id: string
+          slot_id: string
+          stripe_subscription_id: string
+          user_id: string
+        }[]
+      }
+      pp_list_price: {
+        Args: { p_kind: string; p_page_slug: string }
+        Returns: number
+      }
+      pp_market_id: {
+        Args: { p_kind: string; p_page_slug: string }
+        Returns: string
+      }
+      pp_packages: { Args: { p_kind: string }; Returns: string[] }
+      pp_page_status: {
+        Args: { p_kind: string; p_page_slug: string; p_restaurant: string }
+        Returns: Json
+      }
+      pp_place_bid: {
+        Args: {
+          p_amount_cents: number
+          p_kind: string
+          p_page_slug: string
+          p_restaurant: string
+        }
+        Returns: string
+      }
+      pp_protected: {
+        Args: {
+          p_created: string
+          p_kind: string
+          p_period_end: string
+          p_plan: string
+        }
+        Returns: boolean
+      }
+      pp_reserve: {
+        Args: { p_kind: string; p_page_slug: string; p_restaurant: string }
+        Returns: Json
+      }
+      pp_settle: {
+        Args: { p_kind: string }
+        Returns: {
+          action: string
+          bid_id: string
+          price_cents: number
+          restaurant_id: string
+          slot_id: string
+          stripe_subscription_id: string
+          user_id: string
+        }[]
+      }
+      pp_slots: { Args: { p_kind: string }; Returns: number }
+      pp_taken: {
+        Args: { p_kind: string; p_page_slug: string }
+        Returns: number
       }
       promo_action_mail: {
         Args: { p_bid: string; p_product: string; p_slot: string }
@@ -9098,6 +9289,7 @@ export type Database = {
         Args: { p_platform: string; p_token: string }
         Returns: undefined
       }
+      release_bundle_event: { Args: { p_event: string }; Returns: boolean }
       request_restaurant_optout: {
         Args: {
           p_email: string
@@ -9108,6 +9300,10 @@ export type Database = {
           p_toelichting: string
           p_website: string
         }
+        Returns: string
+      }
+      request_test_visit: {
+        Args: { p_note?: string; p_restaurant: string }
         Returns: string
       }
       rescan_discovery_duplicates: { Args: { p_rules?: Json }; Returns: Json }
@@ -9137,6 +9333,16 @@ export type Database = {
         Args: { p_restaurant_id: string }
         Returns: {
           term: string
+        }[]
+      }
+      restaurant_paid_badges: {
+        Args: { p_restaurant: string }
+        Returns: {
+          city_name: string
+          is_founding: boolean
+          kind: string
+          page_slug: string
+          subject: string
         }[]
       }
       restaurant_paid_tag: {
@@ -9282,6 +9488,14 @@ export type Database = {
           zonder_resultaat: number
         }[]
       }
+      search_paid_placements: {
+        Args: { p_city: string; p_cuisine?: string; p_dish_ids?: string[] }
+        Returns: {
+          kind: string
+          page_slug: string
+          restaurant_id: string
+        }[]
+      }
       search_restaurants: {
         Args: { p_city_id?: string; p_limit?: number; p_term: string }
         Returns: {
@@ -9375,12 +9589,67 @@ export type Database = {
         }[]
       }
       snapshot_restaurant_positions: { Args: never; Returns: number }
+      spotlight_price_cents: { Args: never; Returns: number }
+      spotlight_reserve: {
+        Args: {
+          p_body: string
+          p_headline: string
+          p_restaurant: string
+          p_user: string
+          p_weeks: string[]
+        }
+        Returns: string[]
+      }
+      spotlight_slots: { Args: never; Returns: number }
+      spotlight_taken: {
+        Args: { p_city: string; p_week: string }
+        Returns: number
+      }
+      spotlight_week_start: { Args: { p_day: string }; Returns: string }
+      spotlight_weeks: {
+        Args: { p_city: string; p_restaurant?: string }
+        Returns: {
+          mine: boolean
+          places_left: number
+          week_start: string
+        }[]
+      }
       sync_owner_pro_restaurants: {
         Args: { _user_id: string }
         Returns: undefined
       }
+      topplek_daily: {
+        Args: never
+        Returns: {
+          action: string
+          bid_id: string
+          price_cents: number
+          restaurant_id: string
+          slot_id: string
+          stripe_subscription_id: string
+          user_id: string
+        }[]
+      }
+      topplek_page_status: {
+        Args: { p_page_slug: string; p_restaurant: string }
+        Returns: Json
+      }
+      topplek_places_left: { Args: { p_page_slug: string }; Returns: number }
+      topplek_settle: {
+        Args: never
+        Returns: {
+          action: string
+          bid_id: string
+          price_cents: number
+          restaurant_id: string
+          slot_id: string
+          stripe_subscription_id: string
+          user_id: string
+        }[]
+      }
       track_event_metrics: { Args: { p_items: Json }; Returns: number }
       track_founding_metrics: { Args: { p_items: Json }; Returns: number }
+      track_paid_metrics: { Args: { p_items: Json }; Returns: number }
       track_reservation_funnel: { Args: { p_items: Json }; Returns: number }
       track_restaurant_metrics: { Args: { p_items: Json }; Returns: number }
       uitgelicht_daily: {
@@ -9417,10 +9686,13 @@ export type Database = {
         Returns: {
           dish_name: string
           list_price_cents: number
+          page_kind: string
           page_slug: string
           places_left: number
           position: number
           searches_per_month: number
+          topplek_left: number
+          topplek_price_cents: number
           total: number
         }[]
       }

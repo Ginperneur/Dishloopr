@@ -107,6 +107,7 @@ export function useSeoLandingPages() {
     if (!error && data) {
       setPages(data.map(p => ({
         ...p,
+        page_kind: p.page_kind === 'cuisine' || p.page_kind === 'ambience' ? p.page_kind : 'dish',
         faq_content: Array.isArray(p.faq_content) ? (p.faq_content as unknown as FAQ[]) : [],
         dish: p.dishes,
         city: p.cities,
