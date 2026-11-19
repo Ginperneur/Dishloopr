@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { BarChart3, BookOpen, CalendarDays, Check, Crown, Store } from 'lucide-react';
+import { BarChart3, BookOpen, CalendarDays, Check, Crown, Mail, Megaphone, Rocket, Store, Trophy } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,28 +16,23 @@ import { toast } from 'sonner';
 import { CHECKOUT_ENABLED } from '@/lib/checkoutFlags';
 import { OWNER_PRO_PRICES } from '@/lib/proPricing';
 import { useOwnerProCheckout } from '@/hooks/useOwnerProCheckout';
-import { Input } from '@/components/ui/input';
-import { formatEuroCents } from '@/lib/promoSlots';
 import { VatTotal } from '@/components/common/VatTotal';
+import { PACKAGE_NAMES, PRICES, euroCents, foundingWindowOpen, packageCents, placeKind, type PlacePackage } from '@/lib/paidPricing';
 
-type PackageOption = 'founding_month' | 'founding_year' | 'menu_once' | 'menu_month';
-
-// Founding Partner-actie: wie Uitgelicht koopt van nu tot en met dit einde van
-// de actie wordt Founding Partner. Zelfde datum als
-// create-package-checkout's FOUNDING_WINDOW_END, hier alleen voor de copy.
-const FOUNDING_WINDOW_END = new Date('2027-01-05T23:59:59+01:00');
-function foundingWindowOpen() { return new Date() <= FOUNDING_WINDOW_END; }
+type Billing = 'month' | 'year';
+type Offer = { page_slug: string; dish_name: string; position: number | null; total: number; searches_per_month: number;
+  places_left: number; list_price_cents: number; page_kind: 'dish' | 'cuisine' | 'ambience'; topplek_left: number; topplek_price_cents: number };
+type PageStatus = { open_bids: number; highest_bid_cents: number | null; next_auction: string; list_price_cents: number;
+  my_bid: { status: 'open' | 'won'; amount_cents: number; clearing_cents: number | null } | null };
 
 function track(pkg: string) { sendAnalyticsEvent('click_package', { package: pkg }); }
 
-type Billing = 'month' | 'year';
-
 function Features({ items, inverted }: { items: string[]; inverted?: boolean }) {
   return (
-    <ul className="space-y-3 text-sm flex-1">
+    <ul className="flex-1 space-y-3 text-sm">
       {items.map(i => (
         <li key={i} className="flex gap-2.5">
-          <Check className={`h-4 w-4 mt-0.5 shrink-0 ${inverted ? 'text-primary-foreground' : 'text-primary'}`} aria-hidden="true" />
+          <Check className={`mt-0.5 h-4 w-4 shrink-0 ${inverted ? 'text-current' : 'text-primary'}`} aria-hidden="true" />
           <span>{i}</span>
         </li>
       ))}
@@ -45,59 +40,37 @@ function Features({ items, inverted }: { items: string[]; inverted?: boolean }) 
   );
 }
 
-/** Pantrics-style per-card switch; both labels are clickable and the switch is labelled for screen readers. */
-function BillingToggle({ value, onChange, left = 'Maandelijks', right = 'Jaarlijks', hint, inverted, id }: {
-  value: Billing; onChange: (v: Billing) => void; left?: string; right?: string; hint?: string; inverted?: boolean; id: string;
-}) {
-  const label = (active: boolean) => `text-sm font-medium transition-colors ${active ? '' : inverted ? 'text-primary-foreground/70' : 'text-muted-foreground'}`;
+function Tier({ tone, badge, children }: { tone?: 'accent' | 'dark'; badge?: string; children: React.ReactNode }) {
+  const cls = tone === 'accent' ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/20'
+    : tone === 'dark' ? 'bg-secondary text-secondary-foreground' : 'border bg-card';
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <button type="button" className={`min-h-11 ${label(value === 'month')}`} onClick={() => onChange('month')}>{left}</button>
-      <Switch id={id} checked={value === 'year'} onCheckedChange={c => onChange(c ? 'year' : 'month')} aria-label={`${right} betalen`}
-        className={inverted ? 'data-[state=checked]:bg-primary-foreground/30 data-[state=unchecked]:bg-primary-foreground/20' : ''} />
-      <button type="button" className={`min-h-11 ${label(value === 'year')}`} onClick={() => onChange('year')}>{right}</button>
-      {hint && <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${inverted ? 'bg-primary-foreground/20' : 'bg-primary/15 text-primary'}`}>{hint}</span>}
-    </div>
-  );
-}
-
-function BigPrice({ amount, per, was, note, inverted }: { amount: string; per: string; was?: string; note?: string; inverted?: boolean }) {
-  return (
-    <div className="min-h-[104px]">
-      {was && <p className={`text-sm line-through ${inverted ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>{was}</p>}
-      <p className="flex items-baseline gap-1.5">
-        <span className="font-display text-5xl font-bold tracking-tight">{amount}</span>
-        <span className={`text-sm ${inverted ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>{per}</span>
-      </p>
-      {note && <p className={`mt-1 text-sm ${inverted ? 'text-primary-foreground/90' : 'text-muted-foreground'}`}>{note}</p>}
-    </div>
-  );
-}
-
-function Card({ highlight, badge, children }: { highlight?: boolean; badge?: string; children: React.ReactNode }) {
-  return (
-    <div className={`relative flex flex-col gap-6 rounded-3xl p-7 ${highlight
-      ? 'bg-gradient-to-br from-primary via-primary to-amber-500 text-primary-foreground shadow-xl shadow-primary/20 xl:-my-4 xl:py-11'
-      : 'border bg-card'}`}>
-      {badge && (
-        <span className="absolute -top-3 right-6 rounded-full bg-amber-300 px-3 py-1 text-xs font-bold uppercase tracking-wide text-amber-950 shadow">{badge}</span>
-      )}
+    <div className={`relative flex flex-col gap-5 rounded-3xl p-7 ${cls}`}>
+      {badge && <span className="absolute -top-3 right-6 rounded-full bg-secondary px-3 py-1 text-xs font-bold text-secondary-foreground shadow">{badge}</span>}
       {children}
     </div>
   );
 }
 
-const CardLabel = ({ icon: Icon, children }: { icon: typeof Check; children: React.ReactNode }) => (
+const Label = ({ icon: Icon, children }: { icon: typeof Check; children: React.ReactNode }) => (
   <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.12em]"><Icon className="h-5 w-5" aria-hidden="true" />{children}</h2>
 );
 
-const euro = (n: number) => `€${n.toLocaleString('nl-NL', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
+function Price({ amount, per, note, muted }: { amount: string; per: string; note?: string; muted?: string }) {
+  return (
+    <div className="min-h-[88px]">
+      <p className="flex flex-wrap items-baseline gap-1.5"><span className="font-display text-4xl font-bold tracking-tight">{amount}</span><span className={`text-sm ${muted ?? 'text-muted-foreground'}`}>{per}</span></p>
+      {note && <p className={`mt-1 text-sm ${muted ?? 'text-muted-foreground'}`}>{note}</p>}
+    </div>
+  );
+}
+
+const PAGE_KIND_LABEL = { dish: 'Gerecht', cuisine: 'Keuken', ambience: 'Sfeer' } as const;
 
 export default function PackagesPage() {
   const [params] = useSearchParams();
   const { user } = useAuth();
   const paramSlug = params.get('slug') || '';
-
+  const promo = foundingWindowOpen();
   useEffect(() => { sendAnalyticsEvent('view_packages', {}); }, []);
 
   const { data: restaurant } = useQuery({
@@ -114,83 +87,69 @@ export default function PackagesPage() {
   const { data: pages = [] } = useQuery({
     queryKey: ['packages-pages', restaurant?.slug],
     queryFn: async () => {
-      // Position, searches per month and places left per page, so owners see value and scarcity.
       const { data, error } = await (supabase.rpc as any)('uitgelicht_page_offers', { p_slug: restaurant!.slug });
       if (error) throw error;
-      return (data ?? []) as { page_slug: string; dish_name: string; position: number; total: number;
-        searches_per_month: number; places_left: number; list_price_cents: number }[];
+      return (data ?? []) as Offer[];
     },
     enabled: Boolean(restaurant?.slug),
   });
 
-  const [founding, setFounding] = useState<null | Billing>(null);
+  const [buy, setBuy] = useState<null | PlacePackage>(null);
+  const [billing, setBilling] = useState<Billing>('month');
   const [pageSlug, setPageSlug] = useState('');
-  const [busy, setBusy] = useState<PackageOption | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [bidEuro, setBidEuro] = useState('');
 
-  const { data: placesLeft } = useQuery({
-    queryKey: ['founding-places-left', pageSlug],
-    queryFn: async () => {
-      const { data, error } = await (supabase.rpc as any)('founding_places_left', { p_page_slug: pageSlug });
-      if (error) throw error;
-      return data as number;
-    },
-    enabled: Boolean(pageSlug),
-  });
-
-  // A link from the dashboard (?page=) opens Uitgelicht with that dish page already chosen.
+  // A link from the dashboard (?page=&pakket=) opens the dialog with that page chosen.
   const wantedPage = params.get('page');
+  const wantedPkg = params.get('pakket') as PlacePackage | null;
   useEffect(() => {
     if (wantedPage && pages.some(p => p.page_slug === wantedPage)) {
       setPageSlug(wantedPage);
-      setFounding('month');
+      setBuy(wantedPkg && wantedPkg in PACKAGE_NAMES ? wantedPkg : 'uitgelicht');
     }
-  }, [wantedPage, pages]);
+  }, [wantedPage, wantedPkg, pages]);
 
-  // After the Founding Partner window: price per page by demand, and bids when a page is full.
-  const afterWindow = !foundingWindowOpen();
-  const { data: pagePrice } = useQuery({
-    queryKey: ['uitgelicht-price', pageSlug],
+  const kind = buy ? placeKind(buy) : 'uitgelicht';
+  // Founding Partner prices (Uitgelicht and Groei) apply until 5 January 2027; Topplek is always priced by demand.
+  const founding = promo && (buy === 'uitgelicht' || buy === 'groei');
+  const sel = pages.find(p => p.page_slug === pageSlug);
+  const left = sel ? (kind === 'topplek' ? sel.topplek_left : sel.places_left) : null;
+
+  const { data: status, refetch: refetchStatus } = useQuery({
+    queryKey: ['place-status', kind, pageSlug, restaurant?.id],
     queryFn: async () => {
-      const { data, error } = await (supabase.rpc as any)('uitgelicht_list_price', { p_page_slug: pageSlug });
+      const fn = kind === 'topplek' ? 'topplek_page_status' : 'uitgelicht_page_status';
+      const { data, error } = await (supabase.rpc as any)(fn, { p_page_slug: pageSlug, p_restaurant: restaurant!.id });
       if (error) throw error;
-      return data as number;
+      return data as PageStatus;
     },
-    enabled: Boolean(pageSlug) && afterWindow,
-  });
-  const { data: pageStatus, refetch: refetchStatus } = useQuery({
-    queryKey: ['uitgelicht-status', pageSlug, restaurant?.id],
-    queryFn: async () => {
-      const { data, error } = await (supabase.rpc as any)('uitgelicht_page_status', { p_page_slug: pageSlug, p_restaurant: restaurant!.id });
-      if (error) throw error;
-      return data as { open_bids: number; highest_bid_cents: number | null; next_auction: string;
-        my_bid: { status: 'open' | 'won'; amount_cents: number; clearing_cents: number | null } | null };
-    },
-    enabled: Boolean(pageSlug && restaurant?.id && user) && afterWindow,
+    enabled: Boolean(buy && pageSlug && restaurant?.id && user && !founding),
     retry: false,
   });
-  const [bidEuro, setBidEuro] = useState('');
-  const othersWaiting = (pageStatus?.open_bids ?? 0) - (pageStatus?.my_bid?.status === 'open' ? 1 : 0) > 0;
-  const mustBid = afterWindow && pageStatus?.my_bid?.status !== 'won' && (placesLeft === 0 || othersWaiting);
+  const othersWaiting = (status?.open_bids ?? 0) - (status?.my_bid?.status === 'open' ? 1 : 0) > 0;
+  const mustBid = !founding && status?.my_bid?.status !== 'won' && (left === 0 || othersWaiting);
+  const monthCents = sel && buy ? (status?.my_bid?.status === 'won' && status.my_bid.clearing_cents
+    ? status.my_bid.clearing_cents + (buy === 'groei' ? PRICES.groei.surcharge : buy === 'dominant' ? PRICES.dominant.surcharge : 0)
+    : packageCents(buy, sel, founding)) : null;
+
   const placeBid = async () => {
     const cents = Math.round(Number(bidEuro.replace(',', '.')) * 100);
     if (!restaurant || !Number.isFinite(cents) || cents <= 0) { toast.error('Vul een bedrag in euro in.'); return; }
-    const { error } = await (supabase.rpc as any)('place_uitgelicht_bid', { p_page_slug: pageSlug, p_restaurant: restaurant.id, p_amount_cents: cents });
+    const fn = kind === 'topplek' ? 'place_topplek_bid' : 'place_uitgelicht_bid';
+    const { error } = await (supabase.rpc as any)(fn, { p_page_slug: pageSlug, p_restaurant: restaurant.id, p_amount_cents: cents });
     if (error) { toast.error(error.message); return; }
     toast.success('Bod geplaatst. Komt er een plek vrij of wint je bod bij de veiling, dan krijg je bericht.');
     setBidEuro('');
     refetchStatus();
   };
 
-  // Founding Partner and Menuservice go through create-package-checkout, which
-  // checks verified ownership and the 5-per-page cap; payment is taken at checkout.
-  const startPackage = async (option: PackageOption, page?: string) => {
+  const startCheckout = async (option: string, page?: string) => {
     track(option);
     if (!restaurant) { toast.info('Claim eerst je restaurant of log in.'); return; }
     setBusy(option);
     try {
-      const { data, error } = await supabase.functions.invoke('create-package-checkout', {
-        body: { option, restaurant_id: restaurant.id, page_slug: page },
-      });
+      const { data, error } = await supabase.functions.invoke('create-package-checkout', { body: { option, restaurant_id: restaurant.id, page_slug: page } });
       const message = data?.error ?? (error ? await error.context?.json?.().then((b: any) => b?.error).catch(() => null) : null);
       if (message || error || !data?.url) throw new Error(message || 'Geen checkout ontvangen');
       window.location.href = data.url;
@@ -199,202 +158,178 @@ export default function PackagesPage() {
       setBusy(null);
     }
   };
+  const placeOption = (p: PlacePackage) => (p === 'uitgelicht' ? (founding && billing === 'year' ? 'founding_year' : 'founding_month') : `${p}_month`);
 
   const { startCheckout: startPro, loading: proLoading } = useOwnerProCheckout();
-
-  const [uitBilling, setUitBilling] = useState<Billing>('month');
   const [proBilling, setProBilling] = useState<Billing>('month');
-  const [menuBilling, setMenuBilling] = useState<Billing>('month');
-  const promo = foundingWindowOpen();
-  const uit = promo
-    ? (uitBilling === 'month'
-      ? { amount: '€59', per: 'per maand excl. btw', was: 'Normaal €99 per maand', note: 'Je bespaart €480 per jaar.' }
-      : { amount: '€590', per: 'per jaar excl. btw', was: 'Normaal €990 per jaar', note: `Dat is ${euro(590 / 12)} per maand, je bespaart €400 per jaar.` })
-    : { amount: 'vanaf €99', per: 'per maand excl. btw', note: 'De prijs per gerechtpagina hangt af van de vraag. Pagina vol? Dan bied je mee.' };
-  const pro = proBilling === 'month'
-    ? { amount: `€${OWNER_PRO_PRICES.monthly.amount}`, per: 'per maand excl. btw', note: `Of €${OWNER_PRO_PRICES.yearly.amount} per jaar, 2 maanden gratis.` }
-    : { amount: `€${OWNER_PRO_PRICES.yearly.amount}`, per: 'per jaar excl. btw', was: `${euro(OWNER_PRO_PRICES.monthly.amount * 12)} per jaar`, note: `Dat is ${euro(OWNER_PRO_PRICES.yearly.amount / 12)} per maand, 2 maanden gratis.` };
-  const needLogin = () => toast.info('Log eerst in met je eigenaarsaccount.');
-
+  const [menuBilling, setMenuBilling] = useState<'month' | 'once'>('month');
   const claimTo = restaurant ? `/claim/${restaurant.slug}` : '/claim';
+  const open = (p: PlacePackage) => { track(p); setPageSlug(''); setBilling('month'); setBuy(p); };
+  const offerPages = useMemo(() => pages, [pages]);
 
   return (
     <Layout>
-      <SEOHead title="Pakketten voor restaurants | Dishloopr" description="Gratis claimen, Uitgelicht, Menuservice, Evenementen en Pro: kies het pakket dat bij je restaurant past." />
-      <div className="container py-12 md:py-16 space-y-14">
-        <header className="mx-auto max-w-3xl text-center">
+      <SEOHead title="Pakketten voor restaurants | Dishloopr" description="Gratis claimen, Pro, Groei en Dominant, plus losse plekken: Topplek, Uitgelicht, Stadsspotlight en de nieuwsbrief in je stad." />
+      <div className="container space-y-14 py-12 md:py-16">
+        <header className="mx-auto max-w-3xl space-y-4 text-center">
           <h1 className="font-display text-4xl font-bold leading-[1.05] tracking-tight md:text-6xl">Begin gratis, groei wanneer jij wilt.</h1>
-          <p className="mt-4 text-lg text-muted-foreground">
-            {restaurant ? `Voor ${restaurant.name}. ` : ''}Claimen is altijd gratis. Geen verborgen kosten. Alle prijzen zijn exclusief 21% btw; bij het afrekenen zie je het totaalbedrag.
-          </p>
+          <p className="text-lg text-muted-foreground">{restaurant ? `Voor ${restaurant.name}. ` : ''}Claimen is altijd gratis. Alle prijzen zijn exclusief 21% btw; bij het afrekenen zie je het totaalbedrag.</p>
         </header>
 
-        <div className="grid items-stretch gap-6 md:grid-cols-2 xl:grid-cols-4">
-          <Card>
-            <CardLabel icon={Store}>Gratis</CardLabel>
-            <BigPrice amount="€0" per="altijd" note="Je basisprofiel blijft gratis." />
-            <Features items={['Je pagina claimen', 'Menukaart, openingstijden en foto\'s beheren', 'Reageren op reviews', 'Basisstatistieken']} />
-            <Button asChild size="lg" className="min-h-12 w-full rounded-full"><Link to={claimTo} onClick={() => track('free')}>Begin gratis</Link></Button>
-          </Card>
-
-          <Card highlight badge={promo ? 'Founding Partner actie' : 'Populair'}>
-            <CardLabel icon={Crown}>Uitgelicht</CardLabel>
-            {promo && <BillingToggle id="uit-billing" value={uitBilling} onChange={setUitBilling} hint="Tot 40% korting" inverted />}
-            <BigPrice {...uit} inverted />
-            <Features inverted items={[
-              'Vaste plek bovenaan je gerechtpagina in je stad',
-              'Maximaal 5 restaurants per gerechtpagina',
-              'Je plek staat direct live',
-              ...(promo ? ['Founding Partner badge voor altijd op je pagina', 'Actieprijs tot en met 31 december 2027'] : ['Per maand opzegbaar, elk kwartaal een veiling bij volle pagina\'s']),
-            ]} />
-            {promo && <p className="text-xs text-primary-foreground/85">Instappen kan tot en met 5 januari 2027. Minimale looptijd 6 maanden.</p>}
-            {CHECKOUT_ENABLED.packages ? (
-              <Button size="lg" variant="secondary" className="min-h-12 w-full rounded-full bg-primary-foreground text-primary hover:bg-primary-foreground/90"
-                onClick={() => { setPageSlug(''); setFounding(promo ? uitBilling : 'month'); }}>Kies Uitgelicht</Button>
-            ) : (
-              <Button size="lg" disabled variant="secondary" className="min-h-12 w-full rounded-full">Binnenkort beschikbaar</Button>
-            )}
-          </Card>
-
-          <Card>
-            <CardLabel icon={BarChart3}>Owner Pro</CardLabel>
-            <BillingToggle id="pro-billing" value={proBilling} onChange={setProBilling} hint="2 maanden gratis" />
-            <BigPrice {...pro} />
-            <Features items={['Conversiefunnel: weergaven, kliks en reserveringen', 'Zoektermen waarop gasten je vinden', 'Vergelijking met restaurants in je buurt', 'Hulp van AI bij het beantwoorden van reviews']} />
-            <Button size="lg" className="min-h-12 w-full rounded-full" disabled={!CHECKOUT_ENABLED.pro || proLoading !== null}
-              onClick={() => user ? startPro(proBilling === 'month' ? 'monthly' : 'yearly') : needLogin()}>
-              {proLoading ? 'Even geduld…' : 'Kies Owner Pro'}
-            </Button>
-          </Card>
-
-          <Card>
-            <CardLabel icon={BookOpen}>Menuservice</CardLabel>
-            <BillingToggle id="menu-billing" value={menuBilling} onChange={setMenuBilling} left="Per maand" right="Eenmalig" />
-            <BigPrice {...(menuBilling === 'month' ? { amount: '€19', per: 'per maand excl. btw', note: 'Altijd actueel, wij houden hem bij.' } : { amount: '€79', per: 'eenmalig excl. btw', note: 'Wij zetten je kaart één keer online.' })} />
-            <Features items={['Je volledige menukaart online', 'Vertaald in het Engels, Duits en Frans', 'Als QR-menu', 'Voor je eigen website']} />
-            {CHECKOUT_ENABLED.packages ? (
-              <Button size="lg" variant="outline" className="min-h-12 w-full rounded-full" disabled={busy !== null}
-                onClick={() => startPackage(menuBilling === 'month' ? 'menu_month' : 'menu_once')}>
-                {busy === 'menu_month' || busy === 'menu_once' ? 'Even geduld…' : 'Kies Menuservice'}
-              </Button>
-            ) : (
-              <Button size="lg" disabled variant="outline" className="min-h-12 w-full rounded-full">Binnenkort beschikbaar</Button>
-            )}
-          </Card>
-        </div>
-
-        <p className="text-center text-sm text-muted-foreground">
-          Plekken zijn beperkt en de prijs volgt de vraag.{' '}
-          <Link to="/voor-restaurants/plekken-en-bieden" className="font-medium text-primary underline">Lees hoe plekken, prijzen en bieden werken</Link>
-        </p>
-
-        <div className="flex flex-col gap-5 rounded-3xl border bg-card p-7 md:flex-row md:items-center md:justify-between">
-          <div className="max-w-xl space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <CardLabel icon={CalendarDays}>Specials en evenementen</CardLabel>
-              {!CHECKOUT_ENABLED.event && <Badge variant="secondary">Online betalen binnenkort</Badge>}
-            </div>
-            <p className="flex items-baseline gap-1.5"><span className="font-display text-4xl font-bold">€5</span><span className="text-sm text-muted-foreground">per maand per evenement excl. btw, maandelijks opzegbaar</span></p>
-            <Features items={['Je special of evenement op de evenementenpagina en op je restaurantpagina', 'Eenmalig op een datum of elke week terugkerend', 'Elke maand een mail met hoe vaak het in beeld was en is bekeken']} />
+        {promo && (
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
+            <p><strong>Founding Partner-actie:</strong> Uitgelicht voor {euroCents(PRICES.uitgelicht.founding)} in plaats van {euroCents(PRICES.uitgelicht.from)} per maand, Groei voor {euroCents(PRICES.groei.founding)}, tot en met 31 december 2027, en de Founding Partner-badge voor altijd. Instappen kan tot en met 5 januari 2027, minimale looptijd 6 maanden.</p>
           </div>
-          <Button asChild size="lg" variant="outline" className="min-h-12 w-full rounded-full md:w-auto">
-            <Link to={user ? '/owner-dashboard?section=evenementen' : claimTo} onClick={() => track('event_promotion')}>
-              {user ? 'Evenement toevoegen' : 'Claim eerst je restaurant'}
-            </Link>
-          </Button>
+        )}
+
+        <div className="grid items-stretch gap-6 md:grid-cols-2 xl:grid-cols-4">
+          <Tier>
+            <Label icon={Store}>Gratis</Label>
+            <Price amount="€0" per="altijd" note="Je basisprofiel blijft gratis." />
+            <Features items={['Je pagina claimen', 'Menukaart, openingstijden en foto\'s beheren', 'Reageren op reviews', 'Basisstatistieken']} />
+            <Button asChild size="lg" variant="outline" className="min-h-12 w-full rounded-full"><Link to={claimTo} onClick={() => track('free')}>Begin gratis</Link></Button>
+          </Tier>
+
+          <Tier>
+            <Label icon={BarChart3}>Pro</Label>
+            <div className="flex items-center gap-3 text-sm">
+              <button type="button" className="min-h-11" onClick={() => setProBilling('month')}>Maandelijks</button>
+              <Switch checked={proBilling === 'year'} onCheckedChange={c => setProBilling(c ? 'year' : 'month')} aria-label="Jaarlijks betalen" />
+              <button type="button" className="min-h-11" onClick={() => setProBilling('year')}>Jaarlijks</button>
+            </div>
+            <Price amount={`€${proBilling === 'month' ? OWNER_PRO_PRICES.monthly.amount : OWNER_PRO_PRICES.yearly.amount}`}
+              per={proBilling === 'month' ? 'per maand' : 'per jaar'} note={proBilling === 'month' ? `Of €${OWNER_PRO_PRICES.yearly.amount} per jaar, 2 maanden gratis.` : '2 maanden gratis.'} />
+            <Features items={['Zoektermen waarop gasten je vinden', 'Vergelijking met je buurt', 'Hulp van AI bij reviews', 'Onbeperkt simulaties', 'Stempelkaart en social posts']} />
+            <Button size="lg" className="min-h-12 w-full rounded-full" disabled={!CHECKOUT_ENABLED.pro || proLoading !== null}
+              onClick={() => user ? startPro(proBilling === 'month' ? 'monthly' : 'yearly') : toast.info('Log eerst in met je eigenaarsaccount.')}>
+              {proLoading ? 'Even geduld…' : 'Kies Pro'}
+            </Button>
+          </Tier>
+
+          <Tier tone="accent" badge="Aanrader">
+            <Label icon={Rocket}>Groei</Label>
+            <Price amount={promo ? euroCents(PRICES.groei.founding) : `vanaf ${euroCents(PRICES.uitgelicht.from + PRICES.groei.surcharge)}`} per="per maand"
+              note={promo ? `Normaal ${euroCents(PRICES.uitgelicht.from + PRICES.groei.surcharge)}. Los ${euroCents(PRICES.uitgelicht.founding + 2900 + PRICES.event)}.` : `Los ${euroCents(PRICES.uitgelicht.from + 2900 + PRICES.event)}, je bespaart ${euroCents(2900 + PRICES.event - PRICES.groei.surcharge)}.`}
+              muted="text-primary-foreground/85" />
+            <Features inverted items={['1 Uitgelicht-plek op een pagina in je stad', 'Ook bovenaan bij zoeken, op de kaart en met een badge', 'Pro inbegrepen', '1 evenement of special per maand', 'Maandrapport met vertoningen en kliks per plek']} />
+            <Button size="lg" variant="secondary" className="min-h-12 w-full rounded-full bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+              disabled={!CHECKOUT_ENABLED.packages} onClick={() => open('groei')}>Kies Groei</Button>
+          </Tier>
+
+          <Tier tone="dark">
+            <Label icon={Trophy}>Dominant</Label>
+            <Price amount={`vanaf ${euroCents(PRICES.topplek.from + PRICES.dominant.surcharge)}`} per="per maand" note="De prijs volgt de Topplek van je pagina." muted="text-secondary-foreground/80" />
+            <Features inverted items={['De Topplek op een pagina in je stad', 'Vraag doorsturen voor hetzelfde gerecht', '1 nieuwsbriefplaatsing per maand in je stad', 'Pro en 1 evenement per maand inbegrepen']} />
+            <Button size="lg" variant="secondary" className="min-h-12 w-full rounded-full" disabled={!CHECKOUT_ENABLED.packages} onClick={() => open('dominant')}>Kies Dominant</Button>
+          </Tier>
         </div>
+
+        <section aria-labelledby="los" className="space-y-5">
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <h2 id="los" className="font-display text-3xl font-bold">Of kies losse plekken</h2>
+            <Link to="/voor-restaurants/plekken-en-bieden" className="text-sm font-medium text-primary underline">Zo werken plekken en bieden</Link>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { icon: Trophy, name: 'Topplek', price: `vanaf ${euroCents(PRICES.topplek.from)}`, per: 'per maand', text: '1 per pagina: de grote kaart bovenaan, ook als eerste bij zoeken, op de kaart en op de homepage van je stad.', action: () => open('topplek'), cta: 'Kies Topplek' },
+              { icon: Crown, name: 'Uitgelicht', price: promo ? euroCents(PRICES.uitgelicht.founding) : `vanaf ${euroCents(PRICES.uitgelicht.from)}`, per: 'per maand', text: '3 per pagina, direct onder de Topplek. Pagina vol? Dan bied je mee.', action: () => open('uitgelicht'), cta: 'Kies Uitgelicht' },
+              { icon: Megaphone, name: 'Stadsspotlight', price: euroCents(PRICES.spotlightWeek), per: 'per week', text: '3 plekken per stad op de homepage en stadspagina, met je eigen haakje zoals een nieuw menu.', to: '/owner-dashboard?section=promotions', cta: 'Boek een week' },
+              { icon: Mail, name: 'Nieuwsbrief in je stad', price: euroCents(PRICES.newsletterPer1000), per: 'per 1.000 lezers', text: `Maximaal 4 restaurants per editie, minimaal ${euroCents(PRICES.newsletterMin)}. Je ziet vooraf hoeveel lezers.`, to: '/owner-dashboard?section=promotions', cta: 'Kies een editie' },
+              { icon: CalendarDays, name: 'Evenement', price: euroCents(PRICES.event), per: 'per maand', text: 'Je special of evenement op de evenementenpagina, je restaurantpagina en de homepage van je stad.', to: user ? '/owner-dashboard?section=evenementen' : claimTo, cta: 'Evenement toevoegen' },
+              { icon: BookOpen, name: 'Menuservice', price: menuBilling === 'month' ? euroCents(PRICES.menuMonth) : euroCents(PRICES.menuOnce), per: menuBilling === 'month' ? 'per maand' : 'eenmalig', text: 'Wij zetten je kaart online, vertaald en als QR-menu.', action: () => startCheckout(menuBilling === 'month' ? 'menu_month' : 'menu_once'), cta: busy?.startsWith('menu') ? 'Even geduld…' : 'Kies Menuservice', toggle: true },
+            ].map(c => (
+              <div key={c.name} className="flex flex-col gap-3 rounded-2xl border bg-card p-6">
+                <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.1em] text-accent-foreground"><c.icon className="h-4 w-4" aria-hidden="true" />{c.name}</p>
+                <p className="flex items-baseline gap-1.5"><span className="font-display text-2xl font-bold">{c.price}</span><span className="text-sm text-muted-foreground">{c.per}</span></p>
+                {c.toggle && (
+                  <div className="flex gap-2 text-sm">
+                    <button type="button" className={`min-h-9 rounded-full px-3 ${menuBilling === 'month' ? 'bg-secondary text-secondary-foreground' : 'border'}`} onClick={() => setMenuBilling('month')}>Per maand</button>
+                    <button type="button" className={`min-h-9 rounded-full px-3 ${menuBilling === 'once' ? 'bg-secondary text-secondary-foreground' : 'border'}`} onClick={() => setMenuBilling('once')}>Eenmalig</button>
+                  </div>
+                )}
+                <p className="flex-1 text-sm text-muted-foreground">{c.text}</p>
+                {'to' in c && c.to
+                  ? <Button asChild variant="outline" className="min-h-11 rounded-full"><Link to={c.to}>{c.cta}</Link></Button>
+                  : <Button variant="outline" className="min-h-11 rounded-full" disabled={!CHECKOUT_ENABLED.packages || busy !== null} onClick={c.action}>{c.cta}</Button>}
+              </div>
+            ))}
+          </div>
+          <p className="text-sm text-muted-foreground">Betaalde plekken zijn er alleen op pagina's met minstens 10 restaurants, en alleen voor een gerecht dat op je eigen kaart staat. Elke betaalde plek is voor gasten herkenbaar als betaald.</p>
+        </section>
       </div>
 
-      <Dialog open={founding !== null} onOpenChange={o => !o && setFounding(null)}>
+      <Dialog open={buy !== null} onOpenChange={o => !o && setBuy(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Om welke gerechtpagina gaat het?</DialogTitle>
-            <DialogDescription>Je uitgelichte plek komt op één gerechtpagina in je stad.</DialogDescription>
+            <DialogTitle>{buy ? `${PACKAGE_NAMES[buy]}: op welke pagina?` : ''}</DialogTitle>
+            <DialogDescription>Je plek komt op één gerecht-, keuken- of sfeerpagina in je stad, en overal waar die pagina verschijnt.</DialogDescription>
           </DialogHeader>
           {!restaurant ? (
             <div className="space-y-3">
               <p className="text-sm">We weten nog niet om welk restaurant het gaat. Claim eerst je restaurant of log in.</p>
-              <div className="flex gap-2">
-                <Button asChild><Link to="/claim">Restaurant claimen</Link></Button>
-                <Button asChild variant="outline"><Link to="/login">Inloggen</Link></Button>
-              </div>
+              <div className="flex gap-2"><Button asChild><Link to="/claim">Restaurant claimen</Link></Button><Button asChild variant="outline"><Link to="/login">Inloggen</Link></Button></div>
             </div>
-          ) : pages.length === 0 ? (
-            <p className="text-sm">
-              Uitgelicht is er voor de gerechtpagina's van hoofdgerechten met minstens 6 restaurants, zoals pizza, sushi of biefstuk in je stad.
-              {' '}{restaurant.name} staat nog niet op zo'n pagina. Voeg je gerechten toe in je dashboard onder Menu, of mail info@dishloopr.com.
-            </p>
+          ) : offerPages.length === 0 ? (
+            <p className="text-sm">{restaurant.name} staat nog niet op een pagina met betaalde plekken. Die zijn er vanaf 10 restaurants, voor gerechten waar gasten een restaurant voor kiezen. Voeg je gerechten toe in je dashboard onder Menu, of mail info@dishloopr.com.</p>
           ) : (
             <div className="space-y-4">
+              {buy === 'uitgelicht' && founding && (
+                <div className="flex items-center gap-3 text-sm">
+                  <button type="button" className="min-h-11" onClick={() => setBilling('month')}>Per maand</button>
+                  <Switch checked={billing === 'year'} onCheckedChange={c => setBilling(c ? 'year' : 'month')} aria-label="Per jaar betalen" />
+                  <button type="button" className="min-h-11" onClick={() => setBilling('year')}>Per jaar ({euroCents(PRICES.uitgelicht.foundingYear)})</button>
+                </div>
+              )}
               <Select value={pageSlug} onValueChange={setPageSlug}>
-                <SelectTrigger className="min-h-11"><SelectValue placeholder="Kies een gerechtpagina" /></SelectTrigger>
+                <SelectTrigger className="min-h-11"><SelectValue placeholder="Kies een pagina" /></SelectTrigger>
                 <SelectContent>
-                  {pages.map(p => (
-                    <SelectItem key={p.page_slug} value={p.page_slug} disabled={!afterWindow && p.places_left === 0}>
-                      {p.dish_name}: nu #{p.position} van {p.total}
-                      {p.searches_per_month > 0 ? `, ${Math.round(p.searches_per_month).toLocaleString('nl-NL')} zoekopdrachten per maand` : ''}
-                      {p.places_left === 0 ? ', vol' : `, nog ${p.places_left} ${p.places_left === 1 ? 'plek' : 'plekken'}`}
-                    </SelectItem>
-                  ))}
+                  {offerPages.map(p => {
+                    const l = kind === 'topplek' ? p.topplek_left : p.places_left;
+                    return (
+                      <SelectItem key={p.page_slug} value={p.page_slug} disabled={founding && l === 0}>
+                        {PAGE_KIND_LABEL[p.page_kind]}: {p.dish_name}{p.position ? `, nu #${p.position} van ${p.total}` : `, ${p.total} restaurants`}
+                        {l === 0 ? ', vol' : kind === 'topplek' ? ', Topplek vrij' : `, nog ${l} ${l === 1 ? 'plek' : 'plekken'}`}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
-              {pageSlug && (() => {
-                const sel = pages.find(p => p.page_slug === pageSlug);
-                if (!sel) return null;
-                return (
-                  <div className="rounded-lg bg-primary/5 p-3 text-sm">
-                    <p>Je staat nu op <strong>#{sel.position} van {sel.total}</strong> op deze pagina.
-                      {' '}Met Uitgelicht sta je bovenaan{sel.searches_per_month > 0 ? <> voor zo'n <strong>{Math.round(sel.searches_per_month).toLocaleString('nl-NL')} zoekopdrachten per maand</strong></> : ''}.
-                    </p>
-                  </div>
-                );
-              })()}
-              {pageSlug && typeof placesLeft === 'number' && (
-                <p className={`text-sm ${placesLeft > 0 ? 'text-muted-foreground' : 'text-destructive'}`}>
-                  {placesLeft > 0 ? `Nog ${placesLeft} van de 5 plekken vrij op deze pagina.` : 'Alle 5 plekken op deze pagina zijn vergeven.'}
-                </p>
+              {sel && (
+                <div className="rounded-lg bg-primary/5 p-3 text-sm">
+                  {sel.position ? <>Je staat nu op <strong>#{sel.position} van {sel.total}</strong>. </> : null}
+                  {kind === 'topplek' ? 'Met de Topplek sta je als enige helemaal bovenaan' : 'Met Uitgelicht sta je direct onder de Topplek'}
+                  {sel.searches_per_month > 0 ? <>, voor zo'n <strong>{Math.round(sel.searches_per_month).toLocaleString('nl-NL')} zoekopdrachten per maand</strong></> : null}.
+                </div>
               )}
-              {afterWindow && pageSlug && typeof pagePrice === 'number' && (
-                <p className="text-sm">
-                  Prijs voor deze pagina: <strong>{formatEuroCents(pageStatus?.my_bid?.status === 'won' ? (pageStatus.my_bid.clearing_cents ?? pagePrice) : pagePrice)}</strong> per maand excl. btw
-                  {pageStatus && pageStatus.open_bids > 0 && <span className="text-muted-foreground">. {pageStatus.open_bids} {pageStatus.open_bids === 1 ? 'bod' : 'biedingen'} op de wachtlijst, hoogste {formatEuroCents(pageStatus.highest_bid_cents ?? 0)}</span>}
+              {sel && monthCents != null && !mustBid && (
+                <p className="text-sm">Prijs: <strong>{euroCents(monthCents)}</strong> {buy === 'uitgelicht' && founding && billing === 'year' ? `(of ${euroCents(PRICES.uitgelicht.foundingYear)} per jaar)` : 'per maand'} excl. btw
+                  {status && status.open_bids > 0 && <span className="text-muted-foreground">. {status.open_bids} {status.open_bids === 1 ? 'bod' : 'biedingen'} op de wachtlijst</span>}
                 </p>
               )}
               {mustBid ? (
                 <div className="space-y-2 rounded-lg border p-3">
-                  <p className="text-sm">
-                    {pageStatus?.my_bid?.status === 'open'
-                      ? `Je staat op de wachtlijst met ${formatEuroCents(pageStatus.my_bid.amount_cents)} per maand excl. btw. Pas je bod aan of wacht op de veiling.`
-                      : 'Deze pagina is vol of er wachten al bieders. Bied het bedrag dat je maximaal per maand wilt betalen, excl. btw.'}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Komt er een plek vrij, dan gaat die naar het hoogste bod. Elk kwartaal is er een veiling: de hoogste bieders krijgen een plek
-                    en betalen allemaal het hoogste bod dat net niet won, minimaal de lijstprijs.
-                    {pageStatus?.next_auction && ` Volgende veiling: ${new Date(pageStatus.next_auction).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}.`}
-                    {' '}<Link to="/voor-restaurants/plekken-en-bieden" className="text-primary underline">Zo werkt bieden</Link>
-                  </p>
+                  <p className="text-sm">{status?.my_bid?.status === 'open'
+                    ? `Je staat op de wachtlijst met ${euroCents(status.my_bid.amount_cents)} per maand excl. btw. Pas je bod aan of wacht op de veiling.`
+                    : `Deze ${kind === 'topplek' ? 'Topplek is bezet' : 'pagina is vol'} of er wachten al bieders. Bied het bedrag dat je maximaal per maand wilt betalen voor de plek, excl. btw.`}</p>
+                  <p className="text-xs text-muted-foreground">Elk kwartaal is er een veiling: de hoogste bieders krijgen de plek en betalen allemaal het hoogste bod dat net niet won, minimaal de lijstprijs.
+                    {status?.next_auction && ` Volgende veiling: ${new Date(status.next_auction).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}.`}
+                    {(buy === 'groei' || buy === 'dominant') && ` Bij ${PACKAGE_NAMES[buy]} komt er ${euroCents(buy === 'groei' ? PRICES.groei.surcharge : PRICES.dominant.surcharge)} bij voor wat er verder in zit.`}</p>
                   {user ? (<>
                     <div className="flex gap-2">
-                      <Input inputMode="decimal" placeholder={typeof pagePrice === 'number' ? `Minimaal ${formatEuroCents(pagePrice)}` : 'Bedrag per maand'}
-                        value={bidEuro} onChange={e => setBidEuro(e.target.value)} className="min-h-11" aria-label="Je bod per maand in euro" />
+                      <Input inputMode="decimal" placeholder={status ? `Minimaal ${euroCents(status.list_price_cents)}` : 'Bedrag per maand'} value={bidEuro}
+                        onChange={e => setBidEuro(e.target.value)} className="min-h-11" aria-label="Je bod per maand in euro" />
                       <Button variant="outline" className="min-h-11" disabled={!bidEuro} onClick={placeBid}>Bied</Button>
                     </div>
                     {Number(bidEuro.replace(',', '.')) > 0 && <VatTotal exCents={Math.round(Number(bidEuro.replace(',', '.')) * 100)} per="per maand als je wint (je betaalt nooit meer dan je bod)" />}
                   </>) : <p className="text-sm">Log in om te bieden.</p>}
                 </div>
               ) : (
-                <Button className="min-h-11 w-full" disabled={!pageSlug || (!afterWindow && placesLeft === 0) || busy !== null}
-                  onClick={() => founding && startPackage(founding === 'month' || afterWindow ? 'founding_month' : 'founding_year', pageSlug)}>
-                  {busy ? 'Even geduld…' : pageStatus?.my_bid?.status === 'won' ? 'Rond je gewonnen plek af' : 'Verder naar betalen'}
+                <Button className="min-h-11 w-full" disabled={!pageSlug || (founding && left === 0) || busy !== null} onClick={() => buy && startCheckout(placeOption(buy), pageSlug)}>
+                  {busy ? 'Even geduld…' : status?.my_bid?.status === 'won' ? 'Rond je gewonnen plek af' : 'Verder naar betalen'}
                 </Button>
               )}
-              {!mustBid && pageSlug && (() => {
-                const ex = afterWindow
-                  ? (pageStatus?.my_bid?.status === 'won' ? (pageStatus.my_bid.clearing_cents ?? pagePrice) : pagePrice)
-                  : (founding === 'year' ? 59000 : 5900);
-                return typeof ex === 'number' ? <VatTotal exCents={ex} per={!afterWindow && founding === 'year' ? 'per jaar' : 'per maand'} /> : null;
-              })()}
-              <p className="text-xs text-muted-foreground">Je betaalt direct bij het afrekenen; je plek staat meteen live.</p>
+              {!mustBid && monthCents != null && <VatTotal exCents={buy === 'uitgelicht' && founding && billing === 'year' ? PRICES.uitgelicht.foundingYear : monthCents} per={buy === 'uitgelicht' && founding && billing === 'year' ? 'per jaar' : 'per maand'} />}
+              <p className="text-xs text-muted-foreground">Je betaalt direct bij het afrekenen; je plek staat meteen live.{founding ? ' Minimale looptijd 6 maanden.' : ' Per maand opzegbaar.'}</p>
             </div>
           )}
         </DialogContent>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { Loader2, Search, Wand2, CreditCard } from 'lucide-react';
@@ -30,7 +31,7 @@ interface Props {
 
 const PRICE_LABEL: Record<number, string> = { 1: '€', 2: '€€', 3: '€€€', 4: '€€€€' };
 
-/** "What if" on real search data: 3 free per restaurant, then 1.99 euro each; Owner Pro unlimited. */
+/** "What if" on real search data: 3 free per restaurant, unlimited with Pro (also part of Groei and Dominant). */
 export function SimulationMode({ restaurantId, tags = [], priceLevel = null }: Props) {
   const qc = useQueryClient();
   const [kind, setKind] = useState<Kind>('add_dish');
@@ -122,7 +123,7 @@ export function SimulationMode({ restaurantId, tags = [], priceLevel = null }: P
           )}
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Zie vooraf wat een wijziging oplevert, op basis van echte zoekopdrachten in jouw stad. De eerste 3 zijn gratis, daarna €1,99 excl. btw per simulatie.
+          Zie vooraf wat een wijziging oplevert, op basis van echte zoekopdrachten in jouw stad. De eerste 3 zijn gratis; met Pro simuleer je onbeperkt.
         </p>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -169,18 +170,10 @@ export function SimulationMode({ restaurantId, tags = [], priceLevel = null }: P
           </Button>
         ) : quota ? (
           <div className="space-y-3 rounded-lg border p-4">
-            <p className="text-sm">Je 3 gratis simulaties zijn gebruikt. Een simulatie kost €1,99 excl. btw; met Owner Pro simuleer je onbeperkt.</p>
-            <div className="flex flex-wrap items-center gap-2">
-              <Select value={String(qty)} onValueChange={v => setQty(Number(v))}>
-                <SelectTrigger className="min-h-11 w-[150px]"><SelectValue /></SelectTrigger>
-                <SelectContent>{[1, 3, 5, 10].map(n => <SelectItem key={n} value={String(n)}>{n} {n === 1 ? 'simulatie' : 'simulaties'}</SelectItem>)}</SelectContent>
-              </Select>
-              <Button onClick={buy} disabled={buying} className="min-h-11">
-                {buying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
-                Koop voor €{(1.99 * qty).toFixed(2).replace('.', ',')} excl. btw
-              </Button>
-            </div>
-            <VatTotal exCents={199 * qty} />
+            <p className="text-sm">Je 3 gratis simulaties zijn gebruikt. Met Pro simuleer je onbeperkt; Pro zit ook in Groei en Dominant.</p>
+            <Button asChild className="min-h-11">
+              <Link to="/voor-restaurants/pakketten">Bekijk Pro</Link>
+            </Button>
           </div>
         ) : null}
 

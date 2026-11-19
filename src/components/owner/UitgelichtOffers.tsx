@@ -24,7 +24,7 @@ export function UitgelichtOffers({ restaurantSlug }: { restaurantSlug: string })
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base"><Crown className="h-5 w-5 text-primary" />Jouw gerechtpagina's</CardTitle>
-        <CardDescription>Hier sta je nu. Met Uitgelicht sta je bovenaan; per pagina zijn er maar 5 plekken.</CardDescription>
+        <CardDescription>Hier sta je nu. Per pagina zijn er 1 Topplek en 3 Uitgelicht-plekken, boven de gewone lijst.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
         {offers.map(o => (

@@ -86,7 +86,7 @@ export function MyPackagesCard({ restaurantId, restaurantSlug, restaurantName }:
           <CardDescription>
             Sta gegarandeerd bovenaan je gerechtpagina in het blok "Uitgelicht". Normaal €99 per maand excl. btw; koop je 'm nu of
             uiterlijk 5 januari 2027, dan word je Founding Partner en betaal je €59 tot en met 31 december 2027:
-            je bespaart €480 per jaar, of €400 met het jaarabonnement. Max. 5 plekken per gerechtpagina.
+            je bespaart €480 per jaar, of €400 met het jaarabonnement. Per pagina 1 Topplek en 3 Uitgelicht-plekken.
           </CardDescription>
         </CardHeader>
         <CardContent>

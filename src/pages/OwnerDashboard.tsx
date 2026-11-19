@@ -70,7 +70,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { StatCard } from '@/components/owner/StatCard';
 import { ReviewCard } from '@/components/owner/ReviewCard';
 import { AnalyticsTab } from '@/components/owner/AnalyticsTab';
-import { SponsoredMarketplace } from '@/components/sponsored/SponsoredMarketplace';
+import { SpotlightBooking } from '@/components/owner/SpotlightBooking';
+import { PaidPlacementReport } from '@/components/owner/PaidPlacementReport';
+import { TestVisitRequest } from '@/components/owner/TestVisitRequest';
 import { RoutingSlotsManager } from '@/components/owner/RoutingSlotsManager';
 import { OptimizationDashboard } from '@/components/optimization/OptimizationDashboard';
 import { SimulationMode } from '@/components/optimization/SimulationMode';
@@ -962,15 +964,19 @@ export default function OwnerDashboard() {
                 {/* ===== PROMOTIES ===== */}
                 <TabsContent value="promotions" className="space-y-8">
                   <OwnerTabHeader icon={Rocket} title="Promoties"
-                    description="Alles wat je extra zichtbaar maakt. Uitgelicht is het hoofdpakket, daarnaast kies je losse extra's." />
+                    description="Alles wat je extra zichtbaar maakt: de Topplek of een Uitgelicht-plek op je pagina's, de Stadsspotlight, de nieuwsbrief van je stad en evenementen." />
                   {r && (
                     <>
-                      {section('Uitgelicht', Crown, (
+                      {section('Topplek en Uitgelicht', Crown, (
                         <div className="space-y-4">
+                          <PaidPlacementReport restaurantId={r.id} />
                           <MyPackagesCard restaurantId={r.id} restaurantSlug={r.slug} restaurantName={r.name} />
                           <UitgelichtOffers restaurantSlug={r.slug} />
                         </div>
                       ))}
+                      {section('Stadsspotlight', Megaphone, isVerified
+                        ? <SpotlightBooking restaurantId={r.id} cityId={r.city_id ?? null} />
+                        : locked('Stadsspotlight', 'Verifieer dat je de eigenaar bent om een week op de homepage van je stad te staan.'), 'promo-spotlight')}
                       {section('Vraag doorsturen', Zap, isVerified
                         ? <RoutingSlotsManager restaurantId={r.id} cityId={r.city_id ?? null} />
                         : locked('Vraag doorsturen', 'Verifieer dat je de eigenaar bent om gasten van volle of gesloten restaurants te ontvangen.'), 'promo-routing')}
@@ -989,7 +995,9 @@ export default function OwnerDashboard() {
                         </div>
                       ) : locked('Evenementen', 'Zet specials en evenementen op Dishloopr voor €5 per maand per evenement, excl. btw.'))}
                       {section('Nieuwsbrief', Megaphone, <NewsletterPlacement restaurantId={r.id} restaurantName={r.name} />, 'promo-newsletter')}
-                      {section('Gerecht in de spotlight', Star, <SponsoredMarketplace restaurantId={r.id} restaurantName={r.name} />, 'promo-sponsored')}
+                      {section('Getest door Dishloopr', Star, isVerified
+                        ? <TestVisitRequest restaurantId={r.id} />
+                        : locked('Testbezoek', 'Verifieer dat je de eigenaar bent om een testbezoek aan te vragen.'), 'promo-tested')}
 
                       <div className="border-t pt-8">
                         <h2 className="font-display text-xl font-bold">Gasten terug laten komen</h2>

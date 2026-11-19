@@ -66,11 +66,15 @@ export default function PlacesExplainedPage() {
         </header>
 
         <section className="space-y-4">
-          <h2 className="font-display text-2xl font-bold">Twee soorten plekken</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <h2 className="font-display text-2xl font-bold">Drie soorten plekken</h2>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Card><CardContent className="space-y-2 p-5">
+              <p className="flex items-center gap-2 font-semibold"><Crown className="h-5 w-5 text-primary" />Topplek</p>
+              <p className="text-sm text-muted-foreground">Eén per pagina: de grote kaart bovenaan een gerecht-, keuken- of sfeerpagina in je stad, ook als eerste bij zoeken, op de kaart en op de homepage van je stad. Prijs vanaf €199 excl. btw per maand.</p>
+            </CardContent></Card>
             <Card><CardContent className="space-y-2 p-5">
               <p className="flex items-center gap-2 font-semibold"><Crown className="h-5 w-5 text-primary" />Uitgelicht</p>
-              <p className="text-sm text-muted-foreground">Je staat bovenaan een gerechtpagina in je stad, bijvoorbeeld bij pizza in Utrecht. Per pagina zijn er 5 plekken. Prijs vanaf €99 excl. btw per maand.</p>
+              <p className="text-sm text-muted-foreground">Drie per pagina, direct onder de Topplek, bijvoorbeeld bij pizza in Utrecht. Ook bij zoeken, op de kaart en met een badge. Prijs vanaf €99 excl. btw per maand.</p>
             </CardContent></Card>
             <Card><CardContent className="space-y-2 p-5">
               <p className="flex items-center gap-2 font-semibold"><Zap className="h-5 w-5 text-primary" />Vraag doorsturen</p>
@@ -189,14 +193,14 @@ export default function PlacesExplainedPage() {
           <Faq q="Kost bieden geld?">
             <p>Nee. Je betaalt pas als je een plek krijgt en je afrekent. Je kunt een bod altijd aanpassen of intrekken.</p>
           </Faq>
-          <Faq q="Waarom zijn er maar 3 of 5 plekken?">
-            <p>Zodat elke plek echt opvalt. Bij onbeperkt veel plekken zou elke betaler minder gasten krijgen.</p>
+          <Faq q="Waarom zijn er maar 4 plekken per pagina?">
+            <p>Zodat elke plek echt opvalt en gasten de pagina blijven vertrouwen. Daarom zijn er ook pas betaalde plekken vanaf 10 restaurants op een pagina. Bij onbeperkt veel plekken zou elke betaler minder gasten krijgen.</p>
           </Faq>
           <Faq q="Kan ik voor elke stad kiezen bij Vraag doorsturen?">
             <p>Ja. Je kiest een stad en een gerecht van je eigen menu. Elk gerecht in elke stad is een aparte plek met een eigen prijs. Biefstuk en sushi in Den Haag zijn dus twee plekken.</p>
           </Faq>
           <Faq q="Wat ziet de gast?">
-            <p>De gast ziet je restaurant bovenaan met het label Gesponsord of Uitgelicht. Zijn er geen betalende restaurants, dan tonen we gewoon de best passende restaurants.</p>
+            <p>De gast ziet je restaurant bovenaan met het label Topplek of Uitgelicht en Betaald, en een link die uitlegt wat dat betekent. Zijn er geen betalende restaurants, dan tonen we gewoon de best passende restaurants.</p>
           </Faq>
           <Faq q="Zijn de prijzen inclusief btw?">
             <p>Nee, alle prijzen zijn exclusief 21% btw. Bij het afrekenen zie je het totaalbedrag, en de btw staat apart op je factuur. Ook biedingen zijn exclusief btw.</p>

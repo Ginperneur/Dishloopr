@@ -129,6 +129,24 @@ export function OwnerEventsManager({ restaurantId, restaurantName }: OwnerEvents
     },
   });
 
+  // Groei and Dominant include one event or special per month, released without a payment.
+  const { data: hasBundle = false } = useQuery({
+    queryKey: ['owner-bundle', restaurantId],
+    queryFn: async () => {
+      const { count } = await supabase.from('package_orders').select('id', { count: 'exact', head: true })
+        .eq('restaurant_id', restaurantId).in('package', ['groei', 'dominant'] as never).in('status', ['active', 'trialing', 'past_due']);
+      return (count ?? 0) > 0;
+    },
+  });
+  const releaseBundle = async (event: OwnerEvent) => {
+    setCheckoutId(event.id);
+    const { error } = await (supabase.rpc as any)('release_bundle_event', { p_event: event.id });
+    setCheckoutId(null);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Je evenement staat online, inbegrepen bij je pakket.');
+    refresh();
+  };
+
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: eventsKey });
     queryClient.invalidateQueries({ queryKey: ['public-events'] });
@@ -301,6 +319,11 @@ export function OwnerEventsManager({ restaurantId, restaurantName }: OwnerEvents
                       )}
                       {needsPayment && (
                         <div className="mt-3">
+                          {hasBundle && (
+                            <Button size="sm" variant="secondary" className="mb-2 mr-2 min-h-11" onClick={() => releaseBundle(event)} disabled={checkoutId === event.id}>
+                              Zet online, inbegrepen bij je pakket
+                            </Button>
+                          )}
                           {CHECKOUT_ENABLED.event ? (
                             <Button size="sm" className="min-h-11" onClick={() => startCheckout(event)} disabled={checkoutId === event.id}>
                               {checkoutId === event.id && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
