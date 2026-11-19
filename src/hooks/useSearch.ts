@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { fetchSearchPlacements, pickSearchPlacements, type PaidKind } from '@/lib/paidPlacements';
 
 type ParsedTerm = { term: string | null; city_id: string | null; city_name: string | null };
 import { supabase } from '@/integrations/supabase/client';
@@ -28,6 +29,10 @@ export interface SearchResult extends Restaurant {
   matchScore: number;
   bayesianRating: number;
   isSponsored?: boolean;
+  /** Paid place (Topplek or Uitgelicht) pinned above the organic results. */
+  paidKind?: PaidKind;
+  paidFounding?: boolean;
+  paidPage?: string;
   hasDishMatch?: boolean;
   chainName?: string;
   chainLocationsCount?: number;
@@ -600,7 +605,7 @@ export function useSearch() {
         cityName: cityMap.get(r.city_id),
         chainName: r.chain_id ? chainNameById.get(r.chain_id) : undefined,
         chainLocationsCount: r.chain_id ? chainCountById.get(r.chain_id) : undefined,
-        matchScore: r.is_featured ? 2 : r.is_top_listing ? 1 : 0,
+        matchScore: 0,
         bayesianRating: bayesianRating(Number(r.rating), r.review_count),
       }));
       
@@ -610,28 +615,14 @@ export function useSearch() {
       return;
     }
 
-    // ── Step 6: Sponsored check ──
-    const sponsoredRestaurants = new Set<string>();
+    // ── Step 6: Paid places for this dish in this city (pinned above the results below) ──
+    let searchDishIds: string[] = [];
     if (hasDishMatches && cityId && cityId !== 'all') {
       const names = [...new Set([...restaurantDishMap.values()].flat().map(d => d.name))].slice(0, 300);
       const { data: dishRows } = names.length
         ? await supabase.from('dishes').select('id').in('name', names)
         : { data: [] as any[] };
-      const dishIds = (dishRows || []).map((d: any) => d.id);
-      const { data: sponsoredData } = dishIds.length ? await supabase
-        .from('sponsored_purchases_public' as any)
-        .select('restaurant_id, sponsored_products!inner(dish_id, city_id)')
-        .eq('is_active', true)
-        .gt('expires_at', now.toISOString()) : { data: null };
-
-      if (sponsoredData) {
-        (sponsoredData as any[]).forEach((sp: any) => {
-          const product = sp.sponsored_products;
-          if (dishIds.includes(product.dish_id) && product.city_id === cityId) {
-            sponsoredRestaurants.add(sp.restaurant_id);
-          }
-        });
-      }
+      searchDishIds = (dishRows || []).map((d: any) => d.id);
     }
 
     // ── Step 7: Multi-dish coverage ──
@@ -660,12 +651,13 @@ export function useSearch() {
           rating: Number(restaurant.rating),
           review_count: restaurant.review_count,
           cuisines: restaurant.cuisines,
-          is_featured: restaurant.is_featured,
-          is_top_listing: restaurant.is_top_listing,
+          // Payment never changes the organic score; paid places are pinned separately below.
+          is_featured: false,
+          is_top_listing: false,
           chain_id: restaurant.chain_id,
           created_at: restaurant.created_at,
           linkedDishes,
-          isSponsored: sponsoredRestaurants.has(restaurant.id),
+          isSponsored: false,
           queryTermsCovered: restaurantTermCoverage.get(restaurant.id) || 0,
           totalQueryTerms,
           totalDishCount: restaurantDishCount.get(restaurant.id) || 0,
@@ -686,7 +678,6 @@ export function useSearch() {
           dishTranslations,
           matchScore: scored.matchScore,
           bayesianRating: scored.bayesianRating,
-          isSponsored: scored.isSponsored,
           hasDishMatch: scored.hasDishMatch,
         });
       }
@@ -705,6 +696,21 @@ export function useSearch() {
       rebalanced = groupByCoverage(sorted).flatMap(g => rebalanceSponsoredResults(g.items));
     } else {
       rebalanced = rebalanceSponsoredResults(sorted);
+    }
+
+    // At most 1 Topplek and 2 Uitgelicht on top, only restaurants that are in these results anyway.
+    if (searchDishIds.length && cityId && cityId !== 'all') {
+      try {
+        const placements = pickSearchPlacements(await fetchSearchPlacements(cityId, searchDishIds));
+        const byId = new Map(rebalanced.map(r => [r.id, r]));
+        const pinned = placements.filter(p => byId.has(p.restaurant_id)).map(p => ({
+          ...byId.get(p.restaurant_id)!, paidKind: p.kind, paidPage: p.page_slug,
+        }));
+        if (pinned.length) {
+          const pinnedIds = new Set(pinned.map(p => p.id));
+          rebalanced = [...pinned, ...rebalanced.filter(r => !pinnedIds.has(r.id))];
+        }
+      } catch { /* paid places are optional; the organic results stand on their own */ }
     }
 
     setResults(rebalanced);

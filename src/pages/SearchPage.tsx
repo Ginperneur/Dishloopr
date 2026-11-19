@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Map, LayoutGrid, Navigation, Loader2, ArrowUp, UtensilsCrossed, Bookmark, BookmarkCheck, Clock } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { SearchBar } from '@/components/search/SearchBar';
+import { PaidTracked } from '@/components/paid/PaidTracked';
 import { DatabaseRestaurantCard } from '@/components/restaurant/DatabaseRestaurantCard';
 import { sortByCoverage, groupByCoverage, coverageOf, capitalizeTerm, splitDishQuery } from '@/lib/multiDishSearch';
 import { FilterPopover } from '@/components/search/FilterPopover';
@@ -320,8 +321,9 @@ export default function SearchPage() {
       review_count: r.review_count,
       geo_lat: r.geo_lat,
       geo_lng: r.geo_lng,
-      is_featured: r.is_featured,
-      is_top_listing: r.is_top_listing,
+      // Paid places (Topplek, Uitgelicht) get the highlighted pin.
+      is_featured: Boolean(r.paidKind),
+      is_top_listing: r.paidKind === 'topplek',
       images: r.images,
       price_level: r.price_level,
     })),
@@ -835,7 +837,13 @@ export default function SearchPage() {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: Math.min(i * 0.05, 0.3) }}
                         >
-                          <DatabaseRestaurantCard restaurant={restaurant} isSponsored={restaurant.isSponsored} priority={index === 0} />
+                          {restaurant.paidKind && restaurant.paidPage ? (
+                            <PaidTracked restaurantId={restaurant.id} pageSlug={restaurant.paidPage} surface="zoeken">
+                              <DatabaseRestaurantCard restaurant={restaurant} paidKind={restaurant.paidKind} priority={index === 0} />
+                            </PaidTracked>
+                          ) : (
+                            <DatabaseRestaurantCard restaurant={restaurant} priority={index === 0} />
+                          )}
                         </motion.div>
                       );
                     })}

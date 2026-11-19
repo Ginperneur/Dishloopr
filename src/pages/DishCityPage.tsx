@@ -22,14 +22,16 @@ import { FACET_GROUPS, getFacet, matchesFacet, buildFacetFAQ } from '@/lib/dishC
 import { getHubDisplayName, getHubChipHeading, HUB_CHIP_CAP } from '@/lib/dishGroups';
 import { isDutchLocale } from '@/lib/utils';
 import NotFound from './NotFound';
-import { trackFoundingMetric, useFoundingImpression } from '@/lib/foundingMetrics';
+import { trackPaidMetric, usePaidImpression, type PaidKind } from '@/lib/paidPlacements';
+import { WhyPaidLink } from '@/components/paid/PaidLabel';
+import { TopplekCard } from '@/components/paid/TopplekCard';
 
-/** A Founding Partner card in the "Uitgelicht" block; counts impressions and clicks for the owner's report. */
-function FeaturedCard({ restaurant, pageSlug }: { restaurant: { id: string }; pageSlug: string }) {
-  const ref = useFoundingImpression<HTMLDivElement>(restaurant.id, pageSlug);
+/** A paid card in the Uitgelicht block; counts impressions and clicks for the owner's report. */
+function PaidCard({ restaurant, pageSlug, kind, founding }: { restaurant: { id: string }; pageSlug: string; kind: PaidKind; founding: boolean }) {
+  const ref = usePaidImpression<HTMLDivElement>(restaurant.id, pageSlug, 'gerechtpagina');
   return (
-    <div ref={ref} onClickCapture={() => trackFoundingMetric(restaurant.id, pageSlug, 'klik')}>
-      <DatabaseRestaurantCard restaurant={restaurant as any} />
+    <div ref={ref} onClickCapture={() => trackPaidMetric(restaurant.id, pageSlug, 'gerechtpagina', 'klik')}>
+      <DatabaseRestaurantCard restaurant={restaurant as any} paidKind={kind} paidFounding={founding} />
     </div>
   );
 }
@@ -39,7 +41,7 @@ export default function DishCityPage() {
   const location = useLocation();
   const { t, i18n } = useTranslation();
   const isNl = isDutchLocale(i18n.language);
-  const { page, restaurants, foundingIds, loading, resultsLoading, navigationLoading, error, redirectTo, isHub, groupMembers, parentHub, synthesized } = useSeoLandingPage(slug);
+  const { page, restaurants, placements, loading, resultsLoading, navigationLoading, error, redirectTo, isHub, groupMembers, parentHub, synthesized } = useSeoLandingPage(slug);
 
   const activeFacet = getFacet(facetSlug);
   const isFacetRoute = !!facetSlug;
@@ -52,11 +54,13 @@ export default function DishCityPage() {
     return restaurants.filter(r => matchesFacet(r as any, activeFacet));
   }, [restaurants, activeFacet]);
 
-  // Shown in a separate block so the ranked list (and restaurant_positions) keeps its order.
-  const featuredRestaurants = useMemo(
-    () => visibleRestaurants.filter(r => foundingIds.includes(r.id)),
-    [visibleRestaurants, foundingIds],
-  );
+  // Paid places sit in their own block above the list, so the ranked list (and restaurant_positions)
+  // keeps its order. On a filter page they show only when they match the filter.
+  const paid = useMemo(() => {
+    const byId = new Map(visibleRestaurants.map(r => [r.id, r]));
+    const list = placements.map(p => ({ ...p, restaurant: byId.get(p.restaurant_id) })).filter(p => p.restaurant);
+    return { topplek: list.find(p => p.kind === 'topplek') ?? null, uitgelicht: list.filter(p => p.kind === 'uitgelicht') };
+  }, [visibleRestaurants, placements]);
 
   // Count per facet (across meal + ambience + price) for chip rendering.
   const facetCounts = useMemo(() => {
@@ -410,17 +414,31 @@ export default function DishCityPage() {
           )}
         </div>
 
-        {!resultsLoading && featuredRestaurants.length > 0 && (
-          <div className="mb-8 rounded-xl border border-primary/30 bg-primary/5 p-4 md:p-6">
-            <div className="mb-4 flex items-center gap-2">
-              <Badge>Uitgelicht</Badge>
-              <span className="text-sm text-muted-foreground">Founding Partners van deze pagina</span>
+        {!resultsLoading && paid.topplek?.restaurant && (
+          <div className="mb-6">
+            <TopplekCard restaurant={paid.topplek.restaurant as any} pageSlug={slug ?? ''} founding={paid.topplek.is_founding} />
+          </div>
+        )}
+
+        {!resultsLoading && paid.uitgelicht.length > 0 && (
+          <div className="mb-10 space-y-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-xl font-bold">Uitgelicht</h2>
+              <Badge variant="secondary">Betaald</Badge>
+              <WhyPaidLink className="ml-auto" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {featuredRestaurants.map(restaurant => (
-                <FeaturedCard key={restaurant.id} restaurant={restaurant} pageSlug={slug ?? ''} />
+              {paid.uitgelicht.map(p => (
+                <PaidCard key={p.restaurant_id} restaurant={p.restaurant!} pageSlug={slug ?? ''} kind="uitgelicht" founding={p.is_founding} />
               ))}
             </div>
+          </div>
+        )}
+
+        {!resultsLoading && (paid.topplek || paid.uitgelicht.length > 0) && visibleRestaurants.length > 0 && (
+          <div className="mb-4 flex items-baseline justify-between gap-3 border-t pt-6">
+            <h2 className="text-xl font-bold">Alle restaurants</h2>
+            <span className="text-sm text-muted-foreground">Op volgorde van beoordeling</span>
           </div>
         )}
 

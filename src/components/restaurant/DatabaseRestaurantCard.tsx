@@ -3,14 +3,15 @@ import { metricContext } from '@/lib/metricRules';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Star, MapPin, Heart, Sparkles, Trophy, ImageOff, UtensilsCrossed, Clock } from 'lucide-react';
+import { Star, MapPin, Heart, ImageOff, UtensilsCrossed, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useFavorites } from '@/hooks/useFavorites';
 import { SaveToListButton } from '@/components/lists/SaveToListButton';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { useState } from 'react';
 import type { Database } from '@/integrations/supabase/types';
-import { SponsoredBadge } from '@/components/sponsored/SponsoredBadge';
+import { PaidLabel } from '@/components/paid/PaidLabel';
+import type { PaidKind } from '@/lib/paidPlacements';
 import { isDutchLocale } from '@/lib/utils';
 import { isOpenNow } from '@/lib/openingHours';
 import { RatingSummary } from '@/components/restaurant/RatingSummary';
@@ -31,7 +32,9 @@ type RestaurantCardData = Restaurant & {
 interface DatabaseRestaurantCardProps {
   restaurant: RestaurantCardData;
   index?: number;
-  isSponsored?: boolean;
+  /** A paid place (Topplek or Uitgelicht): labelled on the card, never part of the organic order. */
+  paidKind?: PaidKind;
+  paidFounding?: boolean;
   /** Marks the card image as the LCP candidate (eager + high priority, no fade-in). */
   priority?: boolean;
 }
@@ -84,7 +87,7 @@ function ImageWithFallback({ src, alt, priority = false }: { src: string; alt: s
   );
 }
 
-export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = false, priority = false }: DatabaseRestaurantCardProps) {
+export function DatabaseRestaurantCard({ restaurant, index = 0, paidKind, paidFounding = false, priority = false }: DatabaseRestaurantCardProps) {
   const { t, i18n } = useTranslation();
   const isNl = isDutchLocale(i18n.language);
   const location = useLocation();
@@ -93,7 +96,6 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
   const { isRecentlyViewed } = useRecentlyViewed();
   const [isLikeAnimating, setIsLikeAnimating] = useState(false);
   
-  const isFeatured = restaurant.is_featured || restaurant.is_top_listing;
   const hasImage = restaurant.images && restaurant.images.length > 0 && restaurant.images[0];
   const wasViewed = isRecentlyViewed(restaurant.slug);
   const openStatus = isOpenNow((restaurant as any).opening_hours);
@@ -119,7 +121,7 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
         state={{ from: `${location.pathname}${location.search}${location.hash}`, metricContext: document.querySelector<HTMLElement>('[data-metric-context]')?.dataset.metricContext || metricContext(location.pathname, location.search) }}
         onClick={() => logSearchClick(restaurant.id)}
         className={`block restaurant-card rounded-2xl overflow-hidden group ${
-          isFeatured ? 'ring-2 ring-primary/20' : ''
+          paidKind ? 'ring-2 ring-primary/30' : ''
         }`}
       >
         {/* Image */}
@@ -138,22 +140,8 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, isSponsored = fa
           
           {/* Badges */}
           <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
-            {isSponsored && (
-              <SponsoredBadge />
-            )}
-            {restaurant.is_top_listing && (
-              <Badge className="featured-badge border-0 gap-1">
-                <Trophy className="h-3 w-3" />
-                {t('restaurant.topListing')}
-              </Badge>
-            )}
-            {restaurant.is_featured && !restaurant.is_top_listing && !isSponsored && (
-              <Badge className="featured-badge border-0 gap-1">
-                <Sparkles className="h-3 w-3" />
-                {t('restaurant.featured')}
-              </Badge>
-            )}
-            {wasViewed && !isSponsored && !restaurant.is_top_listing && !restaurant.is_featured && (
+            {paidKind && <PaidLabel kind={paidKind} founding={paidFounding} />}
+            {wasViewed && !paidKind && (
               <Badge variant="secondary" className="text-[10px] border-0 bg-background/80 backdrop-blur">
                 Bezocht
               </Badge>

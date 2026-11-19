@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { CityPageChips, CitySpotlightSection, CityToppleksSection } from '@/components/paid/CityPaidSections';
 import { useSearchLogger } from '@/lib/searchLog';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -67,7 +68,6 @@ export default function CityDetailPage() {
         .ilike('address', `%${cityData.name}%`)
         .not('images', 'is', null)
         .not('images', 'eq', '{}')
-        .order('is_featured', { ascending: false })
         .order('rating', { ascending: false })
         .limit(30);
 
@@ -208,6 +208,12 @@ export default function CityDetailPage() {
         </motion.div>
       </section>
 
+      {/* Paid: this week's Stadsspotlight and the Toppleks of the city */}
+      <div className="container space-y-12 px-4 py-8 md:px-6">
+        <CitySpotlightSection cityId={city.id} cityName={city.name} />
+        <CityToppleksSection cityId={city.id} cityName={city.name} citySlug={city.slug} />
+      </div>
+
       {/* Popular Dishes in City */}
       {dishes.length > 0 && (
         <section className="container px-4 md:px-6 py-8">
@@ -244,6 +250,11 @@ export default function CityDetailPage() {
           </div>
         </section>
       )}
+
+      {/* Cuisine and Romantisch pages of the city */}
+      <div className="container px-4 py-8 md:px-6">
+        <CityPageChips cityId={city.id} cityName={city.name} title={`Keukens en sfeer in ${city.name}`} only={['cuisine', 'ambience']} />
+      </div>
 
       {/* Top Restaurants */}
       <section className="container px-4 md:px-6 py-8">

@@ -13,7 +13,12 @@ const json = (body: unknown, status = 200) =>
 
 // Uitgelicht is charged at checkout, like Menuservice "once": the spot goes live right away,
 // so billing starts right away and the minimum term counts from the purchase date.
-const FOUNDING_PLACES_PER_PAGE = 5;
+// A page sells 1 Topplek and 3 Uitgelicht places (Founding Partners keep older extra places).
+const FOUNDING_PLACES_PER_PAGE = 3;
+// Bundles cost the place plus a fixed surcharge: Groei = Uitgelicht + 20 euro (Pro and one event
+// included, 119 euro at the 99 euro list price, 79 euro for Founding Partners), Dominant = Topplek
+// + 50 euro (Pro, one event, one newsletter placement a month and Vraag doorsturen included).
+const BUNDLE_SURCHARGE_CENTS = { groei: 2000, dominant: 5000 } as const;
 
 // Founding Partner promo: anyone who buys Uitgelicht from now (sales open before
 // the 1 dec 2026 soft launch) through this date keeps the discounted price AND the Founding
@@ -35,7 +40,7 @@ function foundingWindowOpen(): boolean {
 }
 
 type Option = {
-  package: "founding_partner" | "menu_service";
+  package: "founding_partner" | "menu_service" | "topplek" | "groei" | "dominant";
   plan: "month" | "year" | "once";
   cents: number;
   normalCents?: number; // prijs buiten het Founding Partner-venster (alleen voor het Uitgelicht-pakket)
@@ -50,6 +55,9 @@ type Option = {
 const OPTIONS: Record<string, Option> = {
   founding_month: { package: "founding_partner", plan: "month", cents: 5900, normalCents: 9900, interval: "month", name: "Uitgelicht (per maand)", priceEnv: "STRIPE_FOUNDING_MONTH_PRICE_ID", normalPriceEnv: "STRIPE_UITGELICHT_MONTH_PRICE_ID" },
   founding_year: { package: "founding_partner", plan: "year", cents: 59000, normalCents: 99000, interval: "year", name: "Uitgelicht (per jaar)", priceEnv: "STRIPE_FOUNDING_YEAR_PRICE_ID", normalPriceEnv: "STRIPE_UITGELICHT_YEAR_PRICE_ID" },
+  topplek_month: { package: "topplek", plan: "month", cents: 19900, interval: "month", name: "Topplek (per maand)", priceEnv: "" },
+  groei_month: { package: "groei", plan: "month", cents: 7900, normalCents: 11900, interval: "month", name: "Groei (per maand)", priceEnv: "" },
+  dominant_month: { package: "dominant", plan: "month", cents: 24900, interval: "month", name: "Dominant (per maand)", priceEnv: "" },
   menu_once: { package: "menu_service", plan: "once", cents: 7900, name: "Menuservice (eenmalig)", priceEnv: "STRIPE_MENU_ONCE_PRICE_ID" },
   menu_month: { package: "menu_service", plan: "month", cents: 1900, interval: "month", name: "Menuservice (per maand)", priceEnv: "STRIPE_MENU_MONTH_PRICE_ID" },
 };
@@ -76,26 +84,29 @@ Deno.serve(async (req) => {
       return json({ error: "Claim eerst je restaurant. Na goedkeuring kun je dit pakket afnemen." }, 403);
     }
 
+    // Every package but Menuservice is a paid place on one page.
+    const placePackage = option.package !== "menu_service";
+    const kind: "uitgelicht" | "topplek" = option.package === "topplek" || option.package === "dominant" ? "topplek" : "uitgelicht";
+    const isFoundingDeal = (option.package === "founding_partner" || option.package === "groei") && foundingWindowOpen();
     let pageSlug: string | null = null;
-    if (option.package === "founding_partner") {
-      if (typeof page_slug !== "string" || !page_slug) return json({ error: "Kies een gerechtpagina" }, 400);
-      const { data: pages } = await admin.rpc("restaurant_positions", { p_slug: restaurant.slug });
-      if (!(pages ?? []).some((p: { page_slug: string }) => p.page_slug === page_slug)) {
-        return json({ error: "Je restaurant staat niet op deze gerechtpagina" }, 400);
-      }
-      // Uitgelicht only on pages Dishloopr chose (dish on the Uitgelicht list, at least 6 restaurants).
+    if (placePackage) {
+      if (typeof page_slug !== "string" || !page_slug) return json({ error: "Kies een pagina" }, 400);
+      // Only a restaurant that is on the page (the dish on its menu, the cuisine, the label) may buy.
+      const { data: onPage } = await admin.rpc("uitgelicht_on_page", { p_restaurant: restaurant.id, p_page_slug: page_slug });
+      if (onPage !== true) return json({ error: "Je restaurant staat niet op deze pagina" }, 400);
+      // Only on pages Dishloopr chose, with at least 10 restaurants.
       const { data: eligible } = await admin.rpc("uitgelicht_page_eligible", { p_page_slug: page_slug });
-      if (eligible !== true) return json({ error: "Op deze gerechtpagina is Uitgelicht niet beschikbaar" }, 400);
-      if (foundingWindowOpen()) {
+      if (eligible !== true) return json({ error: "Op deze pagina zijn geen betaalde plekken te koop" }, 400);
+      const { count } = await admin.from("package_orders").select("id", { count: "exact", head: true })
+        .eq("restaurant_id", restaurant.id).eq("page_slug", page_slug).neq("package", "menu_service")
+        .in("status", ["active", "trialing", "past_due"]);
+      if (count) return json({ error: "Je hebt al een betaalde plek op deze pagina" }, 409);
+      if (isFoundingDeal) {
         const { data: left } = await admin.rpc("founding_places_left", { p_page_slug: page_slug });
         if (typeof left === "number" && left <= 0) {
           return json({ error: `Alle ${FOUNDING_PLACES_PER_PAGE} plekken voor Uitgelicht op deze pagina zijn vergeven` }, 409);
         }
       }
-      const { count } = await admin.from("package_orders").select("id", { count: "exact", head: true })
-        .eq("restaurant_id", restaurant.id).eq("package", "founding_partner").eq("page_slug", page_slug)
-        .in("status", ["active", "trialing", "past_due"]);
-      if (count) return json({ error: "Je staat al Uitgelicht op deze pagina" }, 409);
       pageSlug = page_slug;
     }
 
@@ -103,27 +114,24 @@ Deno.serve(async (req) => {
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     const customerId = customers.data[0]?.id;
 
-    // Founding Partner-korting geldt alleen voor het Uitgelicht-pakket, en alleen
-    // tijdens het actievenster; Menuservice heeft geen normalCents en gebruikt
-    // dus altijd option.cents.
-    const isFoundingDeal = option.package === "founding_partner" && foundingWindowOpen();
-    // After the Founding Partner window Uitgelicht is monthly, priced per page by demand
-    // (uitgelicht_reserve): a won bid at its clearing price, or a free place at the list price.
+    // Outside the Founding Partner deal a place is monthly and priced per page by demand
+    // (pp_reserve): a won bid at its clearing price, or a free place at the list price.
     let dynamicCents: number | null = null;
     let bidId: string | null = null;
-    if (option.package === "founding_partner" && !isFoundingDeal) {
-      if (option.plan !== "month") return json({ error: "Na de Founding Partner actie is Uitgelicht per maand" }, 400);
-      const { data: reserved, error: resErr } = await admin.rpc("uitgelicht_reserve", { p_page_slug: pageSlug, p_restaurant: restaurant.id });
+    if (placePackage && !isFoundingDeal) {
+      if (option.plan !== "month") return json({ error: "Betaalde plekken zijn per maand" }, 400);
+      const { data: reserved, error: resErr } = await admin.rpc("pp_reserve", { p_kind: kind, p_page_slug: pageSlug, p_restaurant: restaurant.id });
       if (resErr) return json({ error: resErr.message }, 409);
-      dynamicCents = (reserved as { price_cents: number }).price_cents;
+      const placeCents = (reserved as { price_cents: number }).price_cents;
       bidId = (reserved as { bid_id: string | null }).bid_id;
+      dynamicCents = placeCents + (option.package === "groei" || option.package === "dominant" ? BUNDLE_SURCHARGE_CENTS[option.package] : 0);
     }
     const effectiveCents = dynamicCents ?? option.cents;
 
     // The STRIPE_FOUNDING_* price ids hold the €59/€590 promo price, so they may only be used
     // inside the window; after it, a normal-price id (or the inline normal price) applies.
     // A dynamic price is always created inline; Stripe price ids only for the fixed prices.
-    const priceId = dynamicCents !== null ? undefined : Deno.env.get(option.priceEnv);
+    const priceId = dynamicCents !== null || !option.priceEnv ? undefined : Deno.env.get(option.priceEnv);
     const lineItem = priceId
       ? { price: priceId, quantity: 1 }
       : {
@@ -145,7 +153,7 @@ Deno.serve(async (req) => {
       amount_cents: String(effectiveCents),
       ...(pageSlug ? { page_slug: pageSlug } : {}),
       ...(bidId ? { bid_id: bidId } : {}),
-      ...(option.package === "founding_partner"
+      ...(option.package === "founding_partner" || option.package === "groei"
         ? { founding_partner: String(isFoundingDeal), ...(isFoundingDeal ? { discount_until: FOUNDING_DISCOUNT_UNTIL } : {}) }
         : {}),
     };

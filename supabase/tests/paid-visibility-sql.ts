@@ -31,7 +31,8 @@ await db.exec(`DROP FUNCTION restaurant_positions(text);
   CREATE TABLE newsletter_placements (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), restaurant_id uuid, target_city_id uuid, status text,
     created_at timestamptz DEFAULT now());
   CREATE TABLE collections (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), slug text, title text, is_active boolean DEFAULT true);
-  CREATE TABLE collection_restaurants (collection_id uuid, restaurant_id uuid, featured_reason text);`);
+  CREATE TABLE collection_restaurants (collection_id uuid, restaurant_id uuid, featured_reason text);
+  CREATE TABLE profiles (id uuid PRIMARY KEY, email text);`);
 for (const m of ["20261114130000_promo_slots", "20261115090000_restaurant_positions_all_pages", "20261114140000_uitgelicht_auction",
                  "20261115110000_uitgelicht_offers", "20261115140000_uitgelicht_dish_list"]) {
   await db.exec(noExt(await Deno.readTextFile(`${repo}/supabase/migrations/${m}.sql`)));
@@ -205,6 +206,19 @@ check("third request in 12 months refused", await db.query("SELECT 1").then(asyn
 }));
 await as(owner(8));
 check("only the owner may ask", await fails("SELECT request_test_visit($1)", [rest(7)]));
+
+// --- Auction mails name the Topplek and the page ---
+await service();
+await db.exec(`INSERT INTO profiles (id, email) VALUES ('${owner(4)}', 'r4@example.com'), ('${owner(5)}', 'r5@example.com')`);
+const label = await one<string>("SELECT promo_item_label('topplek', NULL, NULL, 'pizza-utrecht') v");
+check("mail label: Topplek op de pagina pizza in Utrecht", label === "Topplek op de pagina pizza in Utrecht", label);
+check("cuisine page label", await one<string>("SELECT promo_item_label('uitgelicht', NULL, NULL, 'italiaans-utrecht') v") === "Uitgelicht op de pagina Italiaans eten in Utrecht");
+await db.exec(`INSERT INTO profiles (id, email) VALUES ('${owner(9)}', 'r9@example.com')`);
+await as(owner(9));
+await db.query("SELECT place_uitgelicht_bid('pizza-utrecht', $1, 13000)", [rest(9)]);
+await service();
+const rem = (await db.query<{ product: string; role: string }>("SELECT product, role FROM promo_auction_reminders()")).rows;
+check("reminders reach the Uitgelicht bidder", rem.some(r => r.product === "uitgelicht" && r.role === "bidder"), rem);
 
 console.log(ok ? "ALL PASS" : "SOME FAILED");
 if (!ok) Deno.exit(1);

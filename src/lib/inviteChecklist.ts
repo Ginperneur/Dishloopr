@@ -28,13 +28,12 @@ export function missingItems(input: ChecklistInput): ChecklistItem[] {
   return items;
 }
 
-/** Same order as /eten pages and restaurant_positions(): featured, top listing, rating, id. */
+/** Same order as /eten pages and restaurant_positions(): rating, then id. */
 export function compareLandingOrder(
-  a: { id: string; is_featured: boolean; is_top_listing: boolean; rating: number | null },
-  b: { id: string; is_featured: boolean; is_top_listing: boolean; rating: number | null },
+  a: { id: string; rating: number | null },
+  b: { id: string; rating: number | null },
 ): number {
-  if (Boolean(a.is_featured) !== Boolean(b.is_featured)) return a.is_featured ? -1 : 1;
-  if (Boolean(a.is_top_listing) !== Boolean(b.is_top_listing)) return a.is_top_listing ? -1 : 1;
+  // Organic order: rating, then id. Paid places are shown in their own block and never change it.
   const diff = (b.rating || 0) - (a.rating || 0);
   if (diff !== 0) return diff;
   return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
