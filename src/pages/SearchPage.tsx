@@ -472,8 +472,8 @@ export default function SearchPage() {
           { name: pageTitle, url: 'https://dishloopr.com/search' },
         ])}
       />
-      {/* Search Header — non-sticky on mobile to free vertical space */}
-      <div className="md:sticky md:top-[4rem] z-40 bg-background border-b border-border py-3 md:py-4">
+      {/* Search Header — static: ancestor overflow-x-hidden breaks sticky and added a 64px gap */}
+      <div className="z-40 bg-background border-b border-border py-2 md:py-3">
         <div className="container px-4 md:px-6">
           <div className="flex items-center gap-3">
             <div className="flex-1">
@@ -488,7 +488,7 @@ export default function SearchPage() {
         </div>
       </div>
 
-      <div className="container px-4 md:px-6 py-4 md:py-8">
+      <div className="container px-4 md:px-6 pt-3 pb-4 md:pt-5 md:pb-8">
         {/* Breadcrumb — preserve back-context */}
         <nav aria-label={t('search.ariaCrumb', 'Kruimelpad')} className="text-xs md:text-sm text-muted-foreground mb-2">
           <ol className="flex items-center gap-1.5 flex-wrap">
