@@ -99,9 +99,12 @@ def main() -> None:
                 drinks[rid] += 1
             seen.add((rid, slug))
             order[rid] += 1
+            shown = name if slug != r["dish_slug"] else (d.get("menu_name") or name)
+            if shown.count("(") > shown.count(")"):    # the screening drops a closing parenthesis
+                shown = shown.rstrip(" ,;:-") + ")"
             out.append({
                 "overture_id": rid, "restaurant_name": r["restaurant_name"], "city": r["city"],
-                "dish_slug": slug, "dish_name": name if slug != r["dish_slug"] else (d.get("menu_name") or name), "canonical_slug": canonical,
+                "dish_slug": slug, "dish_name": shown, "canonical_slug": canonical,
                 "course": course, "tier": tier, "price": price, "description": "",
                 "menu_section": section, "sort_order": order[rid],
             })
