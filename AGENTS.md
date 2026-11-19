@@ -30,6 +30,7 @@
 
 - Public dish×city pages load context, restaurant selection, and optional navigation through separate TanStack Query keys per base slug; city-scoped, ordered paginated reads preserve complete results while facets reuse the cached base selection.
 
+- Search and city listings include restaurants without a photo, ordered photo-first via `photoFirst` (`src/lib/photoFirst.ts`); their card shows the first menu dishes (`useDishPreview`, batched) in place of the photo, so imported restaurants stay discoverable.
 - Render restaurant and collection photos through `optimizedImage` in `src/lib/imageUrl.ts` with an explicit width/height, so storage images are served resized as WebP and never shift the layout.
 - Load the support chat and onboarding dialog after idle via `AfterIdle`, and keep below-the-fold homepage sections as lazy chunks, so they never delay the first render.
 - Invite-page positions come from restaurant_positions(), whose order (rating, then id) must stay identical to compareLandingOrder used by /eten pages, so owner-facing ranks always match; payment never changes it.
