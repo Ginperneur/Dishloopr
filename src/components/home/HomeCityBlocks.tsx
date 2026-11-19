@@ -209,7 +209,7 @@ function EditorsPicks({ city }: { city: VisitorCity }) {
       <section aria-labelledby="tested-heading" className="rounded-2xl border border-dashed p-6">
         <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">Binnenkort</p>
         <h2 id="tested-heading" className="text-xl font-bold">Getest door Dishloopr</h2>
-        <p className="max-w-xl text-sm text-muted-foreground">Onze redactie kiest hier de beste restaurants in {city.name}. Restaurants kunnen hier geen plek kopen.</p>
+        <p className="max-w-xl text-sm text-muted-foreground">Ontdek de favoriete restaurants van onze redactie in {city.name}.</p>
       </section>
     );
   }
