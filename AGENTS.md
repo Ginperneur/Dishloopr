@@ -17,6 +17,7 @@
 
 - Overture bulk route (`overture-bulk`): restaurants are created hidden for their menu and go live through the restaurant_dishes trigger at 5 dishes; Python dishes import approved, the website route runs scrape-menu then dish-screening per restaurant. pg_cron runs the same steps unattended (action tick) only while overture_pipeline.enabled is on.
 - Overture bulk candidate reads order by `discovery_results.discovered_at` then `id`, and extract database error messages explicitly; the discovery table has no `created_at` and plain errors otherwise render as `[object Object]`.
+- Sanitize actual U+0000 recursively at Overture bulk input and external-data write boundaries, including pipeline JSON results, because PostgreSQL text/jsonb rejects NUL even in valid JSON.
 
 # Restaurant parking
 

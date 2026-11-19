@@ -12,7 +12,7 @@ import { requireAdminOrInternal, serviceClient, getCaller } from "../_shared/aut
 import { geocodeWithPdok } from "../_shared/pdokGeocode.ts";
 import { restaurantFromOverture } from "../_shared/overtureRestaurant.ts";
 import {
-  BULK_HIDDEN_REASON, TRIAGES, bulkErrorMessage, pendingOvertureBatch, chunks, cleanDishRows, linkRecord, newDishRecord, type DishImportRow,
+  BULK_HIDDEN_REASON, TRIAGES, bulkErrorMessage, pendingOvertureBatch, postgresSafeJson, chunks, cleanDishRows, linkRecord, newDishRecord, type DishImportRow,
 } from "../_shared/overtureBulk.ts";
 
 const corsHeaders = {
@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
   if (deny) return deny;
 
   try {
-    const body = await req.json().catch(() => ({}));
+    const body = postgresSafeJson(await req.json().catch(() => ({})));
     if (body.action === "create") return json(await createBatch(admin, body, (await getCaller(req))?.id ?? null));
     if (body.action === "import_dishes") return json(await importDishes(admin, body));
     if (body.action === "scrape_queue") return json(await scrapeQueue(admin, body));
@@ -56,7 +56,8 @@ async function createBatch(admin: Db, body: { triage?: string; limit?: number },
   const failed: { name: string; error: string }[] = [];
   const now = new Date().toISOString();
 
-  for (const dr of rows ?? []) {
+  for (const candidate of rows ?? []) {
+    const dr = postgresSafeJson(candidate);
     try {
       const { data: existing } = await admin.from("restaurants").select("id").eq("overture_id", dr.external_id).maybeSingle();
       if (existing) {
@@ -74,7 +75,7 @@ async function createBatch(admin: Db, body: { triage?: string; limit?: number },
       const geo = await geocodeWithPdok({ address: dr.address, postalCode: dr.postcode, city: cityName })
         .catch((e: unknown) => ({ ok: false as const, reason: `pdok_error: ${bulkErrorMessage(e)}` }));
       const { data: ins, error: insErr } = await admin.from("restaurants")
-        .insert(restaurantFromOverture(dr, cityName, geo)).select("id").single();
+        .insert(postgresSafeJson(restaurantFromOverture(dr, cityName, geo))).select("id").single();
       if (insErr) throw new Error(insErr.message);
       const { error: hideErr } = await admin.from("restaurants_verborgen")
         .upsert({ id: ins.id, reden: BULK_HIDDEN_REASON, was_active: false }, { onConflict: "id" });
@@ -86,7 +87,7 @@ async function createBatch(admin: Db, body: { triage?: string; limit?: number },
     } catch (e) {
       // A bad row must not come back in every batch: it moves to "twijfel" (triage review), where
       // it stays pending in the Review Queue for a human, with the error as its reason.
-      const msg = bulkErrorMessage(e);
+      const msg = postgresSafeJson(bulkErrorMessage(e));
       failed.push({ name: dr.name, error: msg });
       await admin.from("discovery_results")
         .update({ triage: "review", triage_reason: `Bulk aanmaken mislukt: ${msg}`.slice(0, 300) })
@@ -137,7 +138,10 @@ async function importDishes(admin: Db, body: { rows?: DishImportRow[] }) {
   await loadDishes(slugs.filter((s) => !dishBySlug.has(s)));
 
   // links that do not exist yet; an existing link keeps its own status and owner edits
-  const restaurantIds = [...new Set(usable.map((r) => restaurantByOverture.get(r.overture_id)!))];
+  const restaurantIds = [...new Set(usable.flatMap((r) => {
+    const id = restaurantByOverture.get(r.overture_id);
+    return id ? [id] : [];
+  }))];
   const existing = new Set<string>();
   for (const ids of chunks(restaurantIds, 100)) {
     for (let from = 0; ; from += 1000) {
@@ -152,9 +156,9 @@ async function importDishes(admin: Db, body: { rows?: DishImportRow[] }) {
   const links = [];
   let linksExisting = 0;
   for (const r of usable) {
-    const rid = restaurantByOverture.get(r.overture_id)!;
+    const rid = restaurantByOverture.get(r.overture_id);
     const did = dishBySlug.get(r.dish_slug);
-    if (!did) continue;
+    if (!rid || !did) continue;
     const key = `${rid}|${did}`;
     if (existing.has(key)) { linksExisting++; continue; }
     existing.add(key);
@@ -249,6 +253,6 @@ async function tick(admin: Db) {
 
   result.seconden = Math.round(elapsed() / 1000);
   await admin.from("overture_pipeline")
-    .update({ last_tick_at: new Date().toISOString(), last_result: result }).eq("id", 1);
+    .update({ last_tick_at: new Date().toISOString(), last_result: postgresSafeJson(result) }).eq("id", 1);
   return result;
 }

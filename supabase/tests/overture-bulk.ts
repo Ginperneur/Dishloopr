@@ -1,7 +1,7 @@
 // Checks the pure helpers of the Overture bulk route (supabase/functions/overture-bulk).
 // Usage from the repo root: deno run --config supabase/tests/deno.json supabase/tests/overture-bulk.ts
 import {
-  BULK_HIDDEN_REASON, bulkErrorMessage, pendingOvertureBatch, chunks, cleanDishRows, courseType, linkRecord, newDishRecord, parsePrice,
+  BULK_HIDDEN_REASON, bulkErrorMessage, pendingOvertureBatch, postgresSafeJson, chunks, cleanDishRows, courseType, linkRecord, newDishRecord, parsePrice,
 } from "../functions/_shared/overtureBulk.ts";
 
 let ok = true;
@@ -58,5 +58,20 @@ check('pending batch returns candidates', batch.data, [{ id: 'candidate-1' }]);
 check('database error exposes its message rather than object Object', bulkErrorMessage({ code: '42703', message: 'column discovery_results.created_at does not exist' }), 'column discovery_results.created_at does not exist');
 check('standard error keeps its message', bulkErrorMessage(new Error('Request failed')), 'Request failed');
 check('string error stays readable', bulkErrorMessage('Request failed'), 'Request failed');
+
+check('PostgreSQL-safe JSON strips nested NUL characters without losing valid Unicode',
+  postgresSafeJson({ name: 'Café\u0000 🍣', nested: [{ description: 'a\u0000b', price: 12.5, missing: null }], enabled: true }),
+  { name: 'Café 🍣', nested: [{ description: 'ab', price: 12.5, missing: null }], enabled: true });
+check('printable Unicode escape stays literal', postgresSafeJson('literal \\u0000'), 'literal \\u0000');
+const nulRows = cleanDishRows([
+  { overture_id: 'o\u00001', dish_slug: 'pi\u0000zza', dish_name: 'Pi\u0000zza', description: 'Fresh\u0000 basil', menu_section: 'Main\u0000 menu', tier: 'can\u0000onical', canonical_slug: 'pi\u0000zza' },
+  { overture_id: 'o1', dish_slug: 'pizza', dish_name: 'Duplicate' },
+  { overture_id: 'o1', dish_slug: '\u0000', dish_name: 'Invalid' },
+]);
+check('NUL stripping precedes validation and deduplication', nulRows.length, 1);
+check('dish database record contains no NUL', newDishRecord(nulRows[0]),
+  { slug: 'pizza', name: 'Pizza', canonical_slug: 'pizza', course: null, is_active: true });
+const nulLink = linkRecord(nulRows[0], 'r1', 'd1', 'now');
+check('link database text is cleaned too', [nulLink.description, nulLink.menu_section, nulLink.tier], ['Fresh basil', 'Main menu', 'canonical']);
 
 if (!ok) Deno.exit(1);

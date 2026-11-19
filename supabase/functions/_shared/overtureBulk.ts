@@ -8,6 +8,19 @@ export const BULK_HIDDEN_REASON = 'menu: Overture-import, wacht op 5 gerechten';
 
 export const TRIAGES = ['verified', 'approve'] as const;
 
+// PostgreSQL text/jsonb rejects U+0000, even though JSON permits it. Strip only the
+// actual NUL character, not the printable six-character sequence "\u0000".
+export function postgresSafeJson<T>(value: T): T {
+  if (typeof value === 'string') return value.replace(/\u0000/g, '') as T;
+  if (Array.isArray(value)) return value.map((item) => postgresSafeJson(item)) as T;
+  if (value !== null && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [
+      postgresSafeJson(key), postgresSafeJson(item),
+    ])) as T;
+  }
+  return value;
+}
+
 // Discovery rows use discovered_at, not created_at; id breaks timestamp ties.
 // deno-lint-ignore no-explicit-any
 export function pendingOvertureBatch(admin: any, triage: string, limit: number) {
@@ -51,7 +64,8 @@ export function parsePrice(raw: string | undefined | null): number | null {
 export function cleanDishRows(rows: DishImportRow[]): DishImportRow[] {
   const seen = new Set<string>();
   const out: DishImportRow[] = [];
-  for (const r of rows) {
+  for (const input of rows) {
+    const r = postgresSafeJson(input);
     const overture = (r.overture_id ?? '').trim();
     const slug = (r.dish_slug ?? '').trim();
     const name = (r.dish_name ?? '').trim();
