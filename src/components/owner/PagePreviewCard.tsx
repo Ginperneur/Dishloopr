@@ -55,6 +55,9 @@ export function PagePreviewCard(p: Props) {
           </div>
         </div>
       </Card>
+      {!cover && (
+        <p className="text-xs text-muted-foreground">Zonder foto sta je lager in de lijst van je stad. Voeg bij Foto's een foto toe.</p>
+      )}
       {!p.isActive && (
         <p className="text-xs text-muted-foreground">Je pagina is nog niet zichtbaar voor gasten. Voeg gerechten toe onder Menu.</p>
       )}

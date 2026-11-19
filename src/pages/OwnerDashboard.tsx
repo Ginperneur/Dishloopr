@@ -724,7 +724,13 @@ export default function OwnerDashboard() {
 
                         {section("Foto's", Image, isVerified ? (
                           <>
-                            <p className="text-sm text-muted-foreground">Je foto's halen we automatisch op bij Google. Hier kun je ze vervangen of aanvullen. Met 3 of meer foto's word je vaker aangeklikt.</p>
+                            {r.images?.length ? (
+                              <p className="text-sm text-muted-foreground">Hier kun je je foto's vervangen of aanvullen. Met 3 of meer foto's word je vaker aangeklikt.</p>
+                            ) : (
+                              <p className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
+                                <span className="font-semibold">Je pagina heeft nog geen foto.</span> Restaurants met een foto staan hoger in de lijst van je stad; zonder foto tonen we alleen een paar gerechten. Voeg je mooiste gerecht, je interieur of je terras toe. Met 3 of meer foto's word je vaker aangeklikt.
+                              </p>
+                            )}
                             <RestaurantImageUpload restaurantId={r.id} restaurantName={r.name} existingImages={r.images || []}
                               onImagesUpdate={() => toast.success("Foto's opgeslagen")} />
                           </>

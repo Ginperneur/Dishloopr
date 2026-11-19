@@ -54,4 +54,12 @@ const full = renderOutreach("zichtbaar", { ...base, topDish: { dish: "Carbonara"
 check("no places line when full", !full.text.includes("plekken Uitgelicht vrij"));
 const noRank = renderOutreach("zichtbaar", { ...base, topDish: null, dishCount: 0 });
 check("zichtbaar: renders without ranking or dishes", !noRank.text.includes("sta je nu op plek") && !noRank.text.includes(" 0 gerechten"));
+for (const seg of ["zichtbaar", "onzichtbaar_menu"]) {
+  const noPhoto = renderOutreach(seg, { ...base, hasPhoto: false });
+  check(`${seg}: asks for photos without a photo`, noPhoto.text.includes("Je pagina heeft nog geen foto") && noPhoto.html.includes("Je pagina heeft nog geen foto"));
+  check(`${seg}: photo ask names the city`, noPhoto.text.includes("als gasten in Utrecht kijken"));
+  check(`${seg}: photo ask has no em/en dashes`, !/[–—]/.test(visible(noPhoto.text)));
+  check(`${seg}: no photo ask with a photo`, !renderOutreach(seg, { ...base, hasPhoto: true }).text.includes("nog geen foto"));
+  check(`${seg}: no photo ask when unknown`, !renderOutreach(seg, base).text.includes("nog geen foto"));
+}
 Deno.exit(ok ? 0 : 1);
