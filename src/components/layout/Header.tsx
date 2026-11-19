@@ -32,7 +32,7 @@ export function Header() {
   const [isOwner, setIsOwner] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
-  const { hasCollections, hasEvents } = useContentAvailability();
+  const { hasCollections } = useContentAvailability();
   const hasFeatured = useHasFeatured();
 
   // Scroll-shrink behavior on mobile
@@ -135,12 +135,11 @@ export function Header() {
               {t('nav.featured')}
             </Link>
           )}
-          {hasEvents && (
-            <Link to="/evenementen" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1.5">
-              <PartyPopper className="h-4 w-4" />
-              {t('nav.events', 'Events & Acties')}
-            </Link>
-          )}
+          {/* Always shown: the events page has its own empty state, a link that comes and goes confuses visitors */}
+          <Link to="/evenementen" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1.5">
+            <PartyPopper className="h-4 w-4" />
+            {t('nav.events', 'Events & Acties')}
+          </Link>
           {user && (
             <Link to="/favorites" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1.5">
               <Heart className="h-4 w-4" />
@@ -292,12 +291,10 @@ export function Header() {
                   <span className="font-medium">{t('nav.collections')}</span>
                 </Link>
               )}
-              {hasEvents && (
-                <Link to="/evenementen" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                  <PartyPopper className="h-5 w-5 text-muted-foreground" />
-                  <span className="font-medium">{t('nav.events', 'Events & Acties')}</span>
-                </Link>
-              )}
+              <Link to="/evenementen" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                <PartyPopper className="h-5 w-5 text-muted-foreground" />
+                <span className="font-medium">{t('nav.events', 'Events & Acties')}</span>
+              </Link>
 
               {user && (
                 <>

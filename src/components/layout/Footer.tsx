@@ -14,6 +14,7 @@ import { useContentAvailability } from '@/hooks/useContentAvailability';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/components/theme/ThemeProvider';
 import { openCookieSettings, sendAnalyticsEvent } from '@/lib/cookieConsent';
+import { useVisitorCity } from '@/lib/visitorCity';
 
 export function Footer() {
   const { t } = useTranslation();
@@ -26,6 +27,13 @@ export function Footer() {
   const [seoLinks, setSeoLinks] = useState<{ slug: string; label: string }[]>([]);
   const [cities, setCities] = useState<{ id: string; name: string }[]>([]);
   const [newsletterCityId, setNewsletterCityId] = useState<string>('all');
+  // The newsletter follows the city the visitor chose on the site, until they pick another one here.
+  const { city: visitorCity } = useVisitorCity();
+  const [newsletterCityTouched, setNewsletterCityTouched] = useState(false);
+  useEffect(() => {
+    if (newsletterCityTouched) return;
+    setNewsletterCityId(visitorCity && cities.some(c => c.id === visitorCity.id) ? visitorCity.id : 'all');
+  }, [visitorCity, cities, newsletterCityTouched]);
   const { hasCollections, hasEvents } = useContentAvailability();
 
   useEffect(() => {
@@ -121,7 +129,7 @@ export function Footer() {
                   <span className="text-xs text-muted-foreground">
                     {t('footer.newsletterScope', 'Alleen updates voor:')}
                   </span>
-                  <Select value={newsletterCityId} onValueChange={setNewsletterCityId}>
+                  <Select value={newsletterCityId} onValueChange={v => { setNewsletterCityTouched(true); setNewsletterCityId(v); }}>
                     <SelectTrigger className="h-8 w-auto text-xs border-none bg-transparent shadow-none gap-1 px-1">
                       <SelectValue />
                     </SelectTrigger>

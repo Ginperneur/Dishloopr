@@ -239,7 +239,7 @@
   },
   "trending": {
     "title": "Trending gerechten",
-    "subtitle": "Populair in jouw stad",
+    "subtitle": "Meest gezocht",
     "inCity": "in {{city}}",
     "now": "Trending nu",
     "searches": "zoekopdrachten",
@@ -690,7 +690,6 @@
   "stats": {
     "restaurants": "Restaurants",
     "reviews": "Reviews",
-    "cities": "Steden",
     "dishes": "Gerechten",
     "aria": "Statistieken over Dishloopr"
   },

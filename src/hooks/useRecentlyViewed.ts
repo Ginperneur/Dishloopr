@@ -34,5 +34,10 @@ export function useRecentlyViewed() {
     return items.some(i => i.slug === slug);
   }, [items]);
 
-  return { recentlyViewed: items, addItem, isRecentlyViewed };
+  const clear = useCallback(() => {
+    setItems([]);
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* storage blocked: cleared for this view */ }
+  }, []);
+
+  return { recentlyViewed: items, addItem, isRecentlyViewed, clear };
 }
