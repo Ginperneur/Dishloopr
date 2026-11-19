@@ -9329,6 +9329,16 @@ export type Database = {
         Args: { p_cuisine: string; p_cuisines: string[]; p_restaurant: string }
         Returns: boolean
       }
+      restaurant_listing_signals: {
+        Args: { p_ids: string[] }
+        Returns: {
+          food_dishes: number
+          menu_updated_at: string
+          owner_dishes: number
+          priced_dishes: number
+          restaurant_id: string
+        }[]
+      }
       restaurant_menu_terms: {
         Args: { p_restaurant_id: string }
         Returns: {
