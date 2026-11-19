@@ -114,7 +114,7 @@ function SpotlightStad({ city }: { city: VisitorCity }) {
       <section aria-labelledby="spotlight-slot-heading" className={slotClass}>
         <div className="flex flex-wrap items-baseline gap-2">
           <h2 id="spotlight-slot-heading" className="text-lg font-bold">Spotlight in {city.name}</h2>
-          <span className="text-sm text-muted-foreground">nog geen restaurant deze week</span>
+          <span className="text-sm text-muted-foreground">Nog geen restaurant deze week.</span>
         </div>
         <OwnerCard where={city.name} compact />
       </section>
