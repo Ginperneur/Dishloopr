@@ -12,6 +12,7 @@ import {
   type ScoringContext,
   type DishMatchInfo,
 } from '@/lib/ranking';
+import { photoFirst } from '@/lib/photoFirst';
 import { calculateDistance } from '@/hooks/useGeolocation';
 import { getEmptyRestaurantIds } from '@/lib/listableRestaurants';
 import { splitDishQuery, hasDishConnector, isCompoundDishPhrase, groupByCoverage } from '@/lib/multiDishSearch';
@@ -110,6 +111,8 @@ export function useSearch() {
   const parseCacheRef = useRef(new Map<string, ParsedTerm>());
   // "zoet en zuur"-achtige zoekdelen: is het hele deel zelf een gerechtnaam?
   const knownDishCacheRef = useRef(new Map<string, boolean>());
+  // Only the newest search may show its results: a slow nationwide run must not overwrite a city search started after it.
+  const latestSearchRef = useRef(0);
   const lastSearchRef = useRef<{ key: string; running: boolean; doneAt: number } | null>(null);
   // city_aliases: plaatsnamen zonder eigen stadspagina (bijv. "Nieuwegein", na
   // samenvoeging bij Utrecht) die bij een zoekopdracht toch naar hun stad
@@ -160,6 +163,7 @@ export function useSearch() {
     const rawKey = JSON.stringify([query.toLowerCase().trim(), cityIdInput || 'all', filters ?? null, !!featuredOnly]);
     const cached = searchResultCache.get(rawKey);
     if (cached && Date.now() - cached.at < SEARCH_CACHE_TTL) {
+      ++latestSearchRef.current;
       lastSnapshot = cached;
       setResultsState(cached.results);
       setDetectedCityState(cached.detectedCity);
@@ -169,6 +173,7 @@ export function useSearch() {
       setLoading(false);
       return;
     }
+    const ticket = ++latestSearchRef.current;
     const snap: Omit<SearchSnapshot, 'results' | 'at'> = { detectedCity: null, didYouMean: null, isFuzzyMatch: false, parsedQuery: '' };
     const setDetectedCity = (v: { id: string; name: string } | null) => { snap.detectedCity = v; setDetectedCityState(v); };
     const setDidYouMean = (v: string | null) => { snap.didYouMean = v; setDidYouMeanState(v); };
@@ -177,6 +182,7 @@ export function useSearch() {
     const setResults = (r: SearchResult[]) => {
       const entry = { ...snap, results: r, at: Date.now() };
       searchResultCache.set(rawKey, entry);
+      if (ticket !== latestSearchRef.current) return;
       lastSnapshot = entry;
       setResultsState(r);
     };
@@ -441,9 +447,9 @@ export function useSearch() {
     }
 
     const buildRestaurantQuery = (idChunk?: string[]) => {
+      // Restaurants without a photo are listed too (their dishes stand in for the photo);
+      // browse mode puts the ones with a photo first.
       let q = supabase.from('restaurants').select('*').eq('is_active', true);
-      // Hide restaurants without photos from public listings
-      q = q.not('images', 'is', null).not('images', 'eq', '{}');
 
       if (idChunk) {
         q = q.in('id', idChunk);
@@ -609,7 +615,7 @@ export function useSearch() {
         bayesianRating: bayesianRating(Number(r.rating), r.review_count),
       }));
       
-      const sorted = sortResults(scoredResults);
+      const sorted = photoFirst(sortResults(scoredResults));
       setResults(sorted);
       finish(); setLoading(false);
       return;

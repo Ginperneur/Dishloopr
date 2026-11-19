@@ -10,6 +10,7 @@ import { SEOHead, createBreadcrumbSchema, createItemListSchema } from '@/compone
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DatabaseRestaurantCard } from '@/components/restaurant/DatabaseRestaurantCard';
+import { photoFirst } from '@/lib/photoFirst';
 import { SkeletonCard } from '@/components/ui/skeleton-card';
 import { supabase } from '@/integrations/supabase/client';
 import { getEmptyRestaurantIds } from '@/lib/listableRestaurants';
@@ -66,12 +67,11 @@ export default function CityDetailPage() {
         .eq('city_id', cityData.id)
         .eq('is_active', true)
         .ilike('address', `%${cityData.name}%`)
-        .not('images', 'is', null)
-        .not('images', 'eq', '{}')
         .order('rating', { ascending: false })
-        .limit(30);
+        .limit(60);
 
-      const filteredRest = (restData || []).filter((r: any) => !emptyIds.has(r.id));
+      // Restaurants with a photo first; the rest still show, with their dishes in place of the photo.
+      const filteredRest = photoFirst((restData || []).filter((r: any) => !emptyIds.has(r.id)));
       setTopRestaurants(filteredRest.slice(0, 6));
 
       // Total listable count for this city — fetch all IDs, subtract empties.
