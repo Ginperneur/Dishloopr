@@ -1,4 +1,5 @@
 # Parkeerinformatie
+- [x] Aangeleverde national_uitgelicht-migratie exact toegepast als 0075; publieke selectie gecontroleerd (200, lege lijst); twee actieve Testkeuken-evenementen verwijderd, zonder applicatiecodewijzigingen.
 - [x] Migratie paid_visibility toegepast met ontbrekende toegangsrechten; 192 keukenkoppelingen; zes functies gedeployed; 55 controles geslaagd; bestaande gerechtpagina opent zonder fouten. Migratiegeschiedenis na gelijktijdige repositorywijziging hersteld en gecontroleerd.
 - [x] Eenmalige refresh_landing_pages afgerond: 2.260 pagina-aantallen opgeslagen; eerste poging stopte zonder resultaat, herstart met twintig minuten verwerkingstijd voltooid.
 - [x] support_chat_rls toegepast als 0051; RLS en alle gesprek-/berichtregels gecontroleerd; nieuwe databasescan zonder kritieke meldingen. Publicatie aanvragen.

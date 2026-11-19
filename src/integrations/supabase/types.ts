@@ -8872,6 +8872,15 @@ export type Database = {
           visited_on: string
         }[]
       }
+      national_uitgelicht: {
+        Args: { p_limit?: number }
+        Returns: {
+          city_id: string
+          city_name: string
+          page_slug: string
+          restaurant_id: string
+        }[]
+      }
       nearest_city: {
         Args: { p_lat: number; p_lng: number }
         Returns: {
