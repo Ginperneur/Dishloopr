@@ -498,6 +498,13 @@
       "when": 1795115616446,
       "tag": "0073_restaurant_listing_signals",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1795117114486,
+      "tag": "0074_restrict_landing_page_counts",
+      "breakpoints": true
     }
   ]
 }
