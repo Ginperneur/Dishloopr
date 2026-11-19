@@ -32,7 +32,7 @@ export function Photo({ r, className }: { r: MiniRestaurant; className: string }
 
 /**
  * "Deze week in <stad>": the 3 Stadsspotlight places of this week. Nothing when none are booked.
- * `nested`: inside the homepage "Uitgelicht in <stad>" block, which carries the Betaald label;
+ * `nested`: inside the homepage "Spotlight in <stad>" block, which carries the Betaald label;
  * `extra` fills an open place (the owner card).
  */
 export function CitySpotlightSection({ cityId, cityName, nested = false, extra }: { cityId: string; cityName: string; nested?: boolean; extra?: ReactNode }) {
@@ -43,7 +43,7 @@ export function CitySpotlightSection({ cityId, cityName, nested = false, extra }
   return (
     <section aria-labelledby="spotlight-heading" className={nested ? 'space-y-3' : 'space-y-4'}>
       {nested ? (
-        <h3 id="spotlight-heading" className="text-sm font-semibold text-muted-foreground">In de spotlight deze week</h3>
+        <h3 id="spotlight-heading" className="text-sm font-semibold text-muted-foreground">Deze week</h3>
       ) : (
         <div className="flex flex-wrap items-center gap-2">
           <h2 id="spotlight-heading" className="text-2xl font-bold md:text-3xl">Deze week in {cityName}</h2>

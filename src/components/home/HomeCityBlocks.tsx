@@ -14,8 +14,8 @@ import { UpcomingEvents } from '@/components/home/UpcomingEvents';
 /**
  * The homepage below the search bar, driven by one city: the one in the search bar (kept on the device).
  *
- * No city:  "In welke stad zoek je?" and the paid slot as "Uitgelicht in Nederland".
- * A city:   "Eten in <stad>", the same paid slot as "Uitgelicht in <stad>" (Stadsspotlight and
+ * No city:  "In welke stad zoek je?" and the paid slot as "Spotlight in Nederland".
+ * A city:   "Eten in <stad>", the same paid slot as "Spotlight in <stad>" (Stadsspotlight and
  *           Topplekken from that city only), then events, popular pages and the editors' picks.
  * A city with few or no payers shows an owner card in the open places; never another city's restaurants.
  */
@@ -49,7 +49,7 @@ function SlotHeading({ title, sub }: { title: string; sub: string }) {
   return (
     <div className="space-y-1">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 id="uitgelicht-heading" className="text-2xl font-bold md:text-3xl">{title}</h2>
+        <h2 id="spotlight-slot-heading" className="text-2xl font-bold md:text-3xl">{title}</h2>
         <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">Betaald</span>
         <WhyPaidLink className="ml-auto" />
       </div>
@@ -61,7 +61,7 @@ function SlotHeading({ title, sub }: { title: string; sub: string }) {
 const slotClass = 'scroll-mt-24 space-y-6 rounded-3xl bg-accent/40 p-4 md:p-6';
 
 /** The paid slot without a city: one paying restaurant per city, the city on every card. */
-function UitgelichtNederland() {
+function SpotlightNederland() {
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['national-uitgelicht'],
     queryFn: () => rpc<{ restaurant_id: string; city_id: string; city_name: string; page_slug: string }>('national_uitgelicht', { p_limit: 4 }),
@@ -72,15 +72,15 @@ function UitgelichtNederland() {
   if (isLoading) return null;
   if (!rows.length) {
     return (
-      <section aria-labelledby="uitgelicht-heading" className={slotClass}>
-        <h2 id="uitgelicht-heading" className="text-lg font-bold">Uitgelicht in Nederland</h2>
+      <section aria-labelledby="spotlight-slot-heading" className={slotClass}>
+        <h2 id="spotlight-slot-heading" className="text-lg font-bold">Spotlight in Nederland</h2>
         <OwnerCard where="Nederland" compact />
       </section>
     );
   }
   return (
-    <section aria-labelledby="uitgelicht-heading" className={slotClass}>
-      <SlotHeading title="Uitgelicht in Nederland" sub="Restaurants die zich deze week laten zien. Elk gerecht staat echt op hun kaart." />
+    <section aria-labelledby="spotlight-slot-heading" className={slotClass}>
+      <SlotHeading title="Spotlight in Nederland" sub="Restaurants die zich deze week laten zien. Elk gerecht staat echt op hun kaart." />
       <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-4 md:overflow-visible md:px-0">
         {rows.map(({ r, city_name, page_slug }) => (
           <PaidTracked key={r!.id} restaurantId={r!.id} pageSlug={page_slug} surface={page_slug === 'spotlight' ? 'spotlight' : 'homepage'}>
@@ -97,13 +97,13 @@ function UitgelichtNederland() {
           </PaidTracked>
         ))}
       </div>
-      <p className="text-sm text-muted-foreground">Kies je stad hierboven voor wat er bij jou in de buurt uitgelicht is.</p>
+      <p className="text-sm text-muted-foreground">Kies je stad hierboven voor de spotlight bij jou in de buurt.</p>
     </section>
   );
 }
 
 /** The paid slot for a city: Stadsspotlight and Topplekken from this city only, owner cards in open places. */
-function UitgelichtStad({ city }: { city: VisitorCity }) {
+function SpotlightStad({ city }: { city: VisitorCity }) {
   const spot = useCitySpotlight(city.id);
   const tops = useCityToppleks(city.id);
   if (spot.isLoading || tops.isLoading) return null;
@@ -111,9 +111,9 @@ function UitgelichtStad({ city }: { city: VisitorCity }) {
   const topCount = tops.data?.length ?? 0;
   if (!spotCount && !topCount) {
     return (
-      <section aria-labelledby="uitgelicht-heading" className={slotClass}>
+      <section aria-labelledby="spotlight-slot-heading" className={slotClass}>
         <div className="flex flex-wrap items-baseline gap-2">
-          <h2 id="uitgelicht-heading" className="text-lg font-bold">Uitgelicht in {city.name}</h2>
+          <h2 id="spotlight-slot-heading" className="text-lg font-bold">Spotlight in {city.name}</h2>
           <span className="text-sm text-muted-foreground">nog geen restaurant deze week</span>
         </div>
         <OwnerCard where={city.name} compact />
@@ -121,8 +121,8 @@ function UitgelichtStad({ city }: { city: VisitorCity }) {
     );
   }
   return (
-    <section aria-labelledby="uitgelicht-heading" className={slotClass}>
-      <SlotHeading title={`Uitgelicht in ${city.name}`} sub={`Alleen restaurants uit ${city.name}. Elk gerecht staat echt op hun kaart.`} />
+    <section aria-labelledby="spotlight-slot-heading" className={slotClass}>
+      <SlotHeading title={`Spotlight in ${city.name}`} sub={`Alleen restaurants uit ${city.name}. Elk gerecht staat echt op hun kaart.`} />
       {spotCount > 0
         ? <CitySpotlightSection nested cityId={city.id} cityName={city.name} extra={spotCount < 3 ? <OwnerCard where={city.name} /> : undefined} />
         : <OwnerCard where={city.name} compact />}
@@ -237,10 +237,10 @@ export function HomeCityBlocks() {
     <div id="stad" className="container scroll-mt-24 space-y-10 px-4 py-8 md:px-6">
       {!city ? (<>
         <CityChooser />
-        <UitgelichtNederland />
+        <SpotlightNederland />
       </>) : (<>
         <CityHeader city={city} />
-        <UitgelichtStad city={city} />
+        <SpotlightStad city={city} />
         <div id="events" className="-mx-4 scroll-mt-24 md:-mx-6"><UpcomingEvents city={city} /></div>
         <CityPageChips cityId={city.id} cityName={city.name} />
         <EditorsPicks city={city} />
