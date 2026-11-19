@@ -20,6 +20,8 @@ export interface OutreachData {
   /** Visibility rule: approved dishes (drinks excluded) needed to go live. */
   menuMinimum: number;
   senderName: string;
+  /** False when the restaurant has no photo yet: the mail then asks for one. Unknown (undefined) says nothing. */
+  hasPhoto?: boolean;
   /** Owner flyer: attached as pdf, offered as a download link, or absent (null). */
   flyer?: { mode: "attachment" | "link"; url: string } | null;
 }
@@ -38,6 +40,13 @@ function flyerHtml(d: OutreachData): string {
 function flyerText(d: OutreachData): string[] {
   if (!d.flyer) return [];
   return d.flyer.mode === "attachment" ? [FLYER_ATTACHED] : [`${FLYER_LINKED}\nDownload onze flyer (pdf): ${d.flyer.url}`];
+}
+
+// Listings rank restaurants with a photo higher (src/lib/browseOrder.ts); without one the card shows a few dishes.
+function photoLine(d: OutreachData): string | null {
+  if (d.hasPhoto !== false) return null;
+  const where = d.city ? ` als gasten in ${d.city} kijken` : "";
+  return `Je pagina heeft nog geen foto. Restaurants met een foto staan hoger in de lijst${where}; zonder foto tonen we alleen een paar gerechten van je kaart. Zet er na het claimen een paar foto's op, bijvoorbeeld je mooiste gerecht, je interieur of je terras. Liever niet zelf doen? Stuur ze als antwoord op deze mail, dan zetten wij ze erop.`;
 }
 
 function rankingLine(d: OutreachData): string | null {
@@ -105,10 +114,12 @@ export function renderVisible(d: OutreachData): RenderedMail {
     ...(rank ? [escapeHtml(rank)] : []),
     `Op ${LAUNCH} gaan we officieel live. Dit is het moment om je pagina te claimen, zodat jij bepaalt wat gasten zien.`,
   ];
+  const photo = photoLine(d);
   const html = shell(
     intro.map((p) => `<p style="margin:0 0 14px">${p}</p>`).join("") +
       `<p style="margin:0"><b>Claimen is gratis en blijft gratis.</b> Je krijgt:</p>` + ul(freeBullets) +
       button(d.inviteUrl, "Bekijk en claim je pagina") +
+      (photo ? `<p style="margin:0 0 14px">${escapeHtml(photo)}</p>` : "") +
       `<p style="margin:0">Wil je meer opvallen? Dat kan, maar het hoeft nooit:</p>` + ul(paidBullets) +
       `<p style="margin:0 0 14px"><a href="${escapeHtml(d.pricingUrl)}" style="color:#e8562a">Bekijk alle pakketten en prijzen</a></p>` +
       flyerHtml(d) +
@@ -119,6 +130,7 @@ export function renderVisible(d: OutreachData): RenderedMail {
     ...intro.map(strip),
     `Claimen is gratis en blijft gratis. Je krijgt:\n${freeBullets.map((b) => `• ${b}`).join("\n")}`,
     `Bekijk en claim je pagina: ${d.inviteUrl}`,
+    ...(photo ? [photo] : []),
     `Wil je meer opvallen? Dat kan, maar het hoeft nooit:\n${paidBullets.map((b) => `• ${strip(b)}`).join("\n")}`,
     `Alle pakketten en prijzen: ${d.pricingUrl}`,
     ...flyerText(d),
@@ -143,10 +155,12 @@ export function renderHiddenMenu(d: OutreachData): RenderedMail {
 <li style="margin:6px 0"><b>Claim je pagina en vul je menu zelf aan.</b> Claimen is gratis. In je dashboard upload je je menukaart als pdf of voeg je gerechten toe. Zodra je op ${d.menuMinimum} gerechten staat, ben je automatisch zichtbaar.</li>
 <li style="margin:6px 0"><b>Geen tijd? Antwoord op deze mail met je menukaart.</b> Een foto, een pdf of een link naar de kaart op je website is genoeg. Wij zetten je gerechten erin, zonder kosten, en laten je weten zodra je zichtbaar bent.</li>
 </ol>`;
+  const photo = photoLine(d);
   const optionsText = `1. Claim je pagina en vul je menu zelf aan. Claimen is gratis. In je dashboard upload je je menukaart als pdf of voeg je gerechten toe. Zodra je op ${d.menuMinimum} gerechten staat, ben je automatisch zichtbaar.\n2. Geen tijd? Antwoord op deze mail met je menukaart. Een foto, een pdf of een link naar de kaart op je website is genoeg. Wij zetten je gerechten erin, zonder kosten, en laten je weten zodra je zichtbaar bent.`;
   const html = shell(
     paras.map((p) => `<p style="margin:0 0 14px">${p}</p>`).join("") + optionsHtml +
       button(d.claimUrl, "Claim je pagina en vul je menu aan") +
+      (photo ? `<p style="margin:0 0 14px">${escapeHtml(photo)}</p>` : "") +
       `<p style="margin:0">Met een geclaimde pagina krijg je, gratis:</p>` + ul(freeBullets) +
       `<p style="margin:0">En wil je meer opvallen, dan kan dat ook:</p>` + ul(paidBullets) +
       `<p style="margin:0 0 14px"><a href="${escapeHtml(d.pricingUrl)}" style="color:#e8562a">Bekijk alle pakketten en prijzen</a></p>` +
@@ -158,6 +172,7 @@ export function renderHiddenMenu(d: OutreachData): RenderedMail {
     ...paras.map(strip),
     optionsText,
     `Claim je pagina en vul je menu aan: ${d.claimUrl}`,
+    ...(photo ? [photo] : []),
     `Met een geclaimde pagina krijg je, gratis:\n${freeBullets.map((b) => `• ${b}`).join("\n")}`,
     `En wil je meer opvallen, dan kan dat ook:\n${paidBullets.map((b) => `• ${strip(b)}`).join("\n")}`,
     `Alle pakketten en prijzen: ${d.pricingUrl}`,

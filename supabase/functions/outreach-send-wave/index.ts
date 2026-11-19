@@ -80,8 +80,11 @@ async function render(db: SupabaseClient, t: Target, menuMinimum: number, flyer:
   const token = await unsubscribeToken(db, t.restaurant_id);
   const q = new URLSearchParams({ t: token, slug: t.slug, naam: t.name });
   const utm = "utm_source=outreach&utm_medium=email&utm_campaign=mail_golf";
+  const { data: photoRow } = await db.from("restaurants").select("images").eq("id", t.restaurant_id).maybeSingle();
+  const images = (photoRow as { images: string[] | null } | null)?.images;
   const mail = renderOutreach(t.segment, {
     name: t.name,
+    hasPhoto: !!images?.length && !!images[0],
     city: t.stad,
     dishCount: t.goedgekeurde_gerechten,
     topDish: await topDish(db, t),
