@@ -1,4 +1,5 @@
 # Parkeerinformatie
+- [ ] Migratie paid_visibility toepassen, refresh_landing_pages eenmaal draaien en de zes aangevraagde functies deployen.
 - [x] support_chat_rls toegepast als 0051; RLS en alle gesprek-/berichtregels gecontroleerd; nieuwe databasescan zonder kritieke meldingen. Publicatie aanvragen.
 - [x] newsletter_placement_photo en restaurant_positions_all_pages toegepast als 0043/0044; foto/PDF-kolommen en functie gecontroleerd.
 - [x] Drie kritieke toegangsmeldingen aangepakt; 0046–0049 toegepast (363 kernpagina's, wekelijkse taak); vijf functies gedeployed; publicatie aangevraagd.

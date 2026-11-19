@@ -689,6 +689,21 @@ export type Database = {
           },
         ]
       }
+      cuisine_dishes: {
+        Row: {
+          cuisine: string
+          dish_slug: string
+        }
+        Insert: {
+          cuisine: string
+          dish_slug: string
+        }
+        Update: {
+          cuisine?: string
+          dish_slug?: string
+        }
+        Relationships: []
+      }
       demand_routing_events: {
         Row: {
           created_at: string
@@ -1951,6 +1966,24 @@ export type Database = {
           created_at?: string | null
           dish_id?: string
           slug?: string | null
+        }
+        Relationships: []
+      }
+      landing_page_counts: {
+        Row: {
+          page_slug: string
+          refreshed_at: string
+          restaurant_count: number
+        }
+        Insert: {
+          page_slug: string
+          refreshed_at?: string
+          restaurant_count: number
+        }
+        Update: {
+          page_slug?: string
+          refreshed_at?: string
+          restaurant_count?: number
         }
         Relationships: []
       }
@@ -6921,10 +6954,12 @@ export type Database = {
       }
       seo_landing_pages: {
         Row: {
+          ambience: string | null
           canonical_url: string | null
           city_id: string | null
           created_at: string
           created_by: string | null
+          cuisine: string | null
           dish_id: string | null
           extended_description: string | null
           faq_content: Json | null
@@ -6936,14 +6971,17 @@ export type Database = {
           keywords: string[] | null
           meta_description: string
           meta_title: string
+          page_kind: string
           slug: string
           updated_at: string
         }
         Insert: {
+          ambience?: string | null
           canonical_url?: string | null
           city_id?: string | null
           created_at?: string
           created_by?: string | null
+          cuisine?: string | null
           dish_id?: string | null
           extended_description?: string | null
           faq_content?: Json | null
@@ -6955,14 +6993,17 @@ export type Database = {
           keywords?: string[] | null
           meta_description: string
           meta_title: string
+          page_kind?: string
           slug: string
           updated_at?: string
         }
         Update: {
+          ambience?: string | null
           canonical_url?: string | null
           city_id?: string | null
           created_at?: string
           created_by?: string | null
+          cuisine?: string | null
           dish_id?: string | null
           extended_description?: string | null
           faq_content?: Json | null
@@ -6974,6 +7015,7 @@ export type Database = {
           keywords?: string[] | null
           meta_description?: string
           meta_title?: string
+          page_kind?: string
           slug?: string
           updated_at?: string
         }
@@ -8299,6 +8341,7 @@ export type Database = {
         Args: { p_enabled: boolean; p_restaurant_id: string }
         Returns: string
       }
+      ambience_labels: { Args: { p_ambience: string }; Returns: string[] }
       apply_pending_edit: {
         Args: { p_decision: string; p_id: string; p_note?: string }
         Returns: undefined
@@ -8673,6 +8716,21 @@ export type Database = {
           views: number
         }[]
       }
+      page_restaurant_ids: {
+        Args: { p_page_slug: string }
+        Returns: {
+          restaurant_id: string
+        }[]
+      }
+      page_subject: {
+        Args: { p_page_slug: string }
+        Returns: {
+          city_id: string
+          city_name: string
+          page_kind: string
+          subject: string
+        }[]
+      }
       parse_search_query: {
         Args: { p_query: string }
         Returns: {
@@ -8829,6 +8887,7 @@ export type Database = {
         Returns: undefined
       }
       purge_old_integration_events: { Args: never; Returns: number }
+      refresh_landing_pages: { Args: never; Returns: number }
       register_push_token: {
         Args: { p_platform: string; p_token: string }
         Returns: undefined
@@ -8864,11 +8923,19 @@ export type Database = {
         }
         Returns: boolean
       }
+      restaurant_has_cuisine: {
+        Args: { p_cuisine: string; p_cuisines: string[]; p_restaurant: string }
+        Returns: boolean
+      }
       restaurant_menu_terms: {
         Args: { p_restaurant_id: string }
         Returns: {
           term: string
         }[]
+      }
+      restaurant_paid_tag: {
+        Args: { p_category: string; p_restaurant: string; p_value: string }
+        Returns: boolean
       }
       restaurant_positions: {
         Args: { p_slug: string }
