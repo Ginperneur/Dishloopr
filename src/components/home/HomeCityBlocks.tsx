@@ -27,9 +27,10 @@ function CityPicker({ city, onChoose }: { city: VisitorCity | null; onChoose: (c
       <label htmlFor="home-city" className="sr-only">Stad</label>
       <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground"><MapPin className="h-4 w-4" aria-hidden="true" />Je stad</span>
       <select id="home-city" value={city?.id ?? ''}
-        onChange={e => onChoose(cities.find(c => c.id === e.target.value) ?? null)}
+        onChange={e => onChoose(cities.find(c => c.id === e.target.value) ?? (city?.id === e.target.value ? city : null))}
         className="min-h-11 rounded-full border bg-card px-4 text-sm font-semibold">
         <option value="">Kies je stad</option>
+        {city && !cities.some(c => c.id === city.id) && <option value={city.id}>{city.name}</option>}
         {cities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
       </select>
       <button type="button" onClick={() => { setAsked(true); requestLocation(); }}
