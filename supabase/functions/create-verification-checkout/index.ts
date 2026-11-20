@@ -3,6 +3,8 @@ import { safeOrigin } from "../_shared/auth.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 import { withVat } from "../_shared/vat.ts";
+import { billingParams } from "../_shared/billing.ts";
+import { getOrCreateCustomer } from "../_shared/stripeCustomer.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,7 +28,7 @@ serve(async (req) => {
   );
 
   try {
-    const authHeader = req.headers.get("Authorization")!;
+    const authHeader = req.headers.get("Authorization") ?? "";
     const token = authHeader.replace("Bearer ", "");
     const { data } = await supabaseClient.auth.getUser(token);
     const user = data.user;
@@ -59,18 +61,12 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil",
     });
 
-    // Check for existing Stripe customer
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    let customerId: string | undefined;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
-    }
+    const customerId = await getOrCreateCustomer(stripe, adminClient, user);
 
     const origin = safeOrigin(req);
 
     const session = await stripe.checkout.sessions.create(await withVat(stripe, {
       customer: customerId,
-      customer_email: customerId ? undefined : user.email,
       payment_method_types: ["card", "ideal", "bancontact"],
       line_items: [
         {
@@ -79,7 +75,9 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
-      success_url: `${origin}/owner-dashboard?verification=success&claimId=${claimId}`,
+      // A receipt with the business details, like every other Dishloopr payment.
+      ...billingParams({ mode: "payment", customerId, description: "Verificatie restaurantclaim" }),
+      success_url: `${origin}/owner-dashboard?verification=success&claimId=${encodeURIComponent(claimId)}`,
       cancel_url: `${origin}/owner-dashboard?verification=cancelled`,
       metadata: {
         type: "micro_payment_verification",
@@ -106,7 +104,7 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ error: "De betaling kon niet starten. Probeer het later opnieuw." }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

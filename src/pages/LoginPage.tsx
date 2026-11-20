@@ -45,6 +45,10 @@ const signupSchema = z.object({
   password: z.string().min(6, 'Wachtwoord moet minimaal 6 tekens bevatten'),
 });
 
+// Only same-site paths: starts with a single "/", no backslash, no "://".
+const isSafeRedirect = (p: string | null | undefined): p is string =>
+  !!p && /^\/(?![/\\])/.test(p) && !p.includes('\\') && !p.includes('://');
+
 export default function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -53,13 +57,13 @@ export default function LoginPage() {
   const { user, loading, signIn, signUp } = useAuth();
   const initialTab = searchParams.get('tab') === 'signup' ? 'signup' : 'login';
   const rawRedirect = searchParams.get('redirect');
-  const redirectParam = rawRedirect && rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : null;
+  const redirectParam = isSafeRedirect(rawRedirect) ? rawRedirect : null;
   useEffect(() => {
     if (redirectParam) sessionStorage.setItem('postAuthRedirect', redirectParam);
   }, [redirectParam]);
   const takeRedirect = () => {
     const r = redirectParam || sessionStorage.getItem('postAuthRedirect');
-    return r && r.startsWith('/') && !r.startsWith('//') ? r : null;
+    return isSafeRedirect(r) ? r : null;
   };
   
   const [showPassword, setShowPassword] = useState(false);

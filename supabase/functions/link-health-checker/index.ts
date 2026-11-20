@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
+import { safeFetch } from "../_shared/safeFetch.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,30 +28,27 @@ async function checkUrl(
     // Try HEAD first
     let res: Response;
     try {
-      res = await fetch(url, {
+      res = await safeFetch(url, {
         method: "HEAD",
-        redirect: "follow",
         signal: ctrl.signal,
         headers: { "User-Agent": UA, Accept: "*/*" },
-      });
+      }, { maxBytes: 1_000_000 });
     } catch {
       // Some servers don't allow HEAD — try GET
-      res = await fetch(url, {
+      res = await safeFetch(url, {
         method: "GET",
-        redirect: "follow",
         signal: ctrl.signal,
         headers: { "User-Agent": UA, Accept: "*/*" },
-      });
+      }, { maxBytes: 1_000_000 });
     }
     // If HEAD returned 405/403, fall back to GET
     if (res.status === 405 || res.status === 403) {
       try {
-        res = await fetch(url, {
+        res = await safeFetch(url, {
           method: "GET",
-          redirect: "follow",
-          signal: ctrl.signal,
+            signal: ctrl.signal,
           headers: { "User-Agent": UA, Accept: "*/*" },
-        });
+        }, { maxBytes: 1_000_000 });
       } catch (_) { /* keep original */ }
     }
     // Consume body to avoid leaks
@@ -206,7 +204,7 @@ Deno.serve(async (req) => {
   } catch (e) {
     console.error("[link-health-checker] error", e);
     return new Response(
-      JSON.stringify({ error: (e as Error)?.message ?? "unknown" }),
+      JSON.stringify({ error: "Er ging iets mis. Probeer het later opnieuw." }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

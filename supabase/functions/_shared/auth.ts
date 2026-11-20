@@ -75,12 +75,16 @@ const ALLOWED_ORIGINS = [
   "https://dishloopr.lovable.app",
 ];
 
-/** Returns the request Origin only when it is one of the app's own domains or a Lovable preview. */
+/**
+ * Returns the request Origin only when it is one of the app's own domains (or localhost in
+ * development). Any other *.lovable.app or *.lovableproject.com site could be someone else's,
+ * so Stripe would send a paying owner there: those fall back to dishloopr.com. Add an exact
+ * preview host through STRIPE_EXTRA_ORIGINS (comma separated) when a preview must test checkout.
+ */
 export function safeOrigin(req: Request): string {
   const origin = req.headers.get("origin") ?? "";
-  if (ALLOWED_ORIGINS.includes(origin)) return origin;
-  if (/^https:\/\/[a-z0-9-]+\.lovable\.app$/i.test(origin)) return origin;
-  if (/^https:\/\/[a-z0-9-]+\.lovableproject\.com$/i.test(origin)) return origin;
+  const extra = (Deno.env.get("STRIPE_EXTRA_ORIGINS") ?? "").split(",").map(s => s.trim()).filter(Boolean);
+  if (ALLOWED_ORIGINS.includes(origin) || extra.includes(origin)) return origin;
   if (/^http:\/\/localhost:\d+$/.test(origin)) return origin;
   return "https://dishloopr.com";
 }
@@ -107,4 +111,16 @@ export function isSafePublicUrl(raw: string): boolean {
     if (host === "::1" || host === "::" || host.startsWith("fc") || host.startsWith("fd") || host.startsWith("fe80") || host.startsWith("::ffff:")) return false;
   }
   return true;
+}
+
+/** Constant-time string comparison for shared secrets and signatures. */
+export function timingSafeEqual(a: string | null | undefined, b: string | null | undefined): boolean {
+  if (typeof a !== "string" || typeof b !== "string") return false;
+  const enc = new TextEncoder();
+  const x = enc.encode(a);
+  const y = enc.encode(b);
+  let diff = x.length ^ y.length;
+  const len = Math.max(x.length, y.length);
+  for (let i = 0; i < len; i++) diff |= (x[i] ?? 0) ^ (y[i] ?? 0);
+  return diff === 0;
 }

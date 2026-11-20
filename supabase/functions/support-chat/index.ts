@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
+import { escapeHtml } from "../_shared/auth.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -35,13 +36,13 @@ async function notifyAdminOfEscalation(
     await resend.emails.send({
       from: "Dishloopr <noreply@resend.dev>",
       to: [adminEmail],
-      subject: "Support-chat escalatie — iemand heeft hulp nodig",
+      subject: "Support-chat escalatie — iemand heeft hulp nodig".replace(/[\r\n]+/g, " "),
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h1 style="color:#1a1a1a;font-size:20px;">🔔 Support-chat escalatie</h1>
-          <p style="color:#666;"><strong>Van:</strong> ${contact}</p>
-          ${reason ? `<p style="color:#666;"><strong>Reden:</strong> ${reason}</p>` : ""}
-          <div style="background:#f8f9fa;border-radius:8px;padding:16px;margin:16px 0;color:#333;">${message}</div>
+          <p style="color:#666;"><strong>Van:</strong> ${escapeHtml(contact)}</p>
+          ${reason ? `<p style="color:#666;"><strong>Reden:</strong> ${escapeHtml(reason)}</p>` : ""}
+          <div style="background:#f8f9fa;border-radius:8px;padding:16px;margin:16px 0;color:#333;white-space:pre-wrap;">${escapeHtml(message)}</div>
           <p style="color:#999;font-size:13px;">Bekijk en beantwoord dit in Admin &gt; Gebruikers &amp; Claims &gt; Support Chat.</p>
         </div>`,
     });
@@ -110,7 +111,7 @@ serve(async (req) => {
     const parsed = RequestSchema.safeParse(raw);
     if (!parsed.success) {
       return new Response(
-        JSON.stringify({ error: "Invalid input", details: parsed.error.flatten().fieldErrors }),
+        JSON.stringify({ error: "Invalid input" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -287,7 +288,7 @@ serve(async (req) => {
   } catch (e) {
     console.error("support-chat error", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "unknown" }),
+      JSON.stringify({ error: "Er ging iets mis. Probeer het later opnieuw." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

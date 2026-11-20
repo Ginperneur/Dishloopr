@@ -279,8 +279,8 @@ export default function ForRestaurantsPage() {
                       <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> Meertalig profiel (5 talen)</li>
                       <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" /> Onbeperkte profiel-tags &amp; team-beheer</li>
                     </ul>
-                    <Button className="w-full" disabled title="Binnenkort beschikbaar">
-                      Binnenkort beschikbaar
+                    <Button asChild className="w-full">
+                      <Link to="/voor-restaurants/pakketten">Bekijk Pro</Link>
                     </Button>
                   </CardContent>
                 </Card>

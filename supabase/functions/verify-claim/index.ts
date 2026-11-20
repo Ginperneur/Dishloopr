@@ -1,6 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
-import { escapeHtml } from "../_shared/auth.ts";
+import { escapeHtml, timingSafeEqual } from "../_shared/auth.ts";
 import { sendTemplateEmail } from "../_shared/transactional-email-templates/send-email.ts";
 import { screenClaimDocuments } from "../_shared/claimScreening.ts";
 
@@ -271,22 +271,15 @@ Deno.serve(async (req) => {
       await admin.from("restaurants").update({ claim_status: "claimed_unverified" }).eq("id", restaurant.id);
       await log(restaurant.id, claimId, "MANUAL_PROOF_SUBMITTED", { files: files.length, job_title: jobTitle });
 
-      // AI pre-check after the response: approve a strong KvK match right away,
-      // otherwise attach the summary for the admin queue.
+      // AI pre-check after the response: attach the summary for the admin queue.
+      // It never approves a claim; an admin always decides.
       const screen = async () => {
         try {
           const screening = await screenClaimDocuments(admin, files, { name: restaurant.name, address: restaurant.address }, fullName);
           if (!screening) return;
           await admin.from("restaurant_claims").update({ verification_proof: { ...proof, ai_screening: screening } }).eq("id", claimId);
           await log(restaurant.id, claimId, "AI_SCREENED", { verdict: screening.verdict, reasons: screening.reasons, doc_type: screening.doc_type }, "system");
-          if (screening.verdict !== "auto_approve") return;
-          const { data: fresh } = await admin.from("restaurant_claims").select("status").eq("id", claimId).maybeSingle();
-          const { data: r } = await admin.from("restaurants").select("claim_status").eq("id", restaurant.id).maybeSingle();
-          if (!fresh || !OPEN_CLAIM_STATUSES.includes(fresh.status) || r?.claim_status === "verified_owner") return;
-          const email = await promote({ id: claimId, user_id: user.id, restaurant_id: restaurant.id }, "manual_proof",
-            { ...proof, ai_screening: screening, auto_approved: true }, "system");
-          if (email) await sendMail(email, `Je claim voor ${restaurant.name} is goedgekeurd`,
-            mailShell("Claim goedgekeurd", `<p>Je KvK-uittreksel is gecontroleerd: je bent nu de geverifieerde eigenaar van <b>${escapeHtml(restaurant.name)}</b> op Dishloopr.</p><p><a href="https://dishloopr.com/owner-dashboard?welcome=1" style="color:#F26522">Ga naar je dashboard</a></p>`));
+          // The AI verdict is advice only: the claim always stays pending for an admin to approve.
         } catch (e) {
           console.error("[verify-claim] AI screening failed", e);
         }
@@ -355,18 +348,29 @@ Deno.serve(async (req) => {
     if (action === "verify_domain_code") {
       const code = String(body.code || "").trim();
       if (!/^\d{6}$/.test(code)) return json({ error: "Ongeldige code" }, 400);
-      const { data: secret } = await admin.from("claim_verification_secrets").select("*").eq("claim_id", claimId).maybeSingle();
-      if (!secret || secret.method !== "domain_email") {
-        return json({ error: "Geen actieve verificatie. Vraag eerst een nieuwe code aan." }, 400);
+      // Claim an attempt slot atomically BEFORE comparing: a compare-and-swap UPDATE on `attempts`
+      // (only succeeds when nobody else incremented in between), so parallel guesses each consume
+      // a distinct slot and cannot get past the 5-attempt limit.
+      let secret: any = null;
+      let newAttempts = 0;
+      for (let i = 0; i < 8; i++) {
+        const { data: cur } = await admin.from("claim_verification_secrets").select("*").eq("claim_id", claimId).maybeSingle();
+        if (!cur || cur.method !== "domain_email") {
+          return json({ error: "Geen actieve verificatie. Vraag eerst een nieuwe code aan." }, 400);
+        }
+        if (isExpired(cur.expires_at, now)) return json({ error: "Code is verlopen. Vraag een nieuwe aan." }, 400);
+        const used = cur.attempts ?? 0;
+        if (attemptsExhausted(used)) return json({ error: "Te veel pogingen. Vraag een nieuwe code aan." }, 429);
+        const { data: won } = await admin.from("claim_verification_secrets")
+          .update({ attempts: used + 1, updated_at: new Date().toISOString() })
+          .eq("claim_id", claimId).eq("attempts", used).eq("code_hash", cur.code_hash)
+          .select("attempts");
+        if (won && won.length > 0) { secret = cur; newAttempts = used + 1; break; }
       }
-      if (isExpired(secret.expires_at, now)) return json({ error: "Code is verlopen. Vraag een nieuwe aan." }, 400);
-      if (attemptsExhausted(secret.attempts ?? 0)) return json({ error: "Te veel pogingen. Vraag een nieuwe code aan." }, 429);
+      if (!secret) return json({ error: "Probeer het over een paar seconden opnieuw." }, 429);
       const submittedHash = await sha256(`${claimId}:${code}`);
-      if (submittedHash !== secret.code_hash) {
-        await admin.from("claim_verification_secrets")
-          .update({ attempts: (secret.attempts ?? 0) + 1, updated_at: new Date().toISOString() })
-          .eq("claim_id", claimId);
-        return json({ error: attemptsExhausted((secret.attempts ?? 0) + 1) ? "Je hebt 5 foute pogingen gedaan. Vraag een nieuwe code aan." : "Onjuiste code" }, 400);
+      if (!timingSafeEqual(submittedHash, secret.code_hash)) {
+        return json({ error: attemptsExhausted(newAttempts) ? "Je hebt 5 foute pogingen gedaan. Vraag een nieuwe code aan." : "Onjuiste code" }, 400);
       }
       await promote(claim, "domain_email", { email: secret.email }, "user");
       return json({ success: true });
@@ -448,6 +452,6 @@ Deno.serve(async (req) => {
     return json({ error: "Onbekende actie" }, 400);
   } catch (e) {
     console.error("[verify-claim] error", e);
-    return json({ error: (e as Error).message }, 500);
+    return json({ error: "Er ging iets mis. Probeer het later opnieuw." }, 500);
   }
 });

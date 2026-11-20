@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.118.0';
+import { timingSafeEqual } from '../_shared/auth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,7 +19,7 @@ Deno.serve(async (req) => {
   try {
     const secret = req.headers.get('x-internal-secret');
     const expected = Deno.env.get('N8N_WEBHOOK_SECRET');
-    if (!expected || secret !== expected) {
+    if (!expected || !timingSafeEqual(secret, expected)) {
       return new Response(JSON.stringify({ error: 'unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -58,7 +59,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e: any) {
-    return new Response(JSON.stringify({ error: e.message }), {
+    console.error('create-owner-notification error', e);
+    return new Response(JSON.stringify({ error: 'Er ging iets mis. Probeer het later opnieuw.' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

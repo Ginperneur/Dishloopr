@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { periodEndIso } from "../_shared/stripePeriod.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
+import { customerIdsForUser } from "../_shared/stripeCustomer.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -43,7 +44,9 @@ serve(async (req) => {
     const user = userData.user;
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    // All of the user's Stripe customers: a one-off payment used to create a fresh customer, and
+    // looking only at the newest one switched paying owners' Pro off.
+    const customerIds = await customerIdsForUser(stripe, supabaseAdmin, user);
 
     let isActive = false;
     let interval: string | null = null;
@@ -53,12 +56,11 @@ serve(async (req) => {
     let stripeSubscriptionId: string | null = null;
     let stripePriceId: string | null = null;
 
-    if (customers.data.length > 0) {
-      stripeCustomerId = customers.data[0].id;
+    for (const customerId of customerIds) {
       const subs = await stripe.subscriptions.list({
-        customer: stripeCustomerId,
+        customer: customerId,
         status: "all",
-        limit: 10,
+        limit: 100,
       });
       const activeSub = subs.data.find((s: Stripe.Subscription) => {
         const priceId = s.items.data[0]?.price?.id;
@@ -69,11 +71,13 @@ serve(async (req) => {
       });
       if (activeSub) {
         isActive = true;
+        stripeCustomerId = customerId;
         stripeSubscriptionId = activeSub.id;
         stripePriceId = activeSub.items.data[0].price.id;
         interval = activeSub.items.data[0].price?.recurring?.interval === "year" || stripePriceId === PRICE_YEARLY ? "yearly" : "monthly";
         periodEnd = periodEndIso(activeSub);
         cancelAtPeriodEnd = activeSub.cancel_at_period_end;
+        break;
       }
     }
 
@@ -119,7 +123,7 @@ serve(async (req) => {
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     log("ERROR", { msg });
-    return new Response(JSON.stringify({ error: msg }), {
+    return new Response(JSON.stringify({ error: "De Pro-status kon niet worden opgehaald." }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

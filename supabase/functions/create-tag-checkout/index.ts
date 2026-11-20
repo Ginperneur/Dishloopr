@@ -3,6 +3,7 @@ import { billingParams } from "../_shared/billing.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 import { withVat } from "../_shared/vat.ts";
+import { expireOpenCheckouts, getOrCreateCustomer } from "../_shared/stripeCustomer.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -50,7 +51,7 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
-    const authHeader = req.headers.get("Authorization")!;
+    const authHeader = req.headers.get("Authorization") ?? "";
     const token = authHeader.replace("Bearer ", "");
     const { data: userData } = await supabaseClient.auth.getUser(token);
     const user = userData.user;
@@ -82,6 +83,27 @@ Deno.serve(async (req) => {
       });
     }
 
+    // At most 3 extra tags per category (the free one is stored on the restaurant itself).
+    const { count: extraInCategory } = await admin.from("restaurant_tag_subscriptions")
+      .select("id", { count: "exact", head: true })
+      .eq("restaurant_id", restaurant_id).eq("tag_category", tag_category).eq("is_active", true).neq("tag_value", tag_value);
+    if ((extraInCategory ?? 0) >= 3) {
+      return new Response(JSON.stringify({ error: "Je hebt al 3 extra tags in deze categorie" }), {
+        status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Extra tags are included with Owner Pro (paid, part of Groei or Dominant, or given by
+    // Dishloopr): no checkout, the tag is switched on straight away and switches off with Pro.
+    const { data: rest } = await admin.from("restaurants").select("owner_tier, owner_pro_override").eq("id", restaurant_id).maybeSingle();
+    if (rest?.owner_tier === "pro" || rest?.owner_pro_override === true) {
+      const { error: tagErr } = await admin.from("restaurant_tag_subscriptions").upsert({
+        restaurant_id, user_id: user.id, tag_category, tag_value, payment_type: "owner_pro", stripe_subscription_id: null, is_active: true,
+      }, { onConflict: "restaurant_id,tag_category,tag_value" });
+      if (tagErr) throw tagErr;
+      return new Response(JSON.stringify({ included: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     // Price is determined server-side. The client can NOT influence what
     // the user pays for an extra tag.
     // STRIPE_TAG_PRICE_ID wins when set; otherwise the advertised €5/month is created inline.
@@ -94,18 +116,14 @@ Deno.serve(async (req) => {
       apiVersion: "2025-08-27.basil",
     });
 
-    // Find or create customer
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    let customerId: string | undefined;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
-    }
+    const customerId = await getOrCreateCustomer(stripe, admin, user);
+    await expireOpenCheckouts(stripe, customerId, md => md.type === "extra_tag" && md.restaurant_id === restaurant_id
+      && md.tag_category === tag_category && md.tag_value === tag_value);
 
     const origin = safeOrigin(req);
 
     const session = await stripe.checkout.sessions.create(await withVat(stripe, {
       customer: customerId,
-      customer_email: customerId ? undefined : user.email,
       line_items: [lineItem],
       mode: "subscription",
       ...billingParams({ mode: "subscription", customerId }),
@@ -131,7 +149,10 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("create-tag-checkout", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+    // Validation messages above are thrown on purpose; anything else stays on the server.
+    const msg = e instanceof Error && /^(Niet ingelogd|Ontbrekende velden|Onbekende tag-categorie|Ongeldige tag-waarde)/.test(e.message)
+      ? e.message : "Afrekenen lukte niet. Probeer het later opnieuw.";
+    return new Response(JSON.stringify({ error: msg }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

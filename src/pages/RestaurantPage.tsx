@@ -60,6 +60,7 @@ import { sendAnalyticsEvent } from '@/lib/cookieConsent';
 import { ReserveButton } from '@/components/restaurant/ReserveButton';
 import { NATIVE_RESERVATIONS_ENABLED, useReservationOptions } from '@/hooks/useReservationOptions';
 import { reservationMode } from '@/lib/reservationIntegration';
+import { safeHttpUrl } from '@/lib/safeUrl';
 
 export default function RestaurantPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -475,24 +476,24 @@ export default function RestaurantPage() {
                       className="h-8 w-8"
                       onShare={() => trackRestaurantMetric(restaurant.id, 'delen', metricContext)}
                     />
-                    {restaurant.website_url && (
+                    {safeHttpUrl(restaurant.website_url) && (
                       <Button variant="outline" size="sm" onClick={() => trackCTA('website')} asChild>
-                        <a href={restaurant.website_url} target="_blank" rel="noopener noreferrer" className="gap-2">
+                        <a href={safeHttpUrl(restaurant.website_url)} target="_blank" rel="noopener noreferrer" className="gap-2">
                           <Globe className="h-4 w-4" />
                           <span className="">{t('restaurant.website', 'Website')}</span>
                         </a>
                       </Button>
                     )}
-                    {restaurant.instagram_url && (
+                    {safeHttpUrl(restaurant.instagram_url) && (
                       <Button variant="outline" size="icon" className="h-8 w-8" asChild>
-                        <a href={restaurant.instagram_url} target="_blank" rel="noopener noreferrer" title="Instagram">
+                        <a href={safeHttpUrl(restaurant.instagram_url)} target="_blank" rel="noopener noreferrer" title="Instagram">
                           <Instagram className="h-4 w-4" />
                         </a>
                       </Button>
                     )}
-                    {restaurant.tiktok_url && (
+                    {safeHttpUrl(restaurant.tiktok_url) && (
                       <Button variant="outline" size="icon" className="h-8 w-8" asChild>
-                        <a href={restaurant.tiktok_url} target="_blank" rel="noopener noreferrer" aria-label="TikTok">
+                        <a href={safeHttpUrl(restaurant.tiktok_url)} target="_blank" rel="noopener noreferrer" aria-label="TikTok">
                           <TikTokIcon />
                         </a>
                       </Button>
@@ -674,9 +675,9 @@ export default function RestaurantPage() {
               {/* Website & Contact Card */}
               <div className="p-6 rounded-2xl border border-border bg-card">
                 <div className="space-y-3">
-                  {restaurant.website_url && (
+                  {safeHttpUrl(restaurant.website_url) && (
                     <Button variant="outline" className="w-full" size="lg" onClick={() => trackCTA('website')} asChild>
-                      <a href={restaurant.website_url} target="_blank" rel="noopener noreferrer">
+                      <a href={safeHttpUrl(restaurant.website_url)} target="_blank" rel="noopener noreferrer">
                         <Globe className="h-4 w-4 mr-2" />
                         {t('restaurant.website')}
                       </a>
@@ -707,18 +708,18 @@ export default function RestaurantPage() {
                   </div>
 
                   {/* Social Media Links */}
-                  {(restaurant.instagram_url || restaurant.tiktok_url) && (
+                  {(safeHttpUrl(restaurant.instagram_url) || safeHttpUrl(restaurant.tiktok_url)) && (
                     <div className="flex gap-2 pt-2 border-t border-border">
-                      {restaurant.instagram_url && (
+                      {safeHttpUrl(restaurant.instagram_url) && (
                         <Button variant="outline" size="icon" asChild className="flex-1">
-                          <a href={restaurant.instagram_url} target="_blank" rel="noopener noreferrer" title="Instagram">
+                          <a href={safeHttpUrl(restaurant.instagram_url)} target="_blank" rel="noopener noreferrer" title="Instagram">
                             <Instagram className="h-4 w-4" />
                           </a>
                         </Button>
                       )}
-                      {restaurant.tiktok_url && (
+                      {safeHttpUrl(restaurant.tiktok_url) && (
                         <Button variant="outline" size="icon" asChild className="flex-1">
-                          <a href={restaurant.tiktok_url} target="_blank" rel="noopener noreferrer" aria-label="TikTok">
+                          <a href={safeHttpUrl(restaurant.tiktok_url)} target="_blank" rel="noopener noreferrer" aria-label="TikTok">
                             <TikTokIcon />
                           </a>
                         </Button>

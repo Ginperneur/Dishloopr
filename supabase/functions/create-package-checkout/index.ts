@@ -2,6 +2,7 @@ import { safeOrigin, serviceClient, getCaller, isAdmin } from "../_shared/auth.t
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { billingParams } from "../_shared/billing.ts";
 import { withVat } from "../_shared/vat.ts";
+import { getOrCreateCustomer } from "../_shared/stripeCustomer.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -101,32 +102,45 @@ Deno.serve(async (req) => {
         .eq("restaurant_id", restaurant.id).eq("page_slug", page_slug).neq("package", "menu_service")
         .in("status", ["active", "trialing", "past_due"]);
       if (count) return json({ error: "Je hebt al een betaalde plek op deze pagina" }, 409);
-      if (isFoundingDeal) {
-        const { data: left } = await admin.rpc("founding_places_left", { p_page_slug: page_slug });
-        if (typeof left === "number" && left <= 0) {
-          return json({ error: `Alle ${FOUNDING_PLACES_PER_PAGE} plekken voor Uitgelicht op deze pagina zijn vergeven` }, 409);
-        }
-      }
       pageSlug = page_slug;
     }
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    const customerId = customers.data[0]?.id;
+    const customerId = await getOrCreateCustomer(stripe, admin, user);
 
-    // Outside the Founding Partner deal a place is monthly and priced per page by demand
-    // (pp_reserve): a won bid at its clearing price, or a free place at the list price.
+    // The place is held while the owner pays (pp_hold, under a lock per page), so two owners can
+    // never both pay for the last place. Outside the Founding Partner deal a place is monthly and
+    // priced per page by demand: a won bid at its clearing price, or a free place at the list price.
     let dynamicCents: number | null = null;
     let bidId: string | null = null;
-    if (placePackage && !isFoundingDeal) {
-      if (option.plan !== "month") return json({ error: "Betaalde plekken zijn per maand" }, 400);
-      const { data: reserved, error: resErr } = await admin.rpc("pp_reserve", { p_kind: kind, p_page_slug: pageSlug, p_restaurant: restaurant.id });
-      if (resErr) return json({ error: resErr.message }, 409);
-      const placeCents = (reserved as { price_cents: number }).price_cents;
-      bidId = (reserved as { bid_id: string | null }).bid_id;
-      dynamicCents = placeCents + (option.package === "groei" || option.package === "dominant" ? BUNDLE_SURCHARGE_CENTS[option.package] : 0);
+    let holdId: string | null = null;
+    let replacedSessions: string[] = [];
+    if (placePackage) {
+      if (!isFoundingDeal && option.plan !== "month") return json({ error: "Betaalde plekken zijn per maand" }, 400);
+      const { data: held, error: holdErr } = await admin.rpc("pp_hold", {
+        p_kind: kind, p_page_slug: pageSlug, p_restaurant: restaurant.id, p_user: user.id, p_founding: isFoundingDeal,
+      });
+      if (holdErr) {
+        // P0001 carries a message meant for the owner (place taken, bid first, already yours).
+        const forOwner = (holdErr as { code?: string }).code === "P0001";
+        if (!forOwner) console.error("pp_hold", holdErr);
+        return json({ error: forOwner ? holdErr.message : "Deze plek kon niet worden vastgehouden. Probeer het opnieuw." }, 409);
+      }
+      const h = held as { price_cents: number | null; bid_id: string | null; hold_id: string; replaced_sessions: string[] };
+      holdId = h.hold_id;
+      bidId = h.bid_id;
+      replacedSessions = h.replaced_sessions ?? [];
+      if (!isFoundingDeal && typeof h.price_cents === "number") {
+        dynamicCents = h.price_cents + (option.package === "groei" || option.package === "dominant" ? BUNDLE_SURCHARGE_CENTS[option.package] : 0);
+      }
     }
     const effectiveCents = dynamicCents ?? option.cents;
+    // The owner sees on the Stripe page and the invoice which page the place is on.
+    let productName = option.name;
+    if (pageSlug) {
+      const { data: page } = await admin.from("seo_landing_pages").select("h1_title").eq("slug", pageSlug).maybeSingle();
+      productName = `${option.name}: ${(page?.h1_title as string | undefined) ?? pageSlug}`.slice(0, 250);
+    }
 
     // The STRIPE_FOUNDING_* price ids hold the €59/€590 promo price, so they may only be used
     // inside the window; after it, a normal-price id (or the inline normal price) applies.
@@ -140,7 +154,7 @@ Deno.serve(async (req) => {
             currency: "eur",
             unit_amount: effectiveCents,
             tax_behavior: "exclusive" as const,
-            product_data: { name: option.name },
+            product_data: { name: productName },
             ...(option.interval ? { recurring: { interval: option.interval } } : {}),
           },
         };
@@ -153,6 +167,7 @@ Deno.serve(async (req) => {
       amount_cents: String(effectiveCents),
       ...(pageSlug ? { page_slug: pageSlug } : {}),
       ...(bidId ? { bid_id: bidId } : {}),
+      ...(holdId ? { hold_id: holdId } : {}),
       ...(option.package === "founding_partner" || option.package === "groei"
         ? { founding_partner: String(isFoundingDeal), ...(isFoundingDeal ? { discount_until: FOUNDING_DISCOUNT_UNTIL } : {}) }
         : {}),
@@ -161,25 +176,34 @@ Deno.serve(async (req) => {
     const origin = safeOrigin(req);
     const session = await stripe.checkout.sessions.create(await withVat(stripe, {
       customer: customerId,
-      customer_email: customerId ? undefined : user.email,
       line_items: [lineItem],
       mode: option.interval ? "subscription" : "payment",
+      // Ends before the hold (35 minutes), so a payment can never land on a released place.
+      expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
       ...billingParams({
         mode: option.interval ? "subscription" : "payment",
         customerId,
-        description: `${option.name}: ${restaurant.name}`,
+        description: `${productName}: ${restaurant.name}`,
       }),
       metadata,
       ...(option.interval
-        ? { subscription_data: { metadata, description: `${option.name}: ${restaurant.name}`.slice(0, 500) } }
+        ? { subscription_data: { metadata, description: `${productName}: ${restaurant.name}`.slice(0, 500) } }
         : { payment_intent_data: { metadata, description: `${option.name}: ${restaurant.name}`.slice(0, 500) } }),
       success_url: `${origin}/owner-dashboard?package_checkout=success`,
       cancel_url: `${origin}/voor-restaurants/pakketten?slug=${encodeURIComponent(restaurant.slug)}`,
     }));
 
+    if (holdId) {
+      await admin.from("package_checkout_holds").update({ stripe_session_id: session.id }).eq("id", holdId);
+    }
+    // An earlier, unpaid checkout of the same restaurant for this page can no longer be paid.
+    for (const old of replacedSessions) {
+      await stripe.checkout.sessions.expire(old).catch(() => {});
+    }
+
     return json({ url: session.url });
   } catch (e) {
     console.error("create-package-checkout error:", e);
-    return json({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
+    return json({ error: "Afrekenen lukte niet. Probeer het later opnieuw." }, 500);
   }
 });

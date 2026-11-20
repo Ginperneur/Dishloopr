@@ -3,6 +3,8 @@ import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 import { billingParams } from "../_shared/billing.ts";
 import { withVat } from "../_shared/vat.ts";
+import { safeOrigin } from "../_shared/auth.ts";
+import { expireOpenCheckouts, getOrCreateCustomer } from "../_shared/stripeCustomer.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -46,16 +48,28 @@ serve(async (req) => {
     const interval = body?.interval === "yearly" ? "yearly" : "monthly";
     const priceId = interval === "yearly" ? PRICE_YEARLY : PRICE_MONTHLY;
 
+    const admin = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+    // Pro is never sold twice: not with a running subscription, not with Groei or Dominant
+    // (Pro is included) and not when Dishloopr gave the restaurant Pro for free.
+    const [{ data: hasPro }, { count: comped }] = await Promise.all([
+      admin.rpc("is_owner_pro", { _user_id: user.id }),
+      admin.from("restaurants").select("id", { count: "exact", head: true })
+        .eq("claimed_by_owner_id", user.id).eq("owner_pro_override", true),
+    ]);
+    if (hasPro === true || (comped ?? 0) > 0) {
+      return new Response(JSON.stringify({ error: "Je hebt Owner Pro al. Beheer je abonnement in je dashboard." }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 409,
+      });
+    }
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    const customerId = await getOrCreateCustomer(stripe, admin, user);
+    await expireOpenCheckouts(stripe, customerId, md => md.type === "owner_pro");
 
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    const customerId = customers.data[0]?.id;
-
-    const origin = req.headers.get("origin") || "https://dishloopr.com";
+    const origin = safeOrigin(req);
 
     const session = await stripe.checkout.sessions.create(await withVat(stripe, {
       customer: customerId,
-      customer_email: customerId ? undefined : user.email,
       line_items: [priceId
         ? { price: priceId, quantity: 1 }
         : {
@@ -88,7 +102,7 @@ serve(async (req) => {
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     log("ERROR", { msg });
-    return new Response(JSON.stringify({ error: msg }), {
+    return new Response(JSON.stringify({ error: "Afrekenen lukte niet. Probeer het later opnieuw." }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

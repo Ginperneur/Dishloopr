@@ -1,37 +1,37 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
 import { enforceRateLimit } from "../_shared/rateLimit.ts";
+import { safeFetch } from "../_shared/safeFetch.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Known reservation provider domains (in order of preference)
-const PROVIDERS: { name: string; regex: RegExp; extractZenchef?: RegExp }[] = [
-  { name: 'zenchef', regex: /https?:\/\/(?:bookings?\.|widget\.|module\.)?zenchef\.com\/[^\s"'<>)]+/i, extractZenchef: /zenchef\.com\/(?:reservation|widget|results)?\/?(\d{3,8})/i },
-  { name: 'thefork', regex: /https?:\/\/(?:www\.|module\.|widget\.)?thefork\.[a-z.]+\/(?:restaurant|r|widget|book)[^\s"'<>)]+/i },
-  { name: 'thefork-short', regex: /https?:\/\/(?:www\.)?thefork\.[a-z.]+\/[^\s"'<>)]+/i },
-  { name: 'opentable', regex: /https?:\/\/(?:www\.|widget\.|book\.)?opentable\.[a-z.]+\/[^\s"'<>)]+/i },
-  { name: 'resy', regex: /https?:\/\/(?:www\.|widgets\.)?resy\.com\/[^\s"'<>)]+/i },
-  { name: 'formitable', regex: /https?:\/\/(?:[a-z0-9-]+\.)?formitable\.com\/[^\s"'<>)]+/i },
-  { name: 'quandoo', regex: /https?:\/\/(?:www\.|booking\.)?quandoo\.[a-z.]+\/[^\s"'<>)]+/i },
-  { name: 'bookatable', regex: /https?:\/\/(?:www\.)?bookatable\.[a-z.]+\/[^\s"'<>)]+/i },
-  { name: 'sevenrooms', regex: /https?:\/\/(?:www\.)?sevenrooms\.com\/[^\s"'<>)]+/i },
-  { name: 'eveve', regex: /https?:\/\/(?:[a-z0-9-]+\.)?eveve\.com\/[^\s"'<>)]+/i },
+// Known reservation providers (in order of preference). Hosts are matched against the PARSED
+// hostname of each candidate link, anchored to the exact provider domains, never against page text.
+const PROVIDERS: { name: string; host: RegExp; extractZenchef?: RegExp }[] = [
+  { name: 'zenchef', host: /(^|\.)zenchef\.com$/, extractZenchef: /^\/(?:(?:reservation|widget|results)\/)?(\d{3,8})(?:[/?#]|$)/i },
+  { name: 'thefork', host: /(^|\.)thefork\.(nl|com|be|de|fr|es|it|pt|dk|se|ch|at|co\.uk)$/ },
+  { name: 'opentable', host: /(^|\.)opentable\.(nl|com|co\.uk|de|be|fr|es|it|ie|ca|com\.au)$/ },
+  { name: 'resy', host: /(^|\.)resy\.com$/ },
+  { name: 'formitable', host: /(^|\.)formitable\.com$/ },
+  { name: 'quandoo', host: /(^|\.)quandoo\.(nl|com|de|co\.uk|fi|se|it|dk|pl|sg|hk)$/ },
+  { name: 'bookatable', host: /(^|\.)bookatable\.(nl|com|co\.uk|de|fr|es|it)$/ },
+  { name: 'sevenrooms', host: /(^|\.)sevenrooms\.com$/ },
+  { name: 'eveve', host: /(^|\.)eveve\.com$/ },
 ];
 
 async function fetchHtml(url: string, timeoutMs = 8000): Promise<string | null> {
   try {
     const controller = new AbortController();
     const t = setTimeout(() => controller.abort(), timeoutMs);
-    const res = await fetch(url, {
+    const res = await safeFetch(url, {
       signal: controller.signal,
-      redirect: 'follow',
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; Dishloopr/1.0; +https://dishloopr.com/bot)',
         'Accept': 'text/html,application/xhtml+xml',
       },
-    });
+    }, { maxBytes: 2_000_000, maxRedirects: 4 });
     clearTimeout(t);
     if (!res.ok) return null;
     const ct = res.headers.get('content-type') || '';
@@ -45,16 +45,22 @@ async function fetchHtml(url: string, timeoutMs = 8000): Promise<string | null> 
 }
 
 function detectInHtml(html: string): { url: string; provider: string; zenchefId?: string } | null {
+  const candidates: URL[] = [];
+  for (const m of html.matchAll(/https?:\/\/[^\s"'<>)\\]+/gi)) {
+    try {
+      const u = new URL(m[0]);
+      if (!u.username && !u.password) candidates.push(u);
+    } catch { /* ignore */ }
+  }
   for (const p of PROVIDERS) {
-    const m = html.match(p.regex);
-    if (m) {
-      const url = m[0].replace(/["'<>)\s].*$/, '');
+    for (const u of candidates) {
+      if (!p.host.test(u.hostname.toLowerCase())) continue;
       let zenchefId: string | undefined;
       if (p.extractZenchef) {
-        const z = url.match(p.extractZenchef);
+        const z = u.pathname.match(p.extractZenchef);
         if (z) zenchefId = z[1];
       }
-      return { url, provider: p.name, zenchefId };
+      return { url: u.toString(), provider: p.name, zenchefId };
     }
   }
   return null;
@@ -193,14 +199,16 @@ Deno.serve(async (req) => {
           continue;
         }
         const update: Record<string, unknown> = { reservation_url: foundSub.url, accepts_reservations: true };
-        if (foundSub.zenchefId) update.zenchef_id = foundSub.zenchefId;
+        // Only store a detected Zenchef id when none exists yet (never overwrite).
+        if (foundSub.zenchefId && foundSub.provider === 'zenchef' && !r.zenchef_id) update.zenchef_id = foundSub.zenchefId;
         await supabase.from('restaurants').update(update).eq('id', r.id);
         results.push({ id: r.id, name: r.name, status: 'found', provider: foundSub.provider, url: foundSub.url });
         continue;
       }
 
       const update: Record<string, unknown> = { reservation_url: found.url, accepts_reservations: true };
-      if (found.zenchefId) update.zenchef_id = found.zenchefId;
+      // Only store a detected Zenchef id when none exists yet (never overwrite).
+      if (found.zenchefId && found.provider === 'zenchef' && !r.zenchef_id) update.zenchef_id = found.zenchefId;
       await supabase.from('restaurants').update(update).eq('id', r.id);
       results.push({ id: r.id, name: r.name, status: 'found', provider: found.provider, url: found.url });
     }
@@ -220,7 +228,7 @@ Deno.serve(async (req) => {
   } catch (err) {
     console.error('detect-reservation-links error:', err);
     return new Response(
-      JSON.stringify({ error: err instanceof Error ? err.message : 'Unknown error' }),
+      JSON.stringify({ error: 'Er ging iets mis. Probeer het later opnieuw.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

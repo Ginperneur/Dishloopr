@@ -4,6 +4,7 @@ import { Button, type ButtonProps } from '@/components/ui/button';
 import { useZenchefSdk } from '@/hooks/useZenchefSdk';
 import { isZenchefId, widgetBookingId, zenchefBookingUrl, zenchefPartnerId } from '@/lib/zenchef';
 import { trackReservationFunnel } from '@/lib/reservationFunnel';
+import { safeHttpUrl } from '@/lib/safeUrl';
 import type { ReservationMode } from '@/lib/reservationIntegration';
 import { NativeReservationFlow } from './NativeReservationFlow';
 
@@ -76,9 +77,10 @@ export function ReserveButton({
   }
 
   // Zenchef refused the widget for this restaurant: use the restaurant's own link, or show nothing.
+  const safeReservationUrl = safeHttpUrl(reservationUrl) ?? null;
   const href = widgetId && sdk === 'unavailable'
-    ? reservationUrl ?? null
-    : widgetId ? zenchefBookingUrl(widgetId, { lang, partnerId: zenchefPartnerId() }) : mode === 'link' ? reservationUrl : null;
+    ? safeReservationUrl
+    : widgetId ? zenchefBookingUrl(widgetId, { lang, partnerId: zenchefPartnerId() }) : mode === 'link' ? safeReservationUrl : null;
   const viaZenchef = !!widgetId && sdk !== 'unavailable';
   if (!href) return null;
   return (
