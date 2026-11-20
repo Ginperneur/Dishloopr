@@ -3161,6 +3161,42 @@ export type Database = {
           },
         ]
       }
+      package_checkout_holds: {
+        Row: {
+          bid_id: string | null
+          created_at: string
+          id: string
+          kind: string
+          page_slug: string
+          reserved_until: string
+          restaurant_id: string
+          stripe_session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          bid_id?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          page_slug: string
+          reserved_until: string
+          restaurant_id: string
+          stripe_session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          bid_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          page_slug?: string
+          reserved_until?: string
+          restaurant_id?: string
+          stripe_session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       package_orders: {
         Row: {
           amount_cents: number
@@ -7492,6 +7528,42 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_customers: {
+        Row: {
+          created_at: string
+          stripe_customer_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          stripe_customer_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          stripe_customer_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      stripe_processed_events: {
+        Row: {
+          event_id: string
+          event_type: string | null
+          received_at: string
+        }
+        Insert: {
+          event_id: string
+          event_type?: string | null
+          received_at?: string
+        }
+        Update: {
+          event_id?: string
+          event_type?: string | null
+          received_at?: string
+        }
+        Relationships: []
+      }
       support_conversations: {
         Row: {
           created_at: string
@@ -8798,6 +8870,9 @@ export type Database = {
         }
         Returns: boolean
       }
+      guard_email_confirmed: { Args: { _uid: string }; Returns: boolean }
+      guard_is_restricted: { Args: never; Returns: boolean }
+      guard_is_restricted_mod: { Args: never; Returns: boolean }
       has_restaurant_access: {
         Args: {
           _min_role?: Database["public"]["Enums"]["manager_role"]
@@ -9111,6 +9186,16 @@ export type Database = {
           user_id: string
         }[]
       }
+      pp_hold: {
+        Args: {
+          p_founding: boolean
+          p_kind: string
+          p_page_slug: string
+          p_restaurant: string
+          p_user: string
+        }
+        Returns: Json
+      }
       pp_list_price: {
         Args: { p_kind: string; p_page_slug: string }
         Returns: number
@@ -9292,6 +9377,7 @@ export type Database = {
         Args: { p_restaurant_id: string }
         Returns: undefined
       }
+      purge_expired_checkout_holds: { Args: never; Returns: undefined }
       purge_old_integration_events: { Args: never; Returns: number }
       refresh_landing_pages: { Args: never; Returns: number }
       register_push_token: {
@@ -9608,6 +9694,7 @@ export type Database = {
         }[]
       }
       snapshot_restaurant_positions: { Args: never; Returns: number }
+      spotlight_first_bookable_week: { Args: never; Returns: string }
       spotlight_price_cents: { Args: never; Returns: number }
       spotlight_reserve: {
         Args: {
