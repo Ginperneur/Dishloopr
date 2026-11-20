@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.118.0';
+import { requireAdminOrInternal } from '../_shared/auth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -42,6 +43,7 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
+    { const __deny = await requireAdminOrInternal(req, supabase as any, corsHeaders); if (__deny) return __deny; }
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
@@ -129,42 +131,71 @@ Deno.serve(async (req) => {
         .maybeSingle();
       if (!profile?.email) continue;
 
-      const hasCritical = fresh.some((a) => a.severity === 'critical');
-      const label = hasCritical ? 'kritieke daling' : 'opvallende daling';
-      const html = renderAlert(profile.name || 'eigenaar', r.name, r.slug, fresh, label);
-      const subject = `Let op: ${label} bij ${r.name}`;
-
-      const res = await fetch(`${GATEWAY_URL}/emails`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          'X-Connection-Api-Key': RESEND_API_KEY,
-        },
-        body: JSON.stringify({
-          from: 'Dishloopr <hallo@dishloopr.com>',
-          to: [profile.email],
-          subject,
-          html,
-        }),
-      });
-
-      if (!res.ok) {
+      // Claim the log rows BEFORE sending so concurrent runs cannot double-send. The unique key
+      // (restaurant_id, metric, week_start) makes the insert a lock: only rows we actually inserted are ours.
+      const { data: claimed, error: claimError } = await supabase
+        .from('owner_anomaly_alerts_log')
+        .upsert(
+          fresh.map((a) => ({
+            user_id: ownerId,
+            restaurant_id: r.id,
+            metric: a.metric,
+            severity: a.severity,
+            delta_pct: a.delta_pct,
+            week_start: wk,
+          })),
+          { onConflict: 'restaurant_id,metric,week_start', ignoreDuplicates: true }
+        )
+        .select('id, metric');
+      if (claimError) {
+        console.error('anomaly claim failed', claimError.message);
         failed++;
         continue;
       }
+      const claimedMetrics = new Set((claimed || []).map((c: any) => c.metric));
+      const toSend = fresh.filter((a) => claimedMetrics.has(a.metric));
+      if (toSend.length === 0) {
+        skipped_duplicates++;
+        continue;
+      }
 
-      // Log to prevent re-sending this week
-      await supabase.from('owner_anomaly_alerts_log').insert(
-        fresh.map((a) => ({
-          user_id: ownerId,
-          restaurant_id: r.id,
-          metric: a.metric,
-          severity: a.severity,
-          delta_pct: a.delta_pct,
-          week_start: wk,
-        }))
-      );
+      const hasCritical = toSend.some((a) => a.severity === 'critical');
+      const label = hasCritical ? 'kritieke daling' : 'opvallende daling';
+      const html = renderAlert(profile.name || 'eigenaar', r.name, r.slug, toSend, label);
+      const subject = `Let op: ${label} bij ${String(r.name ?? '').replace(/[\r\n]+/g, ' ')}`;
+
+      let sendOk = false;
+      try {
+        const res = await fetch(`${GATEWAY_URL}/emails`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            'X-Connection-Api-Key': RESEND_API_KEY,
+          },
+          body: JSON.stringify({
+            from: 'Dishloopr <hallo@dishloopr.com>',
+            to: [profile.email],
+            subject,
+            html,
+          }),
+        });
+        sendOk = res.ok;
+      } catch (sendErr) {
+        console.error('anomaly send error', sendErr);
+      }
+
+      if (!sendOk) {
+        // Release the claim so the next run can retry.
+        await supabase
+          .from('owner_anomaly_alerts_log')
+          .delete()
+          .eq('restaurant_id', r.id)
+          .eq('week_start', wk)
+          .in('metric', toSend.map((a) => a.metric));
+        failed++;
+        continue;
+      }
       alerts_sent++;
     }
 
@@ -173,7 +204,8 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (e: any) {
-    return new Response(JSON.stringify({ error: e.message }), {
+    console.error('send-anomaly-alerts error', e);
+    return new Response(JSON.stringify({ error: 'Er ging iets mis. Probeer het later opnieuw.' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

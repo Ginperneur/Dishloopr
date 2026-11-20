@@ -15,6 +15,12 @@ export interface RateLimitOptions {
   anon: { max: number; window: number };
   /** If true, this counts towards the AI kill-switch in app_settings. */
   isAi?: boolean;
+  /**
+   * If true, an infrastructure error (missing env, RPC failure, unexpected exception) blocks the
+   * request with a 503 instead of letting it through. Use for SMS and mail-sending endpoints where
+   * an unbounded burst costs money or spams people.
+   */
+  failClosed?: boolean;
 }
 
 export interface RateLimitResult {
@@ -25,14 +31,32 @@ export interface RateLimitResult {
   isUser?: boolean;
 }
 
+/**
+ * Client IP for rate limiting. Supabase Edge Functions are served behind Cloudflare, which sets
+ * `cf-connecting-ip` itself (a client-supplied value is overwritten), so that header is trusted first.
+ * `x-forwarded-for` is a comma list where every proxy APPENDS the address it saw, so the first
+ * entries are client-controlled and spoofable; the LAST entry is the one written by our own
+ * infrastructure. We therefore use the last entry, never the first.
+ */
 function getClientIp(req: Request): string {
+  const cf = req.headers.get("cf-connecting-ip");
+  if (cf && cf.trim()) return cf.trim();
   const fwd = req.headers.get("x-forwarded-for");
-  if (fwd) return fwd.split(",")[0].trim();
-  return (
-    req.headers.get("cf-connecting-ip") ||
-    req.headers.get("x-real-ip") ||
-    "unknown"
-  );
+  if (fwd) {
+    const parts = fwd.split(",").map((p) => p.trim()).filter(Boolean);
+    if (parts.length) return parts[parts.length - 1];
+  }
+  return req.headers.get("x-real-ip") || "unknown";
+}
+
+function unavailable(): RateLimitResult {
+  return {
+    allowed: false,
+    response: new Response(
+      JSON.stringify({ error: "Dienst tijdelijk niet beschikbaar. Probeer het later opnieuw." }),
+      { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" } },
+    ),
+  };
 }
 
 /**
@@ -49,6 +73,7 @@ export async function enforceRateLimit(
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     if (!supabaseUrl || !serviceKey) {
+      if (opts.failClosed) { console.error("[rateLimit] missing env, failing closed"); return unavailable(); }
       console.warn("[rateLimit] missing env, failing open");
       return { allowed: true };
     }
@@ -139,6 +164,7 @@ export async function enforceRateLimit(
     });
 
     if (error) {
+      if (opts.failClosed) { console.error("[rateLimit] RPC error, failing closed:", error.message); return unavailable(); }
       console.error("[rateLimit] RPC error, failing open:", error.message);
       return { allowed: true, identifier, isUser };
     }
@@ -179,6 +205,7 @@ export async function enforceRateLimit(
 
     return { allowed: true, identifier, isUser };
   } catch (e) {
+    if (opts.failClosed) { console.error("[rateLimit] unexpected error, failing closed:", e); return unavailable(); }
     console.error("[rateLimit] unexpected error, failing open:", e);
     return { allowed: true };
   }

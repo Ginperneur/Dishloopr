@@ -55,6 +55,8 @@ interface TagManagerProps {
 }
 
 export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
+  // Extra tags are included with Owner Pro (paid, in a bundle, or given by Dishloopr).
+  const hasPro = (restaurant as { owner_tier?: string }).owner_tier === 'pro' || (restaurant as { owner_pro_override?: boolean }).owner_pro_override === true;
   const { user } = useAuth();
   const [paidTags, setPaidTags] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,6 +111,13 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
       // Show the function's own message instead of "Edge Function returned a non-2xx status code".
       const reason = data?.error ?? (error ? await (error as { context?: Response }).context?.json?.().then((b: { error?: string }) => b?.error).catch(() => null) : null);
       if (reason || error) throw new Error(reason || 'Kon de betaling niet starten');
+      if (data?.included) {
+        // Included with Owner Pro: the tag is on straight away, no payment.
+        toast.success(`${tagValue} toegevoegd, inbegrepen bij Owner Pro`);
+        // Same return as after a paid tag, so the dashboard reloads the restaurant with its new tag.
+        window.location.href = `/owner-dashboard?tag_added=${encodeURIComponent(tagValue)}`;
+        return;
+      }
       // Same tab: a window.open after an await is often blocked as a pop-up.
       if (data?.url) window.location.href = data.url;
     } catch (e: any) {
@@ -260,7 +269,7 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
                         ) : (
                           <ShoppingCart className="h-3 w-3 mr-1" />
                         )}
-                        {CHECKOUT_ENABLED.tag ? '€5/mnd excl. btw' : COMING_SOON_LABEL}
+                        {hasPro ? 'Toevoegen, inbegrepen bij Pro' : CHECKOUT_ENABLED.tag ? '€5/mnd excl. btw' : COMING_SOON_LABEL}
                       </Button>
                       <Button
                         size="sm"
@@ -296,7 +305,7 @@ export function TagManager({ restaurant, onUpdate }: TagManagerProps) {
           {pendingCount > 0 && <span className="text-sm text-muted-foreground">Je keuzes worden pas bewaard als je op Tags opslaan klikt.</span>}
         </div>
 
-        {(restaurant as { owner_tier?: string }).owner_tier !== 'pro' && <div className="border-t pt-4">
+        {!hasPro && <div className="border-t pt-4">
           <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
             <Crown className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
             <div className="space-y-1">

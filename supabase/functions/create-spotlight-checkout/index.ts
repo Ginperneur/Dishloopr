@@ -5,6 +5,7 @@ import { billingParams } from "../_shared/billing.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 import { withVat } from "../_shared/vat.ts";
+import { getOrCreateCustomer } from "../_shared/stripeCustomer.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,13 +43,11 @@ Deno.serve(async (req) => {
     const bookingIds = (ids ?? []) as string[];
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    const customerId = customers.data[0]?.id;
+    const customerId = await getOrCreateCustomer(stripe, admin, user);
     const meta = { type: "spotlight", restaurant_id, user_id: user.id, booking_ids: bookingIds.join(","), weeks: list.join(",") };
     const origin = safeOrigin(req);
     const session = await stripe.checkout.sessions.create(await withVat(stripe, {
       customer: customerId,
-      customer_email: customerId ? undefined : user.email,
       mode: "payment",
       line_items: [{
         quantity: bookingIds.length,
@@ -64,6 +63,6 @@ Deno.serve(async (req) => {
     return json({ url: session.url });
   } catch (e) {
     console.error("create-spotlight-checkout", e);
-    return json({ error: e instanceof Error ? e.message : "Onbekende fout" }, 500);
+    return json({ error: "Afrekenen lukte niet. Probeer het later opnieuw." }, 500);
   }
 });

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { safeOrigin } from "../_shared/auth.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
+import { getOrCreateCustomer } from "../_shared/stripeCustomer.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 
 const corsHeaders = {
@@ -28,18 +29,21 @@ serve(async (req) => {
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     if (userError || !userData.user?.email) throw new Error("Not authenticated");
     const user = userData.user;
+    // Billing data is matched on the email address, so it must be a confirmed one.
+    if (!user.email_confirmed_at) throw new Error("Bevestig eerst je e-mailadres");
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    if (customers.data.length === 0) throw new Error("Geen Stripe-klant gevonden");
+    const admin = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+    // The user's own customer (the one with their running subscriptions), never just the newest.
+    const customerId = await getOrCreateCustomer(stripe, admin, user);
 
     const origin = safeOrigin(req);
     const portal = await stripe.billingPortal.sessions.create({
-      customer: customers.data[0].id,
+      customer: customerId,
       return_url: `${origin}/owner`,
     });
 
-    log("Portal session created", { customerId: customers.data[0].id });
+    log("Portal session created", { customerId });
 
     return new Response(JSON.stringify({ url: portal.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -48,7 +52,7 @@ serve(async (req) => {
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     log("ERROR", { msg });
-    return new Response(JSON.stringify({ error: msg }), {
+    return new Response(JSON.stringify({ error: msg === "Bevestig eerst je e-mailadres" ? msg : "Het betaalportaal kon niet worden geopend." }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

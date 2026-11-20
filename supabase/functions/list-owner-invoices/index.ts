@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
+import { customerIdsForUser } from "../_shared/stripeCustomer.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -80,18 +81,27 @@ serve(async (req) => {
       });
     }
 
-    // Stripe customer IDs from featured_subscriptions
-    const { data: subs } = await supabaseAdmin
-      .from("featured_subscriptions")
-      .select("stripe_customer_id")
-      .in("restaurant_id", restaurantIds)
-      .not("stripe_customer_id", "is", null);
-
-    const customerIds = Array.from(new Set((subs || []).map(s => s.stripe_customer_id).filter(Boolean) as string[]));
-
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
     });
+
+    // Every customer the owner paid with: packages, Pro, events, tags, Stadsspotlight and the
+    // newsletter all have invoices now, not only the old featured subscriptions. Matching on the
+    // email address only for a confirmed address.
+    const [{ data: subs }, { data: orders }, { data: pro }] = await Promise.all([
+      supabaseAdmin.from("featured_subscriptions").select("stripe_customer_id")
+        .in("restaurant_id", restaurantIds).not("stripe_customer_id", "is", null),
+      supabaseAdmin.from("package_orders").select("stripe_customer_id")
+        .in("restaurant_id", restaurantIds).not("stripe_customer_id", "is", null),
+      supabaseAdmin.from("owner_pro_subscriptions").select("stripe_customer_id")
+        .eq("user_id", user.id).not("stripe_customer_id", "is", null),
+    ]);
+    const ids = new Set<string>([...(subs || []), ...(orders || []), ...(pro || [])]
+      .map(r => r.stripe_customer_id as string | null).filter(Boolean) as string[]);
+    if (user.email_confirmed_at) {
+      for (const id of await customerIdsForUser(stripe, supabaseAdmin, user)) ids.add(id);
+    }
+    const customerIds = [...ids];
 
     const invoices: InvoiceItem[] = [];
     const seen = new Set<string>();
@@ -128,7 +138,7 @@ serve(async (req) => {
     for (const restId of restaurantIds) {
       try {
         const found = await stripe.checkout.sessions.search({
-          query: `metadata['restaurantId']:'${restId}' AND status:'complete'`,
+          query: `(metadata['restaurantId']:'${restId}' OR metadata['restaurant_id']:'${restId}') AND status:'complete'`,
           limit: 100,
         });
         for (const session of found.data) {
@@ -179,7 +189,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("list-owner-invoices error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : String(error) }),
+      JSON.stringify({ error: "Facturen konden niet worden opgehaald." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }

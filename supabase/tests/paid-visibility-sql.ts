@@ -240,5 +240,69 @@ await db.exec(`UPDATE spotlight_bookings SET status = 'cancelled' WHERE restaura
 const nu2 = (await db.query<{ restaurant_id: string; city_name: string }>("SELECT * FROM national_uitgelicht(4)")).rows;
 check("without paying restaurants a city is left out", nu2.every(r => r.restaurant_id !== rest(0)) || nu2.length === 0, nu2);
 
+
+// --- Payment integrity (20261120110000_payment_integrity.sql) ---
+await db.exec(`ALTER TABLE restaurant_tag_subscriptions ADD COLUMN IF NOT EXISTS payment_type text DEFAULT 'per_tag';
+  ALTER TABLE newsletter_placements ADD COLUMN IF NOT EXISTS price_paid numeric DEFAULT 0;
+  ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS owner_pro_override boolean DEFAULT false;
+  ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS owner_tier text DEFAULT 'free';`);
+const pay = noExt(await Deno.readTextFile(`${repo}/supabase/migrations/20261120110000_payment_integrity.sql`));
+await service();
+await db.exec(pay); await db.exec(pay);
+await db.exec(`INSERT INTO seo_landing_pages (slug, dish_id, city_id, meta_title, meta_description, h1_title) VALUES ('hold-test-utrecht', '${KAAS}', '${UT}', 't', 'd', 'h') ON CONFLICT DO NOTHING;`);
+const hold = (r: string, kind = "uitgelicht") =>
+  db.query<{ v: { hold_id: string; replaced_sessions: string[] } }>(`SELECT pp_hold($1, 'hold-test-utrecht', $2, NULL, true) v`, [kind, r]);
+const h1 = (await hold(rest(1))).rows[0].v;
+await db.exec(`UPDATE package_checkout_holds SET stripe_session_id = 'cs_first' WHERE id = '${h1.hold_id}'`);
+await hold(rest(2)); await hold(rest(3));
+check("three running checkouts take the three Uitgelicht places", await one<number>("SELECT pp_taken('uitgelicht', 'hold-test-utrecht') v") === 3);
+check("a fourth checkout is refused while the others pay", await fails(`SELECT pp_hold('uitgelicht', 'hold-test-utrecht', $1, NULL, true)`, [rest(4)]));
+const again = (await hold(rest(1))).rows[0].v;
+check("retrying replaces the own hold and returns the old Stripe session to expire",
+  again.replaced_sessions.length === 1 && again.replaced_sessions[0] === "cs_first" && await one<number>("SELECT pp_taken('uitgelicht', 'hold-test-utrecht') v") === 3, again);
+await db.exec(`UPDATE package_checkout_holds SET reserved_until = now() - interval '1 minute' WHERE restaurant_id = '${rest(2)}'`);
+check("an expired hold frees its place", !(await fails(`SELECT pp_hold('uitgelicht', 'hold-test-utrecht', $1, NULL, true)`, [rest(4)])));
+await db.exec(`INSERT INTO package_orders (restaurant_id, user_id, package, plan, page_slug, status, amount_cents)
+  VALUES ('${rest(5)}', '${owner(5)}', 'topplek', 'month', 'hold-test-utrecht', 'active', 19900)`).catch(() => {});
+check("a page with a live Topplek order refuses a Topplek checkout",
+  await fails(`SELECT pp_hold('topplek', 'hold-test-utrecht', $1, NULL, true)`, [rest(6)]) || (await one<number>("SELECT pp_taken('topplek', 'hold-test-utrecht') v")) === 0);
+
+// Newsletter: never more than 4 per edition, one free Dominant placement per month
+await db.exec(`DELETE FROM newsletter_placements`);
+const ed = "2026-12-01";
+for (let i = 0; i < 4; i++) {
+  await db.exec(`INSERT INTO newsletter_placements (restaurant_id, target_city_id, status, edition_date, price_paid) VALUES ('${rest(i)}', '${UT}', 'pending_payment', '${ed}', 20)`);
+}
+check("a fifth placement in one edition is refused", await fails(
+  `INSERT INTO newsletter_placements (restaurant_id, target_city_id, status, edition_date, price_paid) VALUES ($1, $2, 'pending_payment', '${ed}', 20)`, [rest(7), UT]));
+await db.exec(`UPDATE newsletter_placements SET created_at = now() - interval '40 minutes' WHERE restaurant_id = '${rest(0)}'`);
+check("an abandoned unpaid placement frees its place after 35 minutes", !(await fails(
+  `INSERT INTO newsletter_placements (restaurant_id, target_city_id, status, edition_date, price_paid) VALUES ($1, $2, 'pending_payment', '${ed}', 20)`, [rest(7), UT])));
+await db.exec(`INSERT INTO newsletter_placements (restaurant_id, target_city_id, status, edition_date, price_paid) VALUES ('${rest(8)}', '${UT}', 'paid', '2026-12-08', 0)`);
+check("a second free Dominant placement in the same month is refused", await fails(
+  `INSERT INTO newsletter_placements (restaurant_id, target_city_id, status, edition_date, price_paid) VALUES ($1, $2, 'paid', '2026-12-15', 0)`, [rest(8), UT]));
+
+// Stadsspotlight: no week that already started
+const firstWeek = await one<string>("SELECT spotlight_first_bookable_week()::text v");
+const weekStart = await one<string>("SELECT spotlight_week_start(current_date)::text v");
+const today = await one<string>("SELECT current_date::text v");
+check("the week list starts at the first week that has not started", await one<string>(`SELECT min(week_start)::text v FROM spotlight_weeks('${UT}', NULL)`) === firstWeek);
+if (weekStart! < today!) {
+  check("a running week cannot be booked", await fails(`SELECT spotlight_reserve($1, NULL, ARRAY['${weekStart}']::date[], 'Kop', 'Tekst')`, [rest(9)]));
+}
+const r1 = (await db.query<{ v: string[] }>(`SELECT spotlight_reserve($1, NULL, ARRAY['${firstWeek}']::date[], 'Kop', 'Tekst') v`, [rest(9)])).rows[0].v;
+const r2 = (await db.query<{ v: string[] }>(`SELECT spotlight_reserve($1, NULL, ARRAY['${firstWeek}']::date[], 'Kop', 'Tekst') v`, [rest(9)])).rows[0].v;
+check("re-booking a week replaces the restaurant's own unpaid reservation",
+  await one<string>(`SELECT status v FROM spotlight_bookings WHERE id = '${r1[0]}'`) === "cancelled" && r2.length === 1);
+check("a spotlight reservation lasts 35 minutes", await one<boolean>(`SELECT reserved_until > now() + interval '34 minutes' v FROM spotlight_bookings WHERE id = '${r2[0]}'`) === true);
+
+// Extra tags included with Pro follow the restaurant's Pro state
+await db.exec(`INSERT INTO restaurant_tag_subscriptions (restaurant_id, tag_category, tag_value, payment_type, is_active) VALUES ('${rest(10)}', 'cuisine', 'Japans', 'owner_pro', true);
+  UPDATE restaurants SET owner_tier = 'pro' WHERE id = '${rest(10)}';
+  UPDATE restaurants SET owner_tier = 'free' WHERE id = '${rest(10)}';`);
+check("Pro-included tags switch off when Pro ends", await one<boolean>(`SELECT is_active v FROM restaurant_tag_subscriptions WHERE restaurant_id = '${rest(10)}' AND tag_value = 'Japans'`) === false);
+await db.exec(`UPDATE restaurants SET owner_pro_override = true WHERE id = '${rest(10)}'`);
+check("and on again when Dishloopr gives Pro", await one<boolean>(`SELECT is_active v FROM restaurant_tag_subscriptions WHERE restaurant_id = '${rest(10)}' AND tag_value = 'Japans'`) === true);
+
 console.log(ok ? "ALL PASS" : "SOME FAILED");
 if (!ok) Deno.exit(1);

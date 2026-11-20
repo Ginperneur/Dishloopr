@@ -303,7 +303,6 @@ Regels:
       return new Response(JSON.stringify({
         success: false,
         error: `AI analyse mislukt (${aiResponse.status})`,
-        details: aiErrorText.slice(0, 300),
         scrapedUrl: urlToScrape,
       }), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -342,7 +341,7 @@ Regels:
 
         if (!existingDish) {
           const { data: byName } = await adminSupabase
-            .from('dishes').select('id, synonyms').ilike('name', formattedName).maybeSingle();
+            .from('dishes').select('id, synonyms').ilike('name', formattedName.replace(/[\\%_]/g, (c) => '\\' + c)).maybeSingle();
           existingDish = byName;
         }
 
@@ -352,15 +351,7 @@ Regels:
           dishId = existingDish.id;
           results.existing.push(formattedName);
 
-          const currentSynonyms = existingDish.synonyms || [];
-          const newSynonyms = (dish.synonyms || []).filter((s: string) =>
-            !currentSynonyms.some((cs: string) => cs.toLowerCase() === s.toLowerCase())
-          );
-          if (newSynonyms.length > 0) {
-            await adminSupabase.from('dishes').update({
-              synonyms: [...currentSynonyms, ...newSynonyms.map((s: string) => s.toLowerCase())]
-            }).eq('id', dishId);
-          }
+          // Model-supplied synonyms are NOT appended to existing shared dishes (an admin curates those).
         } else {
           const { data: newDish, error: createError } = await adminSupabase
             .from('dishes').insert({
@@ -368,6 +359,8 @@ Regels:
               name_en: dish.name_en ? formatDishName(dish.name_en) : null,
               slug,
               synonyms: (dish.synonyms || []).map((s: string) => s.toLowerCase()),
+              // Stays active: the Overture pipeline needs new dishes live to reach the 5-dish minimum.
+              // Model output can no longer rename shared dishes (no synonym merging, escaped ilike).
               is_active: true,
             }).select('id').single();
 
@@ -424,8 +417,7 @@ Regels:
       scrapedUrl: scrapedUrlForLog,
     });
     return new Response(JSON.stringify({
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown'
+      error: 'Er ging iets mis. Probeer het later opnieuw.'
     }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

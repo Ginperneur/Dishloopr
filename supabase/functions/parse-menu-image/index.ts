@@ -1,3 +1,4 @@
+import { safeFetch, UnsafeUrlError } from "../_shared/safeFetch.ts";
 import { isSafePublicUrl } from "../_shared/auth.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
@@ -122,16 +123,16 @@ serve(async (req) => {
       try {
         let contentType = '';
 
-        const headResp = await fetch(url, { method: 'HEAD', redirect: 'manual' });
+        const headResp = await safeFetch(url, { method: 'HEAD' }, { maxBytes: 1_000_000, maxRedirects: 4 });
         contentType = headResp.headers.get('content-type') ?? '';
 
         if ((!headResp.ok || !contentType) && headResp.status !== 405) {
           // Fallback: some servers don’t support HEAD or don’t include content-type
-          const getResp = await fetch(url, {
+          const getResp = await safeFetch(url, {
             method: 'GET',
-            redirect: 'manual',
             headers: { Range: 'bytes=0-2047' },
-          });
+          }, { maxBytes: 1_000_000, maxRedirects: 4 });
+          try { await getResp.body?.cancel(); } catch { /* ignore */ }
           contentType = getResp.headers.get('content-type') ?? '';
         }
 
@@ -160,6 +161,12 @@ serve(async (req) => {
           }
         }
       } catch (e) {
+        if (e instanceof UnsafeUrlError) {
+          return new Response(
+            JSON.stringify({ error: 'Ongeldige afbeeldings-URL', code: 'INVALID_URL' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          );
+        }
         // If we can't validate (network / blocked), let the AI gateway attempt it.
         console.warn('Could not validate imageUrl content-type, continuing:', e);
       }

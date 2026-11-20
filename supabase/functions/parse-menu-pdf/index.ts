@@ -1,3 +1,4 @@
+import { safeFetch } from "../_shared/safeFetch.ts";
 import { isSafePublicUrl } from "../_shared/auth.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
@@ -94,7 +95,7 @@ serve(async (req) => {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      const resp = await fetch(String(pdfUrl), { redirect: 'manual' });
+      const resp = await safeFetch(String(pdfUrl), {}, { maxBytes: 20 * 1024 * 1024, maxRedirects: 4 });
       if (!resp.ok) {
         return new Response(JSON.stringify({ error: `PDF kon niet worden opgehaald (${resp.status})` }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },

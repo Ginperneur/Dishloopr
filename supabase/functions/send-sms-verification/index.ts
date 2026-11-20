@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
+import { timingSafeEqual } from "../_shared/auth.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,6 +15,15 @@ serve(async (req) => {
   }
 
   try {
+    // SMS costs money: fail closed when the limiter itself is unavailable.
+    const rl = await enforceRateLimit(req, {
+      functionName: 'send-sms-verification',
+      user: { max: 15, window: 3600 },
+      anon: { max: 5, window: 3600 },
+      failClosed: true,
+    });
+    if (!rl.allowed && rl.response) return rl.response;
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -101,7 +112,23 @@ serve(async (req) => {
       );
     }
 
+    // Extra counters on top of the per-claim send cap, kept in the rate-limit table (no schema change).
+    const counter = async (identifier: string, fn: string, max: number, window: number): Promise<boolean> => {
+      const { data, error: rpcError } = await supabaseAdmin.rpc('check_and_log_rate_limit', {
+        p_identifier: identifier, p_function: fn, p_max: max, p_window_seconds: window,
+      });
+      if (rpcError) { console.error('counter rpc error', rpcError.message); return false; } // fail closed
+      return (data as { allowed?: boolean } | null)?.allowed === true;
+    };
+
     if (action === 'send') {
+      // Max 5 SMS per restaurant per day, whoever asks (stops SMS-bombing a restaurant's phone via many claims).
+      if (!(await counter(`restaurant:${claim.restaurant_id}`, 'sms-send-restaurant', 5, 86400))) {
+        return new Response(
+          JSON.stringify({ error: 'Too many verification attempts. Please contact support.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
       // Generate 6-digit code
       const verificationCode = (100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000)).toString();
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
@@ -179,6 +206,14 @@ serve(async (req) => {
         );
       }
 
+      // Lock after 5 verify attempts per claim per hour (every attempt counts, so guessing is capped).
+      if (!(await counter(`claim:${claimId}`, 'sms-verify-claim', 5, 3600))) {
+        return new Response(
+          JSON.stringify({ error: 'Too many verification attempts. Please contact support.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       // Check if code is valid and not expired
       if (!claim.phone_verification_code || !claim.phone_code_expires_at) {
         return new Response(
@@ -194,7 +229,7 @@ serve(async (req) => {
         );
       }
 
-      if (claim.phone_verification_code !== code) {
+      if (!timingSafeEqual(String(claim.phone_verification_code), String(code))) {
         return new Response(
           JSON.stringify({ error: 'Invalid verification code' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

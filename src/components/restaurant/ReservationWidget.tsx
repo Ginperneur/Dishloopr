@@ -6,6 +6,7 @@ import { reservationMode, type PublicReservationOption } from '@/lib/reservation
 import { NATIVE_RESERVATIONS_ENABLED } from '@/hooks/useReservationOptions';
 import { isZenchefId, zenchefBookingUrl, zenchefPartnerId } from '@/lib/zenchef';
 import { useZenchefSdk } from '@/hooks/useZenchefSdk';
+import { safeHttpUrl } from '@/lib/safeUrl';
 
 interface ReservationWidgetProps {
   restaurantId: string;
@@ -167,9 +168,9 @@ export function ReservationWidget({
             Opent het niet? Reserveer in een nieuw tabblad
           </a>
         )}
-        {mode === 'widget' && !zenchefUnavailable && reservationUrl && (
+        {mode === 'widget' && !zenchefUnavailable && safeHttpUrl(reservationUrl) && (
           <Button variant="outline" size="sm" className="w-full" asChild>
-            <a href={reservationUrl} target="_blank" rel="noopener noreferrer" onClick={() => onClickTrack?.('reservation')}>
+            <a href={safeHttpUrl(reservationUrl)} target="_blank" rel="noopener noreferrer" onClick={() => onClickTrack?.('reservation')}>
               <ExternalLink className="h-3 w-3 mr-2" />
               Reserveer via website
             </a>

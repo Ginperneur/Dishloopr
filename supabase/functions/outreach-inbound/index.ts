@@ -5,7 +5,9 @@
 //   automatisch  out of office, bounce, auto reply: archived
 // Everything else waits in the admin inbox; nothing is ever answered without a human.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { serviceClient } from "../_shared/auth.ts";
+import { serviceClient, timingSafeEqual } from "../_shared/auth.ts";
+
+const escapeLike = (v: string) => v.replace(/[\\%_]/g, (c) => "\\" + c);
 
 const RESEND = "https://api.resend.com";
 const CATEGORIES = [
@@ -25,7 +27,10 @@ async function verify(req: Request, raw: string): Promise<boolean> {
   const k = await crypto.subtle.importKey("raw", key, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const mac = new Uint8Array(await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(`${id}.${ts}.${raw}`)));
   const expected = btoa(String.fromCharCode(...mac));
-  return sigs.split(" ").some((s) => s.split(",")[1] === expected);
+  // Constant-time compare; evaluate every signature (no short-circuit on the first match).
+  let ok = false;
+  for (const s of sigs.split(" ")) if (timingSafeEqual(s.split(",")[1] ?? "", expected)) ok = true;
+  return ok;
 }
 
 function parseFrom(from: string): { email: string; name: string | null } {
@@ -134,7 +139,7 @@ serve(async (req) => {
   const plus = ((d.to ?? []) as string[]).join(" ").match(/antwoord\+([0-9a-f-]{36})@/i)?.[1] ?? null;
   let restaurantId: string | null = plus;
   if (!restaurantId) {
-    const { data: c } = await db.from("restaurant_contacts").select("restaurant_id").ilike("email", from.email).limit(1).maybeSingle();
+    const { data: c } = await db.from("restaurant_contacts").select("restaurant_id").ilike("email", escapeLike(from.email)).limit(1).maybeSingle();
     restaurantId = c?.restaurant_id ?? null;
   }
   const { data: target } = restaurantId
@@ -159,7 +164,16 @@ serve(async (req) => {
       body, attachments: attachments.map((a) => `${a.filename} (${a.content_type})`),
     });
     let status = "te_beoordelen";
+    // Auto opt-out only when the sender address is a stored contact of that restaurant (case-insensitive).
+    // The plus address (antwoord+<id>@) is guessable, so it alone proves nothing; otherwise the reply
+    // just waits in the admin inbox for review.
+    let senderIsContact = false;
     if (t.categorie === "afmelden" && restaurantId) {
+      const { data: match } = await db.from("restaurant_contacts").select("id")
+        .eq("restaurant_id", restaurantId).ilike("email", escapeLike(from.email)).limit(1).maybeSingle();
+      senderIsContact = !!match;
+    }
+    if (t.categorie === "afmelden" && restaurantId && senderIsContact) {
       await db.from("restaurant_contacts").update({ afgemeld_op: new Date().toISOString() }).eq("restaurant_id", restaurantId).is("afgemeld_op", null);
       status = "automatisch";
     } else if (t.categorie === "automatisch") {

@@ -2,6 +2,7 @@ import { safeOrigin, serviceClient, getCaller, isAdmin } from "../_shared/auth.t
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { billingParams } from "../_shared/billing.ts";
 import { withVat } from "../_shared/vat.ts";
+import { expireOpenCheckouts, getOrCreateCustomer } from "../_shared/stripeCustomer.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -41,14 +42,13 @@ Deno.serve(async (req) => {
       : { quantity: 1, price_data: { currency: "eur", unit_amount: 500, tax_behavior: "exclusive" as const, recurring: { interval: "month" as const }, product_data: { name: "Evenement op Dishloopr" } } };
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    const customerId = customers.data[0]?.id;
+    const customerId = await getOrCreateCustomer(stripe, admin, user);
+    await expireOpenCheckouts(stripe, customerId, md => md.type === "event_promotion" && md.event_id === event.id);
 
     const metadata = { type: "event_promotion", event_id: event.id, restaurant_id: event.restaurant_id, user_id: user.id };
     const origin = safeOrigin(req);
     const session = await stripe.checkout.sessions.create(await withVat(stripe, {
       customer: customerId,
-      customer_email: customerId ? undefined : user.email,
       line_items: [lineItem],
       mode: "subscription",
       ...billingParams({ mode: "subscription", customerId }),
@@ -61,6 +61,6 @@ Deno.serve(async (req) => {
     return json({ url: session.url });
   } catch (e) {
     console.error("create-event-checkout error:", e);
-    return json({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
+    return json({ error: "Afrekenen lukte niet. Probeer het later opnieuw." }, 500);
   }
 });

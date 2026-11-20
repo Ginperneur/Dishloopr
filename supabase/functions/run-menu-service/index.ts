@@ -1,4 +1,5 @@
 import { getCaller, isAdmin, isInternalCaller, isSafePublicUrl, serviceClient } from "../_shared/auth.ts";
+import { safeFetch, UnsafeUrlError } from "../_shared/safeFetch.ts";
 import { sendMenuReadyMail, toBase64 } from "./helpers.ts";
 
 const corsHeaders = {
@@ -32,7 +33,7 @@ Regels:
 type Source = { kind: "file"; dataUrl: string } | { kind: "text"; text: string };
 
 async function loadSource(url: string): Promise<Source> {
-  const res = await fetch(url, { redirect: "follow", headers: { "User-Agent": "DishlooprMenuService/1.0" } });
+  const res = await safeFetch(url, { headers: { "User-Agent": "DishlooprMenuService/1.0" } }, { maxBytes: MAX_BYTES, maxRedirects: 4 });
   if (!res.ok) throw new Error(`Kon ${url} niet ophalen (${res.status})`);
   const type = (res.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
   if (type === "application/pdf" || /^image\/(png|jpe?g|webp|gif)$/.test(type)) {
@@ -110,8 +111,12 @@ Deno.serve(async (req) => {
       if (!user) return json({ error: "Log eerst in" }, 401);
       const { data: verified } = await admin.rpc("is_verified_owner", { _user_id: user.id, _restaurant_id: restaurantId });
       if (verified !== true && !(await isAdmin(admin, user.id))) return json({ error: "Geen toegang" }, 403);
+      // Needs a live (active/trialing/past_due, see founding_partner_live) menu_service order that is
+      // not yet fulfilled; the monthly plan may be re-run.
       const { count } = await admin.from("package_orders").select("id", { count: "exact", head: true })
-        .eq("restaurant_id", restaurantId).eq("package", "menu_service");
+        .eq("restaurant_id", restaurantId).eq("package", "menu_service")
+        .in("status", ["active", "trialing", "past_due"])
+        .or("plan.eq.month,fulfillment_status.in.(todo,in_progress)");
       if (!count) return json({ error: "Menuservice is nog niet afgenomen" }, 402);
     }
 
@@ -142,8 +147,13 @@ Deno.serve(async (req) => {
     await sendMenuReadyMail(admin, restaurant, items.length).catch(e => console.error("run-menu-service: mail failed", e));
     return json({ status: "awaiting_owner", items: items.length });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Onbekende fout";
     console.error("run-menu-service error:", restaurantId, err);
+    // Specific, user-facing import problems are kept; unexpected errors become generic.
+    const message = err instanceof UnsafeUrlError
+      ? "Deze link kan niet worden opgehaald. Gebruik een openbare link naar je menu."
+      : err instanceof Error && /^(Kon |Het bestand|Op deze pagina|Te weinig gerechten)/.test(err.message)
+        ? err.message
+        : "Er ging iets mis. Probeer het later opnieuw.";
     if (restaurantId) {
       await admin.from("restaurant_menus").upsert({ restaurant_id: restaurantId, status: "failed", error: message, updated_at: new Date().toISOString() });
       // Back on the admin's list: the automatic import did not work.

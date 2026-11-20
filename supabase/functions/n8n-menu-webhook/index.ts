@@ -1,5 +1,9 @@
 /// <reference types="https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts" />
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
+import { timingSafeEqual } from "../_shared/auth.ts";
+import { safeFetch } from "../_shared/safeFetch.ts";
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
+import { aiChatTarget } from "../_shared/aiChat.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,11 +25,21 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Rate limit first (also covers wrong-secret guessing); fail closed because this triggers AI spend.
+    const rl = await enforceRateLimit(req, {
+      functionName: 'n8n-menu-webhook',
+      user: { max: 60, window: 3600 },
+      anon: { max: 60, window: 3600 },
+      isAi: true,
+      failClosed: true,
+    });
+    if (!rl.allowed && rl.response) return rl.response;
+
     // Verify webhook secret
     const webhookSecret = req.headers.get('x-webhook-secret');
     const expectedSecret = Deno.env.get('N8N_WEBHOOK_SECRET');
     
-    if (!expectedSecret || webhookSecret !== expectedSecret) {
+    if (!expectedSecret || !timingSafeEqual(webhookSecret, expectedSecret)) {
       console.error('Invalid webhook secret');
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
@@ -60,8 +74,9 @@ Deno.serve(async (req) => {
     let textToProcess = menuText;
     if (menuUrl && !menuText) {
       try {
-        const response = await fetch(menuUrl);
-        textToProcess = await response.text();
+        const response = await safeFetch(String(menuUrl), {}, { maxBytes: 2_000_000, maxRedirects: 4 });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        textToProcess = (await response.text()).slice(0, 100_000);
       } catch (error) {
         console.error('Error fetching menu from URL:', error);
         return new Response(
@@ -87,13 +102,22 @@ Deno.serve(async (req) => {
     }
 
     // Use AI to extract dishes from menu text
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiTarget = aiChatTarget('google/gemini-2.5-flash');
+    if (!aiTarget) {
+      console.error('No AI key configured');
+      return new Response(
+        JSON.stringify({ error: 'Er ging iets mis. Probeer het later opnieuw.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    const aiResponse = await fetch(aiTarget.url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${aiTarget.key}`,
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: aiTarget.model,
         messages: [
           {
             role: 'system',
@@ -146,7 +170,7 @@ Regels:
     } catch (parseError) {
       console.error('Error parsing AI response:', parseError);
       return new Response(
-        JSON.stringify({ error: 'Failed to parse extracted dishes', raw: content }),
+        JSON.stringify({ error: 'Failed to parse extracted dishes' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -184,7 +208,7 @@ Regels:
           const { data: dishByName } = await supabase
             .from('dishes')
             .select('id, name')
-            .ilike('name', formattedName)
+            .ilike('name', formattedName.replace(/[\\%_]/g, (c) => '\\' + c))
             .single();
           existingDish = dishByName;
         }
@@ -271,9 +295,8 @@ Regels:
 
   } catch (error) {
     console.error('Webhook error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: errorMessage }),
+      JSON.stringify({ error: 'Er ging iets mis. Probeer het later opnieuw.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

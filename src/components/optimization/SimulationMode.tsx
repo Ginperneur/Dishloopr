@@ -41,8 +41,6 @@ export function SimulationMode({ restaurantId, tags = [], priceLevel = null }: P
   const [price, setPrice] = useState('');
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [running, setRunning] = useState(false);
-  const [buying, setBuying] = useState(false);
-  const [qty, setQty] = useState(1);
 
   const { data: quota } = useQuery({
     queryKey: ['simulation-quota', restaurantId],
@@ -92,18 +90,6 @@ export function SimulationMode({ restaurantId, tags = [], priceLevel = null }: P
     }
     setResult(data as SimulationResult);
     qc.setQueryData(['simulation-quota', restaurantId], (data as SimulationResult).quota);
-  };
-
-  const buy = async () => {
-    setBuying(true);
-    const { data, error } = await supabase.functions.invoke('create-simulation-checkout', { body: { restaurant_id: restaurantId, quantity: qty } });
-    if (error || !data?.url) {
-      const reason = data?.error ?? await (error as { context?: Response } | null)?.context?.json?.().then((b: { error?: string }) => b?.error).catch(() => null);
-      toast.error(reason || 'Afrekenen lukte niet. Probeer het opnieuw.');
-      setBuying(false);
-      return;
-    }
-    window.location.href = data.url;
   };
 
   const summary = result ? simulationSummary(result, priceLevel) : null;

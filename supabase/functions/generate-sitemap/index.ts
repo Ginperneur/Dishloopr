@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
 
 const SITE_URL = "https://dishloopr.com";
 
@@ -85,6 +86,14 @@ serve(async (req) => {
   }
 
   try {
+    // Generous: the sitemap is cached for an hour and fetched by crawlers; this only stops hammering.
+    const rl = await enforceRateLimit(req, {
+      functionName: 'generate-sitemap',
+      user: { max: 120, window: 3600 },
+      anon: { max: 60, window: 3600 },
+    });
+    if (!rl.allowed && rl.response) return rl.response;
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -294,9 +303,8 @@ ${urls.join('\n')}
     });
   } catch (error: unknown) {
     console.error('Sitemap generation error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: 'Er ging iets mis. Probeer het later opnieuw.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

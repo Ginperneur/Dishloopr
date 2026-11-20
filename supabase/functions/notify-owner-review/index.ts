@@ -1,4 +1,5 @@
 import { getCaller, escapeHtml } from "../_shared/auth.ts";
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 
 const corsHeaders = {
@@ -12,6 +13,15 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Sends mail: fail closed.
+    const rl = await enforceRateLimit(req, {
+      functionName: "notify-owner-review",
+      user: { max: 30, window: 3600 },
+      anon: { max: 10, window: 3600 },
+      failClosed: true,
+    });
+    if (!rl.allowed && rl.response) return rl.response;
+
     const caller = await getCaller(req);
     if (!caller) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -99,7 +109,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: "Dishloopr <noreply@dishloopr.com>",
         to: [ownerProfile.email],
-        subject: `Nieuwe review voor ${restaurant.name} - ${stars}`,
+        subject: `Nieuwe review voor ${String(restaurant.name ?? "").replace(/[\r\n]+/g, " ")} - ${stars}`,
         html: `
           <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
             <h2 style="color: #333;">Nieuwe review voor ${escapeHtml(restaurant.name)}</h2>
@@ -125,7 +135,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: (error as Error).message }), {
+    console.error("notify-owner-review error", error);
+    return new Response(JSON.stringify({ error: "Er ging iets mis. Probeer het later opnieuw." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

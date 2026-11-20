@@ -14,7 +14,29 @@ const logStep = (step: string, details?: any) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${detailsStr}`);
 };
 
+/** A payment that needs a human (refund, double sale, missing data): mail the admin, never fail the webhook. */
+// deno-lint-ignore no-explicit-any
+async function alertAdmin(admin: { from(table: string): any }, subject: string, lines: string[]) {
+  try {
+    const { data: setting } = await admin.from("app_settings").select("value").eq("key", "admin_email").maybeSingle();
+    const esc = (t: string) => t.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
+    await new Resend(Deno.env.get("RESEND_API_KEY")).emails.send({
+      from: "Dishloopr <noreply@resend.dev>",
+      to: [(setting?.value as string) || "admin@dishloopr.com"],
+      subject: `Betaling vraagt aandacht: ${subject}`.replace(/[\r\n]+/g, " ").slice(0, 150),
+      html: lines.map(l => `<p>${esc(l)}</p>`).join(""),
+    });
+  } catch (e) {
+    logStep("Admin alert failed", { error: String(e) });
+  }
+}
+
+const PLACE_PACKAGES = ["founding_partner", "topplek", "groei", "dominant"];
+const placeKind = (pkg: string) => (pkg === "topplek" || pkg === "dominant" ? "topplek" : "uitgelicht");
+
 serve(async (req) => {
+  // Set once the event is claimed, so a failure can release it for Stripe's retry.
+  let releaseEvent: (() => Promise<unknown>) | null = null;
   try {
     logStep("Webhook received");
 
@@ -57,9 +79,28 @@ serve(async (req) => {
 
     logStep("Event type", { type: event.type });
 
+    // Each event is handled once: a redelivery must not re-run imports, re-send mails or reactivate
+    // a place that was cancelled in the meantime.
+    {
+      const { error: claimErr } = await supabaseAdmin.from("stripe_processed_events").insert({ event_id: event.id, event_type: event.type });
+      if (claimErr?.code === "23505") {
+        logStep("Duplicate event, already processed", { id: event.id });
+        return new Response(JSON.stringify({ received: true, duplicate: true }), { status: 200 });
+      }
+      if (claimErr) throw new Error(`Event claim failed: ${claimErr.message}`);
+      releaseEvent = async () => { await supabaseAdmin.from("stripe_processed_events").delete().eq("event_id", event.id); };
+    }
+
     if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
       const session = event.data.object as Stripe.Checkout.Session;
       logStep("Checkout session completed", { sessionId: session.id });
+
+      // Bank transfers and other delayed methods complete the session before the money is in:
+      // nothing is activated until checkout.session.async_payment_succeeded says it is paid.
+      if (session.payment_status === "unpaid") {
+        logStep("Payment not confirmed yet, waiting for async_payment_succeeded", { sessionId: session.id });
+        return new Response(JSON.stringify({ received: true, pending: true }), { status: 200 });
+      }
 
       const metadata = session.metadata || {};
       const {
@@ -111,102 +152,30 @@ serve(async (req) => {
 
         logStep("Name matching", { payerName, restaurantName });
 
-        // Check if payer name matches restaurant name (fuzzy: one contains the other or significant overlap)
-        // Strict: the payer name must contain the full restaurant name, and an
-        // already-owned restaurant is never auto-transferred (admin review instead).
-        const nameMatches = !alreadyOwned && restaurantName.length >= 3 &&
-          payerName.length > 0 && payerName.includes(restaurantName);
-
-        if (nameMatches) {
-          logStep("Name match succeeded, auto-verifying");
-
-          // Update claim to verified
-          const { error: claimError } = await supabaseAdmin
-            .from("restaurant_claims")
-            .update({
-              status: "verified",
-              verification_method: "micro_payment",
-              verification_completed_at: new Date().toISOString(),
-              verification_proof: { method: "micro_payment", stripe_session_id: session.id, payment_intent: session.payment_intent, name_match: true, payer_name: payerName },
-              is_primary: true,
-            })
-            .eq("id", claimId);
-
-          if (claimError) {
-            logStep("Claim update error", { error: claimError.message });
-          } else {
-            // Store €1 verification credit for future purchase
-            await supabaseAdmin
-              .from("verification_credits")
-              .insert({
-                user_id: userId,
-                restaurant_id: restaurantId,
-                claim_id: claimId,
-                amount: 1.00,
-                stripe_payment_intent: session.payment_intent as string,
-              });
-            logStep("Verification credit stored for user", { userId });
-
-            // Update restaurant status
-            await supabaseAdmin
-              .from("restaurants")
-              .update({ claim_status: "verified_owner" })
-              .eq("id", restaurantId);
-
-            // Add user as primary owner
-            await supabaseAdmin
-              .from("restaurant_managers")
-              .upsert({
-                restaurant_id: restaurantId,
-                user_id: userId,
-                role: "primary_owner",
-                accepted_at: new Date().toISOString(),
-              }, { onConflict: "restaurant_id,user_id" });
-
-            // Give user owner role
-            const { data: existingRole } = await supabaseAdmin
-              .from("user_roles")
-              .select("id")
-              .eq("user_id", userId)
-              .eq("role", "owner")
-              .maybeSingle();
-
-            if (!existingRole) {
-              await supabaseAdmin
-                .from("user_roles")
-                .insert({ user_id: userId, role: "owner" });
-            }
-
-            // Supersede other claims
-            await supabaseAdmin
-              .from("restaurant_claims")
-              .update({ status: "superseded" })
-              .eq("restaurant_id", restaurantId)
-              .neq("id", claimId);
-
-            logStep("Micro-payment verification completed successfully (name matched)");
-          }
-        } else {
-          logStep("Name mismatch, setting to pending_admin_review", { payerName, restaurantName });
-
-          // Name doesn't match - require admin review
-          const { error: claimError } = await supabaseAdmin
-            .from("restaurant_claims")
-            .update({
-              status: "pending_admin_review",
-              verification_method: "micro_payment",
-              verification_completed_at: new Date().toISOString(),
-              verification_proof: { method: "micro_payment", stripe_session_id: session.id, payment_intent: session.payment_intent, name_match: false, payer_name: payerName, restaurant_name: restaurantName },
-              admin_notes: `Automatische naam-controle mislukt. Betaler: "${payerName}", Restaurant: "${restaurantName}". Handmatige review nodig.`,
-            })
-            .eq("id", claimId);
-
-          if (claimError) {
-            logStep("Claim update error", { error: claimError.message });
-          } else {
-            logStep("Claim set to pending_admin_review due to name mismatch");
-          }
+        // The payer types this name on the Stripe page, so it proves nothing on its own: a match is
+        // only a hint for the admin. Every micro-payment claim waits for admin review; nothing is
+        // granted automatically (no verified status, owner role, manager row or credit here).
+        const nameMatches = restaurantName.length >= 3 && payerName.length > 0 && payerName.includes(restaurantName);
+        const { error: claimError } = await supabaseAdmin
+          .from("restaurant_claims")
+          .update({
+            status: "pending_admin_review",
+            verification_method: "micro_payment",
+            verification_completed_at: new Date().toISOString(),
+            verification_proof: {
+              method: "micro_payment", stripe_session_id: session.id, payment_intent: session.payment_intent,
+              name_match: nameMatches, payer_name: payerName, restaurant_name: restaurantName, already_owned: alreadyOwned,
+            },
+            admin_notes: `Betaling van €1 ontvangen. Naam op de betaling: "${payerName}". Restaurant: "${restaurantName}". `
+              + (nameMatches ? "De namen komen overeen, maar die naam typt de betaler zelf: controleer het eigendom." : "De namen komen niet overeen.")
+              + (alreadyOwned ? " Let op: dit restaurant heeft al een geverifieerde eigenaar." : ""),
+          })
+          .eq("id", claimId);
+        if (claimError) {
+          logStep("Claim update error", { error: claimError.message });
+          throw new Error("Claim update failed");
         }
+        logStep("Micro-payment received, claim waits for admin review", { claimId, nameMatches });
       }
       // Handle extra_tag subscription purchase
       else if (type === "extra_tag" && restaurantId && userId && metadata.tag_category && metadata.tag_value) {
@@ -238,7 +207,7 @@ serve(async (req) => {
 
         if (tagError) {
           logStep("Extra tag subscription insert error", { error: tagError.message });
-          return new Response(JSON.stringify({ error: tagError.message }), { status: 500 });
+          throw new Error(`Extra tag activation failed: ${tagError.message}`);
         }
         logStep("Extra tag subscription activated");
       }
@@ -251,18 +220,22 @@ serve(async (req) => {
         });
         if (simErr) {
           logStep("Simulation credits error", { error: simErr.message });
-          return new Response(JSON.stringify({ error: simErr.message }), { status: 500 });
+          throw new Error(`Simulation credits failed: ${simErr.message}`);
         }
         logStep("Simulation credits granted", { restaurantId, quantity });
       }
       // Paid promotion slot (Vraag doorsturen): the reserved slot becomes active.
       else if (type === "promo_slot" && metadata.slot_id) {
-        const { error: slotErr } = await supabaseAdmin.from("promo_slots")
+        // Only the reservation this checkout made: never revive a slot that ended or was replaced.
+        const { data: activated, error: slotErr } = await supabaseAdmin.from("promo_slots")
           .update({ status: "active", stripe_subscription_id: (session.subscription as string) || null, reserved_until: null, updated_at: new Date().toISOString() })
-          .eq("id", metadata.slot_id);
-        if (slotErr) {
-          logStep("Promo slot activation error", { error: slotErr.message });
-          return new Response(JSON.stringify({ error: slotErr.message }), { status: 500 });
+          .eq("id", metadata.slot_id).eq("status", "pending_payment").select("id");
+        if (slotErr) throw new Error(`Promo slot activation failed: ${slotErr.message}`);
+        if (!activated?.length) {
+          await alertAdmin(supabaseAdmin, "Vraag doorsturen betaald voor een vervallen plek", [
+            `Restaurant ${restaurantId ?? "?"} betaalde voor plek ${metadata.slot_id}, maar die reservering was al vervallen of vervangen.`,
+            `Stripe-sessie ${session.id}, abonnement ${session.subscription ?? "-"}. Zet de plek handmatig aan als er ruimte is, of zeg het abonnement op en betaal terug.`,
+          ]);
         }
         if (metadata.bid_id) {
           await supabaseAdmin.from("promo_bids").update({ status: "converted", updated_at: new Date().toISOString() }).eq("id", metadata.bid_id);
@@ -334,7 +307,7 @@ serve(async (req) => {
 
         if (subError) {
           logStep("Featured subscription insert error", { error: subError.message });
-          return new Response(JSON.stringify({ error: subError.message }), { status: 500 });
+          throw new Error(`Legacy activation failed: ${subError.message}`);
         }
 
         // Also set restaurant as featured
@@ -373,7 +346,7 @@ serve(async (req) => {
 
         if (purchaseError) {
           logStep("Sponsored purchase insert error", { error: purchaseError.message });
-          return new Response(JSON.stringify({ error: purchaseError.message }), { status: 500 });
+          throw new Error(`Legacy activation failed: ${purchaseError.message}`);
         }
 
         logStep("Sponsored purchase created successfully", { productId, restaurantId, duration });
@@ -404,7 +377,7 @@ serve(async (req) => {
 
         if (updateError) {
           logStep("Database update error", { error: updateError.message });
-          return new Response(JSON.stringify({ error: updateError.message }), { status: 500 });
+          throw new Error(`Legacy activation failed: ${updateError.message}`);
         }
 
         // Mark verification credit as redeemed if used
@@ -427,17 +400,19 @@ serve(async (req) => {
       else if (type === "newsletter_placement" && metadata.placement_id) {
         logStep("Processing newsletter placement payment", { placementId: metadata.placement_id });
 
-        const { error: updateError } = await supabaseAdmin
+        const { data: paid, error: updateError } = await supabaseAdmin
           .from("newsletter_placements")
           .update({
             status: "paid",
             stripe_payment_id: session.payment_intent as string,
           })
-          .eq("id", metadata.placement_id);
-
-        if (updateError) {
-          logStep("Newsletter placement update error", { error: updateError.message });
-          return new Response(JSON.stringify({ error: updateError.message }), { status: 500 });
+          .eq("id", metadata.placement_id).eq("status", "pending_payment").select("id");
+        if (updateError) throw new Error(`Newsletter placement update failed: ${updateError.message}`);
+        if (!paid?.length) {
+          await alertAdmin(supabaseAdmin, "Nieuwsbriefplaatsing betaald na vervallen", [
+            `Plaatsing ${metadata.placement_id} (restaurant ${restaurantId ?? "?"}, editie ${metadata.edition_date ?? "?"}) is betaald, maar stond niet meer open.`,
+            `Betaling ${session.payment_intent ?? session.id}. Plaats hem handmatig als de editie nog plek heeft, anders terugbetalen.`,
+          ]);
         }
 
         logStep("Newsletter placement paid successfully", { placementId: metadata.placement_id });
@@ -447,12 +422,22 @@ serve(async (req) => {
       // Stadsspotlight: the reserved weeks become active once paid.
       else if (type === "spotlight" && restaurantId && metadata.booking_ids) {
         const ids = metadata.booking_ids.split(",").filter(Boolean);
-        const { error: spotError } = await supabaseAdmin.from("spotlight_bookings")
+        const { data: activated, error: spotError } = await supabaseAdmin.from("spotlight_bookings")
           .update({ status: "active", stripe_session_id: session.id, updated_at: new Date().toISOString() })
-          .in("id", ids).eq("restaurant_id", restaurantId);
-        if (spotError) {
-          logStep("Spotlight activation error", { error: spotError.message });
-          return new Response(JSON.stringify({ error: spotError.message }), { status: 500 });
+          .in("id", ids).eq("restaurant_id", restaurantId).eq("status", "pending_payment")
+          .select("id, city_id, week_start");
+        if (spotError) throw new Error(`Spotlight activation failed: ${spotError.message}`);
+        const problems: string[] = [];
+        if ((activated?.length ?? 0) < ids.length) problems.push(`${ids.length - (activated?.length ?? 0)} van de ${ids.length} weken stonden niet meer open.`);
+        for (const b of activated ?? []) {
+          const { count } = await supabaseAdmin.from("spotlight_bookings").select("id", { count: "exact", head: true })
+            .eq("city_id", b.city_id).eq("week_start", b.week_start).eq("status", "active");
+          if ((count ?? 0) > 3) problems.push(`De week van ${b.week_start} heeft nu ${count} actieve plekken (maximaal 3).`);
+        }
+        if (problems.length) {
+          await alertAdmin(supabaseAdmin, "Stadsspotlight klopt niet na betaling", [
+            `Restaurant ${restaurantId}, Stripe-sessie ${session.id}.`, ...problems, "Betaal het verschil terug of schuif de boeking op.",
+          ]);
         }
         logStep("Spotlight weeks activated", { restaurantId, weeks: ids.length });
       }
@@ -488,9 +473,22 @@ serve(async (req) => {
           commitment_until: commitmentUntil,
           current_period_end: periodEnd,
         }, { onConflict: "stripe_session_id" });
-        if (orderError) {
-          logStep("Package order insert error", { error: orderError.message });
-          return new Response(JSON.stringify({ error: orderError.message }), { status: 500 });
+        if (orderError) throw new Error(`Package order insert failed: ${orderError.message}`);
+        if (PLACE_PACKAGES.includes(type) && metadata.page_slug) {
+          // The hold made at checkout is now a real order; a page must never hold more than its places.
+          await supabaseAdmin.from("package_checkout_holds").delete().eq("stripe_session_id", session.id);
+          if (metadata.hold_id) await supabaseAdmin.from("package_checkout_holds").delete().eq("id", metadata.hold_id);
+          const kind = placeKind(type);
+          const [{ data: taken }, { data: slots }] = await Promise.all([
+            supabaseAdmin.rpc("pp_taken", { p_kind: kind, p_page_slug: metadata.page_slug }),
+            supabaseAdmin.rpc("pp_slots", { p_kind: kind }),
+          ]);
+          if (typeof taken === "number" && typeof slots === "number" && taken > slots) {
+            await alertAdmin(supabaseAdmin, "Pagina heeft meer betaalde plekken dan toegestaan", [
+              `Pagina ${metadata.page_slug}: ${taken} plekken voor ${kind}, maximaal ${slots}. Nieuwste bestelling: restaurant ${restaurantId}, sessie ${session.id}.`,
+              "Betaal de laatste bestelling terug en zeg het abonnement op.",
+            ]);
+          }
         }
         if ((type === "groei" || type === "dominant") && userId) {
           // Pro is part of both bundles.
@@ -564,8 +562,57 @@ serve(async (req) => {
         await supabaseAdmin.rpc("sync_owner_pro_restaurants", { _user_id: metadata.user_id });
         logStep("Owner Pro subscription activated", { userId: metadata.user_id, interval });
       } else {
-        logStep("Missing metadata for purchase", { metadata: session.metadata });
+        logStep("Missing metadata for purchase", { sessionId: session.id, type: session.metadata?.type ?? null });
+        await alertAdmin(supabaseAdmin, "Betaling zonder herkenbaar product", [
+          `Stripe-sessie ${session.id} is betaald (${(session.amount_total ?? 0) / 100} euro), maar het product kon niet worden toegekend.`,
+          `Type: ${session.metadata?.type ?? "onbekend"}. Controleer de sessie in Stripe en lever het product handmatig of betaal terug.`,
+        ]);
       }
+    }
+
+    // A checkout that was never paid (expired, or a delayed payment that failed) frees its place at once.
+    if (event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed") {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const md = (session.metadata ?? {}) as Record<string, string | undefined>;
+      if (md.type === "spotlight" && md.booking_ids) {
+        await supabaseAdmin.from("spotlight_bookings").update({ status: "cancelled", updated_at: new Date().toISOString() })
+          .in("id", md.booking_ids.split(",").filter(Boolean)).eq("status", "pending_payment");
+      } else if (md.type === "newsletter_placement" && md.placement_id) {
+        await supabaseAdmin.from("newsletter_placements").update({ status: "rejected" })
+          .eq("id", md.placement_id).eq("status", "pending_payment");
+      } else if (md.type === "promo_slot" && md.slot_id) {
+        await supabaseAdmin.from("promo_slots").update({ status: "ended", updated_at: new Date().toISOString() })
+          .eq("id", md.slot_id).eq("status", "pending_payment");
+      }
+      await supabaseAdmin.from("package_checkout_holds").delete().eq("stripe_session_id", session.id);
+      logStep("Unpaid checkout released", { sessionId: session.id, type: md.type ?? null });
+    }
+
+    // Money that went back (refund) or is contested (dispute): one-off products stop, the admin hears about it.
+    if (event.type === "charge.refunded" || event.type === "charge.dispute.created") {
+      const obj = event.data.object as Stripe.Charge | Stripe.Dispute;
+      const paymentIntent = typeof obj.payment_intent === "string" ? obj.payment_intent : obj.payment_intent?.id;
+      const fullRefund = event.type === "charge.dispute.created" || (obj as Stripe.Charge).refunded === true;
+      let summary = `Betaling ${paymentIntent ?? "?"}`;
+      if (paymentIntent && fullRefund) {
+        const sessions = await stripe.checkout.sessions.list({ payment_intent: paymentIntent, limit: 1 });
+        const md = (sessions.data[0]?.metadata ?? {}) as Record<string, string | undefined>;
+        summary += `, product ${md.type ?? "onbekend"}, restaurant ${md.restaurant_id ?? "?"}`;
+        if (md.type === "spotlight" && md.booking_ids) {
+          await supabaseAdmin.from("spotlight_bookings").update({ status: "cancelled", updated_at: new Date().toISOString() })
+            .in("id", md.booking_ids.split(",").filter(Boolean));
+        } else if (md.type === "newsletter_placement" && md.placement_id) {
+          await supabaseAdmin.from("newsletter_placements").update({ status: "rejected" })
+            .eq("id", md.placement_id).in("status", ["pending_payment", "paid", "approved"]);
+        } else if (md.type === "menu_service" && sessions.data[0]?.id) {
+          await supabaseAdmin.from("package_orders").update({ status: "cancelled", updated_at: new Date().toISOString() })
+            .eq("stripe_session_id", sessions.data[0].id);
+        }
+      }
+      await alertAdmin(supabaseAdmin, event.type === "charge.refunded" ? "Terugbetaling" : "Betwiste betaling", [
+        summary, fullRefund ? "Eenmalige producten zijn stopgezet." : "Gedeeltelijke terugbetaling: niets automatisch gewijzigd.",
+        "Abonnementen lopen via Stripe; zeg die daar op als dat nodig is.",
+      ]);
     }
 
     // Invoice payment also recovers a missed checkout notification and handles renewals.
@@ -670,6 +717,8 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), { status: 500 });
+    // Let Stripe's retry handle the event again.
+    if (releaseEvent) await releaseEvent().catch(() => {});
+    return new Response(JSON.stringify({ error: "Webhook processing failed" }), { status: 500 });
   }
 });

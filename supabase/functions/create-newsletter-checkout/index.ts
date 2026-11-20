@@ -4,6 +4,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 import { withVat } from "../_shared/vat.ts";
+import { getOrCreateCustomer } from "../_shared/stripeCustomer.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -41,7 +42,6 @@ serve(async (req) => {
 
     const {
       restaurantId,
-      restaurantName,
       title,
       description,
       promoType,
@@ -54,6 +54,15 @@ serve(async (req) => {
       editionDate,
     } = await req.json();
 
+    // Text that goes into the newsletter and the invoice: plain strings of a sane length.
+    if (typeof title !== "string" || title.trim().length < 2 || title.length > 80
+        || (description != null && (typeof description !== "string" || description.length > 500))
+        || (promoType != null && (typeof promoType !== "string" || !/^[a-z_]{2,30}$/.test(promoType)))) {
+      return new Response(JSON.stringify({ error: "Titel (2 tot 80 tekens) of beschrijving (max. 500) klopt niet" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     if (!restaurantId || !title) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
         status: 400,
@@ -107,7 +116,7 @@ serve(async (req) => {
       });
     }
 
-    const { data: rest } = await supabaseAdmin.from("restaurants").select("city_id, cities(name)").eq("id", restaurantId).maybeSingle();
+    const { data: rest } = await supabaseAdmin.from("restaurants").select("name, city_id, cities(name)").eq("id", restaurantId).maybeSingle();
     const cityId = rest?.city_id as string | undefined;
     if (!cityId) {
       return new Response(JSON.stringify({ error: "Je restaurant heeft nog geen stad" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -158,8 +167,10 @@ serve(async (req) => {
 
     if (placementError) {
       console.error("Placement error:", placementError);
-      return new Response(JSON.stringify({ error: placementError.message }), {
-        status: 500,
+      // The guard trigger refuses a full edition or a second free placement with its own message.
+      const full = /vol, kies een andere week|gratis plaatsing van deze maand/.test(placementError.message);
+      return new Response(JSON.stringify({ error: full ? placementError.message : "Plaatsen lukte niet. Probeer het later opnieuw." }), {
+        status: full ? 409 : 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -176,6 +187,7 @@ serve(async (req) => {
     });
 
     const origin = safeOrigin(req);
+    const customerId = await getOrCreateCustomer(stripe, supabaseAdmin, user);
 
     const session = await stripe.checkout.sessions.create(await withVat(stripe, {
       line_items: [
@@ -190,8 +202,10 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
-      customer_email: user.email,
-      ...billingParams({ mode: "payment", description: `Nieuwsbriefplaatsing ${restaurantName ?? ""}: ${title}` }),
+      customer: customerId,
+      // The place is held for 35 minutes (newsletter_city_taken); the session ends before that.
+      expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
+      ...billingParams({ mode: "payment", customerId, description: `Nieuwsbriefplaatsing ${rest?.name ?? ""}: ${title}` }),
       success_url: `${origin}/owner-dashboard?newsletter=success&placementId=${placement.id}`,
       cancel_url: `${origin}/owner-dashboard?newsletter=cancelled`,
       metadata: {
@@ -211,7 +225,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : String(error) }),
+      JSON.stringify({ error: "Afrekenen lukte niet. Probeer het later opnieuw." }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

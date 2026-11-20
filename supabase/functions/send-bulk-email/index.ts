@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.118.0";
+import { timingSafeEqual } from "../_shared/auth.ts";
+import { enforceRateLimit } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -198,7 +200,7 @@ serve(async (req: Request): Promise<Response> => {
 
     let isAuthorized = false;
 
-    if (webhookSecret && n8nSecret && webhookSecret === n8nSecret) {
+    if (webhookSecret && n8nSecret && timingSafeEqual(webhookSecret, n8nSecret)) {
       isAuthorized = true;
     } else if (authHeader) {
       // Verify JWT and check admin role
@@ -222,6 +224,15 @@ serve(async (req: Request): Promise<Response> => {
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Mail sending: fail closed, generous (a campaign needs one call per 500 recipients).
+    const rl = await enforceRateLimit(req, {
+      functionName: "send-bulk-email",
+      user: { max: 600, window: 3600 },
+      anon: { max: 600, window: 3600 },
+      failClosed: true,
+    });
+    if (!rl.allowed && rl.response) return rl.response;
 
     const body = await req.json();
     const { campaign_id, action } = body;
@@ -309,6 +320,29 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
+    // Claim this batch atomically BEFORE sending: advance the cursor with a conditional UPDATE that
+    // only matches when the cursor/status are still what we read. An overlapping invocation reading the
+    // same cursor matches 0 rows and must not send. (If a send crashes midway the batch is not retried:
+    // at-most-once is chosen over duplicate mails.)
+    {
+      let claim = supabase
+        .from("email_campaigns")
+        .update({
+          last_cursor: nextCursor,
+          ...(nextCursor ? {} : { status: "completed", completed_at: new Date().toISOString() }),
+        })
+        .eq("id", campaign_id)
+        .eq("status", "sending");
+      claim = c.last_cursor === null ? claim.is("last_cursor", null) : claim.eq("last_cursor", c.last_cursor);
+      const { data: claimed, error: claimErr } = await claim.select("id");
+      if (claimErr || !claimed || claimed.length === 0) {
+        return new Response(
+          JSON.stringify({ message: "Batch is already being processed", has_more: true }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     console.log(`Processing batch of ${emails.length} emails for campaign ${campaign_id}`);
 
     // Send the batch
@@ -319,25 +353,15 @@ serve(async (req: Request): Promise<Response> => {
       c.html_content
     );
 
-    // Update campaign progress
-    const newSentCount = (c.sent_count || 0) + sent;
-    const newFailedCount = (c.failed_count || 0) + failed;
-
-    const updateData: Record<string, any> = {
-      sent_count: newSentCount,
-      failed_count: newFailedCount,
-      last_cursor: nextCursor,
-    };
-
-    if (!nextCursor) {
-      // No more batches
-      updateData.status = "completed";
-      updateData.completed_at = new Date().toISOString();
-    }
+    // Update campaign progress (cursor/status were already advanced when the batch was claimed)
+    const { data: freshCounts } = await supabase
+      .from("email_campaigns").select("sent_count, failed_count").eq("id", campaign_id).maybeSingle();
+    const newSentCount = (freshCounts?.sent_count ?? c.sent_count ?? 0) + sent;
+    const newFailedCount = (freshCounts?.failed_count ?? c.failed_count ?? 0) + failed;
 
     await supabase
       .from("email_campaigns")
-      .update(updateData)
+      .update({ sent_count: newSentCount, failed_count: newFailedCount })
       .eq("id", campaign_id);
 
     return new Response(
@@ -352,10 +376,9 @@ serve(async (req: Request): Promise<Response> => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    console.error("Error in send-bulk-email:", msg);
+    console.error("Error in send-bulk-email:", error);
     return new Response(
-      JSON.stringify({ error: msg }),
+      JSON.stringify({ error: "Er ging iets mis. Probeer het later opnieuw." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

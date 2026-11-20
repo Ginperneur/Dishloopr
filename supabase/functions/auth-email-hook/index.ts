@@ -1,4 +1,5 @@
 import * as React from 'npm:react@18.3.1'
+import { timingSafeEqual } from '../_shared/auth.ts'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createAuthEmailHandler } from 'npm:@lovable.dev/email-js@0.4.0'
 import { SignupEmail } from '../_shared/email-templates/signup.tsx'
@@ -84,7 +85,7 @@ async function handlePreview(req: Request): Promise<Response> {
   const apiKey = Deno.env.get('LOVABLE_API_KEY')
   const authHeader = req.headers.get('Authorization')
 
-  if (!apiKey || authHeader !== `Bearer ${apiKey}`) {
+  if (!apiKey || !timingSafeEqual(authHeader, `Bearer ${apiKey}`)) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { ...previewCorsHeaders, 'Content-Type': 'application/json' },
