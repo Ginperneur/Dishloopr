@@ -30,7 +30,7 @@ export function SurpriseMe({ variant = 'button', className = '', city }: Surpris
   const [isOpen, setIsOpen] = useState(false);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [cityInput, setCityInput] = useState(city || '');
-  const { surprise, loading, getSurpriseRecommendation, clearRecommendations } = useAIRecommendations();
+  const { surprise, loading, error, getSurpriseRecommendation, clearRecommendations } = useAIRecommendations();
 
   const handleSurprise = async () => {
     await getSurpriseRecommendation({
@@ -148,6 +148,8 @@ export function SurpriseMe({ variant = 'button', className = '', city }: Surpris
                         </button>
                       ))}
                     </div>
+
+                    {error && <p role="alert" className="mb-3 text-sm text-destructive">{error}</p>}
 
                     <Button
                       onClick={handleSurprise}

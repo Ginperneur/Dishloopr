@@ -82,9 +82,11 @@ serve(async (req) => {
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const authClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
-    const { data: { user } } = await authClient.auth.getUser(authHeader.replace("Bearer ", ""));
-    if (!user) {
+    const authClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data, error: authError } = await authClient.auth.getClaims(authHeader.slice(7));
+    if (authError || !data?.claims?.sub) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
@@ -314,8 +316,8 @@ Het is ${season}. ${cityContext ? `De gebruiker is in ${city}.` : ""}`;
       throw new Error("AI gateway error");
     }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
+    const aiData = await response.json();
+    const content = aiData.choices?.[0]?.message?.content;
 
     let recommendation;
     try {

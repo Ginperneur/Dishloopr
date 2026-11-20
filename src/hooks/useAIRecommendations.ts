@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { invokeAuthenticatedAI, RecommendationAuthError } from '@/lib/invokeAuthenticatedAI';
 
 interface SurpriseRecommendation {
   dish: string;
@@ -138,7 +139,7 @@ export function useAIRecommendations() {
         return data.recommendation;
       }
     } catch (error) {
-      console.error('Surprise recommendation error:', error);
+      if (!(error instanceof RecommendationAuthError)) console.error('Surprise recommendation error:', error);
       const message = error instanceof Error ? error.message : 'Kon geen aanbeveling ophalen';
       setState(prev => ({ ...prev, error: message, loading: false }));
       toast.error(message);
@@ -192,7 +193,7 @@ export function useAIRecommendations() {
         return data.recommendation.recommendations;
       }
     } catch (error) {
-      console.error('Personalized recommendations error:', error);
+      if (!(error instanceof RecommendationAuthError)) console.error('Personalized recommendations error:', error);
       const message = error instanceof Error ? error.message : 'Kon geen aanbevelingen ophalen';
       setState(prev => ({ ...prev, error: message, loading: false }));
     }
@@ -221,7 +222,7 @@ export function useAIRecommendations() {
         return data.recommendation.suggestions;
       }
     } catch (error) {
-      console.error('Smart suggestions error:', error);
+      if (!(error instanceof RecommendationAuthError)) console.error('Smart suggestions error:', error);
       const message = error instanceof Error ? error.message : 'Kon geen suggesties ophalen';
       setState(prev => ({ ...prev, error: message, loading: false }));
     }
@@ -251,7 +252,7 @@ export function useAIRecommendations() {
         return data.recommendation;
       }
     } catch (error) {
-      console.error('Dish exploration error:', error);
+      if (!(error instanceof RecommendationAuthError)) console.error('Dish exploration error:', error);
       const message = error instanceof Error ? error.message : 'Kon geen info ophalen';
       setState(prev => ({ ...prev, error: message, loading: false }));
     }
@@ -278,14 +279,7 @@ export function useAIRecommendations() {
   };
 }
 
-// The AI function requires a signed-in user; skip silently when signed out.
+// Always send the current user token and recover once from an expired session.
 async function invokeAI(options: { body: Record<string, unknown> }): Promise<{ data: any; error: any }> {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return { data: null, error: null };
-  const res = await supabase.functions.invoke('ai-recommendations', options);
-  const status = (res.error as any)?.context?.status;
-  if (res.error && (status === 401 || /401|Unauthorized/i.test(String(res.error?.message)))) {
-    return { data: null, error: null };
-  }
-  return res;
+  return invokeAuthenticatedAI(supabase, options.body);
 }
