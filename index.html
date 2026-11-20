@@ -3,7 +3,26 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
-    
+    <script>
+      // Clickjacking protection. The live site is served by Lovable directly, so a header from our
+      // Cloudflare (X-Frame-Options) no longer reaches it. On our own domains the app refuses to run
+      // inside another site's frame and opens itself in the full window instead. Exempt: the menu
+      // widget (/menu/<slug>?embed=1) that restaurants embed on their own website, frames from our
+      // own domain, and every other host (Lovable editor preview, localhost, the native app).
+      (function () {
+        try {
+          var h = location.hostname;
+          if (!/(^|\.)dishloopr\.(com|nl|eu)$/.test(h) || window.top === window.self) return;
+          if (/^\/menu\/[^/]+\/?$/.test(location.pathname) && /(^|[?&])embed=1(&|$)/.test(location.search)) return;
+          var sameSite = false;
+          try { sameSite = /(^|\.)dishloopr\.(com|nl|eu)$/.test(window.top.location.hostname); } catch (e) { /* other origin */ }
+          if (sameSite) return;
+          document.documentElement.style.display = "none";
+          window.top.location.href = location.href;
+        } catch (e) { /* never block the site because of this check */ }
+      })();
+    </script>
+
     <title>Dishloopr - Vind restaurants op gerecht | NL</title>
     <meta name="description" content="Zoek restaurants op basis van het gerecht waar je zin in hebt. Filter op stad, sfeer en prijs. Ontdek de lekkerste plekken in Nederland." />
     <meta name="author" content="Dishloopr" />
