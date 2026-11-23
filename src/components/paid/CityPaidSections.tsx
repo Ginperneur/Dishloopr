@@ -126,7 +126,7 @@ export function CityToppleksSection({ cityId, cityName, citySlug, limit = 7, nes
 /** Chips to every dish, cuisine and Romantisch page of a city, with the number of restaurants. Free. */
 export function CityPageChips({ cityId, cityName, title, only }: { cityId: string; cityName: string; title?: string; only?: CityPage['page_kind'][] }) {
   const { data: all = [] } = useCityPages(cityId);
-  const [showAllDishes, setShowAllDishes] = useState(false);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const pages = only ? all.filter(p => only.includes(p.page_kind)) : all;
   if (!pages.length) return null;
   const group = (kind: CityPage['page_kind']) => pages.filter(p => p.page_kind === kind);
@@ -134,26 +134,29 @@ export function CityPageChips({ cityId, cityName, title, only }: { cityId: strin
   return (
     <section aria-labelledby="popular-pages-heading" className="space-y-4">
       <h2 id="popular-pages-heading" className="text-2xl font-bold md:text-3xl">{title ?? `Populair in ${cityName}`}</h2>
-      {rows.filter(([, list]) => list.length).map(([label, list]) => (
+      {rows.filter(([, list]) => list.length).map(([label, list]) => {
+        const isOpen = !!expanded[label];
+        return (
         <div key={label} className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">{label}</p>
           <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:overflow-visible md:px-0">
-            {(label === 'Gerechten' && !showAllDishes ? list.slice(0, 6) : list).map(p => (
+            {(isOpen ? list : list.slice(0, 6)).map(p => (
               <Link key={p.page_slug} to={`/eten/${p.page_slug}`}
                 className="inline-flex min-h-10 flex-none items-center gap-1.5 rounded-full border bg-card px-3.5 text-sm hover:border-primary">
                 {pageLabel(p)} <span className="text-xs text-muted-foreground">{p.restaurant_count}</span>
               </Link>
             ))}
-            {label === 'Gerechten' && list.length > 6 && (
-              <button type="button" onClick={() => setShowAllDishes(v => !v)} aria-expanded={showAllDishes}
+            {list.length > 6 && (
+              <button type="button" onClick={() => setExpanded(prev => ({ ...prev, [label]: !prev[label] }))} aria-expanded={isOpen}
                 className="inline-flex min-h-10 flex-none items-center gap-1 rounded-full px-3.5 text-sm font-medium text-primary hover:underline">
-                {showAllDishes ? 'Zie minder' : 'Zie meer'}
-                <ChevronDown className={`h-4 w-4 transition-transform ${showAllDishes ? 'rotate-180' : ''}`} />
+                {isOpen ? 'Zie minder' : 'Zie meer'}
+                <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
               </button>
             )}
           </div>
         </div>
-      ))}
+        );
+      })}
       <p className="text-xs text-muted-foreground">Het getal is het aantal restaurants in {cityName}.</p>
     </section>
   );
