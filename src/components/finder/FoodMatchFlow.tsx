@@ -39,6 +39,7 @@ export function FoodMatchFlow({ guestCode, onBack }: { guestCode?: string; onBac
   const [group, setGroup] = useState(isGuest);
   const [name, setName] = useState('');
   const [cityId, setCityId] = useState('');
+  const [cityQuery, setCityQuery] = useState('');
   const [cities, setCities] = useState<{ id: string; name: string }[]>([]);
   const [ambiences, setAmbiences] = useState<string[]>([]);
   const [code, setCode] = useState<string | null>(guestCode ?? null);
@@ -157,12 +158,16 @@ export function FoodMatchFlow({ guestCode, onBack }: { guestCode?: string; onBac
           {step === 'city' && (
             <>
               <Title k="In welke stad?" />
-              <div className="grid grid-cols-2 gap-2 max-h-[50vh] overflow-y-auto pr-1">
-                {cities.map((c) => (
+              <Input value={cityQuery} onChange={(e) => setCityQuery(e.target.value)} placeholder="Typ een stad…" autoFocus className="h-12 rounded-xl mb-3" aria-label="Zoek stad" />
+              <div className="grid grid-cols-2 gap-2 max-h-[45vh] overflow-y-auto pr-1">
+                {cities.filter((c) => c.name.toLowerCase().includes(cityQuery.trim().toLowerCase())).map((c) => (
                   <Option key={c.id} active={cityId === c.id} onClick={() => { setCityId(c.id); setStep('ambience'); }}>
                     <span className="font-medium">{c.name}</span>
                   </Option>
                 ))}
+                {cityQuery && !cities.some((c) => c.name.toLowerCase().includes(cityQuery.trim().toLowerCase())) && (
+                  <p className="col-span-2 py-6 text-center text-sm text-muted-foreground">Geen stad gevonden</p>
+                )}
               </div>
             </>
           )}
