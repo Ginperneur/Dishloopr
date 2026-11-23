@@ -9,6 +9,8 @@ import { useCitySpotlight, useCityToppleks } from '@/lib/paidPlacements';
 import { CityPageChips, CitySpotlightSection, CityToppleksSection, Photo, useRestaurantsByIds } from '@/components/paid/CityPaidSections';
 import { WhyPaidLink } from '@/components/paid/PaidLabel';
 import { PaidTracked } from '@/components/paid/PaidTracked';
+import { useCollections } from '@/hooks/useCollections';
+import { optimizedImage } from '@/lib/imageUrl';
 import { UpcomingEvents } from '@/components/home/UpcomingEvents';
 
 /**
@@ -191,38 +193,31 @@ function CityHeader({ city }: { city: VisitorCity }) {
   );
 }
 
-/** "Getest door Dishloopr": the editors' own picks. Shown from 3 restaurants in the city, a short teaser before that. */
-function EditorsPicks({ city }: { city: VisitorCity }) {
-  const { data = [] } = useQuery({
-    queryKey: ['city-tested', city.id],
-    queryFn: async () => {
-      const list = await rpc<{ restaurant_id: string; reason: string | null; collection_slug: string; collection_title: string }>('city_tested_restaurants', { p_city: city.id });
-      if (list.length < 3) return [];
-      const { data: rs } = await supabase.from('restaurants').select('id, name, slug').in('id', list.map(r => r.restaurant_id));
-      const byId = new Map((rs ?? []).map(r => [r.id, r]));
-      return list.map(r => ({ ...r, r: byId.get(r.restaurant_id) })).filter(x => x.r);
-    },
-    staleTime: 10 * 60_000,
-  });
-  if (!data.length) {
-    return (
-      <section aria-labelledby="tested-heading" className="rounded-2xl border border-dashed p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">Binnenkort</p>
-        <h2 id="tested-heading" className="text-xl font-bold">Getest door Dishloopr</h2>
-        <p className="max-w-xl text-sm text-muted-foreground">Ontdek de favoriete restaurants van onze redactie.</p>
-      </section>
-    );
-  }
+const DISHLOOPR_COLLECTION = 'getest-door-dishloopr';
+
+/** Collections with photo: "Getest door Dishloopr" first, then the rest in their own order. */
+function HomeCollections() {
+  const { collections } = useCollections();
+  const list = [...collections].sort((x, y) =>
+    (x.slug === DISHLOOPR_COLLECTION ? -1 : 0) - (y.slug === DISHLOOPR_COLLECTION ? -1 : 0) || x.sort_order - y.sort_order);
+  if (!list.length) return null;
   return (
-    <section aria-labelledby="tested-heading" className="space-y-4">
-      <h2 id="tested-heading" className="text-2xl font-bold md:text-3xl">Getest door Dishloopr</h2>
-      <p className="text-sm text-muted-foreground">Gekozen door de Dishloopr-redactie. Restaurants kunnen hier geen plek kopen.</p>
-      <ul className="grid gap-3 md:grid-cols-3">
-        {data.slice(0, 6).map(x => (
-          <li key={x.restaurant_id}>
-            <Link to={`/restaurant/${x.r!.slug}`} className="block h-full rounded-2xl border bg-card p-4">
-              <p className="font-semibold">{x.r!.name}</p>
-              {x.reason && <p className="mt-1 text-sm text-muted-foreground">{x.reason}</p>}
+    <section aria-labelledby="collections-heading" className="space-y-4">
+      <h2 id="collections-heading" className="text-2xl font-bold md:text-3xl">Collecties</h2>
+      <ul className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 lg:grid-cols-4">
+        {list.map(c => (
+          <li key={c.id} className="w-[70vw] max-w-xs flex-none snap-start md:w-auto md:max-w-none">
+            <Link to={`/collection/${c.slug}`} className="block h-full overflow-hidden rounded-2xl border bg-card">
+              {c.cover_image ? (
+                <img src={optimizedImage(c.cover_image, { width: 400 })} alt="" width={400} height={300} loading="lazy" decoding="async"
+                  className="aspect-[4/3] w-full object-cover" />
+              ) : (
+                <div className="flex aspect-[4/3] w-full items-center justify-center bg-primary/15 p-4 text-center font-bold text-primary">{c.title}</div>
+              )}
+              <div className="p-3">
+                <p className="font-semibold">{c.title}</p>
+                {c.subtitle && <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">{c.subtitle}</p>}
+              </div>
             </Link>
           </li>
         ))}
@@ -243,7 +238,7 @@ export function HomeCityBlocks() {
         <SpotlightStad city={city} />
         <div id="events" className="-mx-4 scroll-mt-24 md:-mx-6"><UpcomingEvents city={city} /></div>
         <CityPageChips cityId={city.id} cityName={city.name} />
-        <EditorsPicks city={city} />
+        <HomeCollections />
       </>)}
     </div>
   );
