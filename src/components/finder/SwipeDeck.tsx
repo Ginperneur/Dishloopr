@@ -3,6 +3,9 @@ import { motion, useMotionValue, useTransform, AnimatePresence, PanInfo } from '
 import { Heart, X } from 'lucide-react';
 import type { FoodCategory } from '@/lib/foodMatch';
 
+const PHOTOS = import.meta.glob('@/assets/foodmatch/*.jpg', { eager: true, import: 'default' }) as Record<string, string>;
+const photoFor = (id: string) => Object.entries(PHOTOS).find(([k]) => k.endsWith(`/${id}.jpg`))?.[1];
+
 interface Props { items: FoodCategory[]; onDone: (liked: string[]) => void }
 
 function Card({ item, onSwipe }: { item: FoodCategory; onSwipe: (like: boolean) => void }) {
@@ -23,12 +26,17 @@ function Card({ item, onSwipe }: { item: FoodCategory; onSwipe: (like: boolean) 
       initial={{ scale: 0.92, opacity: 0, y: 20 }}
       animate={{ scale: 1, opacity: 1, y: 0 }}
       exit={{ x: x.get() >= 0 ? 400 : -400, opacity: 0, transition: { duration: 0.25 } }}
-      className="absolute inset-0 cursor-grab active:cursor-grabbing rounded-3xl border border-primary/30 bg-gradient-to-br from-card via-card to-primary/10 shadow-2xl flex flex-col items-center justify-center select-none touch-pan-y"
+      className="absolute inset-0 cursor-grab active:cursor-grabbing rounded-3xl border border-primary/30 overflow-hidden bg-card shadow-2xl flex flex-col items-center justify-end select-none touch-pan-y"
     >
-      <motion.span style={{ opacity: likeOpacity }} className="absolute top-5 left-5 rounded-lg border-2 border-primary px-3 py-1 font-display text-sm font-bold uppercase tracking-widest text-primary -rotate-12">Lekker</motion.span>
-      <motion.span style={{ opacity: nopeOpacity }} className="absolute top-5 right-5 rounded-lg border-2 border-muted-foreground px-3 py-1 font-display text-sm font-bold uppercase tracking-widest text-muted-foreground rotate-12">Nee</motion.span>
-      <span className="text-8xl drop-shadow-lg mb-4" aria-hidden>{item.emoji}</span>
-      <h3 className="font-display text-3xl font-bold">{item.label}</h3>
+      <motion.span style={{ opacity: likeOpacity }} className="absolute z-10 top-5 left-5 bg-background/70 rounded-lg border-2 border-primary px-3 py-1 font-display text-sm font-bold uppercase tracking-widest text-primary -rotate-12">Lekker</motion.span>
+      <motion.span style={{ opacity: nopeOpacity }} className="absolute z-10 top-5 right-5 bg-background/70 rounded-lg border-2 border-muted-foreground px-3 py-1 font-display text-sm font-bold uppercase tracking-widest text-muted-foreground rotate-12">Nee</motion.span>
+      {photoFor(item.id) ? (
+        <img src={photoFor(item.id)} alt={item.label} width={720} height={1080} draggable={false} className="absolute inset-0 h-full w-full object-cover pointer-events-none" />
+      ) : (
+        <span className="absolute inset-0 flex items-center justify-center text-8xl" aria-hidden>{item.emoji}</span>
+      )}
+      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-background/95 via-background/60 to-transparent pointer-events-none" />
+      <h3 className="relative z-10 mb-6 font-display text-3xl font-bold">{item.label}</h3>
     </motion.div>
   );
 }
