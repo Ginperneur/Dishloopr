@@ -5,7 +5,7 @@ import { User, Users, ArrowLeft, Copy, MessageCircle, Star, Loader2, Sparkles, C
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
-import { AMBIENCES, FOOD_CATEGORIES } from '@/lib/foodMatch';
+import { AMBIENCES, FOOD_CATEGORIES, foodMatchShareUrl } from '@/lib/foodMatch';
 import { optimizedImage } from '@/lib/imageUrl';
 import { SwipeDeck } from './SwipeDeck';
 import { matchRestaurants, type MatchResult } from './matchRestaurants';
@@ -112,7 +112,7 @@ export function FoodMatchFlow({ guestCode, onBack }: { guestCode?: string; onBac
     } catch { toast.error('Opslaan lukte niet, probeer opnieuw'); } finally { setLoading(false); }
   };
 
-  const shareUrl = code ? `${window.location.origin}/food-match/${code}` : '';
+  const shareUrl = code ? foodMatchShareUrl(code) : '';
   const order: Step[] = isGuest ? ['name', 'ambience', 'dishes', 'wait', 'result'] : group
     ? ['company', 'city', 'ambience', 'dishes', 'wait', 'result'] : ['company', 'city', 'ambience', 'dishes', 'result'];
   const progress = ((order.indexOf(step) + 1) / order.length) * 100;
@@ -213,7 +213,12 @@ export function FoodMatchFlow({ guestCode, onBack }: { guestCode?: string; onBac
               <Title k={isGuest ? 'Je stem is binnen!' : 'Nodig je vrienden uit'} sub={cityName ? `Eten in ${cityName}` : undefined} />
               {!isGuest && (
                 <div className="flex gap-2 mb-5">
-                  <Button variant="outline" className="flex-1 h-12 rounded-xl" onClick={() => { navigator.clipboard?.writeText(shareUrl); toast.success('Link gekopieerd'); }}><Copy className="h-4 w-4 mr-2" />Kopieer link</Button>
+                  <Button variant="outline" className="flex-1 h-12 rounded-xl" onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(shareUrl);
+                      toast.success('Link gekopieerd');
+                    } catch { toast.error('Kopiëren lukte niet. Deel de link via WhatsApp.'); }
+                  }}><Copy className="h-4 w-4 mr-2" />Kopieer link</Button>
                   <Button asChild variant="outline" className="flex-1 h-12 rounded-xl">
                     <a href={`https://wa.me/?text=${encodeURIComponent(`Stem mee waar we gaan eten: ${shareUrl}`)}`} target="_blank" rel="noopener noreferrer"><MessageCircle className="h-4 w-4 mr-2" />WhatsApp</a>
                   </Button>
@@ -227,7 +232,10 @@ export function FoodMatchFlow({ guestCode, onBack }: { guestCode?: string; onBac
                   ))}
                 </ul>
               </div>
-              <Button className="w-full h-12 rounded-xl" onClick={async () => showResults(await refresh(code!))}><Sparkles className="h-4 w-4 mr-2" />Toon resultaat</Button>
+              <Button className="w-full h-12 rounded-xl" disabled={!code} onClick={async () => {
+                if (!code) return;
+                await showResults(await refresh(code));
+              }}><Sparkles className="h-4 w-4 mr-2" />Toon resultaat</Button>
             </>
           )}
 

@@ -1,4 +1,5 @@
 # Navigation
+- Food Match invitations use the production website origin, never the preview or native app origin, so friends can open them publicly.
 - AI recommendations send an explicit current session token, refresh and retry a 401 once, and validate signing-key JWTs with getClaims; authentication failures remain recoverable UI states.
 - Domain claim codes use managed app email; persist the linked claim and hashed code before sending, and audit DOMAIN_CODE_SENT only after accepted delivery to avoid false success records.
 - Claim page and owner dashboard share ClaimCodeForm and restore code state through authenticated verify-claim status reads, so refresh and mail links never depend on temporary browser state.

@@ -1,9 +1,12 @@
 import { describe, expect, test } from 'bun:test';
-import { pickTop, tally, scoreCandidate } from '../src/lib/foodMatch';
+import { pickTop, tally, scoreCandidate, foodMatchShareUrl } from '../src/lib/foodMatch';
 
 const c = (id: string, cats: string[], amb: string[], rating: number | null = null) => ({ id, categoryHits: new Set(cats), ambienceTags: amb, rating });
 
 describe('food match', () => {
+  test('friend invitations always point to the public production website', () => {
+    expect(foodMatchShareUrl('abc123')).toBe('https://dishloopr.com/food-match/abc123');
+  });
   test('returns exactly 2 suggestions', () => {
     const r = pickTop([c('a', ['pizza'], []), c('b', ['ramen'], []), c('c', [], [])], { pizza: 1, ramen: 1 }, {});
     expect(r.length).toBe(2);

@@ -1,5 +1,10 @@
 export interface FoodCategory { id: string; label: string; emoji: string; terms: string[] }
 
+/** Invitations must be reachable outside the preview or native app. */
+export function foodMatchShareUrl(code: string): string {
+  return `https://dishloopr.com/food-match/${encodeURIComponent(code)}`;
+}
+
 export const FOOD_CATEGORIES: FoodCategory[] = [
   { id: 'vlees', label: 'Vlees', emoji: '🥩', terms: ['biefstuk', 'spareribs'] },
   { id: 'garnalen', label: 'Garnalen', emoji: '🍤', terms: ['garnalen'] },
