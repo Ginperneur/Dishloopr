@@ -1,5 +1,5 @@
 # Parkeerinformatie
-- [ ] SEO review: correct confirmed page metadata, accessibility, and sitemap issues — waiting for the SEO review approval card.
+- [x] SEO review: metadata, knoplabels, koppen en sitemap gecorrigeerd.
 - [ ] Google indexing and traffic verification — no accessible Search Console connection; evidence unavailable.
 - [x] Reviewed current SEO foundations and live dish×city pages; supplied realistic Dutch ranking targets using Semrush evidence.
 - [x] Recommendations use current-session authentication with one refresh/retry; five regression checks passed; deployed function returned 200 with a visible recommendation; signed-out mobile check showed login recovery and zero AI requests.

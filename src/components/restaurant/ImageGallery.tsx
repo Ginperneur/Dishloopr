@@ -246,7 +246,7 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
               variant="secondary"
               size="icon"
               className="absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur"
-              onClick={handlePrev}
+              onClick={handlePrev} aria-label="Vorige foto"
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>
@@ -254,7 +254,7 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
               variant="secondary"
               size="icon"
               className="absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur"
-              onClick={handleNext}
+              onClick={handleNext} aria-label="Volgende foto"
             >
               <ChevronRight className="h-5 w-5" />
             </Button>
@@ -342,7 +342,7 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
               variant="ghost"
               size="icon"
               className="absolute top-4 right-4 z-10"
-              onClick={closeFullscreen}
+              onClick={closeFullscreen} aria-label="Sluiten"
             >
               <X className="h-6 w-6" />
             </Button>
@@ -353,7 +353,7 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 rounded-full"
-                onClick={(e) => { e.stopPropagation(); zoomOut(); }}
+                onClick={(e) => { e.stopPropagation(); zoomOut(); }} aria-label="Uitzoomen"
                 disabled={zoomLevel <= 1}
               >
                 <ZoomOut className="h-4 w-4" />
@@ -365,7 +365,7 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 rounded-full"
-                onClick={(e) => { e.stopPropagation(); zoomIn(); }}
+                onClick={(e) => { e.stopPropagation(); zoomIn(); }} aria-label="Inzoomen"
                 disabled={zoomLevel >= 4}
               >
                 <ZoomIn className="h-4 w-4" />
@@ -379,7 +379,7 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
                   variant="ghost"
                   size="icon"
                   className="absolute left-4 top-1/2 -translate-y-1/2 h-12 w-12 z-10"
-                  onClick={(e) => { e.stopPropagation(); handlePrev(); }}
+                  onClick={(e) => { e.stopPropagation(); handlePrev(); }} aria-label="Vorige foto"
                 >
                   <ChevronLeft className="h-8 w-8" />
                 </Button>
@@ -387,7 +387,7 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
                   variant="ghost"
                   size="icon"
                   className="absolute right-4 top-1/2 -translate-y-1/2 h-12 w-12 z-10"
-                  onClick={(e) => { e.stopPropagation(); handleNext(); }}
+                  onClick={(e) => { e.stopPropagation(); handleNext(); }} aria-label="Volgende foto"
                 >
                   <ChevronRight className="h-8 w-8" />
                 </Button>

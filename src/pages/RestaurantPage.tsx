@@ -278,7 +278,7 @@ export default function RestaurantPage() {
             : '',
         })}
         canonical={`https://dishloopr.com/restaurant/${restaurant.slug}`}
-        ogType="restaurant"
+        ogType="website"
         ogImage={restaurant.images?.[0]}
         ogImageAlt={`${restaurant.name} restaurant`}
         keywords={[restaurant.name, ...(restaurant.cuisines || []), restaurant.city?.name || '', 'restaurant', 'reviews']}
