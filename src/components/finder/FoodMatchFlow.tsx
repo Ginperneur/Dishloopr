@@ -51,6 +51,21 @@ export function FoodMatchFlow({ guestCode, onBack }: { guestCode?: string; onBac
     supabase.from('cities').select('id,name').eq('is_active', true).order('name').then(({ data }) => setCities(data ?? []));
   }, []);
 
+  // Prefill the name from the signed-in account; only ask when there is none.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
+      if (!user) return;
+      const { data: profile } = await supabase.from('profiles').select('name').eq('id', user.id).maybeSingle();
+      const meta = user.user_metadata as { full_name?: string; name?: string } | undefined;
+      const found = (profile?.name || meta?.full_name || meta?.name || '').trim();
+      if (!cancelled && found) setName((n) => (n.trim() ? n : found));
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   useEffect(() => {
     if (!guestCode) return;
     supabase.rpc('food_match_get' as never, { p_code: guestCode } as never).then(({ data }) => {
