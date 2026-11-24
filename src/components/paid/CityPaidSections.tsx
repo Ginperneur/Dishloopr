@@ -71,7 +71,9 @@ export function CitySpotlightSection({ cityId, cityName, nested = false, extra }
   );
 }
 
-const pageLabel = (p: Pick<CityPage, 'page_kind' | 'subject'>) => (p.page_kind === 'ambience' ? 'Romantisch' : p.subject);
+// Dish subjects are stored lowercase (canonical names); show them with a capital letter. URLs stay untouched.
+const pageLabel = (p: Pick<CityPage, 'page_kind' | 'subject'>) =>
+  p.page_kind === 'ambience' ? 'Romantisch' : p.subject.charAt(0).toUpperCase() + p.subject.slice(1);
 
 /** "Topplekken in <stad>": per dish, cuisine or Romantisch page the restaurant holding its Topplek. */
 export function CityToppleksSection({ cityId, cityName, citySlug, limit = 7, nested = false }: { cityId: string; cityName: string; citySlug: string; limit?: number; nested?: boolean }) {
