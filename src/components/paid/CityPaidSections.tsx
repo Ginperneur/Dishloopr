@@ -136,9 +136,9 @@ export function CityPageChips({ cityId, cityName, title, only }: { cityId: strin
       <h2 id="popular-pages-heading" className="text-xl font-bold md:text-3xl">{title ?? `Populair in ${cityName}`}</h2>
       {rows.filter(([, list]) => list.length).map(([label, list]) => {
         const isOpen = !!expanded[label];
-        // Mobile: collapsed shows one row of three chips; "Zie meer" adds rows of three.
-        // Desktop: wrapped rows showing the first 6, the rest after "Zie meer".
-        const hiddenClass = (i: number) => (isOpen || i < 3 ? '' : i < 6 ? 'hidden md:inline-flex' : 'hidden');
+        // Mobile: collapsed shows one row of three chips; "Zie meer" adds rows of three, up to the top 12.
+        // Desktop: collapsed the first 6, "Zie meer" up to the top 12.
+        const hiddenClass = (i: number) => (isOpen ? (i < 12 ? '' : 'hidden') : i < 3 ? '' : i < 6 ? 'hidden md:inline-flex' : 'hidden');
         const rowClass = isOpen
           ? 'grid grid-cols-3 gap-1.5 md:flex md:flex-wrap md:gap-2'
           : 'scrollbar-hide -mx-4 flex flex-nowrap gap-1.5 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:gap-2 md:overflow-visible md:px-0';
