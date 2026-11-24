@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, ArrowLeftRight, Loader2, LocateFixed, MapPin, Store } from 'lucide-react';
+import { ArrowRight, ArrowLeftRight, ChevronDown, Loader2, LocateFixed, MapPin, Store } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   cityCameFromLocation, openCityPicker, setVisitorCity, useHomepageCities, useLocateVisitorCity, useVisitorCity, type VisitorCity,
@@ -198,30 +199,38 @@ const DISHLOOPR_COLLECTION = 'getest-door-dishloopr';
 /** Collections with photo: "Getest door Dishloopr" first, then the rest in their own order. */
 function HomeCollections() {
   const { collections } = useCollections();
+  const [expanded, setExpanded] = useState(false);
   const list = [...collections].sort((x, y) =>
     (x.slug === DISHLOOPR_COLLECTION ? -1 : 0) - (y.slug === DISHLOOPR_COLLECTION ? -1 : 0) || x.sort_order - y.sort_order);
   if (!list.length) return null;
   return (
     <section aria-labelledby="collections-heading" className="space-y-3 md:space-y-4">
       <h2 id="collections-heading" className="text-xl font-bold md:text-3xl">Collecties</h2>
-      <ul className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 lg:grid-cols-4">
-        {list.map(c => (
-          <li key={c.id} className="w-[44vw] max-w-[200px] flex-none snap-start md:w-auto md:max-w-none">
+      <ul className="grid grid-cols-3 gap-2 md:grid-cols-3 md:gap-3 lg:grid-cols-4">
+        {list.map((c, i) => (
+          <li key={c.id} className={!expanded && i >= 6 ? 'hidden md:block' : ''}>
             <Link to={`/collection/${c.slug}`} className="block h-full overflow-hidden rounded-2xl border bg-card">
               {c.cover_image ? (
                 <img src={optimizedImage(c.cover_image, { width: 400 })} alt="" width={400} height={300} loading="lazy" decoding="async"
                   className="aspect-[4/3] w-full object-cover" />
               ) : (
-                <div className="flex aspect-[4/3] w-full items-center justify-center bg-primary/15 p-3 text-center text-sm font-bold md:p-4 md:text-base text-primary">{c.title}</div>
+                <div className="flex aspect-[4/3] w-full items-center justify-center bg-primary/15 p-1.5 text-center text-[10px] font-bold md:p-4 md:text-base text-primary">{c.title}</div>
               )}
-              <div className="p-2.5 md:p-3">
-                <p className="line-clamp-2 text-sm font-semibold leading-snug md:text-base">{c.title}</p>
-                {c.subtitle && <p className="mt-0.5 line-clamp-2 text-xs md:text-sm text-muted-foreground">{c.subtitle}</p>}
+              <div className="p-1.5 md:p-3">
+                <p className="line-clamp-2 text-[11px] font-semibold leading-snug md:text-base">{c.title}</p>
+                {c.subtitle && <p className="mt-0.5 line-clamp-1 text-[10px] md:line-clamp-2 md:text-sm text-muted-foreground">{c.subtitle}</p>}
               </div>
             </Link>
           </li>
         ))}
       </ul>
+      {list.length > 6 && (
+        <button type="button" onClick={() => setExpanded(v => !v)} aria-expanded={expanded}
+          className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-primary hover:underline">
+          {expanded ? 'Zie minder' : 'Zie meer'}
+          <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+        </button>
+      )}
     </section>
   );
 }

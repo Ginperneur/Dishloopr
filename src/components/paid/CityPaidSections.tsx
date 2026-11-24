@@ -136,19 +136,21 @@ export function CityPageChips({ cityId, cityName, title, only }: { cityId: strin
       <h2 id="popular-pages-heading" className="text-xl font-bold md:text-3xl">{title ?? `Populair in ${cityName}`}</h2>
       {rows.filter(([, list]) => list.length).map(([label, list]) => {
         const isOpen = !!expanded[label];
+        // Mobile shows the first 4 chips, desktop the first 6; the rest only after "Zie meer".
+        const hiddenClass = (i: number) => (isOpen || i < 4 ? '' : i < 6 ? 'hidden md:inline-flex' : 'hidden');
         return (
         <div key={label} className="space-y-1.5 md:space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">{label}</p>
-          <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 md:mx-0 md:gap-2 md:flex-wrap md:overflow-visible md:px-0">
-            {(isOpen ? list : list.slice(0, 6)).map(p => (
+          <div className="flex flex-wrap gap-1.5 pb-1 md:gap-2">
+            {list.map((p, i) => (
               <Link key={p.page_slug} to={`/eten/${p.page_slug}`}
-                className="inline-flex min-h-9 flex-none items-center gap-1 whitespace-nowrap rounded-full border bg-card px-3 text-[13px] hover:border-primary md:min-h-10 md:gap-1.5 md:px-3.5 md:text-sm">
+                className={`inline-flex min-h-9 flex-none items-center gap-1 whitespace-nowrap rounded-full border bg-card px-3 text-[13px] hover:border-primary md:min-h-10 md:gap-1.5 md:px-3.5 md:text-sm ${hiddenClass(i)}`}>
                 {pageLabel(p)} <span className="text-[11px] text-muted-foreground md:text-xs">{p.restaurant_count}</span>
               </Link>
             ))}
-            {list.length > 6 && (
+            {list.length > 4 && (
               <button type="button" onClick={() => setExpanded(prev => ({ ...prev, [label]: !prev[label] }))} aria-expanded={isOpen}
-                className="inline-flex min-h-9 flex-none items-center gap-1 whitespace-nowrap rounded-full px-3 text-[13px] font-medium md:min-h-10 md:text-sm text-primary hover:underline">
+                className={`inline-flex min-h-9 w-full flex-none items-center gap-1 whitespace-nowrap rounded-full px-0 text-[13px] font-medium text-primary hover:underline md:min-h-10 md:w-auto md:px-3 md:text-sm ${list.length <= 6 ? 'md:hidden' : ''}`}>
                 {isOpen ? 'Zie minder' : 'Zie meer'}
                 <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
               </button>
