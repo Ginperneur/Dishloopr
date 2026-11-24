@@ -136,17 +136,21 @@ export function CityPageChips({ cityId, cityName, title, only }: { cityId: strin
       <h2 id="popular-pages-heading" className="text-xl font-bold md:text-3xl">{title ?? `Populair in ${cityName}`}</h2>
       {rows.filter(([, list]) => list.length).map(([label, list]) => {
         const isOpen = !!expanded[label];
-        // Mobile: one non-wrapping row you can swipe, showing the first 3 chips.
-        // Desktop: wrapped rows showing the first 6. The rest appears after "Zie meer".
+        // Mobile: collapsed shows one row of three chips; "Zie meer" adds rows of three.
+        // Desktop: wrapped rows showing the first 6, the rest after "Zie meer".
         const hiddenClass = (i: number) => (isOpen || i < 3 ? '' : i < 6 ? 'hidden md:inline-flex' : 'hidden');
+        const rowClass = isOpen
+          ? 'grid grid-cols-3 gap-1.5 md:flex md:flex-wrap md:gap-2'
+          : 'scrollbar-hide -mx-4 flex flex-nowrap gap-1.5 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:gap-2 md:overflow-visible md:px-0';
         return (
         <div key={label} className="space-y-1.5 md:space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">{label}</p>
-          <div className="scrollbar-hide -mx-4 flex flex-nowrap gap-1.5 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:gap-2 md:overflow-visible md:px-0">
+          <div className={rowClass}>
             {list.map((p, i) => (
               <Link key={p.page_slug} to={`/eten/${p.page_slug}`}
-                className={`inline-flex min-h-9 flex-none items-center gap-1 whitespace-nowrap rounded-full border bg-card px-3 text-[13px] hover:border-primary md:min-h-10 md:gap-1.5 md:px-3.5 md:text-sm ${hiddenClass(i)}`}>
-                {pageLabel(p)} <span className="text-[11px] text-muted-foreground md:text-xs">{p.restaurant_count}</span>
+                className={`inline-flex min-h-9 min-w-0 flex-none items-center gap-1 whitespace-nowrap overflow-hidden rounded-full border bg-card text-[13px] hover:border-primary md:min-h-10 md:gap-1.5 md:px-3.5 md:text-sm ${isOpen ? 'px-2 text-[12px]' : 'px-3'} ${hiddenClass(i)}`}>
+                <span className="truncate">{pageLabel(p)}</span>
+                <span className="flex-none text-[11px] text-muted-foreground md:text-xs">{p.restaurant_count}</span>
               </Link>
             ))}
           </div>
