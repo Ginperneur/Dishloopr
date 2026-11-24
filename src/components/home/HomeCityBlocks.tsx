@@ -202,21 +202,21 @@ function HomeCollections() {
     (x.slug === DISHLOOPR_COLLECTION ? -1 : 0) - (y.slug === DISHLOOPR_COLLECTION ? -1 : 0) || x.sort_order - y.sort_order);
   if (!list.length) return null;
   return (
-    <section aria-labelledby="collections-heading" className="space-y-4">
-      <h2 id="collections-heading" className="text-2xl font-bold md:text-3xl">Collecties</h2>
+    <section aria-labelledby="collections-heading" className="space-y-3 md:space-y-4">
+      <h2 id="collections-heading" className="text-xl font-bold md:text-3xl">Collecties</h2>
       <ul className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 lg:grid-cols-4">
         {list.map(c => (
-          <li key={c.id} className="w-[70vw] max-w-xs flex-none snap-start md:w-auto md:max-w-none">
+          <li key={c.id} className="w-[44vw] max-w-[200px] flex-none snap-start md:w-auto md:max-w-none">
             <Link to={`/collection/${c.slug}`} className="block h-full overflow-hidden rounded-2xl border bg-card">
               {c.cover_image ? (
                 <img src={optimizedImage(c.cover_image, { width: 400 })} alt="" width={400} height={300} loading="lazy" decoding="async"
                   className="aspect-[4/3] w-full object-cover" />
               ) : (
-                <div className="flex aspect-[4/3] w-full items-center justify-center bg-primary/15 p-4 text-center font-bold text-primary">{c.title}</div>
+                <div className="flex aspect-[4/3] w-full items-center justify-center bg-primary/15 p-3 text-center text-sm font-bold md:p-4 md:text-base text-primary">{c.title}</div>
               )}
-              <div className="p-3">
-                <p className="font-semibold">{c.title}</p>
-                {c.subtitle && <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">{c.subtitle}</p>}
+              <div className="p-2.5 md:p-3">
+                <p className="line-clamp-2 text-sm font-semibold leading-snug md:text-base">{c.title}</p>
+                {c.subtitle && <p className="mt-0.5 line-clamp-2 text-xs md:text-sm text-muted-foreground">{c.subtitle}</p>}
               </div>
             </Link>
           </li>

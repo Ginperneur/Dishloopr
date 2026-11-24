@@ -132,23 +132,23 @@ export function CityPageChips({ cityId, cityName, title, only }: { cityId: strin
   const group = (kind: CityPage['page_kind']) => pages.filter(p => p.page_kind === kind);
   const rows: [string, CityPage[]][] = [['Gerechten', group('dish')], ['Keukens', group('cuisine')], ['Sfeer', group('ambience')]];
   return (
-    <section aria-labelledby="popular-pages-heading" className="space-y-4">
-      <h2 id="popular-pages-heading" className="text-2xl font-bold md:text-3xl">{title ?? `Populair in ${cityName}`}</h2>
+    <section aria-labelledby="popular-pages-heading" className="space-y-3 md:space-y-4">
+      <h2 id="popular-pages-heading" className="text-xl font-bold md:text-3xl">{title ?? `Populair in ${cityName}`}</h2>
       {rows.filter(([, list]) => list.length).map(([label, list]) => {
         const isOpen = !!expanded[label];
         return (
-        <div key={label} className="space-y-2">
+        <div key={label} className="space-y-1.5 md:space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">{label}</p>
-          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:overflow-visible md:px-0">
+          <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 md:mx-0 md:gap-2 md:flex-wrap md:overflow-visible md:px-0">
             {(isOpen ? list : list.slice(0, 6)).map(p => (
               <Link key={p.page_slug} to={`/eten/${p.page_slug}`}
-                className="inline-flex min-h-10 flex-none items-center gap-1.5 rounded-full border bg-card px-3.5 text-sm hover:border-primary">
-                {pageLabel(p)} <span className="text-xs text-muted-foreground">{p.restaurant_count}</span>
+                className="inline-flex min-h-9 flex-none items-center gap-1 whitespace-nowrap rounded-full border bg-card px-3 text-[13px] hover:border-primary md:min-h-10 md:gap-1.5 md:px-3.5 md:text-sm">
+                {pageLabel(p)} <span className="text-[11px] text-muted-foreground md:text-xs">{p.restaurant_count}</span>
               </Link>
             ))}
             {list.length > 6 && (
               <button type="button" onClick={() => setExpanded(prev => ({ ...prev, [label]: !prev[label] }))} aria-expanded={isOpen}
-                className="inline-flex min-h-10 flex-none items-center gap-1 rounded-full px-3.5 text-sm font-medium text-primary hover:underline">
+                className="inline-flex min-h-9 flex-none items-center gap-1 whitespace-nowrap rounded-full px-3 text-[13px] font-medium md:min-h-10 md:text-sm text-primary hover:underline">
                 {isOpen ? 'Zie minder' : 'Zie meer'}
                 <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
               </button>
