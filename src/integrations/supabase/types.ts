@@ -411,6 +411,64 @@ export type Database = {
           },
         ]
       }
+      collection_entries: {
+        Row: {
+          city_id: string | null
+          collection_id: string
+          dish_name: string | null
+          dish_price: number | null
+          eligible: boolean
+          restaurant_id: string
+          review_avg: number | null
+          review_count: number
+          score: number
+        }
+        Insert: {
+          city_id?: string | null
+          collection_id: string
+          dish_name?: string | null
+          dish_price?: number | null
+          eligible?: boolean
+          restaurant_id: string
+          review_avg?: number | null
+          review_count?: number
+          score?: number
+        }
+        Update: {
+          city_id?: string | null
+          collection_id?: string
+          dish_name?: string | null
+          dish_price?: number | null
+          eligible?: boolean
+          restaurant_id?: string
+          review_avg?: number | null
+          review_count?: number
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collection_entries_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collection_entries_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "collection_entries_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       collection_restaurants: {
         Row: {
           collection_id: string
@@ -466,6 +524,7 @@ export type Database = {
       collections: {
         Row: {
           ambience_tag: string | null
+          auto_cover: string | null
           city_id: string | null
           cover_image: string | null
           created_at: string
@@ -477,6 +536,10 @@ export type Database = {
           id: string
           is_active: boolean | null
           is_featured: boolean | null
+          match_concepts: string[] | null
+          match_dietary: string | null
+          match_dish_names: string[] | null
+          match_dishes: string[] | null
           seo_description: string | null
           seo_title: string | null
           slug: string
@@ -489,6 +552,7 @@ export type Database = {
         }
         Insert: {
           ambience_tag?: string | null
+          auto_cover?: string | null
           city_id?: string | null
           cover_image?: string | null
           created_at?: string
@@ -500,6 +564,10 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_featured?: boolean | null
+          match_concepts?: string[] | null
+          match_dietary?: string | null
+          match_dish_names?: string[] | null
+          match_dishes?: string[] | null
           seo_description?: string | null
           seo_title?: string | null
           slug: string
@@ -512,6 +580,7 @@ export type Database = {
         }
         Update: {
           ambience_tag?: string | null
+          auto_cover?: string | null
           city_id?: string | null
           cover_image?: string | null
           created_at?: string
@@ -523,6 +592,10 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_featured?: boolean | null
+          match_concepts?: string[] | null
+          match_dietary?: string | null
+          match_dish_names?: string[] | null
+          match_dishes?: string[] | null
           seo_description?: string | null
           seo_title?: string | null
           slug?: string
@@ -3265,11 +3338,14 @@ export type Database = {
       package_orders: {
         Row: {
           amount_cents: number
+          bundle_order_id: string | null
+          commitment_months: number | null
           commitment_until: string | null
           created_at: string
           current_period_end: string | null
           fulfillment_status: string
           id: string
+          is_founding: boolean | null
           package: string
           page_slug: string | null
           plan: string
@@ -3283,11 +3359,14 @@ export type Database = {
         }
         Insert: {
           amount_cents: number
+          bundle_order_id?: string | null
+          commitment_months?: number | null
           commitment_until?: string | null
           created_at?: string
           current_period_end?: string | null
           fulfillment_status?: string
           id?: string
+          is_founding?: boolean | null
           package: string
           page_slug?: string | null
           plan: string
@@ -3301,11 +3380,14 @@ export type Database = {
         }
         Update: {
           amount_cents?: number
+          bundle_order_id?: string | null
+          commitment_months?: number | null
           commitment_until?: string | null
           created_at?: string
           current_period_end?: string | null
           fulfillment_status?: string
           id?: string
+          is_founding?: boolean | null
           package?: string
           page_slug?: string | null
           plan?: string
@@ -3318,6 +3400,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "package_orders_bundle_order_id_fkey"
+            columns: ["bundle_order_id"]
+            isOneToOne: false
+            referencedRelation: "package_orders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "package_orders_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -6932,6 +7021,8 @@ export type Database = {
       }
       reviews: {
         Row: {
+          about_restaurant: boolean
+          atmosphere_rating: number | null
           body: string | null
           created_at: string
           dishes_eaten: string[] | null
@@ -6942,14 +7033,18 @@ export type Database = {
           photos: string[] | null
           rating: number
           restaurant_id: string
+          service_rating: number | null
           status: Database["public"]["Enums"]["review_status"]
           suggested_tags: string[] | null
           tag_votes: Json | null
           title: string | null
           updated_at: string
           user_id: string
+          value_rating: number | null
         }
         Insert: {
+          about_restaurant?: boolean
+          atmosphere_rating?: number | null
           body?: string | null
           created_at?: string
           dishes_eaten?: string[] | null
@@ -6960,14 +7055,18 @@ export type Database = {
           photos?: string[] | null
           rating: number
           restaurant_id: string
+          service_rating?: number | null
           status?: Database["public"]["Enums"]["review_status"]
           suggested_tags?: string[] | null
           tag_votes?: Json | null
           title?: string | null
           updated_at?: string
           user_id: string
+          value_rating?: number | null
         }
         Update: {
+          about_restaurant?: boolean
+          atmosphere_rating?: number | null
           body?: string | null
           created_at?: string
           dishes_eaten?: string[] | null
@@ -6978,12 +7077,14 @@ export type Database = {
           photos?: string[] | null
           rating?: number
           restaurant_id?: string
+          service_rating?: number | null
           status?: Database["public"]["Enums"]["review_status"]
           suggested_tags?: string[] | null
           tag_votes?: Json | null
           title?: string | null
           updated_at?: string
           user_id?: string
+          value_rating?: number | null
         }
         Relationships: [
           {
@@ -8783,6 +8884,64 @@ export type Database = {
         Args: { _restaurant_id: string }
         Returns: undefined
       }
+      collection_candidates: {
+        Args: { p_collection: string; p_restaurant?: string }
+        Returns: {
+          active_owner: boolean
+          city_id: string
+          dish_name: string
+          dish_price: number
+          dish_priced: boolean
+          eligible: boolean
+          has_photo: boolean
+          hours_known: boolean
+          kind: string
+          matching_dishes: number
+          matching_mains: number
+          priced_dishes: number
+          restaurant_id: string
+          restaurant_reviews: number
+          review_avg: number
+          review_count: number
+          score: number
+        }[]
+      }
+      collection_cities: {
+        Args: { p_slug: string }
+        Returns: {
+          city_name: string
+          city_slug: string
+          restaurants: number
+        }[]
+      }
+      collection_list: {
+        Args: { p_city_slug?: string; p_limit?: number; p_slug: string }
+        Returns: {
+          address: string
+          ambience_tags: string[]
+          city_name: string
+          city_slug: string
+          cuisines: string[]
+          dish_name: string
+          dish_price: number
+          images: string[]
+          is_pick: boolean
+          name: string
+          pick_reason: string
+          price_level: number
+          restaurant_id: string
+          review_avg: number
+          review_count: number
+          slug: string
+          total: number
+        }[]
+      }
+      collection_review_minimum: { Args: never; Returns: number }
+      collection_review_part: {
+        Args: { p_avg: number; p_n: number }
+        Returns: number
+      }
+      collection_reviews_enforced: { Args: never; Returns: boolean }
       confirm_reservation_integration: {
         Args: { p_provider: string; p_restaurant_id: string }
         Returns: {
@@ -9059,6 +9218,7 @@ export type Database = {
         Args: { p_city: string; p_date: string }
         Returns: number
       }
+      opening_hours_known: { Args: { p_hours: Json }; Returns: boolean }
       outreach_unsubscribe: { Args: { p_token: string }; Returns: string }
       overture_scrape_queue: {
         Args: { p_limit?: number }
@@ -9071,6 +9231,31 @@ export type Database = {
       owner_analytics_allowed: {
         Args: { p_restaurant_id: string }
         Returns: boolean
+      }
+      owner_collection_status: {
+        Args: { p_restaurant: string }
+        Returns: {
+          city_name: string
+          city_slug: string
+          collection_slug: string
+          dish_name: string
+          dish_price: number
+          dish_priced: boolean
+          eligible: boolean
+          has_photo: boolean
+          hours_known: boolean
+          in_list: number
+          kind: string
+          matching_dishes: number
+          matching_mains: number
+          position: number
+          priced_dishes: number
+          review_avg: number
+          review_count: number
+          review_minimum: number
+          reviews_enforced: boolean
+          title: string
+        }[]
       }
       owner_daily_metrics: {
         Args: { p_days?: number; p_restaurant_id: string }
@@ -9284,6 +9469,21 @@ export type Database = {
         Args: { p_kind: string; p_page_slug: string }
         Returns: string
       }
+      pp_order_founding: {
+        Args: { p_created: string; p_is_founding: boolean; p_package: string }
+        Returns: boolean
+      }
+      pp_order_protected: {
+        Args: {
+          p_created: string
+          p_is_founding: boolean
+          p_kind: string
+          p_package: string
+          p_period_end: string
+          p_plan: string
+        }
+        Returns: boolean
+      }
       pp_packages: { Args: { p_kind: string }; Returns: string[] }
       pp_page_status: {
         Args: { p_kind: string; p_page_slug: string; p_restaurant: string }
@@ -9459,6 +9659,7 @@ export type Database = {
       }
       purge_expired_checkout_holds: { Args: never; Returns: undefined }
       purge_old_integration_events: { Args: never; Returns: number }
+      refresh_collection_entries: { Args: never; Returns: number }
       refresh_landing_pages: { Args: never; Returns: number }
       register_push_token: {
         Args: { p_platform: string; p_token: string }

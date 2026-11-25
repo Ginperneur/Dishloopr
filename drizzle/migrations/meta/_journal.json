@@ -540,6 +540,27 @@
       "when": 1795427758880,
       "tag": "0079_food_match_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1795604566106,
+      "tag": "0080_founding_minimum_term",
+      "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1795604569040,
+      "tag": "0081_dish_reviews",
+      "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1795604670562,
+      "tag": "0082_dish_collections",
+      "breakpoints": true
     }
   ]
 }
