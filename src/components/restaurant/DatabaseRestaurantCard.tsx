@@ -3,12 +3,12 @@ import { metricContext } from '@/lib/metricRules';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Star, MapPin, Heart, ImageOff, UtensilsCrossed, Clock } from 'lucide-react';
+import { Star, MapPin, Heart, UtensilsCrossed, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useFavorites } from '@/hooks/useFavorites';
 import { SaveToListButton } from '@/components/lists/SaveToListButton';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { Database } from '@/integrations/supabase/types';
 import { PaidLabel } from '@/components/paid/PaidLabel';
 import type { PaidKind } from '@/lib/paidPlacements';
@@ -16,7 +16,7 @@ import { isDutchLocale } from '@/lib/utils';
 import { isOpenNow } from '@/lib/openingHours';
 import { RatingSummary } from '@/components/restaurant/RatingSummary';
 import { useOwnReviewStats } from '@/hooks/useOwnReviewStats';
-import { useDishPreview } from '@/hooks/useDishPreview';
+import { MoodImage } from '@/components/restaurant/MoodImage';
 import { optimizedImage, optimizedSrcSet, imgLoadingProps } from '@/lib/imageUrl';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
@@ -63,15 +63,9 @@ function formatEuroNL(value: number): string {
   return `€${value.toFixed(2).replace('.', ',')}`;
 }
 
-function ImageWithFallback({ src, alt, priority = false }: { src: string; alt: string; priority?: boolean }) {
+function ImageWithFallback({ src, alt, priority = false, fallback }: { src: string; alt: string; priority?: boolean; fallback: ReactNode }) {
   const [stage, setStage] = useState<0 | 1 | 2>(0);
-  if (stage === 2) {
-    return (
-      <div className="absolute inset-0 flex items-center justify-center">
-        <ImageOff className="w-12 h-12 text-muted-foreground/40" />
-      </div>
-    );
-  }
+  if (stage === 2) return <>{fallback}</>;
   const optimized = stage === 0 ? optimizedImage(src, { width: 400 }) : src;
   return (
     <img
@@ -88,40 +82,6 @@ function ImageWithFallback({ src, alt, priority = false }: { src: string; alt: s
   );
 }
 
-/** Stands in for a missing photo: the first dishes from the menu, so the card still shows what you can eat there. */
-function MenuPreview({ restaurantId, label }: { restaurantId: string; label: string }) {
-  const dishes = useDishPreview(restaurantId, true);
-  return (
-    <div className="absolute inset-0 flex flex-col justify-center gap-2 bg-gradient-to-br from-primary/10 via-muted to-muted px-5 py-4">
-      <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-primary">
-        <UtensilsCrossed className="h-3.5 w-3.5" aria-hidden="true" />
-        {label}
-      </div>
-      {dishes === undefined ? (
-        <div className="space-y-2" aria-hidden="true">
-          {[0, 1, 2].map((i) => <div key={i} className="h-3.5 rounded bg-foreground/10" style={{ width: `${80 - i * 15}%` }} />)}
-        </div>
-      ) : dishes.length === 0 ? (
-        <UtensilsCrossed className="h-10 w-10 text-muted-foreground/40" aria-hidden="true" />
-      ) : (
-        <ul className="space-y-1.5">
-          {dishes.map((d) => (
-            <li key={d.name} className="flex items-baseline gap-2 text-sm text-foreground">
-              <span className="min-w-0 truncate font-medium">{d.name}</span>
-              {d.price != null && (
-                <>
-                  <span className="flex-1 border-b border-dotted border-foreground/25" aria-hidden="true" />
-                  <span className="shrink-0 tabular-nums text-muted-foreground">{formatEuroNL(d.price)}</span>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
 export function DatabaseRestaurantCard({ restaurant, index = 0, paidKind, paidFounding = false, priority = false }: DatabaseRestaurantCardProps) {
   const { t, i18n } = useTranslation();
   const isNl = isDutchLocale(i18n.language);
@@ -132,6 +92,8 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, paidKind, paidFo
   const [isLikeAnimating, setIsLikeAnimating] = useState(false);
   
   const hasImage = restaurant.images && restaurant.images.length > 0 && restaurant.images[0];
+  // No own photo (or it failed to load): a labelled sfeerbeeld, never a stock photo. See src/lib/moodImage.ts.
+  const mood = <MoodImage seed={restaurant.id} name={restaurant.name} cuisinePrimary={restaurant.cuisine_primary} cuisines={restaurant.cuisines} />;
   const wasViewed = isRecentlyViewed(restaurant.slug);
   const openStatus = isOpenNow((restaurant as any).opening_hours);
 
@@ -166,10 +128,9 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, paidKind, paidFo
               src={restaurant.images![0]}
               alt={restaurant.name}
               priority={priority}
+              fallback={mood}
             />
-          ) : (
-            <MenuPreview restaurantId={restaurant.id} label={t('restaurant.onTheMenu', 'Op de kaart')} />
-          )}
+          ) : mood}
           
           {/* Badges */}
           <div className="absolute top-3 left-3 flex gap-2 flex-wrap">

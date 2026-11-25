@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { RatingSummary } from '@/components/restaurant/RatingSummary';
 import { useOwnReviewStats } from '@/hooks/useOwnReviewStats';
 import { optimizedImage, imgLoadingProps } from '@/lib/imageUrl';
+import { MoodImage } from '@/components/restaurant/MoodImage';
 
 function RestaurantCard({ item, index }: { item: CollectionRestaurant; index: number }) {
   const { restaurant } = item;
@@ -31,14 +32,19 @@ function RestaurantCard({ item, index }: { item: CollectionRestaurant; index: nu
           <div className="flex flex-col md:flex-row">
             {/* Image */}
             <div className="relative w-full md:w-48 h-48 md:h-auto flex-shrink-0 overflow-hidden">
-              <img
-                src={optimizedImage(restaurant.images?.[0] || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&q=80', { width: 400 })}
-                alt={restaurant.name}
-                width={400}
-                height={300}
-                {...imgLoadingProps(false)}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-              />
+              {restaurant.images?.[0] ? (
+                <img
+                  src={optimizedImage(restaurant.images[0], { width: 400 })}
+                  alt={restaurant.name}
+                  width={400}
+                  height={300}
+                  {...imgLoadingProps(false)}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+              ) : (
+                // No own photo: a labelled sfeerbeeld instead of a stock interior.
+                <MoodImage seed={restaurant.id} name={restaurant.name} cuisines={restaurant.cuisines} labelAt="bottom-right" />
+              )}
               
               {/* Ranking */}
               <div className="absolute bottom-2 left-2 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">

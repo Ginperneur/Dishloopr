@@ -3,10 +3,13 @@ import { ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { optimizedImage, imgLoadingProps } from '@/lib/imageUrl';
+import { MoodImage } from '@/components/restaurant/MoodImage';
 
 interface ImageGalleryProps {
   images: string[];
   restaurantName: string;
+  /** Without own photos the header shows the restaurant's sfeerbeeld (src/lib/moodImage.ts). */
+  mood?: { seed: string; cuisinePrimary?: string | null; cuisines?: string[] | null };
 }
 
 interface TouchState {
@@ -25,7 +28,7 @@ const preloadImage = (src: string): Promise<void> => {
   });
 };
 
-export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
+export function ImageGallery({ images, restaurantName, mood }: ImageGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set([0]));
@@ -194,8 +197,9 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
 
   if (!images || images.length === 0) {
     return (
-      <div className="aspect-[16/9] md:aspect-[21/9] bg-muted flex items-center justify-center text-muted-foreground">
-        Geen afbeeldingen beschikbaar
+      <div className="relative aspect-[16/9] md:aspect-[21/9] bg-muted">
+        <MoodImage seed={mood?.seed ?? restaurantName} name={restaurantName}
+          cuisinePrimary={mood?.cuisinePrimary} cuisines={mood?.cuisines} size="hero" />
       </div>
     );
   }

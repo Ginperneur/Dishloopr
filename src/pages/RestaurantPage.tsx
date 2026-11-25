@@ -207,6 +207,7 @@ export default function RestaurantPage() {
   const openingHours = (restaurant.opening_hours || {}) as { [key: string]: string };
   const claimStatus = (restaurant as any).claim_status as string | null | undefined;
   const canBeClaimed = claimStatus !== 'verified_owner' && claimStatus !== 'locked';
+  const hasOwnPhotos = !!restaurant.images?.length && !!restaurant.images[0];
   const ownReviewCount = reviews.length;
   const ownAverage = ownReviewCount > 0 ? reviews.reduce((s, r) => s + (Number(r.rating) || 0), 0) / ownReviewCount : 0;
   const hasOwnScore = ownReviewCount >= OWN_REVIEW_THRESHOLD && ownAverage > 0;
@@ -289,9 +290,10 @@ export default function RestaurantPage() {
       />
       {/* Hero Image Gallery */}
       <div className="relative">
-        <ImageGallery 
-          images={restaurant.images || []} 
-          restaurantName={restaurant.name} 
+        <ImageGallery
+          images={restaurant.images || []}
+          restaurantName={restaurant.name}
+          mood={{ seed: restaurant.id, cuisinePrimary: restaurant.cuisine_primary, cuisines: restaurant.cuisines }}
         />
         
         {/* Back Button */}
@@ -629,7 +631,7 @@ export default function RestaurantPage() {
               </div>
             </motion.div>
 
-            {canBeClaimed && (
+            {canBeClaimed && (hasOwnPhotos ? (
               <div className="rounded-lg border bg-muted/40 p-5 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
                 <div>
                   <p className="font-semibold">{t('restaurant.isYourRestaurant', 'Is dit jouw restaurant?')}</p>
@@ -637,7 +639,16 @@ export default function RestaurantPage() {
                 </div>
                 <Button asChild><Link to={`/claim/${restaurant.slug}`}>{t('restaurant.claimFree', 'Claim gratis')}</Link></Button>
               </div>
-            )}
+            ) : (
+              // The header shows a sfeerbeeld: invite the owner to replace it with real photos.
+              <div className="rounded-lg border border-primary/25 bg-primary/5 p-5 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+                <div>
+                  <p className="font-semibold">{t('restaurant.noOwnPhotosTitle', "Nog geen eigen foto's")}</p>
+                  <p className="text-sm text-muted-foreground">{t('restaurant.noOwnPhotosText', 'Gasten zien nu een sfeerbeeld. Ben jij de eigenaar? Claim de pagina gratis en laat zien hoe het er bij jullie echt uitziet.')}</p>
+                </div>
+                <Button asChild><Link to={`/claim/${restaurant.slug}`}>{t('restaurant.addPhotosFree', "Voeg gratis foto's toe")}</Link></Button>
+              </div>
+            ))}
 
             {/* Related Internal Links for SEO */}
             <RelatedLinks
