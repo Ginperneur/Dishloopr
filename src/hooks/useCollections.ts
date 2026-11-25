@@ -81,13 +81,13 @@ export function useCollection(slug: string | undefined) {
         city:city_id (name, slug),
         dish:dish_id (name, slug)
       `)
-      .eq('slug', slug)
+      .in('slug', OLD_SLUG[slug] ? [slug, OLD_SLUG[slug]] : [slug])
       .eq('is_active', true)
-      .maybeSingle()
       .then(({ data, error }) => {
         if (cancelled) return;
         if (error) console.error('Error fetching collection:', error);
-        setCollection((data ?? null) as unknown as Collection | null);
+        const rows = (data ?? []) as unknown as Collection[];
+        setCollection(rows.find(r => r.slug === slug) ?? rows[0] ?? null);
         setLoading(false);
       });
     return () => { cancelled = true; };
@@ -124,13 +124,37 @@ export interface CollectionListItem {
   total: number;
 }
 
+// Collections renamed by 20261125100000_dish_collections.sql, under their old slug until it has run.
+const OLD_SLUG: Record<string, string> = { 'beste-ramen': 'beste-ramen-amsterdam' };
+
+async function legacyCollectionList(slug: string, citySlug: string | null): Promise<CollectionListItem[] | null> {
+  let { data: col } = await supabase.from('collections').select('id').eq('slug', slug).eq('is_active', true).maybeSingle();
+  if (!col && OLD_SLUG[slug]) ({ data: col } = await supabase.from('collections').select('id').eq('slug', OLD_SLUG[slug]).eq('is_active', true).maybeSingle());
+  if (!col) return null;
+  const { data, error } = await supabase.from('collection_restaurants')
+    .select('restaurant_id, featured_reason, sort_order, restaurant:restaurant_id (id, name, slug, address, images, price_level, cuisines, ambience_tags, city:city_id (name, slug))')
+    .eq('collection_id', col.id).order('sort_order');
+  if (error) return null;
+  type Row = { restaurant_id: string; featured_reason: string | null; restaurant: { id: string; name: string; slug: string; address: string | null;
+    images: string[] | null; price_level: number | null; cuisines: string[] | null; ambience_tags: string[] | null; city: { name: string; slug: string } | null } | null };
+  const list = ((data ?? []) as unknown as Row[]).filter(r => r.restaurant && (!citySlug || r.restaurant.city?.slug === citySlug));
+  return list.map(r => ({
+    restaurant_id: r.restaurant!.id, name: r.restaurant!.name, slug: r.restaurant!.slug, address: r.restaurant!.address,
+    city_name: r.restaurant!.city?.name ?? null, city_slug: r.restaurant!.city?.slug ?? null, images: r.restaurant!.images,
+    price_level: r.restaurant!.price_level, cuisines: r.restaurant!.cuisines, ambience_tags: r.restaurant!.ambience_tags,
+    dish_name: null, dish_price: null, review_count: 0, review_avg: null, is_pick: true, pick_reason: r.featured_reason, total: list.length,
+  }));
+}
+
 /** The ranked restaurants of a collection, across the Netherlands or in one city (collection_list). */
 export function useCollectionList(slug: string | undefined, citySlug: string | null, limit = citySlug ? 15 : 20) {
   return useQuery({
     queryKey: ['collection-list', slug, citySlug, limit],
     queryFn: async () => {
-      const { data, error } = await (supabase.rpc as unknown as UntypedRpc)('collection_list', { p_slug: slug, p_city_slug: citySlug, p_limit: limit });
-      if (error) throw error;
+      const { data: rows, error } = await (supabase.rpc as unknown as UntypedRpc)('collection_list', { p_slug: slug, p_city_slug: citySlug, p_limit: limit });
+      // Before 20261125100000_dish_collections.sql has run: the hand-picked list, as before.
+      const data = error ? await legacyCollectionList(slug!, citySlug) : rows;
+      if (data === null) throw error;
       return ((data ?? []) as CollectionListItem[]).map(r => ({
         ...r,
         dish_price: r.dish_price == null ? null : Number(r.dish_price),

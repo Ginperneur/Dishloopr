@@ -18,6 +18,7 @@ interface Order {
   package: 'founding_partner' | 'menu_service' | 'topplek' | 'groei' | 'dominant' | 'collectieplek';
   plan: 'month' | 'year' | 'once';
   amount_cents?: number | null;
+  bundle_order_id?: string | null;
   page_slug: string | null;
   status: string;
   fulfillment_status: string;
@@ -128,7 +129,8 @@ export function MyPackagesCard({ restaurantId, restaurantSlug, restaurantName }:
                 <div className="rounded-md bg-muted/50 p-3"><MousePointer className="h-4 w-4 text-muted-foreground" /><p className="mt-1 text-xl font-bold tabular-nums">{nf.format(s.klik)}</p><p className="text-xs text-muted-foreground">keer aangeklikt</p></div>
               </div>
               <p className="mt-3 text-xs text-muted-foreground">
-                {o.amount_cents ? `€${(o.amount_cents / 100).toLocaleString('nl-NL')} ${o.plan === 'year' ? 'per jaar' : 'per maand'}` : o.plan === 'year' ? '€590 per jaar' : '€59 per maand'} excl. btw.
+                {o.bundle_order_id ? 'Inbegrepen in je bundel, zolang die loopt.'
+                  : `${o.amount_cents ? `€${(o.amount_cents / 100).toLocaleString('nl-NL')} ${o.plan === 'year' ? 'per jaar' : 'per maand'}` : o.plan === 'year' ? '€590 per jaar' : '€59 per maand'} excl. btw.`}
                 {o.commitment_until && ` Minimale looptijd tot ${date(o.commitment_until)}.`}
               </p>
             </div>

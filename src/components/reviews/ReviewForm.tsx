@@ -44,6 +44,7 @@ export function ReviewForm({
   const [dishRatings, setDishRatings] = useState<DishRating[]>([]);
   // What the review is about: one or more dishes from the menu, or the restaurant as a whole.
   const [about, setAbout] = useState<'dish' | 'restaurant' | null>(null);
+  const [aspects, setAspects] = useState<{ service?: number; atmosphere?: number; value?: number }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { 
@@ -126,7 +127,8 @@ export function ReviewForm({
       title, 
       body, 
       photos,
-      dishRatings: dishRatings.map(dr => ({ dishId: dr.dishId, rating: dr.rating }))
+      dishRatings: dishRatings.map(dr => ({ dishId: dr.dishId, rating: dr.rating })),
+      aspects: mode === 'restaurant' ? aspects : undefined,
     });
     if (success) {
       setRating(0);
@@ -134,6 +136,7 @@ export function ReviewForm({
       setBody('');
       setPhotos([]);
       setDishRatings([]);
+      setAspects({});
     }
   };
 
@@ -243,6 +246,29 @@ export function ReviewForm({
         aria-label="Je review"
         className="text-base"
       />
+
+      {/* Optional part scores */}
+      <div className="grid gap-2 sm:grid-cols-3">
+        {([
+          { key: 'service', label: 'Service' },
+          { key: 'atmosphere', label: 'Sfeer' },
+          { key: 'value', label: 'Prijs en kwaliteit' },
+        ] as const).map(a => (
+          <div key={a.key} className="rounded-lg border bg-background px-3 py-2">
+            <p className="text-xs text-muted-foreground">{a.label} <span className="opacity-75">(optioneel)</span></p>
+            <div className="flex" role="radiogroup" aria-label={a.label}>
+              {[1, 2, 3, 4, 5].map(star => (
+                <button key={star} type="button" role="radio" aria-checked={aspects[a.key] === star}
+                  aria-label={`${star} ${star === 1 ? 'ster' : 'sterren'} voor ${a.label.toLowerCase()}`}
+                  onClick={() => setAspects(prev => ({ ...prev, [a.key]: prev[a.key] === star ? undefined : star }))}
+                  className="flex h-9 w-8 items-center justify-center">
+                  <Star className={`h-5 w-5 ${star <= (aspects[a.key] ?? 0) ? 'fill-rating text-rating' : 'text-muted-foreground/40'}`} />
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
 
       {/* Optional dish ratings next to a restaurant review */}
       {restaurantId && availableDishes.length > 0 && (

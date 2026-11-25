@@ -28,6 +28,8 @@ export interface ReviewSubmission {
   body?: string;
   photos?: string[];
   dishRatings?: { dishId: string; rating: number }[];
+  /** Service, sfeer and prijs-kwaliteit, 1 to 5, only for a review about the restaurant. */
+  aspects?: { service?: number; atmosphere?: number; value?: number };
 }
 
 export function useReviews(restaurantId: string | undefined) {
@@ -187,13 +189,24 @@ export function useReviews(restaurantId: string | undefined) {
       photos: validatedData.photos || [],
       status: reviewStatus,
       about_restaurant: validatedData.aboutRestaurant,
+      ...(validatedData.aboutRestaurant && validatedData.aspects ? {
+        service_rating: validatedData.aspects.service ?? null,
+        atmosphere_rating: validatedData.aspects.atmosphere ?? null,
+        value_rating: validatedData.aspects.value ?? null,
+      } : {}),
     };
 
-    const { data: insertedReview, error } = await supabase
+    let { data: insertedReview, error } = await supabase
       .from('reviews')
       .insert(review)
       .select('id')
       .single();
+    // Before 20261125095000_dish_reviews.sql has run the new columns are unknown: a restaurant review
+    // is then saved without them (a review only about dishes needs the migration).
+    if (error && validatedData.aboutRestaurant && /about_restaurant|_rating/.test(error.message ?? '')) {
+      const { about_restaurant: _a, service_rating: _s, atmosphere_rating: _t, value_rating: _v, ...legacy } = review;
+      ({ data: insertedReview, error } = await supabase.from('reviews').insert(legacy).select('id').single());
+    }
 
     if (error || !insertedReview) {
       console.error('Error submitting review:', error);

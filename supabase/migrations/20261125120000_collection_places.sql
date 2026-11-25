@@ -288,3 +288,76 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   LIMIT 1
 $$;
 REVOKE ALL ON FUNCTION public.promo_action_mail(text, uuid, uuid) FROM public, anon, authenticated;
+
+-- 5. Collection places included in bundles ----------------------------------------------------------
+-- Groei includes 1 collection place, Dominant 2, for as long as the bundle runs. The owner claims
+-- one on a page with a free place (no jumping the waiting list); it costs nothing extra, is marked
+-- with bundle_order_id, never takes part in the auction and ends when the bundle ends.
+ALTER TABLE public.package_orders ADD COLUMN IF NOT EXISTS bundle_order_id uuid REFERENCES public.package_orders(id) ON DELETE SET NULL;
+
+CREATE OR REPLACE FUNCTION public.collection_bundle_allowance(p_restaurant uuid)
+RETURNS TABLE (allowed integer, used integer)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT coalesce((SELECT sum(CASE o.package WHEN 'dominant' THEN 2 ELSE 1 END)::int FROM public.package_orders o
+                    WHERE o.restaurant_id = p_restaurant AND o.package IN ('groei', 'dominant') AND public.founding_partner_live(o.status)), 0),
+         (SELECT count(*)::int FROM public.package_orders o
+           WHERE o.restaurant_id = p_restaurant AND o.package = 'collectieplek' AND o.bundle_order_id IS NOT NULL
+             AND public.founding_partner_live(o.status))
+$$;
+GRANT EXECUTE ON FUNCTION public.collection_bundle_allowance(uuid) TO authenticated, service_role;
+
+CREATE OR REPLACE FUNCTION public.claim_bundle_collection_place(p_page_slug text, p_restaurant uuid)
+RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE v_bundle uuid; v_id uuid; v_allowed int; v_used int;
+BEGIN
+  IF NOT public.promo_can_manage(p_restaurant) THEN
+    RAISE EXCEPTION 'Alleen de geverifieerde eigenaar' USING ERRCODE = '42501';
+  END IF;
+  IF NOT public.collection_page_eligible(p_page_slug) THEN
+    RAISE EXCEPTION 'In deze collectie zijn hier geen plekken te koop' USING ERRCODE = 'P0001';
+  END IF;
+  IF NOT public.collection_page_member(p_restaurant, p_page_slug) THEN
+    RAISE EXCEPTION 'Je restaurant hoort niet bij deze collectie, of heeft nog geen foto' USING ERRCODE = 'P0001';
+  END IF;
+  -- The same lock as a paid checkout on this page.
+  PERFORM pg_advisory_xact_lock(hashtext('pp_hold:collectie:' || p_page_slug));
+  IF EXISTS (SELECT 1 FROM public.package_orders o WHERE o.page_slug = p_page_slug AND o.restaurant_id = p_restaurant
+              AND o.package <> 'menu_service' AND public.founding_partner_live(o.status)) THEN
+    RAISE EXCEPTION 'Je hebt al een plek in deze collectie' USING ERRCODE = 'P0001';
+  END IF;
+  IF public.pp_taken('collectie', p_page_slug) >= public.pp_slots('collectie')
+     OR EXISTS (SELECT 1 FROM public.pp_bids('collectie', p_page_slug) b WHERE b.status = 'open' AND b.restaurant_id <> p_restaurant) THEN
+    RAISE EXCEPTION 'Deze collectie is hier vol of er wachten bieders' USING ERRCODE = 'P0001';
+  END IF;
+  SELECT a.allowed, a.used INTO v_allowed, v_used FROM public.collection_bundle_allowance(p_restaurant) a;
+  IF v_used >= v_allowed THEN
+    RAISE EXCEPTION 'Je inbegrepen collectieplekken zijn al in gebruik' USING ERRCODE = 'P0001';
+  END IF;
+  -- The bundle with room left (Groei 1, Dominant 2).
+  SELECT o.id INTO v_bundle FROM public.package_orders o
+   WHERE o.restaurant_id = p_restaurant AND o.package IN ('groei', 'dominant') AND public.founding_partner_live(o.status)
+     AND (SELECT count(*) FROM public.package_orders x WHERE x.bundle_order_id = o.id AND public.founding_partner_live(x.status))
+         < CASE o.package WHEN 'dominant' THEN 2 ELSE 1 END
+   ORDER BY o.created_at LIMIT 1;
+  INSERT INTO public.package_orders (restaurant_id, user_id, package, plan, page_slug, status, fulfillment_status, amount_cents,
+                                     is_founding, bundle_order_id)
+    VALUES (p_restaurant, auth.uid(), 'collectieplek', 'month', p_page_slug, 'active', 'n_a', 0, false, v_bundle)
+    RETURNING id INTO v_id;
+  RETURN v_id;
+END $$;
+REVOKE ALL ON FUNCTION public.claim_bundle_collection_place(text, uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.claim_bundle_collection_place(text, uuid) TO authenticated;
+
+-- A bundle that ends takes its included collection places with it.
+CREATE OR REPLACE FUNCTION public.end_bundle_collection_places()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF NEW.package IN ('groei', 'dominant') AND NOT public.founding_partner_live(NEW.status) AND public.founding_partner_live(OLD.status) THEN
+    UPDATE public.package_orders SET status = 'cancelled', updated_at = now()
+     WHERE bundle_order_id = NEW.id AND public.founding_partner_live(status);
+  END IF;
+  RETURN NEW;
+END $$;
+DROP TRIGGER IF EXISTS end_bundle_collection_places ON public.package_orders;
+CREATE TRIGGER end_bundle_collection_places AFTER UPDATE OF status ON public.package_orders
+  FOR EACH ROW EXECUTE FUNCTION public.end_bundle_collection_places();

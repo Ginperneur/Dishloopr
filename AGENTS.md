@@ -45,7 +45,9 @@
 
 # Collections
 - Collections with match rules (match_dishes, match_dish_names, match_dietary, match_concepts) fill themselves from collection_entries, refreshed nightly by refresh_collection_entries(); the page reads collection_list(slug, city) and collection_cities(slug), national first with ?stad= for a city.
-- Collection order uses only Dishloopr's own signals (own reviews, menu with prices, photo, active owner), never Google data or payment; hand-picked collection_restaurants rows stay marked as Keuze van de redactie.
+- Free entry follows the 9 rules in collection_candidates (dish on the approved menu with a price, photo, 10 priced dishes, known hours, 10 reviews of the dish from 1 April 2027); the order weighs dish reviews 50%, never Google data or payment. Hand-picked collection_restaurants rows must match the collection and stay marked as Keuze van de redactie.
+- Paid collection places are the third place kind 'collectie' (package 'collectieplek', page_slug 'collectie--<collection>--<city|nederland>') on the shared pp_* rails: 3 per page, from 10 matching restaurants, buyers must match and have a photo; Groei and Dominant include 1 and 2 via claim_bundle_collection_place, which end with the bundle and never join the auction. "Getest door Dishloopr" is never for sale.
+- Reviews can be about dishes only (reviews.about_restaurant = false, stars in dish_ratings); those never count for the restaurant score.
 
 # Founding Partner term
 - Owners pick a term (1, 3, 6 or 12 months, or a year) before paying Uitgelicht or Groei; only 6 months or more in the window is a Founding Partner. package_orders.is_founding stores that per order (NULL keeps the old purchase-date rule), and pp_order_founding / pp_order_protected decide badges and auction protection.

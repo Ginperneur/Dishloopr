@@ -340,6 +340,7 @@ await db.exec(`
     ADD COLUMN IF NOT EXISTS is_gluten_free boolean DEFAULT false, ADD COLUMN IF NOT EXISTS dietary_tags text[] NOT NULL DEFAULT '{}',
     ADD COLUMN IF NOT EXISTS course_type text;
   ALTER TABLE reviews ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid();
+  ALTER TABLE package_orders ADD COLUMN IF NOT EXISTS fulfillment_status text NOT NULL DEFAULT 'todo';
   CREATE TABLE IF NOT EXISTS dish_ratings (id uuid DEFAULT gen_random_uuid(), review_id uuid, dish_id uuid, rating int);
   CREATE FUNCTION guard_is_restricted_mod() RETURNS boolean LANGUAGE sql STABLE AS $$ SELECT false $$;
   ALTER TABLE collections ADD COLUMN IF NOT EXISTS subtitle text, ADD COLUMN IF NOT EXISTS description text, ADD COLUMN IF NOT EXISTS cover_image text,
@@ -384,6 +385,25 @@ check("mail label names the collection place",
 await db.exec(`UPDATE package_orders SET amount_cents = 3000, is_founding = false WHERE page_slug = '${PIZZA_UT}'`);
 const cset = (await db.query<{ action: string; restaurant_id: string }>("SELECT * FROM collectie_settle()")).rows;
 check("the quarterly auction runs for collection places", cset.some(x => x.action === "won" && x.restaurant_id === rest(10)), cset);
+
+// --- Collection places included in Groei and Dominant ---
+await as(owner(7));
+check("no bundle, no included collection place", await fails(`SELECT claim_bundle_collection_place('${PIZZA_NL}', $1)`, [rest(7)]));
+await service();
+await order(7, "groei", { page: "oud-utrecht", cents: 11900 });
+const bundleId = await one<string>(`SELECT id::text v FROM package_orders WHERE restaurant_id = '${rest(7)}' AND package = 'groei'`);
+await as(owner(7));
+check("Groei: the included place cannot jump a full page", await fails(`SELECT claim_bundle_collection_place('${PIZZA_UT}', $1)`, [rest(7)]));
+await db.query(`SELECT claim_bundle_collection_place('${PIZZA_NL}', $1)`, [rest(7)]);
+const inc = (await db.query<{ amount_cents: number; bundle_order_id: string; status: string }>(
+  `SELECT amount_cents, bundle_order_id::text, status FROM package_orders WHERE restaurant_id = '${rest(7)}' AND package = 'collectieplek'`)).rows;
+check("Groei includes one national collection place at no extra cost", inc.length === 1 && inc[0].amount_cents === 0 && inc[0].bundle_order_id === bundleId && inc[0].status === "active", inc);
+check("and only one", await fails(`SELECT claim_bundle_collection_place('collectie--beste-pasta--nederland', $1)`, [rest(7)]));
+await service();
+check("the included place shows on the collection", (await db.query("SELECT * FROM collection_paid_placements('beste-pizza', NULL)")).rows.length === 1);
+await db.exec(`UPDATE package_orders SET status = 'cancelled' WHERE id = '${bundleId}'`);
+check("ending the bundle ends its collection place",
+  await one<string>(`SELECT status v FROM package_orders WHERE restaurant_id = '${rest(7)}' AND package = 'collectieplek'`) === "cancelled");
 
 console.log(ok ? "ALL PASS" : "SOME FAILED");
 if (!ok) Deno.exit(1);

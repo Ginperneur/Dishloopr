@@ -10,6 +10,9 @@
 
 ALTER TABLE public.package_orders ADD COLUMN IF NOT EXISTS is_founding boolean;
 ALTER TABLE public.package_orders ADD COLUMN IF NOT EXISTS commitment_months integer;
+-- A collection place included in a Groei or Dominant bundle points at that bundle order
+-- (20261125120000_collection_places.sql); such a place never takes part in the auction.
+ALTER TABLE public.package_orders ADD COLUMN IF NOT EXISTS bundle_order_id uuid REFERENCES public.package_orders(id) ON DELETE SET NULL;
 
 CREATE OR REPLACE FUNCTION public.pp_order_founding(p_package text, p_created timestamptz, p_is_founding boolean)
 RETURNS boolean LANGUAGE sql STABLE AS $$
@@ -45,10 +48,12 @@ BEGIN
         FROM public.package_orders o
         LEFT JOIN public.pp_bids(p_kind, v_page) b ON b.restaurant_id = o.restaurant_id AND b.status = 'open'
        WHERE o.package = ANY (v_pk) AND o.page_slug = v_page AND public.founding_partner_live(o.status)
-         AND o.plan = 'month' AND NOT public.pp_order_protected(p_kind, o.package, o.created_at, o.is_founding, o.plan, o.current_period_end);
+         AND o.plan = 'month' AND o.bundle_order_id IS NULL
+         AND NOT public.pp_order_protected(p_kind, o.package, o.created_at, o.is_founding, o.plan, o.current_period_end);
     v_avail := public.pp_slots(p_kind) - (SELECT count(*) FROM public.package_orders o
                      WHERE o.package = ANY (v_pk) AND o.page_slug = v_page AND public.founding_partner_live(o.status)
-                       AND (o.plan <> 'month' OR public.pp_order_protected(p_kind, o.package, o.created_at, o.is_founding, o.plan, o.current_period_end)))::int;
+                       AND (o.plan <> 'month' OR o.bundle_order_id IS NOT NULL
+                            OR public.pp_order_protected(p_kind, o.package, o.created_at, o.is_founding, o.plan, o.current_period_end)))::int;
 
     IF NOT EXISTS (SELECT 1 FROM public.pp_bids(p_kind, v_page) b WHERE b.status = 'open') THEN
       -- No competition: unprotected holders renew at the list price.
@@ -159,6 +164,7 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
       CROSS JOIN LATERAL (SELECT CASE WHEN o.package IN ('topplek', 'dominant') THEN 'topplek' WHEN o.package = 'collectieplek' THEN 'collectie' ELSE 'uitgelicht' END AS kind) k
       JOIN page_bids pb ON pb.page_slug = o.page_slug AND pb.product = k.kind
      WHERE o.package IN ('founding_partner', 'groei', 'topplek', 'dominant', 'collectieplek') AND public.founding_partner_live(o.status) AND o.plan = 'month'
+       AND o.bundle_order_id IS NULL
        AND NOT public.pp_order_protected(k.kind, o.package, o.created_at, o.is_founding, o.plan, o.current_period_end)
        AND EXISTS (SELECT 1 FROM public.pp_bids(k.kind, o.page_slug) b WHERE b.status = 'open' AND b.restaurant_id <> o.restaurant_id)
     UNION ALL

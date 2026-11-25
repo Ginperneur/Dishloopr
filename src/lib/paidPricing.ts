@@ -17,6 +17,8 @@ export const PRICES = {
   topplek: { from: 19900 },
   groei: { surcharge: 2000, founding: 7900 },
   dominant: { surcharge: 5000 },
+  /** A place in a collection: per city or across the Netherlands (pp_list_price / collection_founding_price). */
+  collectie: { city: 4900, national: 14900, foundingCity: 2900, foundingNational: 8900 },
   spotlightWeek: 3900,
   newsletterPer1000: 3000,
   newsletterMin: 2000,

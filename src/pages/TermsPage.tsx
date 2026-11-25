@@ -136,6 +136,13 @@ export default function TermsPage() {
                   weigeren of beëindigen.
                 </li>
                 <li>
+                  <strong>Collectieplekken.</strong> Een betaalde plek bovenaan een collectie in één stad of in heel
+                  Nederland, altijd gemarkeerd als ‘Uitgelicht’ en ‘Betaald’. Per collectie zijn er 3 plekken per stad en 3
+                  landelijk, alleen voor restaurants die bij de collectie horen. De ranglijst van de collectie verandert er
+                  niet door. Looptijd, Founding Partner-prijs en bieden werken zoals bij Uitgelicht. Groei bevat 1 en Dominant
+                  2 collectieplekken zolang de bundel loopt. ‘Getest door Dishloopr’ is niet te koop.
+                </li>
+                <li>
                   <strong>Menuservice.</strong> Levering vindt plaats binnen 3 werkdagen. Het restaurant controleert
                   de menukaart, prijzen en allergeneninformatie en blijft daarvoor verantwoordelijk.
                   Correcties binnen 14 dagen na levering zijn kosteloos.

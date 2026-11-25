@@ -14,12 +14,14 @@ async function flush() {
   pending = new Set();
   for (let i = 0; i < ids.length; i += 150) {
     const chunk = ids.slice(i, i + 150);
-    const { data } = await supabase
-      .from('reviews')
-      .select('restaurant_id, rating')
-      .eq('status', 'published')
-      .eq('about_restaurant', true) // reviews only about a dish do not count for the restaurant
-      .in('restaurant_id', chunk);
+    const read = (onlyRestaurant: boolean) => {
+      const q = supabase.from('reviews').select('restaurant_id, rating').eq('status', 'published').in('restaurant_id', chunk);
+      // Reviews only about a dish do not count for the restaurant (20261125095000_dish_reviews.sql).
+      return onlyRestaurant ? q.eq('about_restaurant', true) : q;
+    };
+    const first = await read(true);
+    // Until that migration has run the column does not exist yet; then every review is about the restaurant.
+    const { data } = first.error ? await read(false) : first;
     const agg = new Map<string, { s: number; c: number }>();
     for (const r of data ?? []) {
       const a = agg.get(r.restaurant_id) ?? { s: 0, c: 0 };

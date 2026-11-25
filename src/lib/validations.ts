@@ -5,6 +5,12 @@ import { z } from 'zod';
 // one or more dishes from the menu (dish stars required, text optional).
 export const reviewSchema = z.object({
   aboutRestaurant: z.boolean(),
+  // Optional part scores of a restaurant review.
+  aspects: z.object({
+    service: z.number().int().min(1).max(5).optional(),
+    atmosphere: z.number().int().min(1).max(5).optional(),
+    value: z.number().int().min(1).max(5).optional(),
+  }).optional(),
   rating: z.number().int().min(1, 'Minimaal 1 ster').max(5, 'Maximaal 5 sterren'),
   title: z.string().trim().max(200, 'Titel mag maximaal 200 tekens zijn').optional(),
   body: z.string().trim().max(5000, 'Review mag maximaal 5000 tekens zijn').optional(),

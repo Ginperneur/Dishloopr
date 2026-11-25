@@ -194,6 +194,16 @@ export function ReviewList({ reviews, loading, isOwner = false, onRefetch, hideE
             </div>
           )}
 
+          {/* Part scores */}
+          {review.about_restaurant !== false && (review.service_rating || review.atmosphere_rating || review.value_rating) ? (
+            <div className="mb-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
+              {([['Service', review.service_rating], ['Sfeer', review.atmosphere_rating], ['Prijs en kwaliteit', review.value_rating]] as const)
+                .filter(([, v]) => v).map(([label, v]) => (
+                  <span key={label}>{label} <span className="text-rating" aria-label={`${v} van 5`}>{'★'.repeat(v!)}</span></span>
+                ))}
+            </div>
+          ) : null}
+
           {/* Content */}
           {review.title && (
             <h4 className="font-medium text-sm md:text-base mb-1 md:mb-2">{review.title}</h4>

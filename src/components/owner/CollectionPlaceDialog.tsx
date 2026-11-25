@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,6 +44,30 @@ export function CollectionPlaceDialog({ restaurantId, collectionSlug, title, ope
   const pages = (offers.data ?? []).filter(o => o.collection_slug === collectionSlug);
   const sel = pages.find(p => p.page_slug === pageSlug) ?? pages.find(p => !p.is_national && p.for_sale) ?? pages[0];
   const founding = promo && term >= FOUNDING_MIN_MONTHS;
+  const queryClient = useQueryClient();
+
+  // Groei includes 1 collection place and Dominant 2, claimed here without paying again.
+  const allowance = useQuery({
+    queryKey: ['collection-bundle-allowance', restaurantId],
+    queryFn: async () => {
+      const { data, error } = await rpc('collection_bundle_allowance', { p_restaurant: restaurantId });
+      if (error) throw error;
+      return ((data ?? []) as { allowed: number; used: number }[])[0] ?? { allowed: 0, used: 0 };
+    },
+    enabled: open,
+  });
+  const included = Math.max(0, (allowance.data?.allowed ?? 0) - (allowance.data?.used ?? 0));
+  const claimIncluded = async () => {
+    if (!sel) return;
+    setBusy(true);
+    const { error } = await rpc('claim_bundle_collection_place', { p_page_slug: sel.page_slug, p_restaurant: restaurantId });
+    setBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Je inbegrepen collectieplek staat live.');
+    queryClient.invalidateQueries({ queryKey: ['collection-place-offers', restaurantId] });
+    queryClient.invalidateQueries({ queryKey: ['collection-bundle-allowance', restaurantId] });
+    onOpenChange(false);
+  };
 
   const status = useQuery({
     queryKey: ['collection-place-status', sel?.page_slug, restaurantId],
@@ -122,6 +146,16 @@ export function CollectionPlaceDialog({ restaurantId, collectionSlug, title, ope
                 </label>
               ))}
             </fieldset>
+
+            {included > 0 && sel && (
+              <div className="space-y-2 rounded-lg border border-green-300 bg-green-50 p-3 dark:border-green-800 dark:bg-green-950/30">
+                <p className="text-sm">Je bundel bevat nog {included} {included === 1 ? 'collectieplek' : 'collectieplekken'} zonder extra kosten, zolang je bundel loopt.</p>
+                <Button className="min-h-11 w-full" variant="outline" onClick={claimIncluded}
+                  disabled={busy || !sel.for_sale || !sel.can_buy || sel.holds_place || sel.places_left === 0}>
+                  Gebruik je inbegrepen plek {sel.is_national ? 'in heel Nederland' : `in ${sel.city_name}`}
+                </Button>
+              </div>
+            )}
 
             {promo && (
               <fieldset className="space-y-2">
