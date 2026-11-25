@@ -28,6 +28,7 @@ await db.exec(`CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_
   CREATE TABLE dish_ratings (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), review_id uuid, dish_id uuid, rating int);
   CREATE TABLE collections (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), slug text UNIQUE, title text, subtitle text, description text,
     cover_image text, city_id uuid, is_active boolean DEFAULT true, sort_order int DEFAULT 0, seo_title text, seo_description text,
+    title_i18n jsonb DEFAULT '{}', subtitle_i18n jsonb DEFAULT '{}', description_i18n jsonb DEFAULT '{}',
     updated_at timestamptz DEFAULT now());
   CREATE TABLE collection_restaurants (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), collection_id uuid, restaurant_id uuid,
     sort_order int DEFAULT 0, featured_reason text);`);
@@ -92,6 +93,7 @@ await db.exec(`INSERT INTO reviews (restaurant_id, rating, status) VALUES ('${id
 await db.exec(`INSERT INTO collections (slug, title, cover_image, sort_order) VALUES ('beste-ramen-amsterdam', 'Beste Ramen in Amsterdam', '/collections/beste-ramen-amsterdam.jpg', 1);
   INSERT INTO collection_restaurants (collection_id, restaurant_id, featured_reason, sort_order)
     SELECT id, '${id(107)}', 'Niet op de kaart', 1 FROM collections WHERE slug = 'beste-ramen-amsterdam';
+  UPDATE collections SET title_i18n = '{"nl": "Beste Ramen in Amsterdam"}' WHERE slug = 'beste-ramen-amsterdam';
   INSERT INTO collection_restaurants (collection_id, restaurant_id, featured_reason, sort_order)
     SELECT id, '${id(102)}', 'Onze favoriet', 2 FROM collections WHERE slug = 'beste-ramen-amsterdam';`);
 
@@ -151,6 +153,13 @@ check("owner then sees why: not in the list, no position", !after.eligible && af
 
 // A dish-only review does not count for the restaurant's own score.
 check("dish-only reviews keep about_restaurant false", (await db.query<{ n: number }>(`SELECT count(*)::int n FROM reviews WHERE restaurant_id = '${id(101)}' AND about_restaurant`)).rows[0].n === 1);
+const listed = noExt(await Deno.readTextFile(`${repo}/supabase/migrations/20261125130000_collection_listed_count.sql`));
+await db.exec(listed); await db.exec(listed);
+const counts = Object.fromEntries((await db.query<{ slug: string; listed_count: number }>("SELECT slug, listed_count FROM collections")).rows.map(r => [r.slug, r.listed_count]));
+check("the stale translation of the ramen title is gone", (await db.query<{ t: unknown }>("SELECT title_i18n t FROM collections WHERE slug = 'beste-ramen'")).rows[0].t !== null
+  && JSON.stringify((await db.query<{ t: unknown }>("SELECT title_i18n t FROM collections WHERE slug = 'beste-ramen'")).rows[0].t) === "{}");
+// The review rule is enforced at this point of the test: only A (12 ramen reviews) is listed.
+check("listed_count counts the restaurants in the list", counts["beste-ramen"] === 1 && counts["halal-uit-eten"] === 0 && counts["beste-pho"] === 0, counts);
 const jobs = (await db.query<{ n: number }>("SELECT count(*)::int n FROM cron.job WHERE jobname = 'refresh-collection-entries'")).rows[0].n;
 check("one nightly job after running twice", jobs === 1, jobs);
 
