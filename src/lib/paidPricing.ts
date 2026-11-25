@@ -6,6 +6,12 @@
 export const FOUNDING_WINDOW_END = new Date('2027-01-05T23:59:59+01:00');
 export const foundingWindowOpen = () => new Date() <= FOUNDING_WINDOW_END;
 
+/** Terms an owner picks before paying for Uitgelicht or Groei; same list as create-package-checkout. */
+export const TERM_MONTHS = [1, 3, 6, 12] as const;
+export type TermMonths = (typeof TERM_MONTHS)[number];
+/** The Founding Partner price and status need a term of at least this many months. */
+export const FOUNDING_MIN_MONTHS = 6;
+
 export const PRICES = {
   uitgelicht: { from: 9900, founding: 5900, foundingYear: 59000 },
   topplek: { from: 19900 },

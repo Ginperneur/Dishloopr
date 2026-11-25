@@ -13,9 +13,14 @@ export async function launchAt(admin: SupabaseClient): Promise<{ date: string; m
   return { date, ms: Date.parse(`${date}T00:00:00Z`) - offsetHours * 3600_000 };
 }
 
-/** End of the 6-month Founding Partner minimum term that starts on `fromMs`. */
-export function commitmentEnd(fromMs: number): string {
+/** Shortest term that earns the Founding Partner price and status. */
+export const FOUNDING_MIN_MONTHS = 6;
+/** Terms an owner can pick for a monthly place; 1 means cancellable every month. */
+export const TERM_MONTHS = [1, 3, 6, 12] as const;
+
+/** End of a minimum term of `months` (default the 6-month Founding Partner term) that starts on `fromMs`. */
+export function commitmentEnd(fromMs: number, months: number = FOUNDING_MIN_MONTHS): string {
   const end = new Date(fromMs);
-  end.setUTCMonth(end.getUTCMonth() + 6);
+  end.setUTCMonth(end.getUTCMonth() + months);
   return end.toISOString();
 }

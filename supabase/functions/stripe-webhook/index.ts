@@ -31,8 +31,8 @@ async function alertAdmin(admin: { from(table: string): any }, subject: string, 
   }
 }
 
-const PLACE_PACKAGES = ["founding_partner", "topplek", "groei", "dominant"];
-const placeKind = (pkg: string) => (pkg === "topplek" || pkg === "dominant" ? "topplek" : "uitgelicht");
+const PLACE_PACKAGES = ["founding_partner", "topplek", "groei", "dominant", "collectieplek"];
+const placeKind = (pkg: string) => (pkg === "topplek" || pkg === "dominant" ? "topplek" : pkg === "collectieplek" ? "collectie" : "uitgelicht");
 
 serve(async (req) => {
   // Set once the event is claimed, so a failure can release it for Stripe's retry.
@@ -442,7 +442,7 @@ serve(async (req) => {
         logStep("Spotlight weeks activated", { restaurantId, weeks: ids.length });
       }
       // Founding Partner (Uitgelicht), Topplek, the Groei and Dominant bundles and Menuservice (create-package-checkout)
-      else if (type && ["founding_partner", "menu_service", "topplek", "groei", "dominant"].includes(type) && restaurantId && metadata.plan) {
+      else if (type && ["founding_partner", "menu_service", "topplek", "groei", "dominant", "collectieplek"].includes(type) && restaurantId && metadata.plan) {
         const subscriptionId = (session.subscription as string) || null;
         let status = "active";
         let periodEnd: string | null = null;
@@ -451,11 +451,13 @@ serve(async (req) => {
           const sub = await stripe.subscriptions.retrieve(subscriptionId);
           status = sub.status === "trialing" ? "trialing" : "active";
           periodEnd = periodEndIso(sub);
-          // The 6-month minimum term belongs to the Founding Partner deal; later monthly Uitgelicht
-          // places are cancellable monthly and can be outbid at the quarterly auction.
-          if ((type === "founding_partner" || type === "groei") && metadata.plan === "month" && metadata.founding_partner === "true") {
-            // Minimum term of 6 months, counted from the first paid day (launch).
-            commitmentUntil = commitmentEnd((sub.trial_end ?? sub.start_date) * 1000);
+          // The owner chose the term at checkout (commitment_months); from 6 months it is the Founding
+          // Partner deal. Older checkouts carry no term: their Founding Partner deal is 6 months.
+          // Counted from the first paid day; 1 month means cancellable every month.
+          const termMonths = Number(metadata.commitment_months)
+            || ((type === "founding_partner" || type === "groei" || type === "collectieplek") && metadata.founding_partner === "true" ? 6 : 1);
+          if (metadata.plan === "month" && termMonths > 1) {
+            commitmentUntil = commitmentEnd((sub.trial_end ?? sub.start_date) * 1000, termMonths);
           }
         }
         const { error: orderError } = await supabaseAdmin.from("package_orders").upsert({
@@ -474,6 +476,15 @@ serve(async (req) => {
           current_period_end: periodEnd,
         }, { onConflict: "stripe_session_id" });
         if (orderError) throw new Error(`Package order insert failed: ${orderError.message}`);
+        if (PLACE_PACKAGES.includes(type) && metadata.founding_partner) {
+          // Founding Partner status per order (20261125090000_founding_minimum_term.sql). Written apart from
+          // the order, so a payment is never lost when that migration is not applied yet.
+          const { error: termError } = await supabaseAdmin.from("package_orders").update({
+            is_founding: metadata.founding_partner === "true",
+            commitment_months: Number(metadata.commitment_months) || null,
+          }).eq("stripe_session_id", session.id);
+          if (termError) logStep("Founding status not stored", { error: termError.message });
+        }
         if (PLACE_PACKAGES.includes(type) && metadata.page_slug) {
           // The hold made at checkout is now a real order; a page must never hold more than its places.
           await supabaseAdmin.from("package_checkout_holds").delete().eq("stripe_session_id", session.id);
@@ -671,7 +682,7 @@ serve(async (req) => {
         await supabaseAdmin.rpc("sync_owner_pro_restaurants", { _user_id: userId });
         logStep("Owner Pro subscription synced", { userId, status: sub.status });
       }
-      if (["founding_partner", "menu_service", "topplek", "groei", "dominant"].includes(sub.metadata?.type ?? "")) {
+      if (["founding_partner", "menu_service", "topplek", "groei", "dominant", "collectieplek"].includes(sub.metadata?.type ?? "")) {
         const live = ["active", "trialing", "past_due"].includes(sub.status);
         const { data: order } = await supabaseAdmin.from("package_orders")
           .select("id, commitment_until").eq("stripe_subscription_id", sub.id).maybeSingle();

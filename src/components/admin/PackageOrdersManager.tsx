@@ -16,7 +16,7 @@ const db = supabase as any;
 
 interface PackageOrder {
   id: string;
-  package: 'founding_partner' | 'menu_service';
+  package: 'founding_partner' | 'menu_service' | 'topplek' | 'groei' | 'dominant' | 'collectieplek';
   plan: 'month' | 'year' | 'once';
   page_slug: string | null;
   status: string;
@@ -168,7 +168,7 @@ export function PackageOrdersManager() {
                       <div className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleDateString('nl-NL')}</div>
                     </TableCell>
                     <TableCell>
-                      {o.package === 'founding_partner' ? 'Uitgelicht' : 'Menuservice'} · {o.plan === 'once' ? 'eenmalig' : o.plan === 'year' ? 'per jaar' : 'per maand'}
+                      {({ founding_partner: 'Uitgelicht', menu_service: 'Menuservice', topplek: 'Topplek', groei: 'Groei', dominant: 'Dominant', collectieplek: 'Collectieplek' } as const)[o.package] ?? o.package} · {o.plan === 'once' ? 'eenmalig' : o.plan === 'year' ? 'per jaar' : 'per maand'}
                       {o.page_slug && <div className="text-xs text-muted-foreground">/{o.page_slug}</div>}
                       {o.commitment_until && <div className="text-xs text-muted-foreground">Vast tot {new Date(o.commitment_until).toLocaleDateString('nl-NL')}</div>}
                     </TableCell>

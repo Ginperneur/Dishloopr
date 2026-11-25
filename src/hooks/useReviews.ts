@@ -16,6 +16,18 @@ export interface ReviewWithProfile extends Review {
   };
   helpful_count?: number;
   user_has_voted?: boolean;
+  /** Stars per dish from the menu that this review rates (dish_ratings). */
+  dishRatings?: { dishId: string; dishName: string; rating: number }[];
+}
+
+/** What a guest sends: a review about the restaurant, or only about dishes from the menu. */
+export interface ReviewSubmission {
+  aboutRestaurant: boolean;
+  rating?: number;
+  title?: string;
+  body?: string;
+  photos?: string[];
+  dishRatings?: { dishId: string; rating: number }[];
 }
 
 export function useReviews(restaurantId: string | undefined) {
@@ -70,6 +82,18 @@ export function useReviews(restaurantId: string | undefined) {
         voteCountMap.set(vote.review_id, (voteCountMap.get(vote.review_id) || 0) + 1);
       });
 
+      // Dish ratings of these reviews, with the dish names, for the dish filter.
+      const { data: dishRows } = await supabase
+        .from('dish_ratings')
+        .select('review_id, dish_id, rating, dishes:dish_id (name)')
+        .in('review_id', reviewIds);
+      const dishMap = new Map<string, NonNullable<ReviewWithProfile['dishRatings']>>();
+      for (const row of (dishRows ?? []) as Array<{ review_id: string; dish_id: string; rating: number; dishes: { name: string } | null }>) {
+        const list = dishMap.get(row.review_id) ?? [];
+        list.push({ dishId: row.dish_id, dishName: row.dishes?.name ?? 'Gerecht', rating: row.rating });
+        dishMap.set(row.review_id, list);
+      }
+
       // Check if current user has voted
       let userVotes = new Set<string>();
       if (user) {
@@ -87,24 +111,29 @@ export function useReviews(restaurantId: string | undefined) {
         profile: profileMap.get(review.user_id) as ReviewWithProfile['profile'],
         helpful_count: voteCountMap.get(review.id) || 0,
         user_has_voted: userVotes.has(review.id),
+        dishRatings: dishMap.get(review.id) ?? [],
       })));
     }
     setLoading(false);
   };
 
-  const submitReview = async (data: { 
-    rating: number; 
-    title: string; 
-    body: string;
-    photos?: string[];
-    dishRatings?: { dishId: string; rating: number }[];
-  }) => {
+  const submitReview = async (input: ReviewSubmission) => {
     if (!user) {
       toast.error('Log in om een review te schrijven');
       return false;
     }
 
     if (!restaurantId) return false;
+
+    // A review only about dishes carries the average of its dish stars, because reviews.rating is
+    // required; about_restaurant = false keeps it out of the restaurant's own score.
+    const dishStars = input.dishRatings ?? [];
+    const data = {
+      ...input,
+      rating: input.aboutRestaurant || !dishStars.length
+        ? input.rating ?? 0
+        : Math.round(dishStars.reduce((s, d) => s + d.rating, 0) / dishStars.length),
+    };
 
     // Validate input
     const validation = validateWithErrors(reviewSchema, data);
@@ -118,13 +147,14 @@ export function useReviews(restaurantId: string | undefined) {
     setSubmitting(true);
     const validatedData = validation.data;
 
-    // AI moderation check
+    // AI moderation check (a dish review with stars only has no text to check)
     let reviewStatus: 'published' | 'flagged' = 'published';
-    try {
+    const hasText = Boolean(`${validatedData.title ?? ''}${validatedData.body ?? ''}`.trim());
+    if (hasText) try {
       const { data: mod, error: modError } = await supabase.functions.invoke('moderate-review', {
         body: {
-          title: validatedData.title,
-          body: validatedData.body,
+          title: validatedData.title ?? '',
+          body: validatedData.body ?? '',
           rating: validatedData.rating,
         },
       });
@@ -152,10 +182,11 @@ export function useReviews(restaurantId: string | undefined) {
       restaurant_id: restaurantId,
       user_id: user.id,
       rating: validatedData.rating,
-      title: validatedData.title,
-      body: validatedData.body,
+      title: validatedData.title || null,
+      body: validatedData.body || null,
       photos: validatedData.photos || [],
       status: reviewStatus,
+      about_restaurant: validatedData.aboutRestaurant,
     };
 
     const { data: insertedReview, error } = await supabase

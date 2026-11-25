@@ -17,7 +17,7 @@ import { CHECKOUT_ENABLED } from '@/lib/checkoutFlags';
 import { OWNER_PRO_PRICES } from '@/lib/proPricing';
 import { useOwnerProCheckout } from '@/hooks/useOwnerProCheckout';
 import { VatTotal } from '@/components/common/VatTotal';
-import { PACKAGE_NAMES, PRICES, euroCents, foundingWindowOpen, packageCents, placeKind, type PlacePackage } from '@/lib/paidPricing';
+import { FOUNDING_MIN_MONTHS, PACKAGE_NAMES, PRICES, TERM_MONTHS, euroCents, foundingWindowOpen, packageCents, placeKind, type PlacePackage, type TermMonths } from '@/lib/paidPricing';
 
 type Billing = 'month' | 'year';
 type Offer = { page_slug: string; dish_name: string; position: number | null; total: number; searches_per_month: number;
@@ -95,7 +95,8 @@ export default function PackagesPage() {
   });
 
   const [buy, setBuy] = useState<null | PlacePackage>(null);
-  const [billing, setBilling] = useState<Billing>('month');
+  // Term picked before paying: 1, 3, 6 or 12 months, or a year up front (Uitgelicht only).
+  const [term, setTerm] = useState<TermMonths | 'year'>(FOUNDING_MIN_MONTHS);
   const [pageSlug, setPageSlug] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const [bidEuro, setBidEuro] = useState('');
@@ -111,8 +112,12 @@ export default function PackagesPage() {
   }, [wantedPage, wantedPkg, pages]);
 
   const kind = buy ? placeKind(buy) : 'uitgelicht';
-  // Founding Partner prices (Uitgelicht and Groei) apply until 5 January 2027; Topplek is always priced by demand.
-  const founding = promo && (buy === 'uitgelicht' || buy === 'groei');
+  // Founding Partner prices (Uitgelicht and Groei) apply until 5 January 2027, and only with a term of
+  // at least 6 months; a shorter term pays the normal price of the page. Topplek is always priced by demand.
+  const termable = promo && (buy === 'uitgelicht' || buy === 'groei');
+  const termMonths = term === 'year' ? 12 : term;
+  const founding = termable && termMonths >= FOUNDING_MIN_MONTHS;
+  const yearly = buy === 'uitgelicht' && founding && term === 'year';
   const sel = pages.find(p => p.page_slug === pageSlug);
   const left = sel ? (kind === 'topplek' ? sel.topplek_left : sel.places_left) : null;
 
@@ -149,7 +154,8 @@ export default function PackagesPage() {
     if (!restaurant) { toast.info('Claim eerst je restaurant of log in.'); return; }
     setBusy(option);
     try {
-      const { data, error } = await supabase.functions.invoke('create-package-checkout', { body: { option, restaurant_id: restaurant.id, page_slug: page } });
+      const months = termable && page ? termMonths : 1;
+      const { data, error } = await supabase.functions.invoke('create-package-checkout', { body: { option, restaurant_id: restaurant.id, page_slug: page, ...(page ? { months } : {}) } });
       const message = data?.error ?? (error ? await error.context?.json?.().then((b: any) => b?.error).catch(() => null) : null);
       if (message || error || !data?.url) throw new Error(message || 'Geen checkout ontvangen');
       window.location.href = data.url;
@@ -158,13 +164,18 @@ export default function PackagesPage() {
       setBusy(null);
     }
   };
-  const placeOption = (p: PlacePackage) => (p === 'uitgelicht' ? (founding && billing === 'year' ? 'founding_year' : 'founding_month') : `${p}_month`);
+  const placeOption = (p: PlacePackage) => (p === 'uitgelicht' ? (yearly ? 'founding_year' : 'founding_month') : `${p}_month`);
 
   const { startCheckout: startPro, loading: proLoading } = useOwnerProCheckout();
   const [proBilling, setProBilling] = useState<Billing>('month');
   const [menuBilling, setMenuBilling] = useState<'month' | 'once'>('month');
   const claimTo = restaurant ? `/claim/${restaurant.slug}` : '/claim';
-  const open = (p: PlacePackage) => { track(p); setPageSlug(''); setBilling('month'); setBuy(p); };
+  const open = (p: PlacePackage) => { track(p); setPageSlug(''); setTerm(FOUNDING_MIN_MONTHS); setBuy(p); };
+  // Monthly price per term option, for the term buttons: the normal price is the page's list price once a page is chosen.
+  const normalCents = buy === 'groei'
+    ? (sel ? sel.list_price_cents : PRICES.uitgelicht.from) + PRICES.groei.surcharge
+    : sel ? sel.list_price_cents : PRICES.uitgelicht.from;
+  const foundingCents = buy === 'groei' ? PRICES.groei.founding : PRICES.uitgelicht.founding;
   const offerPages = useMemo(() => pages, [pages]);
 
   return (
@@ -178,7 +189,7 @@ export default function PackagesPage() {
 
         {promo && (
           <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
-            <p><strong>Founding Partner-actie:</strong> Uitgelicht voor {euroCents(PRICES.uitgelicht.founding)} in plaats van {euroCents(PRICES.uitgelicht.from)} per maand, Groei voor {euroCents(PRICES.groei.founding)}, tot en met 31 december 2027, en de Founding Partner-badge voor altijd. Instappen kan tot en met 5 januari 2027, minimale looptijd 6 maanden.</p>
+            <p><strong>Founding Partner-actie:</strong> Uitgelicht voor {euroCents(PRICES.uitgelicht.founding)} in plaats van {euroCents(PRICES.uitgelicht.from)} per maand, Groei voor {euroCents(PRICES.groei.founding)}, tot en met 31 december 2027, en de Founding Partner-badge voor altijd. Dat geldt bij een looptijd van minimaal {FOUNDING_MIN_MONTHS} maanden; je kiest de looptijd voordat je afrekent. Instappen kan tot en met 5 januari 2027.</p>
           </div>
         )}
 
@@ -273,12 +284,32 @@ export default function PackagesPage() {
             <p className="text-sm">{restaurant.name} staat nog niet op een pagina met betaalde plekken. Die zijn er vanaf 10 restaurants, voor gerechten waar gasten een restaurant voor kiezen. Voeg je gerechten toe in je dashboard onder Menu, of mail info@dishloopr.com.</p>
           ) : (
             <div className="space-y-4">
-              {buy === 'uitgelicht' && founding && (
-                <div className="flex items-center gap-3 text-sm">
-                  <button type="button" className="min-h-11" onClick={() => setBilling('month')}>Per maand</button>
-                  <Switch checked={billing === 'year'} onCheckedChange={c => setBilling(c ? 'year' : 'month')} aria-label="Per jaar betalen" />
-                  <button type="button" className="min-h-11" onClick={() => setBilling('year')}>Per jaar ({euroCents(PRICES.uitgelicht.foundingYear)})</button>
-                </div>
+              {termable && (
+                <fieldset className="space-y-2">
+                  <legend className="text-sm font-medium">Looptijd</legend>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Looptijd">
+                    {[...TERM_MONTHS, ...(buy === 'uitgelicht' ? ['year' as const] : [])].map(t => {
+                      const months = t === 'year' ? 12 : t;
+                      const deal = months >= FOUNDING_MIN_MONTHS;
+                      const active = term === t;
+                      return (
+                        <button key={t} type="button" role="radio" aria-checked={active} onClick={() => setTerm(t)}
+                          className={`min-h-14 rounded-xl border px-3 py-2 text-left text-sm transition-colors ${active ? 'border-primary bg-primary/10 ring-1 ring-primary' : 'hover:bg-muted'}`}>
+                          <span className="block font-semibold">{t === 'year' ? '1 jaar vooruit' : t === 1 ? '1 maand' : `${t} maanden`}</span>
+                          <span className="block text-xs text-muted-foreground">
+                            {t === 'year' ? `${euroCents(PRICES.uitgelicht.foundingYear)} per jaar` : `${!deal && !sel ? 'vanaf ' : ''}${euroCents(deal ? foundingCents : normalCents)} per maand`}
+                          </span>
+                          {deal && <span className="mt-1 inline-block rounded-full bg-amber-200 px-2 py-0.5 text-[11px] font-semibold text-amber-950">Founding Partner</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {founding
+                      ? `Founding Partner-prijs tot en met 31 december 2027 en de badge voor altijd. ${yearly ? 'Je betaalt het jaar vooruit, daarna per jaar opzegbaar.' : `Minimaal ${termMonths} maanden, daarna per maand opzegbaar.`}`
+                      : `Korter dan ${FOUNDING_MIN_MONTHS} maanden: je betaalt de normale prijs van de pagina en wordt geen Founding Partner. ${termMonths > 1 ? `Minimaal ${termMonths} maanden, daarna per maand opzegbaar.` : 'Per maand opzegbaar.'}`}
+                  </p>
+                </fieldset>
               )}
               <Select value={pageSlug} onValueChange={setPageSlug}>
                 <SelectTrigger className="min-h-11"><SelectValue placeholder="Kies een pagina" /></SelectTrigger>
@@ -302,7 +333,7 @@ export default function PackagesPage() {
                 </div>
               )}
               {sel && monthCents != null && !mustBid && (
-                <p className="text-sm">Prijs: <strong>{euroCents(monthCents)}</strong> {buy === 'uitgelicht' && founding && billing === 'year' ? `(of ${euroCents(PRICES.uitgelicht.foundingYear)} per jaar)` : 'per maand'} excl. btw
+                <p className="text-sm">Prijs: <strong>{euroCents(yearly ? PRICES.uitgelicht.foundingYear : monthCents)}</strong> {yearly ? 'per jaar' : 'per maand'} excl. btw
                   {status && status.open_bids > 0 && <span className="text-muted-foreground">. {status.open_bids} {status.open_bids === 1 ? 'bod' : 'biedingen'} op de wachtlijst</span>}
                 </p>
               )}
@@ -328,8 +359,8 @@ export default function PackagesPage() {
                   {busy ? 'Even geduld…' : status?.my_bid?.status === 'won' ? 'Rond je gewonnen plek af' : 'Verder naar betalen'}
                 </Button>
               )}
-              {!mustBid && monthCents != null && <VatTotal exCents={buy === 'uitgelicht' && founding && billing === 'year' ? PRICES.uitgelicht.foundingYear : monthCents} per={buy === 'uitgelicht' && founding && billing === 'year' ? 'per jaar' : 'per maand'} />}
-              <p className="text-xs text-muted-foreground">Je betaalt direct bij het afrekenen; je plek staat meteen live.{founding ? ' Minimale looptijd 6 maanden.' : ' Per maand opzegbaar.'}</p>
+              {!mustBid && monthCents != null && <VatTotal exCents={yearly ? PRICES.uitgelicht.foundingYear : monthCents} per={yearly ? 'per jaar' : 'per maand'} />}
+              <p className="text-xs text-muted-foreground">Je betaalt direct bij het afrekenen; je plek staat meteen live.{termable ? '' : ' Per maand opzegbaar.'}</p>
             </div>
           )}
         </DialogContent>

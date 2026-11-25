@@ -43,6 +43,13 @@
 # Owner Pro
 - Complimentary Pro is a restaurant-scoped override changed through an admin-validated RPC and guarded by the owner-tier trigger; Stripe synchronization preserves it so paid subscriptions remain independent.
 
+# Collections
+- Collections with match rules (match_dishes, match_dish_names, match_dietary, match_concepts) fill themselves from collection_entries, refreshed nightly by refresh_collection_entries(); the page reads collection_list(slug, city) and collection_cities(slug), national first with ?stad= for a city.
+- Collection order uses only Dishloopr's own signals (own reviews, menu with prices, photo, active owner), never Google data or payment; hand-picked collection_restaurants rows stay marked as Keuze van de redactie.
+
+# Founding Partner term
+- Owners pick a term (1, 3, 6 or 12 months, or a year) before paying Uitgelicht or Groei; only 6 months or more in the window is a Founding Partner. package_orders.is_founding stores that per order (NULL keeps the old purchase-date rule), and pp_order_founding / pp_order_protected decide badges and auction protection.
+
 # Event payments
 - Release paid events through the shared event-payment handler only after a signed Stripe payment confirmation; retries preserve the first release time and never override an owner's pause.
 

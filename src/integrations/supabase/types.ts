@@ -6867,6 +6867,7 @@ export type Database = {
       }
       reviews: {
         Row: {
+          about_restaurant: boolean
           body: string | null
           created_at: string
           dishes_eaten: string[] | null
@@ -6885,6 +6886,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          about_restaurant?: boolean
           body?: string | null
           created_at?: string
           dishes_eaten?: string[] | null
@@ -6903,6 +6905,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          about_restaurant?: boolean
           body?: string | null
           created_at?: string
           dishes_eaten?: string[] | null

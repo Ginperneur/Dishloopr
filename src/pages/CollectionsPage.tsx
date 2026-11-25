@@ -16,7 +16,7 @@ export default function CollectionsPage() {
     <Layout>
       <SEOHead
         title={t('collections.seoTitle', 'Restaurant Collecties - Samengestelde Lijsten | Dishloopr')}
-        description={t('collections.seoDescription', 'Ontdek onze handgeselecteerde restaurant collecties. Van de beste ramen in Amsterdam tot romantische Italianen in Rotterdam - vind de perfecte plek voor elke gelegenheid.')}
+        description={t('collections.seoDescription', 'De beste ramen, pizza, sushi, smashburgers en meer: per gerecht de best beoordeelde restaurants van Nederland, en per stad. Ook halal, glutenvrij, all you can eat en shared dining.')}
         keywords={['collecties', 'restaurant lijsten', 'curated', 'beste restaurants', 'Nederland', 'eten', 'uit eten', 'amsterdam', 'rotterdam']}
         structuredData={breadcrumbData}
         canonical="https://dishloopr.com/collections"
@@ -32,7 +32,7 @@ export default function CollectionsPage() {
             {t('collections.title', 'Collecties')}
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl">
-            {t('collections.subtitle', 'Door onze redactie handgeselecteerde restaurant lijsten voor elke gelegenheid. Van hidden gems tot romantische plekjes - wij hebben het voor je uitgezocht.')}
+            {t('collections.subtitle', 'Per gerecht de restaurants waar gasten het meest over te spreken zijn. Je ziet eerst heel Nederland; kies daarna je stad voor de top 15 bij jou in de buurt. Ook voor halal, glutenvrij, all you can eat en shared dining.')}
           </p>
         </motion.div>
 

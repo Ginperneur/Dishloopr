@@ -18,6 +18,7 @@ async function flush() {
       .from('reviews')
       .select('restaurant_id, rating')
       .eq('status', 'published')
+      .eq('about_restaurant', true) // reviews only about a dish do not count for the restaurant
       .in('restaurant_id', chunk);
     const agg = new Map<string, { s: number; c: number }>();
     for (const r of data ?? []) {

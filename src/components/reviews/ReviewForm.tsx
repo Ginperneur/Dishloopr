@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { DishRatingSelector } from './DishRatingSelector';
 import { TagValidator } from './TagValidator';
 import { useDishRatings } from '@/hooks/useDishRatings';
+import type { ReviewSubmission } from '@/hooks/useReviews';
 
 interface DishRating {
   dishId: string;
@@ -19,13 +20,7 @@ interface DishRating {
 }
 
 interface ReviewFormProps {
-  onSubmit: (data: { 
-    rating: number; 
-    title: string; 
-    body: string; 
-    photos?: string[];
-    dishRatings?: { dishId: string; rating: number }[];
-  }) => Promise<boolean>;
+  onSubmit: (data: ReviewSubmission) => Promise<boolean>;
   submitting: boolean;
   restaurantId?: string;
   ambienceTags?: string[];
@@ -47,6 +42,8 @@ export function ReviewForm({
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [dishRatings, setDishRatings] = useState<DishRating[]>([]);
+  // What the review is about: one or more dishes from the menu, or the restaurant as a whole.
+  const [about, setAbout] = useState<'dish' | 'restaurant' | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { 
@@ -54,6 +51,7 @@ export function ReviewForm({
     userTagConfirmations, 
     confirmTag 
   } = useDishRatings(restaurantId || '');
+  const mode = about ?? (availableDishes.length > 0 ? 'dish' : 'restaurant');
 
   if (!user) {
     return (
@@ -119,10 +117,12 @@ export function ReviewForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (rating === 0) return;
+    if (mode === 'restaurant' && rating === 0) return;
+    if (mode === 'dish' && dishRatings.length === 0) return;
     
     const success = await onSubmit({ 
-      rating, 
+      aboutRestaurant: mode === 'restaurant',
+      rating: mode === 'restaurant' ? rating : undefined,
       title, 
       body, 
       photos,
@@ -151,6 +151,55 @@ export function ReviewForm({
         )}
       </div>
       
+      {/* What the review is about */}
+      <fieldset className="space-y-2">
+        <legend className="mb-2 text-sm font-medium">Waar gaat je review over?</legend>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {([
+            { id: 'dish', title: 'Een gerecht', text: 'Kies wat je at van de kaart' },
+            { id: 'restaurant', title: 'Het restaurant', text: 'Sfeer, service en het geheel' },
+          ] as const).map(o => (
+            <button
+              key={o.id}
+              type="button"
+              onClick={() => setAbout(o.id)}
+              aria-pressed={mode === o.id}
+              disabled={o.id === 'dish' && availableDishes.length === 0}
+              className={`min-h-16 rounded-xl border px-4 py-3 text-left transition-colors disabled:opacity-50 ${mode === o.id ? 'border-primary bg-primary/10 ring-1 ring-primary' : 'bg-background hover:bg-muted'}`}
+            >
+              <span className="block text-sm font-semibold">{o.title}</span>
+              <span className="block text-xs text-muted-foreground">{o.text}</span>
+            </button>
+          ))}
+        </div>
+      </fieldset>
+
+      {mode === 'dish' ? (
+        <>
+          <DishRatingSelector
+            availableDishes={availableDishes}
+            selectedRatings={dishRatings}
+            onChange={setDishRatings}
+            alwaysOpen
+            label="Kies je gerecht en geef het sterren"
+          />
+          <div className="space-y-1.5">
+            <label htmlFor="dish-review-body" className="text-sm font-medium">
+              Vertel er iets over <span className="font-normal text-muted-foreground">(mag ook leeg)</span>
+            </label>
+            <Textarea
+              id="dish-review-body"
+              placeholder="Bijvoorbeeld: de smaak, de portie, de prijs"
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              rows={3}
+              className="text-base"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">Je review telt mee voor dit gerecht op deze pagina en in de collecties waar het gerecht in staat.</p>
+        </>
+      ) : (
+        <>
       {/* Star Rating */}
       <div className="flex items-center gap-0.5 md:gap-1">
         {[1, 2, 3, 4, 5].map((star) => (
@@ -160,6 +209,7 @@ export function ReviewForm({
             onClick={() => setRating(star)}
             onMouseEnter={() => setHoverRating(star)}
             onMouseLeave={() => setHoverRating(0)}
+            aria-label={`${star} ${star === 1 ? 'ster' : 'sterren'} voor het restaurant`}
             className="p-0.5 md:p-1 transition-transform hover:scale-110"
           >
             <Star
@@ -177,10 +227,10 @@ export function ReviewForm({
       </div>
 
       <Input
-        placeholder="Titel van je review"
+        placeholder="Titel van je review (optioneel)"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        required
+        aria-label="Titel van je review"
         className="text-base"
       />
 
@@ -190,15 +240,17 @@ export function ReviewForm({
         onChange={(e) => setBody(e.target.value)}
         rows={3}
         required
+        aria-label="Je review"
         className="text-base"
       />
 
-      {/* Dish Rating Section */}
+      {/* Optional dish ratings next to a restaurant review */}
       {restaurantId && availableDishes.length > 0 && (
         <DishRatingSelector
           availableDishes={availableDishes}
           selectedRatings={dishRatings}
           onChange={setDishRatings}
+          label="Ook een gerecht beoordelen?"
         />
       )}
 
@@ -222,6 +274,8 @@ export function ReviewForm({
             />
           )}
         </div>
+      )}
+        </>
       )}
 
       {/* Photo Upload Section */}
@@ -300,7 +354,7 @@ export function ReviewForm({
         </p>
       </div>
 
-      <Button type="submit" disabled={rating === 0 || submitting} className="w-full md:w-auto">
+      <Button type="submit" disabled={(mode === 'restaurant' ? rating === 0 : dishRatings.length === 0) || submitting} className="min-h-11 w-full md:w-auto">
         {submitting ? 'Plaatsen...' : 'Review plaatsen'}
       </Button>
     </form>

@@ -10,6 +10,7 @@ import {
   MapPin,
   Star,
   MessageSquare,
+  Trophy,
   Store,
   ExternalLink,
   Sparkles,
@@ -43,6 +44,7 @@ import {
   Wand2,
 } from 'lucide-react';
 import { MyPackagesCard } from '@/components/owner/MyPackagesCard';
+import { OwnerCollectionStatus } from '@/components/owner/OwnerCollectionStatus';
 import { UitgelichtOffers } from '@/components/owner/UitgelichtOffers';
 import { ProGrowthInsights } from '@/components/owner/ProGrowthInsights';
 import { Layout } from '@/components/layout/Layout';
@@ -822,6 +824,9 @@ export default function OwnerDashboard() {
                 <TabsContent value="reviews" className="space-y-8">
                   <OwnerTabHeader icon={MessageSquare} title="Reviews en feedback"
                     description="Wat gasten over je zeggen. Een snel antwoord laat zien dat je luistert." />
+                  {r && section('Mijn collecties', Trophy, isVerified
+                    ? <OwnerCollectionStatus restaurantId={r.id} restaurantSlug={r.slug} restaurantName={r.name} onGo={go} />
+                    : locked('Mijn collecties', 'Verifieer dat je de eigenaar bent om te zien hoe je ervoor staat in de collecties van je stad.'), 'collecties')}
                   {section(unansweredReviews > 0 ? `Reviews (${unansweredReviews} onbeantwoord)` : 'Reviews', Star, reviews.length > 0 ? (
                     <div className="space-y-6">
                       <ReviewIntelligence reviews={reviews} onApplyTemplate={(reviewId, text) => respondToReview(reviewId, text)} />

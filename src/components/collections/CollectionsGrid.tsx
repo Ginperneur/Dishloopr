@@ -4,7 +4,7 @@ import { ArrowRight, MapPin, Utensils } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useCollections, Collection } from '@/hooks/useCollections';
+import { useCollections, Collection, isAutoCollection } from '@/hooks/useCollections';
 import { localizedField } from '@/lib/i18n/localizedField';
 import { useTranslation } from 'react-i18next';
 import { optimizedImage, imgLoadingProps } from '@/lib/imageUrl';
@@ -36,7 +36,7 @@ function CollectionCard({ collection, index }: CollectionCardProps) {
         <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300">
           <div className="relative h-48 overflow-hidden">
             <img
-              src={optimizedImage(collection.cover_image || placeholderImages[index % placeholderImages.length], { width: 600 })}
+              src={optimizedImage(collection.cover_image || collection.auto_cover || placeholderImages[index % placeholderImages.length], { width: 600 })}
               alt={title}
               width={600}
               height={384}
@@ -47,10 +47,10 @@ function CollectionCard({ collection, index }: CollectionCardProps) {
             
             {/* Tags */}
             <div className="absolute top-3 left-3 flex flex-wrap gap-2">
-              {collection.city?.name && (
+              {(collection.city?.name || isAutoCollection(collection)) && (
                 <Badge variant="secondary" className="bg-white/90 text-foreground">
                   <MapPin className="h-3 w-3 mr-1" />
-                  {collection.city.name}
+                  {collection.city?.name ?? 'Heel Nederland'}
                 </Badge>
               )}
               {collection.dish?.name && (
@@ -160,7 +160,7 @@ export function FeaturedCollections() {
           <Link to={`/collection/${collection.slug}`}>
             <div className="group relative h-32 md:h-40 rounded-xl overflow-hidden">
               <img
-                src={optimizedImage(collection.cover_image || `https://images.unsplash.com/photo-155512663${index}?w=400&q=80`, { width: 400 })}
+                src={optimizedImage(collection.cover_image || collection.auto_cover || `https://images.unsplash.com/photo-155512663${index}?w=400&q=80`, { width: 400 })}
                 alt={localizedField(collection.title_i18n, collection.title, i18n.language)}
                 width={400}
                 height={256}

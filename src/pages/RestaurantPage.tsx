@@ -85,6 +85,12 @@ export default function RestaurantPage() {
   const { restaurant, loading: restaurantLoading, error } = useRestaurant(slug);
   const { data: paidBadges = [] } = useRestaurantBadges(restaurant?.id);
   const { reviews, loading: reviewsLoading, submitting, submitReview, refetch } = useReviews(restaurant?.id);
+  // The review QR code of the owner links to #review-form; the page renders after the URL, so scroll once it is there.
+  useEffect(() => {
+    if (location.hash !== '#review-form' || !restaurant) return;
+    const t = setTimeout(() => document.getElementById('review-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+    return () => clearTimeout(t);
+  }, [location.hash, restaurant]);
   const { isFavorite, toggleFavorite } = useFavorites();
   const { smartSuggestions, getSmartSuggestions } = useAIRecommendations();
   const { alternatives, loading: alternativesLoading, findAlternatives, trackClick: trackAlternativeClick } = useAlternativeRestaurants();

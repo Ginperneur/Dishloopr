@@ -3,6 +3,7 @@ import Stripe from "https://esm.sh/stripe@18.5.0";
 import { billingParams } from "../_shared/billing.ts";
 import { withVat } from "../_shared/vat.ts";
 import { getOrCreateCustomer } from "../_shared/stripeCustomer.ts";
+import { FOUNDING_MIN_MONTHS, TERM_MONTHS } from "../_shared/launch.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -41,7 +42,7 @@ function foundingWindowOpen(): boolean {
 }
 
 type Option = {
-  package: "founding_partner" | "menu_service" | "topplek" | "groei" | "dominant";
+  package: "founding_partner" | "menu_service" | "topplek" | "groei" | "dominant" | "collectieplek";
   plan: "month" | "year" | "once";
   cents: number;
   normalCents?: number; // prijs buiten het Founding Partner-venster (alleen voor het Uitgelicht-pakket)
@@ -59,6 +60,8 @@ const OPTIONS: Record<string, Option> = {
   topplek_month: { package: "topplek", plan: "month", cents: 19900, interval: "month", name: "Topplek (per maand)", priceEnv: "" },
   groei_month: { package: "groei", plan: "month", cents: 7900, normalCents: 11900, interval: "month", name: "Groei (per maand)", priceEnv: "" },
   dominant_month: { package: "dominant", plan: "month", cents: 24900, interval: "month", name: "Dominant (per maand)", priceEnv: "" },
+  // A place in a collection (one city or the whole country); prices per page in pp_list_price / collection_founding_price.
+  collectie_month: { package: "collectieplek", plan: "month", cents: 4900, interval: "month", name: "Collectieplek (per maand)", priceEnv: "" },
   menu_once: { package: "menu_service", plan: "once", cents: 7900, name: "Menuservice (eenmalig)", priceEnv: "STRIPE_MENU_ONCE_PRICE_ID" },
   menu_month: { package: "menu_service", plan: "month", cents: 1900, interval: "month", name: "Menuservice (per maand)", priceEnv: "STRIPE_MENU_MONTH_PRICE_ID" },
 };
@@ -70,7 +73,7 @@ Deno.serve(async (req) => {
     const user = await getCaller(req);
     if (!user?.email) return json({ error: "Log eerst in" }, 401);
 
-    const { option: optionKey, restaurant_id, page_slug } = await req.json().catch(() => ({}));
+    const { option: optionKey, restaurant_id, page_slug, months: monthsIn } = await req.json().catch(() => ({}));
     const option = OPTIONS[optionKey as string];
     if (!option) return json({ error: "Onbekend pakket" }, 400);
     if (typeof restaurant_id !== "string") return json({ error: "Ontbrekend restaurant" }, 400);
@@ -87,16 +90,24 @@ Deno.serve(async (req) => {
 
     // Every package but Menuservice is a paid place on one page.
     const placePackage = option.package !== "menu_service";
-    const kind: "uitgelicht" | "topplek" = option.package === "topplek" || option.package === "dominant" ? "topplek" : "uitgelicht";
-    const isFoundingDeal = (option.package === "founding_partner" || option.package === "groei") && foundingWindowOpen();
+    const kind: "uitgelicht" | "topplek" | "collectie" = option.package === "topplek" || option.package === "dominant" ? "topplek"
+      : option.package === "collectieplek" ? "collectie" : "uitgelicht";
+    // The owner picks a term before paying. The Founding Partner price and status need at least
+    // 6 months (a year plan is 12); a shorter term pays the normal price of the page and is no
+    // Founding Partner. Older clients send no term and were always on the 6-month deal.
+    const foundingPackage = option.package === "founding_partner" || option.package === "groei" || option.package === "collectieplek";
+    const months = option.plan === "year" ? 12 : monthsIn === undefined || monthsIn === null ? (foundingPackage ? FOUNDING_MIN_MONTHS : 1) : Number(monthsIn);
+    if (!(TERM_MONTHS as readonly number[]).includes(months)) return json({ error: "Kies een looptijd van 1, 3, 6 of 12 maanden" }, 400);
+    const isFoundingDeal = foundingPackage && foundingWindowOpen() && months >= FOUNDING_MIN_MONTHS;
     let pageSlug: string | null = null;
     if (placePackage) {
       if (typeof page_slug !== "string" || !page_slug) return json({ error: "Kies een pagina" }, 400);
-      // Only a restaurant that is on the page (the dish on its menu, the cuisine, the label) may buy.
-      const { data: onPage } = await admin.rpc("uitgelicht_on_page", { p_restaurant: restaurant.id, p_page_slug: page_slug });
+      // Only a restaurant that is on the page (the dish on its menu, the cuisine, the label; for a
+      // collection: it matches the collection and has a photo) may buy.
+      const { data: onPage } = await admin.rpc("pp_on_page", { p_kind: kind, p_restaurant: restaurant.id, p_page_slug: page_slug });
       if (onPage !== true) return json({ error: "Je restaurant staat niet op deze pagina" }, 400);
       // Only on pages Dishloopr chose, with at least 10 restaurants.
-      const { data: eligible } = await admin.rpc("uitgelicht_page_eligible", { p_page_slug: page_slug });
+      const { data: eligible } = await admin.rpc("pp_page_eligible", { p_kind: kind, p_page_slug: page_slug });
       if (eligible !== true) return json({ error: "Op deze pagina zijn geen betaalde plekken te koop" }, 400);
       const { count } = await admin.from("package_orders").select("id", { count: "exact", head: true })
         .eq("restaurant_id", restaurant.id).eq("page_slug", page_slug).neq("package", "menu_service")
@@ -117,6 +128,8 @@ Deno.serve(async (req) => {
     let replacedSessions: string[] = [];
     if (placePackage) {
       if (!isFoundingDeal && option.plan !== "month") return json({ error: "Betaalde plekken zijn per maand" }, 400);
+      // Outside the Founding Partner deal a term only exists for the two packages that offer it.
+      if (!foundingPackage && months !== 1) return json({ error: "Dit pakket is per maand opzegbaar" }, 400);
       const { data: held, error: holdErr } = await admin.rpc("pp_hold", {
         p_kind: kind, p_page_slug: pageSlug, p_restaurant: restaurant.id, p_user: user.id, p_founding: isFoundingDeal,
       });
@@ -134,12 +147,28 @@ Deno.serve(async (req) => {
         dynamicCents = h.price_cents + (option.package === "groei" || option.package === "dominant" ? BUNDLE_SURCHARGE_CENTS[option.package] : 0);
       }
     }
-    const effectiveCents = dynamicCents ?? option.cents;
+    // A Founding Partner collection place costs 29 euro in a city and 89 euro nationally.
+    let foundingCents: number | null = null;
+    if (option.package === "collectieplek" && isFoundingDeal) {
+      const { data: fp } = await admin.rpc("collection_founding_price", { p_page_slug: pageSlug });
+      foundingCents = typeof fp === "number" ? fp : null;
+    }
+    const effectiveCents = dynamicCents ?? foundingCents ?? option.cents;
     // The owner sees on the Stripe page and the invoice which page the place is on.
-    let productName = option.name;
+    // The term is part of the name, so it shows on the Stripe page and the invoice.
+    let productName = option.interval === "month" && placePackage && months > 1
+      ? option.name.replace("(per maand)", `(per maand, minimaal ${months} maanden)`) : option.name;
     if (pageSlug) {
-      const { data: page } = await admin.from("seo_landing_pages").select("h1_title").eq("slug", pageSlug).maybeSingle();
-      productName = `${option.name}: ${(page?.h1_title as string | undefined) ?? pageSlug}`.slice(0, 250);
+      let pageName: string | undefined;
+      if (kind === "collectie") {
+        const { data: cp } = await admin.rpc("collection_page", { p_page_slug: pageSlug });
+        const c = (cp as { title: string; city_name: string | null; is_national: boolean }[] | null)?.[0];
+        pageName = c ? `${c.title} ${c.is_national ? "in heel Nederland" : `in ${c.city_name}`}` : undefined;
+      } else {
+        const { data: page } = await admin.from("seo_landing_pages").select("h1_title").eq("slug", pageSlug).maybeSingle();
+        pageName = page?.h1_title as string | undefined;
+      }
+      productName = `${productName}: ${pageName ?? pageSlug}`.slice(0, 250);
     }
 
     // The STRIPE_FOUNDING_* price ids hold the €59/€590 promo price, so they may only be used
@@ -168,7 +197,8 @@ Deno.serve(async (req) => {
       ...(pageSlug ? { page_slug: pageSlug } : {}),
       ...(bidId ? { bid_id: bidId } : {}),
       ...(holdId ? { hold_id: holdId } : {}),
-      ...(option.package === "founding_partner" || option.package === "groei"
+      ...(option.interval === "month" && placePackage ? { commitment_months: String(months) } : {}),
+      ...(foundingPackage
         ? { founding_partner: String(isFoundingDeal), ...(isFoundingDeal ? { discount_until: FOUNDING_DISCOUNT_UNTIL } : {}) }
         : {}),
     };
