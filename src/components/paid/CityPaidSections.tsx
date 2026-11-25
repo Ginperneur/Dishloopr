@@ -1,7 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronDown, ImageOff } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+import { MoodImage } from '@/components/restaurant/MoodImage';
 import { supabase } from '@/integrations/supabase/client';
 import { optimizedImage } from '@/lib/imageUrl';
 import { useCityPages, useCitySpotlight, useCityToppleks, type CityPage } from '@/lib/paidPlacements';
@@ -27,7 +28,7 @@ export function Photo({ r, className }: { r: MiniRestaurant; className: string }
   const src = r.images?.[0];
   return src
     ? <img src={optimizedImage(src, { width: 480 })} width={480} height={300} alt="" loading="lazy" decoding="async" className={`${className} object-cover`} />
-    : <div className={`${className} flex items-center justify-center bg-muted`}><ImageOff className="h-8 w-8 text-muted-foreground/40" aria-hidden="true" /></div>;
+    : <div className={`${className} relative overflow-hidden`}><MoodImage seed={r.id} name={r.name} cuisines={r.cuisines} /></div>;
 }
 
 /**

@@ -1,13 +1,14 @@
 import { Link } from 'react-router-dom';
-import { Clock, ImageOff } from 'lucide-react';
+import { Clock } from 'lucide-react';
+import { MoodImage } from '@/components/restaurant/MoodImage';
 import { useTranslation } from 'react-i18next';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { useState } from 'react';
 import { optimizedImage, imgLoadingProps } from '@/lib/imageUrl';
 
-function SmallImage({ src, alt }: { src: string; alt: string }) {
+function SmallImage({ src, alt, slug }: { src: string; alt: string; slug: string }) {
   const [failed, setFailed] = useState(false);
-  if (failed) return <div className="w-full h-full flex items-center justify-center"><ImageOff className="w-5 h-5 text-muted-foreground/40" /></div>;
+  if (failed) return <MoodImage seed={slug} name={alt} size="thumb" />;
   return <img src={optimizedImage(src, { width: 160 })} alt={alt} width={160} height={160} className="w-full h-full object-cover" {...imgLoadingProps(false)} onError={() => setFailed(true)} />;
 }
 
@@ -35,13 +36,11 @@ export function RecentlyViewed() {
               to={`/restaurant/${item.slug}`}
               className="flex-shrink-0 w-[104px] group"
             >
-              <div className="aspect-[16/10] rounded-lg overflow-hidden bg-muted mb-1">
+              <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-muted mb-1">
                 {item.image ? (
-                  <SmallImage src={item.image} alt={item.name} />
+                  <SmallImage src={item.image} alt={item.name} slug={item.slug} />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <ImageOff className="w-6 h-6 text-muted-foreground/30" />
-                  </div>
+                  <MoodImage seed={item.slug} name={item.name} size="thumb" />
                 )}
               </div>
               <p className="text-xs font-medium truncate group-hover:text-primary transition-colors">

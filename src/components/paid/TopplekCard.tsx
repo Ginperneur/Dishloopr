@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
-import { ImageOff, Star } from 'lucide-react';
+import { Star } from 'lucide-react';
+import { MoodImage } from '@/components/restaurant/MoodImage';
 import { optimizedImage, optimizedSrcSet } from '@/lib/imageUrl';
 import { trackPaidMetric, usePaidImpression, type PaidSurface } from '@/lib/paidPlacements';
 import { PaidLabel, WhyPaidLink } from '@/components/paid/PaidLabel';
@@ -32,7 +33,7 @@ export function TopplekCard({ restaurant, pageSlug, founding = false, surface = 
               width={720} height={450} alt={restaurant.name}
               className="absolute inset-0 h-full w-full object-cover" loading="eager" decoding="async" />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center"><ImageOff className="h-12 w-12 text-muted-foreground/40" aria-hidden="true" /></div>
+            <MoodImage seed={restaurant.id} name={restaurant.name} cuisines={restaurant.cuisines} />
           )}
         </div>
         <div className="flex flex-col gap-3 p-5 md:p-7">
