@@ -107,6 +107,11 @@ function send(apiKey: string, to: string, t: Target, mail: { subject: string; ht
   });
 }
 
+/** Mails rendered at the same time; sending stays one by one. */
+const RENDER_PARALLEL = 8;
+/** Stop starting new mails after this, well before the edge function wall-clock limit. */
+const TIME_BUDGET_MS = 140_000;
+
 const TARGET_COLS = "restaurant_id,name,slug,stad,email,segment,goedgekeurde_gerechten,is_active";
 
 async function loadTarget(db: SupabaseClient, restaurantId: string): Promise<Target | null> {
@@ -127,27 +132,46 @@ async function runBatch(db: SupabaseClient, apiKey: string, limitOverride?: numb
     .order("goedgekeurde_gerechten", { ascending: false }).limit(limit);
   if (error) throw error;
 
-  let sent = 0, failed = 0;
-  for (const t of (rows ?? []) as Target[]) {
-    // Claim the slot first: the unique key makes a second run skip this restaurant.
-    const { mail, token } = await render(db, t, s.menu_minimum, flyer);
-    const { data: claim, error: claimErr } = await db.from("outreach_messages")
-      .insert({ restaurant_id: t.restaurant_id, wave: s.wave, segment: t.segment, to_email: t.email, subject: mail.subject })
-      .select("id").single();
-    if (claimErr || !claim) continue;
-    const r = await send(apiKey, t.email, t, mail, token, flyer);
-    const now = new Date().toISOString();
-    if (r.ok) {
-      sent++;
-      await db.from("outreach_messages").update({ status: "sent", provider_id: r.id, sent_at: now }).eq("id", claim.id);
-      await db.from("restaurant_contacts").update({ mail_golf: s.wave, laatst_gemaild_op: now }).eq("restaurant_id", t.restaurant_id);
-    } else {
-      failed++;
-      await db.from("outreach_messages").update({ status: "failed", error: r.error }).eq("id", claim.id);
+  // Rendering one mail takes 3 to 10 seconds (page position, unsubscribe token, photo), so a batch
+  // rendered one by one ran into the edge function time limit after about 25 mails. Render a few in
+  // parallel, send one by one, and stop starting new mails before the time limit.
+  const started = Date.now();
+  const targets = (rows ?? []) as Target[];
+  let sent = 0, failed = 0, stoppedEarly = false;
+  for (let i = 0; i < targets.length; i += RENDER_PARALLEL) {
+    if (Date.now() - started > TIME_BUDGET_MS) { stoppedEarly = true; break; }
+    const chunk = targets.slice(i, i + RENDER_PARALLEL);
+    const rendered = await Promise.all(chunk.map((t) => render(db, t, s.menu_minimum, flyer).catch((e) => {
+      console.error("outreach render", t.restaurant_id, e);
+      return null;
+    })));
+    for (let j = 0; j < chunk.length; j++) {
+      const t = chunk[j], r0 = rendered[j];
+      if (!r0) { failed++; continue; }
+      if (await sendOne(db, apiKey, s.wave, t, r0, flyer)) sent++; else failed++;
     }
-    await new Promise((res) => setTimeout(res, 250)); // stay well under Resend's rate limit
   }
-  return { sent, failed, wave: s.wave, remaining_today: room - sent, flyer_warning: warning };
+  return { sent, failed, wave: s.wave, remaining_today: room - sent, stopped_early: stoppedEarly, flyer_warning: warning };
+}
+
+/** Claims the slot, sends and records the result. Returns true when the mail went out. */
+async function sendOne(db: SupabaseClient, apiKey: string, wave: number, t: Target,
+  { mail, token }: { mail: { subject: string; html: string; text: string }; token: string }, flyer: Flyer) {
+  // Claim the slot first: the unique key makes a second run skip this restaurant.
+  const { data: claim, error: claimErr } = await db.from("outreach_messages")
+    .insert({ restaurant_id: t.restaurant_id, wave, segment: t.segment, to_email: t.email, subject: mail.subject })
+    .select("id").single();
+  if (claimErr || !claim) return false;
+  const r = await send(apiKey, t.email, t, mail, token, flyer);
+  const now = new Date().toISOString();
+  if (r.ok) {
+    await db.from("outreach_messages").update({ status: "sent", provider_id: r.id, sent_at: now }).eq("id", claim.id);
+    await db.from("restaurant_contacts").update({ mail_golf: wave, laatst_gemaild_op: now }).eq("restaurant_id", t.restaurant_id);
+  } else {
+    await db.from("outreach_messages").update({ status: "failed", error: r.error }).eq("id", claim.id);
+  }
+  await new Promise((res) => setTimeout(res, 350)); // with the send itself this stays under Resend's 2 requests per second
+  return r.ok;
 }
 
 serve(async (req) => {
