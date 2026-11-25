@@ -3,10 +3,13 @@ import { ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { optimizedImage, imgLoadingProps } from '@/lib/imageUrl';
+import { MoodImage } from '@/components/restaurant/MoodImage';
 
 interface ImageGalleryProps {
   images: string[];
   restaurantName: string;
+  /** Without own photos the header shows the restaurant's sfeerbeeld (src/lib/moodImage.ts). */
+  mood?: { seed: string; cuisinePrimary?: string | null; cuisines?: string[] | null };
 }
 
 interface TouchState {
@@ -25,7 +28,7 @@ const preloadImage = (src: string): Promise<void> => {
   });
 };
 
-export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
+export function ImageGallery({ images, restaurantName, mood }: ImageGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set([0]));
@@ -194,8 +197,9 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
 
   if (!images || images.length === 0) {
     return (
-      <div className="aspect-[16/9] md:aspect-[21/9] bg-muted flex items-center justify-center text-muted-foreground">
-        Geen afbeeldingen beschikbaar
+      <div className="relative aspect-[16/9] md:aspect-[21/9] bg-muted">
+        <MoodImage seed={mood?.seed ?? restaurantName} name={restaurantName}
+          cuisinePrimary={mood?.cuisinePrimary} cuisines={mood?.cuisines} size="hero" />
       </div>
     );
   }
@@ -246,7 +250,7 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
               variant="secondary"
               size="icon"
               className="absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur"
-              onClick={handlePrev}
+              onClick={handlePrev} aria-label="Vorige foto"
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>
@@ -254,7 +258,7 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
               variant="secondary"
               size="icon"
               className="absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur"
-              onClick={handleNext}
+              onClick={handleNext} aria-label="Volgende foto"
             >
               <ChevronRight className="h-5 w-5" />
             </Button>
@@ -342,7 +346,7 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
               variant="ghost"
               size="icon"
               className="absolute top-4 right-4 z-10"
-              onClick={closeFullscreen}
+              onClick={closeFullscreen} aria-label="Sluiten"
             >
               <X className="h-6 w-6" />
             </Button>
@@ -353,7 +357,7 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 rounded-full"
-                onClick={(e) => { e.stopPropagation(); zoomOut(); }}
+                onClick={(e) => { e.stopPropagation(); zoomOut(); }} aria-label="Uitzoomen"
                 disabled={zoomLevel <= 1}
               >
                 <ZoomOut className="h-4 w-4" />
@@ -365,7 +369,7 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 rounded-full"
-                onClick={(e) => { e.stopPropagation(); zoomIn(); }}
+                onClick={(e) => { e.stopPropagation(); zoomIn(); }} aria-label="Inzoomen"
                 disabled={zoomLevel >= 4}
               >
                 <ZoomIn className="h-4 w-4" />
@@ -379,7 +383,7 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
                   variant="ghost"
                   size="icon"
                   className="absolute left-4 top-1/2 -translate-y-1/2 h-12 w-12 z-10"
-                  onClick={(e) => { e.stopPropagation(); handlePrev(); }}
+                  onClick={(e) => { e.stopPropagation(); handlePrev(); }} aria-label="Vorige foto"
                 >
                   <ChevronLeft className="h-8 w-8" />
                 </Button>
@@ -387,7 +391,7 @@ export function ImageGallery({ images, restaurantName }: ImageGalleryProps) {
                   variant="ghost"
                   size="icon"
                   className="absolute right-4 top-1/2 -translate-y-1/2 h-12 w-12 z-10"
-                  onClick={(e) => { e.stopPropagation(); handleNext(); }}
+                  onClick={(e) => { e.stopPropagation(); handleNext(); }} aria-label="Volgende foto"
                 >
                   <ChevronRight className="h-8 w-8" />
                 </Button>

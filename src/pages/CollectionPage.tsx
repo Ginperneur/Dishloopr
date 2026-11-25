@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { RatingSummary } from '@/components/restaurant/RatingSummary';
 import { useOwnReviewStats } from '@/hooks/useOwnReviewStats';
 import { optimizedImage, imgLoadingProps } from '@/lib/imageUrl';
+import { MoodImage } from '@/components/restaurant/MoodImage';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&q=80';
 const euro = (n: number) => new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(n);
@@ -38,14 +39,19 @@ function RestaurantCard({ item, index, reviewNoun }: { item: CollectionListItem;
         <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg">
           <div className="flex flex-col sm:flex-row">
             <div className="relative h-44 w-full flex-shrink-0 overflow-hidden sm:h-auto sm:w-48">
-              <img
-                src={optimizedImage(item.images?.[0] || FALLBACK_IMAGE, { width: 400 })}
-                alt={item.name}
-                width={400}
-                height={300}
-                {...imgLoadingProps(false)}
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-              />
+              {item.images?.[0] ? (
+                <img
+                  src={optimizedImage(item.images[0], { width: 400 })}
+                  alt={item.name}
+                  width={400}
+                  height={300}
+                  {...imgLoadingProps(false)}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+              ) : (
+                // No own photo: a labelled sfeerbeeld instead of a stock interior.
+                <MoodImage seed={item.restaurant_id} name={item.name} cuisines={item.cuisines} labelAt="bottom-right" />
+              )}
               <div className="absolute bottom-2 left-2 flex h-8 min-w-8 items-center justify-center rounded-full bg-primary px-2 text-sm font-bold text-primary-foreground">
                 #{index + 1}
               </div>

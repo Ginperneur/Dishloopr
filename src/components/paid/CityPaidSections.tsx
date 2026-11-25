@@ -1,7 +1,8 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ImageOff } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+import { MoodImage } from '@/components/restaurant/MoodImage';
 import { supabase } from '@/integrations/supabase/client';
 import { optimizedImage } from '@/lib/imageUrl';
 import { useCityPages, useCitySpotlight, useCityToppleks, type CityPage } from '@/lib/paidPlacements';
@@ -27,7 +28,7 @@ export function Photo({ r, className }: { r: MiniRestaurant; className: string }
   const src = r.images?.[0];
   return src
     ? <img src={optimizedImage(src, { width: 480 })} width={480} height={300} alt="" loading="lazy" decoding="async" className={`${className} object-cover`} />
-    : <div className={`${className} flex items-center justify-center bg-muted`}><ImageOff className="h-8 w-8 text-muted-foreground/40" aria-hidden="true" /></div>;
+    : <div className={`${className} relative overflow-hidden`}><MoodImage seed={r.id} name={r.name} cuisines={r.cuisines} /></div>;
 }
 
 /**
@@ -71,7 +72,9 @@ export function CitySpotlightSection({ cityId, cityName, nested = false, extra }
   );
 }
 
-const pageLabel = (p: Pick<CityPage, 'page_kind' | 'subject'>) => (p.page_kind === 'ambience' ? 'Romantisch' : p.subject);
+// Dish subjects are stored lowercase (canonical names); show them with a capital letter. URLs stay untouched.
+const pageLabel = (p: Pick<CityPage, 'page_kind' | 'subject'>) =>
+  p.page_kind === 'ambience' ? 'Romantisch' : p.subject.charAt(0).toUpperCase() + p.subject.slice(1);
 
 /** "Topplekken in <stad>": per dish, cuisine or Romantisch page the restaurant holding its Topplek. */
 export function CityToppleksSection({ cityId, cityName, citySlug, limit = 7, nested = false }: { cityId: string; cityName: string; citySlug: string; limit?: number; nested?: boolean }) {
@@ -126,26 +129,44 @@ export function CityToppleksSection({ cityId, cityName, citySlug, limit = 7, nes
 /** Chips to every dish, cuisine and Romantisch page of a city, with the number of restaurants. Free. */
 export function CityPageChips({ cityId, cityName, title, only }: { cityId: string; cityName: string; title?: string; only?: CityPage['page_kind'][] }) {
   const { data: all = [] } = useCityPages(cityId);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const pages = only ? all.filter(p => only.includes(p.page_kind)) : all;
   if (!pages.length) return null;
   const group = (kind: CityPage['page_kind']) => pages.filter(p => p.page_kind === kind);
-  const rows: [string, CityPage[]][] = [['Gerechten', group('dish').slice(0, 14)], ['Keukens', group('cuisine')], ['Sfeer', group('ambience')]];
+  const rows: [string, CityPage[]][] = [['Gerechten', group('dish')], ['Keukens', group('cuisine')], ['Sfeer', group('ambience')]];
   return (
-    <section aria-labelledby="popular-pages-heading" className="space-y-4">
-      <h2 id="popular-pages-heading" className="text-2xl font-bold md:text-3xl">{title ?? `Populair in ${cityName}`}</h2>
-      {rows.filter(([, list]) => list.length).map(([label, list]) => (
-        <div key={label} className="space-y-2">
+    <section aria-labelledby="popular-pages-heading" className="space-y-3 md:space-y-4">
+      <h2 id="popular-pages-heading" className="text-xl font-bold md:text-3xl">{title ?? `Populair in ${cityName}`}</h2>
+      {rows.filter(([, list]) => list.length).map(([label, list]) => {
+        const isOpen = !!expanded[label];
+        // Mobile: collapsed shows one row of three chips; "Zie meer" adds rows of three, up to the top 12.
+        // Desktop: collapsed the first 6, "Zie meer" up to the top 12.
+        const hiddenClass = (i: number) => (isOpen ? (i < 12 ? '' : 'hidden') : i < 3 ? '' : i < 6 ? 'hidden md:inline-flex' : 'hidden');
+        const rowClass = isOpen
+          ? 'grid grid-cols-3 gap-1.5 md:flex md:flex-wrap md:gap-2'
+          : 'scrollbar-hide -mx-4 flex flex-nowrap gap-1.5 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:gap-2 md:overflow-visible md:px-0';
+        return (
+        <div key={label} className="space-y-1.5 md:space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">{label}</p>
-          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:overflow-visible md:px-0">
-            {list.map(p => (
+          <div className={rowClass}>
+            {list.map((p, i) => (
               <Link key={p.page_slug} to={`/eten/${p.page_slug}`}
-                className="inline-flex min-h-10 flex-none items-center gap-1.5 rounded-full border bg-card px-3.5 text-sm hover:border-primary">
-                {pageLabel(p)} <span className="text-xs text-muted-foreground">{p.restaurant_count}</span>
+                className={`inline-flex min-h-9 min-w-0 flex-none items-center gap-1 whitespace-nowrap overflow-hidden rounded-full border bg-card text-[13px] hover:border-primary md:min-h-10 md:gap-1.5 md:px-3.5 md:text-sm ${isOpen ? 'px-2 text-[12px]' : 'px-3'} ${hiddenClass(i)}`}>
+                <span className="truncate">{pageLabel(p)}</span>
+                <span className="flex-none text-[11px] text-muted-foreground md:text-xs">{p.restaurant_count}</span>
               </Link>
             ))}
           </div>
+          {list.length > 3 && (
+            <button type="button" onClick={() => setExpanded(prev => ({ ...prev, [label]: !prev[label] }))} aria-expanded={isOpen}
+              className={`inline-flex min-h-9 flex-none items-center gap-1 whitespace-nowrap rounded-full px-0 text-[13px] font-medium text-primary hover:underline md:min-h-10 md:w-auto md:px-3 md:text-sm ${list.length <= 6 ? 'md:hidden' : ''}`}>
+              {isOpen ? 'Zie minder' : 'Zie meer'}
+              <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+          )}
         </div>
-      ))}
+        );
+      })}
       <p className="text-xs text-muted-foreground">Het getal is het aantal restaurants in {cityName}.</p>
     </section>
   );

@@ -22,12 +22,18 @@ interface SurpriseMeProps {
   variant?: 'button' | 'card';
   className?: string;
   city?: string;
+  /** Controlled mode: opened from Restaurant Finder, no own trigger. */
+  open?: boolean;
+  onClose?: () => void;
 }
 
-export function SurpriseMe({ variant = 'button', className = '', city }: SurpriseMeProps) {
+export function SurpriseMe({ variant = 'button', className = '', city, open, onClose }: SurpriseMeProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(false);
+  const [ownOpen, setOwnOpen] = useState(false);
+  const controlled = open !== undefined;
+  const isOpen = controlled ? open : ownOpen;
+  const setIsOpen = (v: boolean) => { if (controlled) { if (!v) onClose?.(); } else setOwnOpen(v); };
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [cityInput, setCityInput] = useState(city || '');
   const { surprise, loading, error, getSurpriseRecommendation, clearRecommendations } = useAIRecommendations();
@@ -71,14 +77,14 @@ export function SurpriseMe({ variant = 'button', className = '', city }: Surpris
   if (variant === 'button') {
     return (
       <>
-        <Button
+        {!controlled && <Button
           variant="ghost"
           onClick={() => setIsOpen(true)}
           className={`group text-primary hover:text-primary hover:bg-primary/5 font-medium ${className}`}
         >
           <Sparkles className="w-4 h-4 mr-2 group-hover:animate-pulse" />
           {t('ai.surpriseMe', 'Verras me!')}
-        </Button>
+        </Button>}
 
         <AnimatePresence>
           {isOpen && (

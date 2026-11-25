@@ -21,6 +21,7 @@ import { NativeBridge, NativeSplashGate } from '@/components/native/NativeBridge
 import Index from "./pages/Index";
 
 // Lazy load all other routes
+const FoodMatchPage = lazy(() => import("./pages/FoodMatchPage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 const RestaurantPage = lazy(() => import("./pages/RestaurantPage"));
 const RestaurantOptoutPage = lazy(() => import("./pages/RestaurantOptoutPage"));
@@ -169,6 +170,7 @@ const App = () => (
                   <Route path="/evenementen/:eventId" element={<EventDetailPage />} />
                   <Route path="/events" element={<Navigate to="/evenementen" replace />} />
                   <Route path="/vote/:shareCode" element={<VotePage />} />
+                  <Route path="/food-match/:code" element={<FoodMatchPage />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <NativeSplashGate />

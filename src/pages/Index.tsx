@@ -8,7 +8,7 @@ import { Layout } from '@/components/layout/Layout';
 import { TrendingDishes } from '@/components/home/TrendingDishes';
 import { HomeCityBlocks } from '@/components/home/HomeCityBlocks';
 import { RecentlyViewed } from '@/components/home/RecentlyViewed';
-import { SurpriseMe } from '@/components/ai/SurpriseMe';
+import { RestaurantFinder } from '@/components/finder/RestaurantFinderDialog';
 import { SEOHead, createWebsiteSchema } from '@/components/seo/SEOHead';
 import { useTrendingDishes } from '@/hooks/useTrendingDishes';
 import { useSavedSearches } from '@/hooks/useSavedSearches';
@@ -198,7 +198,7 @@ const Index = () => {
             transition={{ delay: 0.4, duration: 0.4 }}
             className="flex flex-wrap justify-center items-center gap-2 mt-3 md:mt-5"
           >
-            <SurpriseMe />
+            <RestaurantFinder />
           </motion.div>
         </div>
       </section>

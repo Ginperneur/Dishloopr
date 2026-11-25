@@ -526,6 +526,20 @@
       "when": 1795149381555,
       "tag": "0077_payment_integrity",
       "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1795421259304,
+      "tag": "0078_restrict_promo_markets_read",
+      "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1795427758880,
+      "tag": "0079_food_match_sessions",
+      "breakpoints": true
     }
   ]
 }

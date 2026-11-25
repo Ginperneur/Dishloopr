@@ -53,12 +53,27 @@ async function fetchAll(build) {
   return out;
 }
 
+async function fetchKeyset(table, cols, filter = (q) => q) {
+  const out = [];
+  let last = null;
+  while (true) {
+    let q = filter(supabase.from(table).select(`id, ${cols}`)).order('id').limit(1000);
+    if (last) q = q.gt('id', last);
+    const { data, error } = await q;
+    if (error) throw error;
+    for (const d of data) out.push(d);
+    if (data.length < 1000) break;
+    last = data[data.length - 1].id;
+  }
+  return out;
+}
+
 async function main() {
-  const now = new Date().toISOString().split('T')[0];
+  const day = (v) => (v || '').split('T')[0] || null;
 
   const [restaurants, cities, seoRaw, collections] = await Promise.all([
     fetchAll((f, t) => supabase.from('restaurants').select('slug, updated_at').eq('is_active', true).order('updated_at', { ascending: false }).range(f, t)),
-    fetchAll((f, t) => supabase.from('cities').select('slug, updated_at').eq('is_active', true).range(f, t)),
+    fetchAll((f, t) => supabase.from('cities').select('id, slug, updated_at').eq('is_active', true).range(f, t)),
     fetchAll((f, t) => supabase.from('seo_landing_pages').select('slug, updated_at, city_id, dish_id, dishes:dish_id(slug, canonical_slug)').eq('is_active', true).range(f, t)),
     fetchAll((f, t) => supabase.from('collections').select('slug, updated_at').eq('is_active', true).order('sort_order').range(f, t)),
   ]);
@@ -82,7 +97,7 @@ async function main() {
   console.log(`Fetched: ${restaurants.length} restaurants, ${cities.length} cities, ${seoRaw.length} SEO pages (${seoIndexable.length} canonical+indexable), ${collections.length} collections`);
 
   // ---- Facet URL computation ----
-  const allDishes = await fetchAll((f, t) => supabase.from('dishes').select('id, slug, canonical_slug').range(f, t));
+  const allDishes = await fetchKeyset('dishes', 'slug, canonical_slug', (q) => q.eq('is_active', true));
   const dishIdsByCanonical = new Map();
   for (const d of allDishes) {
     const c = d.canonical_slug || d.slug;
@@ -91,7 +106,8 @@ async function main() {
     arr.push(d.id);
     dishIdsByCanonical.set(c, arr);
   }
-  const rdRows = await fetchAll((f, t) => supabase.from('restaurant_dishes').select('restaurant_id, dish_id').eq('status', 'approved_by_admin').range(f, t));
+  const rdRows = [];
+  for (const st of ['approved_by_admin', 'verified_by_owner']) { for (const row of await fetchKeyset('restaurant_dishes', 'restaurant_id, dish_id', (q) => q.eq('status', st))) rdRows.push(row); }
   const restaurantIdsByDish = new Map();
   for (const rd of rdRows) {
     const arr = restaurantIdsByDish.get(rd.dish_id) || [];
@@ -122,7 +138,7 @@ async function main() {
       if (count >= FACET_THRESHOLD) {
         facetEntries.push({
           loc: `${SITE_URL}/eten/${page.slug}/${f.slug}`,
-          lastmod: (page.updated_at || '').split('T')[0] || now,
+          lastmod: day(page.updated_at),
         });
       }
     }
@@ -132,25 +148,44 @@ async function main() {
   const urls = [];
   const add = (loc, lastmod, changefreq, priority) => {
     if (loc.includes('/eten/gerecht/')) return; // final safety net
-    urls.push(`  <url>\n    <loc>${loc}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`);
+    urls.push(`  <url>\n    <loc>${loc}</loc>\n    ${lastmod ? `<lastmod>${lastmod}</lastmod>\n    ` : ''}<changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`);
   };
 
-  add(SITE_URL, now, 'daily', '1.0');
-  add(`${SITE_URL}/search`, now, 'hourly', '0.9');
-  add(`${SITE_URL}/eten`, now, 'daily', '0.9');
-  add(`${SITE_URL}/steden`, now, 'daily', '0.9');
-  add(`${SITE_URL}/collections`, now, 'weekly', '0.8');
-  add(`${SITE_URL}/events`, now, 'daily', '0.8');
-  add(`${SITE_URL}/for-restaurants`, now, 'monthly', '0.7');
-  add(`${SITE_URL}/about`, now, 'monthly', '0.5');
-  add(`${SITE_URL}/contact`, now, 'monthly', '0.5');
-  add(`${SITE_URL}/privacy`, now, 'monthly', '0.3');
-  add(`${SITE_URL}/terms`, now, 'monthly', '0.3');
+  add(SITE_URL, null, 'daily', '1.0');
+  add(`${SITE_URL}/search`, null, 'hourly', '0.9');
+  add(`${SITE_URL}/eten`, null, 'daily', '0.9');
+  add(`${SITE_URL}/steden`, null, 'daily', '0.9');
+  add(`${SITE_URL}/collections`, null, 'weekly', '0.8');
+  add(`${SITE_URL}/evenementen`, null, 'daily', '0.8');
+  add(`${SITE_URL}/for-restaurants`, null, 'monthly', '0.7');
+  add(`${SITE_URL}/about`, null, 'monthly', '0.5');
+  add(`${SITE_URL}/contact`, null, 'monthly', '0.5');
+  add(`${SITE_URL}/privacy`, null, 'monthly', '0.3');
+  add(`${SITE_URL}/terms`, null, 'monthly', '0.3');
 
-  for (const p of seoIndexable) add(`${SITE_URL}/eten/${p.slug}`, (p.updated_at || '').split('T')[0] || now, 'weekly', '0.9');
-  for (const c of collections) add(`${SITE_URL}/collection/${c.slug}`, (c.updated_at || '').split('T')[0] || now, 'weekly', '0.8');
-  for (const c of cities) add(`${SITE_URL}/steden/${c.slug}`, (c.updated_at || '').split('T')[0] || now, 'weekly', '0.8');
-  for (const r of restaurants) add(`${SITE_URL}/restaurant/${r.slug}`, (r.updated_at || '').split('T')[0] || now, 'weekly', '0.8');
+  for (const p of seoIndexable) add(`${SITE_URL}/eten/${p.slug}`, (p.updated_at || '').split('T')[0] || null, 'weekly', '0.9');
+  for (const c of collections) add(`${SITE_URL}/collection/${c.slug}`, (c.updated_at || '').split('T')[0] || null, 'weekly', '0.8');
+  for (const c of cities) add(`${SITE_URL}/steden/${c.slug}`, (c.updated_at || '').split('T')[0] || null, 'weekly', '0.8');
+  for (const r of restaurants) add(`${SITE_URL}/restaurant/${r.slug}`, (r.updated_at || '').split('T')[0] || null, 'weekly', '0.8');
+  // Dish×city pages without a seo_landing_pages row (hub/fallback), same >=3 rule.
+  const cityById = new Map(cities.map(c => [c.id, c.slug]));
+  const knownSlugs = new Set(seoIndexable.map(p => p.slug));
+  for (const [canonicalSlug, dishIds] of dishIdsByCanonical) {
+    const perCity = new Map();
+    for (const did of dishIds) for (const rid of (restaurantIdsByDish.get(did) || [])) {
+      const r = restaurantById.get(rid);
+      if (!r || !cityById.has(r.city_id)) continue;
+      const set = perCity.get(r.city_id) || new Set();
+      set.add(rid); perCity.set(r.city_id, set);
+    }
+    for (const [cid, set] of perCity) {
+      if (set.size < FACET_THRESHOLD) continue;
+      const slug = `${canonicalSlug}-${cityById.get(cid)}`;
+      if (knownSlugs.has(slug)) continue;
+      knownSlugs.add(slug);
+      add(`${SITE_URL}/eten/${slug}`, null, 'weekly', '0.8');
+    }
+  }
   for (const e of facetEntries) add(e.loc, e.lastmod, 'weekly', '0.7');
 
   // Deduplicate by <loc>

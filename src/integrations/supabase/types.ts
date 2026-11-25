@@ -1760,6 +1760,71 @@ export type Database = {
           },
         ]
       }
+      food_match_answers: {
+        Row: {
+          ambiences: string[]
+          created_at: string
+          dishes: string[]
+          id: string
+          participant_name: string
+          participant_token: string
+          session_id: string
+        }
+        Insert: {
+          ambiences?: string[]
+          created_at?: string
+          dishes?: string[]
+          id?: string
+          participant_name: string
+          participant_token: string
+          session_id: string
+        }
+        Update: {
+          ambiences?: string[]
+          created_at?: string
+          dishes?: string[]
+          id?: string
+          participant_name?: string
+          participant_token?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_match_answers_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "food_match_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      food_match_sessions: {
+        Row: {
+          city_id: string | null
+          created_at: string
+          host_name: string | null
+          id: string
+          share_code: string
+          status: string
+        }
+        Insert: {
+          city_id?: string | null
+          created_at?: string
+          host_name?: string | null
+          id?: string
+          share_code?: string
+          status?: string
+        }
+        Update: {
+          city_id?: string | null
+          created_at?: string
+          host_name?: string | null
+          id?: string
+          share_code?: string
+          status?: string
+        }
+        Relationships: []
+      }
       founding_stats_daily: {
         Row: {
           dag: string
@@ -8772,6 +8837,21 @@ export type Database = {
       ensure_core_landing_pages: {
         Args: { p_min_restaurants?: number }
         Returns: number
+      }
+      food_match_create: {
+        Args: { p_city_id: string; p_host_name: string }
+        Returns: string
+      }
+      food_match_get: { Args: { p_code: string }; Returns: Json }
+      food_match_submit: {
+        Args: {
+          p_ambiences: string[]
+          p_code: string
+          p_dishes: string[]
+          p_name: string
+          p_token: string
+        }
+        Returns: undefined
       }
       founding_partner_live: { Args: { p_status: string }; Returns: boolean }
       founding_partners_for_page: {
