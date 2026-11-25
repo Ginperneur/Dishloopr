@@ -24,6 +24,8 @@ export interface OutreachData {
   hasPhoto?: boolean;
   /** Owner flyer: attached as pdf, offered as a download link, or absent (null). */
   flyer?: { mode: "attachment" | "link"; url: string } | null;
+  /** True from the launch date on: the mail then says Dishloopr is live instead of announcing it. */
+  launched?: boolean;
 }
 
 export interface RenderedMail { subject: string; html: string; text: string }
@@ -168,7 +170,9 @@ export function renderVisible(d: OutreachData): RenderedMail {
     `Dishloopr is een zoekmachine voor gerechten. Je vult in waar je trek in hebt en in welke stad je wilt eten. Vervolgens zie je welke restaurants dat gerecht op de kaart hebben. ${example}`,
     "Onze ambitie is dat Dishloopr in heel Nederland de plek wordt waar mensen hun zoektocht naar een restaurant beginnen met één simpele vraag: Waar heb ik trek in? Voor jullie betekent dat dat nieuwe gasten jullie kunnen ontdekken via de gerechten waar jullie goed in zijn.",
     ...(rank ? [rank] : []),
-    `Op ${LAUNCH} gaan we officieel live. Claim vóór die tijd jullie pagina, zodat jullie zelf bepalen hoe ${d.name} aan gasten wordt gepresenteerd. Claimen is gratis en blijft gratis.`,
+    d.launched
+      ? `Dishloopr is sinds ${LAUNCH} live. Claim nu jullie pagina, zodat jullie zelf bepalen hoe ${d.name} aan gasten wordt gepresenteerd. Claimen is gratis en blijft gratis.`
+      : `Op ${LAUNCH} gaan we officieel live. Claim vóór die tijd jullie pagina, zodat jullie zelf bepalen hoe ${d.name} aan gasten wordt gepresenteerd. Claimen is gratis en blijft gratis.`,
   ];
   const cta = "Claim gratis jullie restaurantpagina";
   const listLead = "Zodra jullie de pagina hebben geclaimd, kunnen jullie:";
@@ -208,7 +212,9 @@ export function renderHiddenMenu(d: OutreachData): RenderedMail {
     `Hoi ${name},`,
     `${name} staat op Dishloopr.`,
     `Alleen zien gasten je nog niet. Op Dishloopr zoeken gasten op gerecht, zoals "beste ramen Amsterdam" of "carbonara Utrecht". Daarom tonen we een restaurant pas als we minimaal ${d.menuMinimum} gerechten van de kaart kennen, drankjes niet meegeteld. ${have} Je menu voldoet daarmee nog niet aan de minimale vereisten.`,
-    `Zonde, want op ${LAUNCH} gaan we officieel live${d.city ? ` en zoeken gasten in ${escapeHtml(d.city)} dan op wat ze willen eten` : ""}. Je kunt dit op twee manieren oplossen:`,
+    d.launched
+      ? `Zonde, want Dishloopr is sinds ${LAUNCH} live${d.city ? ` en gasten in ${escapeHtml(d.city)} zoeken nu op wat ze willen eten` : ""}. Je kunt dit op twee manieren oplossen:`
+      : `Zonde, want op ${LAUNCH} gaan we officieel live${d.city ? ` en zoeken gasten in ${escapeHtml(d.city)} dan op wat ze willen eten` : ""}. Je kunt dit op twee manieren oplossen:`,
   ];
   const optionsHtml = `<ol style="padding-left:20px;margin:8px 0 16px">
 <li style="margin:6px 0"><b>Claim je pagina en vul je menu zelf aan.</b> Claimen is gratis. In je dashboard upload je je menukaart als pdf of voeg je gerechten toe. Zodra je op ${d.menuMinimum} gerechten staat, ben je automatisch zichtbaar.</li>

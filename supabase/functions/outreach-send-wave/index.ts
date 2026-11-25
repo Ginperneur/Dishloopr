@@ -9,6 +9,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { getCaller, isAdmin, isInternalCaller, serviceClient } from "../_shared/auth.ts";
 import { type OutreachSegment, renderOutreach } from "../_shared/outreach/templates.ts";
+import { launchAt } from "../_shared/launch.ts";
 import { outreachSentToday, SENDER_NAME, sendOutreachMail, SITE, unsubscribeToken } from "../_shared/outreach/mailer.ts";
 
 const cors = {
@@ -76,6 +77,10 @@ async function topDish(db: SupabaseClient, t: Target) {
   return rows[0] ? { dish: rows[0].dish_name, position: rows[0].position, total: rows[0].total, placesLeft: rows[0].places_left, topplekLeft: rows[0].topplek_left } : null;
 }
 
+// Launch moment, read once per function instance.
+let launchMs: Promise<number> | null = null;
+const launched = (db: SupabaseClient) => (launchMs ??= launchAt(db).then((l) => l.ms)).then((ms) => Date.now() >= ms);
+
 async function render(db: SupabaseClient, t: Target, menuMinimum: number, flyer: Flyer) {
   const token = await unsubscribeToken(db, t.restaurant_id);
   const q = new URLSearchParams({ t: token, slug: t.slug, naam: t.name });
@@ -96,6 +101,7 @@ async function render(db: SupabaseClient, t: Target, menuMinimum: number, flyer:
     menuMinimum,
     senderName: SENDER_NAME,
     flyer,
+    launched: await launched(db),
   });
   return { mail, token };
 }

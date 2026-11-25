@@ -38,6 +38,13 @@ check("onzichtbaar: states the rule", h.text.includes("minimaal 5 gerechten") &&
 check("onzichtbaar: opens with name", h.text.startsWith("Hoi Trattoria <Da Mario>,\n\nTrattoria <Da Mario> staat op Dishloopr.\n"));
 check("onzichtbaar: claim option with link", h.html.includes(base.claimUrl) && /Claim je pagina en vul je menu zelf aan/.test(h.text));
 check("onzichtbaar: reply option", /Antwoord op deze mail met je menukaart/.test(h.text));
+// Before the launch the mails announce it; from the launch date on they say Dishloopr is live.
+check("zichtbaar: announces the launch before it", v.text.includes("Op 1 december gaan we officieel live. Claim vóór die tijd"));
+const vl = renderOutreach("zichtbaar", { ...base, launched: true });
+check("zichtbaar launched: says it is live", vl.text.includes("Dishloopr is sinds 1 december live. Claim nu jullie pagina") && !vl.text.includes("gaan we officieel live"));
+const hl = renderOutreach("onzichtbaar_menu", { ...base, dishCount: 2, launched: true });
+check("onzichtbaar launched: says it is live", hl.text.includes("Zonde, want Dishloopr is sinds 1 december live en gasten in Utrecht zoeken nu op wat ze willen eten.") && !hl.text.includes("gaan we officieel live"));
+check("launched: no em/en dashes", !/[–—]/.test(visible(vl.text) + visible(hl.text)));
 check("onzichtbaar: zero dishes wording", renderOutreach("onzichtbaar_menu", { ...base, dishCount: 0 }).text.includes("Van jouw kaart kennen we er nog geen."));
 check("zichtbaar: greeting with name", v.text.startsWith("Hoi team van Trattoria <Da Mario>,"));
 for (const seg of ["zichtbaar", "onzichtbaar_menu"]) {
