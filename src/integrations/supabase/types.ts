@@ -3776,7 +3776,7 @@ export type Database = {
       }
       promo_markets: {
         Row: {
-          city_id: string
+          city_id: string | null
           created_at: string
           dish_id: string | null
           id: string
@@ -3785,7 +3785,7 @@ export type Database = {
           slots: number
         }
         Insert: {
-          city_id: string
+          city_id?: string | null
           created_at?: string
           dish_id?: string | null
           id?: string
@@ -3794,7 +3794,7 @@ export type Database = {
           slots?: number
         }
         Update: {
-          city_id?: string
+          city_id?: string | null
           created_at?: string
           dish_id?: string | null
           id?: string
@@ -8865,6 +8865,10 @@ export type Database = {
           subject: string
         }[]
       }
+      claim_bundle_collection_place: {
+        Args: { p_page_slug: string; p_restaurant: string }
+        Returns: string
+      }
       claimable_restaurant: {
         Args: { p_slug: string }
         Returns: {
@@ -8883,6 +8887,41 @@ export type Database = {
       clear_signature_dish: {
         Args: { _restaurant_id: string }
         Returns: undefined
+      }
+      collectie_daily: {
+        Args: never
+        Returns: {
+          action: string
+          bid_id: string
+          price_cents: number
+          restaurant_id: string
+          slot_id: string
+          stripe_subscription_id: string
+          user_id: string
+        }[]
+      }
+      collectie_page_status: {
+        Args: { p_page_slug: string; p_restaurant: string }
+        Returns: Json
+      }
+      collectie_settle: {
+        Args: never
+        Returns: {
+          action: string
+          bid_id: string
+          price_cents: number
+          restaurant_id: string
+          slot_id: string
+          stripe_subscription_id: string
+          user_id: string
+        }[]
+      }
+      collection_bundle_allowance: {
+        Args: { p_restaurant: string }
+        Returns: {
+          allowed: number
+          used: number
+        }[]
       }
       collection_candidates: {
         Args: { p_collection: string; p_restaurant?: string }
@@ -8914,6 +8953,10 @@ export type Database = {
           restaurants: number
         }[]
       }
+      collection_founding_price: {
+        Args: { p_page_slug: string }
+        Returns: number
+      }
       collection_list: {
         Args: { p_city_slug?: string; p_limit?: number; p_slug: string }
         Returns: {
@@ -8934,6 +8977,60 @@ export type Database = {
           review_count: number
           slug: string
           total: number
+        }[]
+      }
+      collection_page: {
+        Args: { p_page_slug: string }
+        Returns: {
+          city_id: string
+          city_name: string
+          collection_id: string
+          collection_slug: string
+          is_national: boolean
+          title: string
+        }[]
+      }
+      collection_page_eligible: {
+        Args: { p_page_slug: string }
+        Returns: boolean
+      }
+      collection_page_member: {
+        Args: { p_page_slug: string; p_restaurant: string }
+        Returns: boolean
+      }
+      collection_page_slug: {
+        Args: { p_city_slug: string; p_collection_slug: string }
+        Returns: string
+      }
+      collection_paid_placements: {
+        Args: { p_city_slug?: string; p_collection_slug: string }
+        Returns: {
+          address: string
+          city_name: string
+          dish_name: string
+          dish_price: number
+          images: string[]
+          name: string
+          restaurant_id: string
+          review_avg: number
+          review_count: number
+          slug: string
+        }[]
+      }
+      collection_place_offers: {
+        Args: { p_restaurant: string }
+        Returns: {
+          can_buy: boolean
+          city_name: string
+          collection_slug: string
+          for_sale: boolean
+          founding_price_cents: number
+          holds_place: boolean
+          is_national: boolean
+          list_price_cents: number
+          page_slug: string
+          places_left: number
+          title: string
         }[]
       }
       collection_review_minimum: { Args: never; Returns: number }
@@ -9391,6 +9488,14 @@ export type Database = {
           term: string
         }[]
       }
+      place_collectie_bid: {
+        Args: {
+          p_amount_cents: number
+          p_page_slug: string
+          p_restaurant: string
+        }
+        Returns: string
+      }
       place_promo_bid: {
         Args: {
           p_amount_cents: number
@@ -9469,6 +9574,10 @@ export type Database = {
         Args: { p_kind: string; p_page_slug: string }
         Returns: string
       }
+      pp_on_page: {
+        Args: { p_kind: string; p_page_slug: string; p_restaurant: string }
+        Returns: boolean
+      }
       pp_order_founding: {
         Args: { p_created: string; p_is_founding: boolean; p_package: string }
         Returns: boolean
@@ -9485,6 +9594,10 @@ export type Database = {
         Returns: boolean
       }
       pp_packages: { Args: { p_kind: string }; Returns: string[] }
+      pp_page_eligible: {
+        Args: { p_kind: string; p_page_slug: string }
+        Returns: boolean
+      }
       pp_page_status: {
         Args: { p_kind: string; p_page_slug: string; p_restaurant: string }
         Returns: Json
