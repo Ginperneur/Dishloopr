@@ -536,6 +536,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           is_featured: boolean | null
+          listed_count: number | null
           match_concepts: string[] | null
           match_dietary: string | null
           match_dish_names: string[] | null
@@ -564,6 +565,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_featured?: boolean | null
+          listed_count?: number | null
           match_concepts?: string[] | null
           match_dietary?: string | null
           match_dish_names?: string[] | null
@@ -592,6 +594,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_featured?: boolean | null
+          listed_count?: number | null
           match_concepts?: string[] | null
           match_dietary?: string | null
           match_dish_names?: string[] | null

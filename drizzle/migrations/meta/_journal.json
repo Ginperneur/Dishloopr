@@ -568,6 +568,13 @@
       "when": 1795605759779,
       "tag": "0083_collection_places",
       "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1795606794692,
+      "tag": "0084_collection_listed_count",
+      "breakpoints": true
     }
   ]
 }
