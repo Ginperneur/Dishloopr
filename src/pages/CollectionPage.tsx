@@ -21,6 +21,8 @@ const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1517248135467-4c7edcad
 const euro = (n: number) => new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(n);
 
 // Old city-bound collections that became national ones, with the city they were about.
+// Collections taken off the site; old links land on the overview.
+const REMOVED = new Set(['romantisch-italiaans-rotterdam']);
 const RENAMED: Record<string, { slug: string; stad: string }> = {
   'beste-ramen-amsterdam': { slug: 'beste-ramen', stad: 'amsterdam' },
 };
@@ -128,6 +130,7 @@ export default function CollectionPage() {
   const { i18n } = useTranslation();
 
   if (renamed) return <Navigate to={`/collection/${renamed.slug}?stad=${renamed.stad}`} replace />;
+  if (slug && REMOVED.has(slug)) return <Navigate to="/collections" replace />;
 
   if (loading) {
     return (

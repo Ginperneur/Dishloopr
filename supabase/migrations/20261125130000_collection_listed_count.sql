@@ -1,6 +1,6 @@
 -- How many restaurants a self-filling collection lists, so the overview can leave out collections
 -- that are (still) nearly empty, such as Halal uit eten while few dishes carry the halal mark.
--- Kept up to date by refresh_collection_entries() (nightly). Requires 20261125100000_dish_collections.sql.
+-- Kept up to date by refresh_collection_entries() (nightly). Also switches off Romantisch Italiaans in Rotterdam. Requires 20261125100000_dish_collections.sql.
 -- Idempotent on purpose.
 
 ALTER TABLE public.collections ADD COLUMN IF NOT EXISTS listed_count integer;
@@ -38,6 +38,10 @@ GRANT EXECUTE ON FUNCTION public.refresh_collection_entries() TO service_role;
 -- The renamed ramen collection kept the Dutch translation of its old title ("Beste Ramen"), which wins over title.
 UPDATE public.collections SET title_i18n = '{}'::jsonb, subtitle_i18n = '{}'::jsonb, description_i18n = '{}'::jsonb
  WHERE slug = 'beste-ramen' AND (title_i18n ->> 'nl') IS DISTINCT FROM NULL;
+
+-- "Romantisch Italiaans in Rotterdam" leaves the site (owner's decision, 25 November 2026). Switched off,
+-- not deleted, so it and its hand picks can come back.
+UPDATE public.collections SET is_active = false, updated_at = now() WHERE slug = 'romantisch-italiaans-rotterdam';
 
 SET LOCAL statement_timeout = '20min';
 SELECT public.refresh_collection_entries();
