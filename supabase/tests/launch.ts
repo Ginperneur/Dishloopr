@@ -7,4 +7,5 @@ const cases: [string | null, string][] = [["2026-12-10", "2026-12-09T23:00:00.00
 let ok = true;
 for (const [v, want] of cases) { const got = new Date((await launchAt(fake(v))).ms).toISOString(); const pass = got === want; ok &&= pass; console.log(pass ? "PASS" : "FAIL", v, got); }
 const c = commitmentEnd(Date.parse("2026-12-09T23:00:00Z")); console.log(c === "2027-06-09T23:00:00.000Z" ? "PASS" : "FAIL", "commitment", c);
+const c3 = commitmentEnd(Date.parse("2026-12-09T23:00:00Z"), 3); console.log(c3 === "2027-03-09T23:00:00.000Z" ? "PASS" : "FAIL", "3-month term", c3);
 Deno.exit(ok ? 0 : 1);

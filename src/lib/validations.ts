@@ -1,15 +1,31 @@
 import { z } from 'zod';
 
 // Review validation schema
+// A review is about the restaurant (stars and a text of at least 10 characters), or only about
+// one or more dishes from the menu (dish stars required, text optional).
 export const reviewSchema = z.object({
+  aboutRestaurant: z.boolean(),
+  // Optional part scores of a restaurant review.
+  aspects: z.object({
+    service: z.number().int().min(1).max(5).optional(),
+    atmosphere: z.number().int().min(1).max(5).optional(),
+    value: z.number().int().min(1).max(5).optional(),
+  }).optional(),
   rating: z.number().int().min(1, 'Minimaal 1 ster').max(5, 'Maximaal 5 sterren'),
-  title: z.string().trim().min(1, 'Titel is verplicht').max(200, 'Titel mag maximaal 200 tekens zijn'),
-  body: z.string().trim().min(10, 'Review moet minimaal 10 tekens bevatten').max(5000, 'Review mag maximaal 5000 tekens zijn'),
+  title: z.string().trim().max(200, 'Titel mag maximaal 200 tekens zijn').optional(),
+  body: z.string().trim().max(5000, 'Review mag maximaal 5000 tekens zijn').optional(),
   photos: z.array(z.string().url('Ongeldige foto URL')).max(10, 'Maximaal 10 foto\'s').optional(),
   dishRatings: z.array(z.object({
     dishId: z.string().uuid(),
     rating: z.number().int().min(1).max(5)
   })).optional()
+}).superRefine((r, ctx) => {
+  if (r.aboutRestaurant && (r.body ?? '').length < 10) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['body'], message: 'Review moet minimaal 10 tekens bevatten' });
+  }
+  if (!r.aboutRestaurant && !(r.dishRatings && r.dishRatings.length)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['dishRatings'], message: 'Kies een gerecht en geef het sterren' });
+  }
 });
 
 export type ReviewInput = z.infer<typeof reviewSchema>;

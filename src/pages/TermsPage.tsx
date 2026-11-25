@@ -124,14 +124,23 @@ export default function TermsPage() {
                   Uitgelicht-plekken, alleen op pagina’s met minstens 10 restaurants. Wie vóór deze regel een plek
                   had, houdt die. Een betaalde plek verandert de volgorde van de overige restaurants niet. Wij
                   geven geen garantie op aantallen bezoekers. Dishloopr heeft op 1 december 2026 een soft launch;
-                  wie Uitgelicht afneemt uiterlijk op 5 januari 2027 wordt Founding Partner en
+                  wie Uitgelicht afneemt uiterlijk op 5 januari 2027 met een looptijd van minimaal 6 maanden (of een
+                  jaarabonnement) wordt Founding Partner en
                   betaalt de actieprijs tot en met 31 december 2027, waarna automatisch de normale prijs gaat
                   gelden. De Founding Partner-badge blijft daarna op de pagina staan, ook als het abonnement
                   eindigt. Facturering start op de dag van afname en de plek gaat direct live. Gaat de soft launch
-                  niet door vóór 31 maart 2027, dan ontvang je een volledige terugbetaling. Een maandabonnement heeft een
-                  minimale looptijd van 6 maanden, gerekend vanaf de dag van afname, en is daarna maandelijks
-                  opzegbaar; een jaarabonnement loopt het jaar uit. Dishloopr mag misleidende plaatsingen
+                  niet door vóór 31 maart 2027, dan ontvang je een volledige terugbetaling. Voor Uitgelicht en Groei kies je
+                  bij het afrekenen een minimale looptijd van 1, 3, 6 of 12 maanden, gerekend vanaf de dag van afname;
+                  een kortere looptijd dan 6 maanden betaalt de normale prijs en geeft geen Founding Partner-status.
+                  Na de looptijd is een maandabonnement maandelijks opzegbaar; een jaarabonnement loopt het jaar uit. Dishloopr mag misleidende plaatsingen
                   weigeren of beëindigen.
+                </li>
+                <li>
+                  <strong>Collectieplekken.</strong> Een betaalde plek bovenaan een collectie in één stad of in heel
+                  Nederland, altijd gemarkeerd als ‘Uitgelicht’ en ‘Betaald’. Per collectie zijn er 3 plekken per stad en 3
+                  landelijk, alleen voor restaurants die bij de collectie horen. De ranglijst van de collectie verandert er
+                  niet door. Looptijd, Founding Partner-prijs en bieden werken zoals bij Uitgelicht. Groei bevat 1 en Dominant
+                  2 collectieplekken zolang de bundel loopt. ‘Getest door Dishloopr’ is niet te koop.
                 </li>
                 <li>
                   <strong>Menuservice.</strong> Levering vindt plaats binnen 3 werkdagen. Het restaurant controleert

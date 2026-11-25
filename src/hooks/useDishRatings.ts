@@ -35,7 +35,7 @@ export function useDishRatings(restaurantId: string) {
   const { user } = useAuth();
   const [dishScores, setDishScores] = useState<RestaurantDishScore[]>([]);
   const [tagScores, setTagScores] = useState<RestaurantTagScore[]>([]);
-  const [availableDishes, setAvailableDishes] = useState<{ id: string; name: string }[]>([]);
+  const [availableDishes, setAvailableDishes] = useState<{ id: string; name: string; price: number | null }[]>([]);
   const [userTagConfirmations, setUserTagConfirmations] = useState<TagConfirmation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -52,20 +52,25 @@ export function useDishRatings(restaurantId: string) {
       setDishScores(scores);
     }
 
-    // Fetch available dishes for this restaurant
+    // The approved dishes on this restaurant's menu, with their price, that guests can review.
     const { data: dishes } = await supabase
       .from('restaurant_dishes')
-      .select('dish_id, dishes:dish_id (id, name)')
-      .eq('restaurant_id', restaurantId);
+      .select('dish_id, price, course_type, dishes:dish_id (id, name)')
+      .eq('restaurant_id', restaurantId)
+      .in('status', ['approved_by_admin', 'verified_by_owner']);
 
     if (dishes) {
+      const seen = new Set<string>();
       setAvailableDishes(
         dishes
-          .filter(d => d.dishes)
+          .filter(d => d.dishes && d.course_type !== 'drank')
           .map(d => ({
             id: (d.dishes as unknown as { id: string; name: string }).id,
-            name: (d.dishes as unknown as { id: string; name: string }).name
+            name: (d.dishes as unknown as { id: string; name: string }).name,
+            price: d.price != null && Number(d.price) > 0 ? Number(d.price) : null,
           }))
+          .filter(d => !seen.has(d.id) && seen.add(d.id))
+          .sort((a, b) => a.name.localeCompare(b.name, 'nl'))
       );
     }
   }, [restaurantId]);

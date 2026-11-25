@@ -304,5 +304,106 @@ check("Pro-included tags switch off when Pro ends", await one<boolean>(`SELECT i
 await db.exec(`UPDATE restaurants SET owner_pro_override = true WHERE id = '${rest(10)}'`);
 check("and on again when Dishloopr gives Pro", await one<boolean>(`SELECT is_active v FROM restaurant_tag_subscriptions WHERE restaurant_id = '${rest(10)}' AND tag_value = 'Japans'`) === true);
 
+// --- Founding Partner only from a 6-month term (20261125090000_founding_minimum_term.sql) ---
+const term = noExt(await Deno.readTextFile(`${repo}/supabase/migrations/20261125090000_founding_minimum_term.sql`));
+await db.exec(term); await db.exec(term);
+await service();
+await db.exec(`INSERT INTO seo_landing_pages (slug, dish_id, city_id, meta_title, meta_description, h1_title) VALUES ('term-utrecht', '${DIAV}', '${UT}', 't', 'd', 'h');`);
+await order(0, "founding_partner", { page: "term-utrecht", created: "2026-12-10", cents: 5900 });
+await order(1, "founding_partner", { page: "term-utrecht", created: "2026-12-10", cents: 9900 });
+await order(2, "founding_partner", { page: "term-utrecht", created: "2026-12-10", cents: 5900 });
+await db.exec(`UPDATE package_orders SET is_founding = false WHERE page_slug = 'term-utrecht' AND restaurant_id = '${rest(1)}';
+  UPDATE package_orders SET is_founding = true WHERE page_slug = 'term-utrecht' AND restaurant_id = '${rest(2)}';`);
+const tp = (await db.query<{ restaurant_id: string; is_founding: boolean }>("SELECT * FROM page_paid_placements('term-utrecht')")).rows;
+check("a short term in the window is no Founding Partner; stored and legacy ones are",
+  tp.length === 3 && tp.find(p => p.restaurant_id === rest(1))?.is_founding === false
+  && tp.find(p => p.restaurant_id === rest(0))?.is_founding === true && tp.find(p => p.restaurant_id === rest(2))?.is_founding === true, tp);
+check("the short term is not protected from the auction",
+  await one<boolean>("SELECT pp_order_protected('uitgelicht', 'founding_partner', '2026-12-10', false, 'month', NULL) v") === false
+  && await one<boolean>("SELECT pp_order_protected('uitgelicht', 'founding_partner', '2026-12-10', NULL, 'month', NULL) v") === true);
+// Give all three a stale price: the auction may only touch the short term.
+await db.exec(`UPDATE package_orders SET amount_cents = 5000 WHERE page_slug = 'term-utrecht'`);
+const settle = (await db.query<{ action: string; slot_id: string }>("SELECT * FROM pp_settle('uitgelicht')")).rows;
+const termIds = (await db.query<{ id: string; restaurant_id: string }>("SELECT id, restaurant_id FROM package_orders WHERE page_slug = 'term-utrecht'")).rows;
+const repriced = termIds.filter(o => settle.some(s => s.action === "reprice" && s.slot_id === o.id)).map(o => o.restaurant_id);
+check("settle reprices only the short term on that page", JSON.stringify(repriced) === JSON.stringify([rest(1)]), { repriced, settle });
+const tb = (await db.query<{ page_slug: string; is_founding: boolean }>("SELECT * FROM restaurant_paid_badges($1)", [rest(1)])).rows;
+check("restaurant badge follows the stored status", tb.find(b => b.page_slug === "term-utrecht")?.is_founding === false, tb);
+
+// --- Paid places in collections (20261125095000, 20261125100000, 20261125120000) ---
+await service();
+await db.exec(`
+  ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS images text[], ADD COLUMN IF NOT EXISTS concepts text[],
+    ADD COLUMN IF NOT EXISTS is_fully_halal boolean DEFAULT false, ADD COLUMN IF NOT EXISTS opening_hours jsonb,
+    ADD COLUMN IF NOT EXISTS address text, ADD COLUMN IF NOT EXISTS price_level int DEFAULT 2;
+  ALTER TABLE restaurant_dishes ADD COLUMN IF NOT EXISTS is_signature boolean DEFAULT false, ADD COLUMN IF NOT EXISTS is_halal boolean DEFAULT false,
+    ADD COLUMN IF NOT EXISTS is_gluten_free boolean DEFAULT false, ADD COLUMN IF NOT EXISTS dietary_tags text[] NOT NULL DEFAULT '{}',
+    ADD COLUMN IF NOT EXISTS course_type text;
+  ALTER TABLE reviews ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid();
+  ALTER TABLE package_orders ADD COLUMN IF NOT EXISTS fulfillment_status text NOT NULL DEFAULT 'todo';
+  CREATE TABLE IF NOT EXISTS dish_ratings (id uuid DEFAULT gen_random_uuid(), review_id uuid, dish_id uuid, rating int);
+  CREATE FUNCTION guard_is_restricted_mod() RETURNS boolean LANGUAGE sql STABLE AS $$ SELECT false $$;
+  ALTER TABLE collections ADD COLUMN IF NOT EXISTS subtitle text, ADD COLUMN IF NOT EXISTS description text, ADD COLUMN IF NOT EXISTS cover_image text,
+    ADD COLUMN IF NOT EXISTS city_id uuid, ADD COLUMN IF NOT EXISTS sort_order int DEFAULT 0, ADD COLUMN IF NOT EXISTS seo_title text,
+    ADD COLUMN IF NOT EXISTS seo_description text, ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();
+  ALTER TABLE collections ADD CONSTRAINT collections_slug_key UNIQUE (slug);
+  ALTER TABLE collection_restaurants ADD COLUMN IF NOT EXISTS sort_order int DEFAULT 0;
+  UPDATE restaurants SET images = ARRAY['x.jpg'] WHERE city_id = '${UT}' AND id <> '${rest(11)}';`);
+for (const m of ["20261125095000_dish_reviews", "20261125100000_dish_collections", "20261125120000_collection_places"]) {
+  const q = noExt(await Deno.readTextFile(`${repo}/supabase/migrations/${m}.sql`));
+  await db.exec(q); await db.exec(q);
+}
+const PIZZA_UT = "collectie--beste-pizza--utrecht", PIZZA_NL = "collectie--beste-pizza--nederland", PIZZA_DH = "collectie--beste-pizza--den-haag";
+const entries = await one<number>(`SELECT count(*)::int v FROM collection_entries e JOIN collections c ON c.id = e.collection_id WHERE c.slug = 'beste-pizza' AND e.city_id = '${UT}'`);
+check("pizza restaurants in Utrecht match Beste pizza", entries === 13, entries);
+check("collection prices: 49 euro in a city, 149 nationally, Founding 29 and 89",
+  await one<number>(`SELECT pp_list_price('collectie', '${PIZZA_UT}') v`) === 4900 && await one<number>(`SELECT pp_list_price('collectie', '${PIZZA_NL}') v`) === 14900
+  && await one<number>(`SELECT collection_founding_price('${PIZZA_UT}') v`) === 2900 && await one<number>(`SELECT collection_founding_price('${PIZZA_NL}') v`) === 8900);
+check("sold from 10 matching restaurants: Utrecht yes, Den Haag (9) no",
+  await one<boolean>(`SELECT collection_page_eligible('${PIZZA_UT}') v`) === true && await one<boolean>(`SELECT collection_page_eligible('${PIZZA_DH}') v`) === false);
+check("Getest door Dishloopr and unknown collections sell nothing",
+  await one<boolean>("SELECT collection_page_eligible('collectie--getest-door-dishloopr--utrecht') v") === false);
+check("only members with a photo may buy", await one<boolean>(`SELECT collection_page_member('${rest(10)}', '${PIZZA_UT}') v`) === true
+  && await one<boolean>(`SELECT collection_page_member('${rest(11)}', '${PIZZA_UT}') v`) === false
+  && await one<boolean>(`SELECT collection_page_member('${rest(50)}', '${PIZZA_UT}') v`) === false);
+check("a free place is sold at the list price", (await one<{ price_cents: number }>(`SELECT pp_reserve('collectie', '${PIZZA_UT}', $1) v`, [rest(10)]))?.price_cents === 4900);
+for (const i of [4, 5, 6]) await order(i, "collectieplek", { page: PIZZA_UT, cents: 4900 });
+check("3 places, then full", await one<number>(`SELECT pp_taken('collectie', '${PIZZA_UT}') v`) === 3
+  && await fails(`SELECT pp_reserve('collectie', '${PIZZA_UT}', $1)`, [rest(10)]));
+check("collection places do not take Uitgelicht or Topplek places", await one<number>(`SELECT pp_taken('uitgelicht', '${PIZZA_UT}') v`) === 0);
+await as(owner(10));
+await db.query(`SELECT place_collectie_bid('${PIZZA_UT}', $1, 6000)`, [rest(10)]);
+const cst = await one<Record<string, number>>(`SELECT collectie_page_status('${PIZZA_UT}', $1) v`, [rest(10)]);
+check("a full collection page takes bids", cst?.open_bids === 1 && cst?.slots === 3 && cst?.list_price_cents === 4900, cst);
+check("a bid below the list price is refused", await fails(`SELECT place_collectie_bid('${PIZZA_UT}', $1, 3000)`, [rest(10)]));
+await service();
+const cpl = (await db.query<{ restaurant_id: string }>("SELECT * FROM collection_paid_placements('beste-pizza', 'utrecht')")).rows;
+check("the collection shows its 3 paid places", cpl.length === 3 && cpl.every(p => [rest(4), rest(5), rest(6)].includes(p.restaurant_id)), cpl);
+check("no paid places nationally yet", (await db.query("SELECT * FROM collection_paid_placements('beste-pizza', NULL)")).rows.length === 0);
+check("mail label names the collection place",
+  await one<string>(`SELECT promo_item_label('collectie', NULL, NULL, '${PIZZA_UT}') v`) === "Collectieplek in Beste pizza in Utrecht");
+await db.exec(`UPDATE package_orders SET amount_cents = 3000, is_founding = false WHERE page_slug = '${PIZZA_UT}'`);
+const cset = (await db.query<{ action: string; restaurant_id: string }>("SELECT * FROM collectie_settle()")).rows;
+check("the quarterly auction runs for collection places", cset.some(x => x.action === "won" && x.restaurant_id === rest(10)), cset);
+
+// --- Collection places included in Groei and Dominant ---
+await as(owner(7));
+check("no bundle, no included collection place", await fails(`SELECT claim_bundle_collection_place('${PIZZA_NL}', $1)`, [rest(7)]));
+await service();
+await order(7, "groei", { page: "oud-utrecht", cents: 11900 });
+const bundleId = await one<string>(`SELECT id::text v FROM package_orders WHERE restaurant_id = '${rest(7)}' AND package = 'groei'`);
+await as(owner(7));
+check("Groei: the included place cannot jump a full page", await fails(`SELECT claim_bundle_collection_place('${PIZZA_UT}', $1)`, [rest(7)]));
+await db.query(`SELECT claim_bundle_collection_place('${PIZZA_NL}', $1)`, [rest(7)]);
+const inc = (await db.query<{ amount_cents: number; bundle_order_id: string; status: string }>(
+  `SELECT amount_cents, bundle_order_id::text, status FROM package_orders WHERE restaurant_id = '${rest(7)}' AND package = 'collectieplek'`)).rows;
+check("Groei includes one national collection place at no extra cost", inc.length === 1 && inc[0].amount_cents === 0 && inc[0].bundle_order_id === bundleId && inc[0].status === "active", inc);
+check("and only one", await fails(`SELECT claim_bundle_collection_place('collectie--beste-pasta--nederland', $1)`, [rest(7)]));
+await service();
+check("the included place shows on the collection", (await db.query("SELECT * FROM collection_paid_placements('beste-pizza', NULL)")).rows.length === 1);
+await db.exec(`UPDATE package_orders SET status = 'cancelled' WHERE id = '${bundleId}'`);
+check("ending the bundle ends its collection place",
+  await one<string>(`SELECT status v FROM package_orders WHERE restaurant_id = '${rest(7)}' AND package = 'collectieplek'`) === "cancelled");
+
 console.log(ok ? "ALL PASS" : "SOME FAILED");
 if (!ok) Deno.exit(1);

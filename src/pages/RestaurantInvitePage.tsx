@@ -119,7 +119,7 @@ export default function RestaurantInvitePage() {
 
             <section className="rounded-xl border bg-muted/40 p-5 space-y-3">
               <h2 className="flex items-center gap-2 text-xl font-semibold"><Star className="h-5 w-5 text-primary" />Extra zichtbaarheid</h2>
-              <p>Uitgelicht: een uitgelichte plek op een gerechtpagina. Koop je 'm nu of uiterlijk 5 januari 2027, dan word je Founding Partner en betaal je €59 per maand excl. btw (in plaats van €99) tot en met 31 december 2027, met een looptijd van minimaal 6 maanden. Per pagina zijn er 1 Topplek en 3 Uitgelicht-plekken. Je plek staat direct live en je betaalt vanaf de dag van afrekenen.</p>
+              <p>Uitgelicht: een uitgelichte plek op een gerechtpagina. Koop je 'm nu of uiterlijk 5 januari 2027 met een looptijd van minimaal 6 maanden, dan word je Founding Partner en betaal je €59 per maand excl. btw (in plaats van €99) tot en met 31 december 2027. Je kiest de looptijd voordat je afrekent; korter mag ook, dan betaal je de normale prijs. Per pagina zijn er 1 Topplek en 3 Uitgelicht-plekken. Je plek staat direct live en je betaalt vanaf de dag van afrekenen.</p>
               <Button asChild variant="outline" className="min-h-11"><Link to={`/voor-restaurants/pakketten?slug=${encodeURIComponent(r.slug)}`}>Bekijk pakketten <ArrowRight className="ml-1 h-4 w-4" /></Link></Button>
             </section>
 

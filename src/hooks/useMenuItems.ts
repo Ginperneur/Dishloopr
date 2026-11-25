@@ -62,6 +62,8 @@ export function useMenuItems(restaurantId: string | undefined) {
           .select(`
             id,
             restaurant_id,
+            price,
+            description,
             is_signature,
             is_halal,
             is_vegetarian,
@@ -88,13 +90,16 @@ export function useMenuItems(restaurantId: string | undefined) {
             const dish = rd.dish as { id: string; name: string; vertaling_nl: string | null; cuisine_tags: string[] | null; course: string | null };
             const cuisineTags = dish.cuisine_tags || [];
             const courseType = normalizeCourse(dish.course ?? (rd as any).course_type);
+            // Price and description come from the restaurant's own menu row; 0 or empty stays hidden.
+            const price = Number((rd as { price?: number | string | null }).price);
+            const description = ((rd as { description?: string | null }).description ?? '').trim();
             
             return {
               id: rd.id,
               restaurant_id: rd.restaurant_id,
               name: dish.name,
-              description: null,
-              price: 0,
+              description: description || null,
+              price: Number.isFinite(price) && price > 0 ? price : 0,
               category: cuisineTags[0] || 'Gerechten',
               course_type: courseType,
               allergens: [],

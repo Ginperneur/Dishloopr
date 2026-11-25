@@ -38,6 +38,8 @@ export interface SearchResult extends Restaurant {
   paidFounding?: boolean;
   paidPage?: string;
   hasDishMatch?: boolean;
+  /** The matched dish with its price from the restaurant's own menu, for the "Bekend om" line. */
+  signatureDish?: { name: string; price: number | null };
   chainName?: string;
   chainLocationsCount?: number;
 }
@@ -70,6 +72,36 @@ const SEARCH_TERM_SYNONYMS: Record<string, string[]> = {
  * Paginated fetch helper — defeats Supabase's 1000-row default cap.
  * Fetches all rows matching a query by paginating with .range().
  */
+/**
+ * Adds a menu price to the "Bekend om" line of search cards: the first matched dish that has a price
+ * on the restaurant's own menu (approved rows, above 0). search_restaurants returns names only.
+ */
+async function withMatchedDishPrices(rows: SearchResult[]): Promise<SearchResult[]> {
+  const wanted = rows.slice(0, 300).filter(r => r.matchedDishes?.length);
+  if (!wanted.length) return rows;
+  const prices = new Map<string, number>();
+  for (let i = 0; i < wanted.length; i += 100) {
+    const chunk = wanted.slice(i, i + 100);
+    const names = [...new Set(chunk.flatMap(r => r.matchedDishes!.slice(0, 5)))];
+    const { data, error } = await supabase.from('restaurant_dishes')
+      .select('restaurant_id, price, dishes:dish_id!inner(name)')
+      .in('restaurant_id', chunk.map(r => r.id))
+      .in('dishes.name', names)
+      .in('status', ['approved_by_admin', 'verified_by_owner'])
+      .gt('price', 0);
+    if (error) throw error;
+    for (const row of (data ?? []) as Array<{ restaurant_id: string; price: number | string | null; dishes: { name: string } | null }>) {
+      const price = Number(row.price);
+      const key = `${row.restaurant_id}|${row.dishes?.name}`;
+      if (Number.isFinite(price) && price > 0 && !prices.has(key)) prices.set(key, price);
+    }
+  }
+  return rows.map(r => {
+    const name = r.matchedDishes?.slice(0, 5).find(n => prices.has(`${r.id}|${n}`));
+    return name ? { ...r, signatureDish: { name, price: prices.get(`${r.id}|${name}`)! } } : r;
+  });
+}
+
 async function fetchAllRows<T>(
   buildQuery: (from: number, to: number) => any,
   pageSize = 1000
@@ -728,6 +760,9 @@ export function useSearch() {
         }
       } catch { /* paid places are optional; the organic results stand on their own */ }
     }
+
+    // Prices are optional: without them the cards still show the matched dish.
+    try { rebalanced = await withMatchedDishPrices(rebalanced); } catch { /* keep the results without prices */ }
 
     setResults(rebalanced);
     finish(); setLoading(false);

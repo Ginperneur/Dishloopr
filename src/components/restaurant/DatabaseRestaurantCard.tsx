@@ -269,7 +269,7 @@ export function DatabaseRestaurantCard({ restaurant, index = 0, paidKind, paidFo
                 <span className="font-medium text-foreground">{t('restaurant.knownFor', 'Bekend om')}:</span>{' '}
                 <span className="capitalize">{sig.name}</span>
                 {sigTr && <span className="font-normal"> ({sigTr})</span>}
-                {priceNum !== null && <> — {formatEuroNL(priceNum)}</>}
+                {priceNum !== null && <> · <span className="tabular-nums">{formatEuroNL(priceNum)}</span></>}
               </div>
             );
           })()}

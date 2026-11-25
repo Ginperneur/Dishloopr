@@ -1,4 +1,6 @@
+import { useMemo, useState } from 'react';
 import { Star, Image as ImageIcon } from 'lucide-react';
+import { formatDishName } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -15,8 +17,32 @@ interface ReviewListProps {
   hideEmpty?: boolean;
 }
 
+type Filter = 'all' | 'restaurant' | string;
+
 export function ReviewList({ reviews, loading, isOwner = false, onRefetch, hideEmpty = false }: ReviewListProps) {
   const { t, i18n } = useTranslation();
+  const [filter, setFilter] = useState<Filter>('all');
+
+  // Filter chips: everything, reviews about the restaurant, and one per reviewed dish (most reviews first).
+  const dishes = useMemo(() => {
+    const byDish = new Map<string, { id: string; name: string; ratings: number[] }>();
+    for (const r of reviews) for (const d of r.dishRatings ?? []) {
+      const e = byDish.get(d.dishId) ?? { id: d.dishId, name: d.dishName, ratings: [] };
+      e.ratings.push(d.rating);
+      byDish.set(d.dishId, e);
+    }
+    return [...byDish.values()].sort((a, b) => b.ratings.length - a.ratings.length || a.name.localeCompare(b.name, 'nl'));
+  }, [reviews]);
+  const aboutRestaurant = reviews.filter(r => r.about_restaurant !== false);
+  const shown = filter === 'all' ? reviews
+    : filter === 'restaurant' ? aboutRestaurant
+    : reviews.filter(r => r.dishRatings?.some(d => d.dishId === filter));
+  const selectedDish = dishes.find(d => d.id === filter);
+  const chips = [
+    { id: 'all', label: t('reviews.filterAll', 'Alle reviews'), count: reviews.length },
+    { id: 'restaurant', label: t('reviews.filterRestaurant', 'Over het restaurant'), count: aboutRestaurant.length },
+    ...dishes.map(d => ({ id: d.id, label: formatDishName(d.name), count: d.ratings.length })),
+  ].filter(c => c.id === 'all' || c.count > 0);
   const dateLocaleMap: Record<string, string> = {
     nl: 'nl-NL', en: 'en-GB', de: 'de-DE', fr: 'fr-FR', es: 'es-ES',
   };
@@ -47,7 +73,59 @@ export function ReviewList({ reviews, loading, isOwner = false, onRefetch, hideE
 
   return (
     <div className="space-y-4 md:space-y-6">
-      {reviews.map((review, index) => (
+      {dishes.length > 0 && (
+        <div className="space-y-2">
+          <p id="review-filter-label" className="text-sm font-medium">{t('reviews.filterLabel', 'Filter op gerecht')}</p>
+          <div role="group" aria-labelledby="review-filter-label" className="flex flex-wrap gap-2">
+            {chips.map(c => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setFilter(c.id)}
+                aria-pressed={filter === c.id}
+                className={`min-h-11 rounded-full border px-4 text-sm transition-colors ${filter === c.id ? 'border-primary bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+              >
+                {c.label} <span className="opacity-75">({c.count})</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {selectedDish && (() => {
+        const n = selectedDish.ratings.length;
+        const avg = selectedDish.ratings.reduce((a, b) => a + b, 0) / n;
+        return (
+          <div className="flex flex-col gap-4 rounded-xl border p-4 sm:flex-row sm:items-center">
+            <div className="flex-1 space-y-1">
+              <p className="text-lg font-semibold">{formatDishName(selectedDish.name)}</p>
+              <p className="text-sm">
+                <Star className="mr-1 inline h-4 w-4 fill-rating text-rating" aria-hidden="true" />
+                <strong>{avg.toLocaleString(dateLocale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</strong>
+                <span className="text-muted-foreground"> {t('reviews.dishCount', 'uit {{n}} reviews van dit gerecht', { n })}</span>
+              </p>
+            </div>
+            <div className="flex-1 space-y-1" aria-label={t('reviews.distribution', 'Verdeling van de sterren')}>
+              {[5, 4, 3, 2, 1].map(stars => {
+                const count = selectedDish.ratings.filter(r => r === stars).length;
+                return (
+                  <div key={stars} className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span className="w-8">{stars} ★</span>
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted"><div className="h-full bg-rating" style={{ width: `${(count / n) * 100}%` }} /></div>
+                    <span className="w-5 text-right">{count}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
+      {shown.length === 0 && (
+        <p className="py-6 text-center text-muted-foreground">{t('reviews.noneForFilter', 'Nog geen reviews voor deze keuze.')}</p>
+      )}
+
+      {shown.map((review, index) => (
         <motion.div
           key={review.id}
           initial={{ opacity: 0, y: 20 }}
@@ -90,7 +168,7 @@ export function ReviewList({ reviews, loading, isOwner = false, onRefetch, hideE
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-0.5 shrink-0">
+            {review.about_restaurant !== false && <div className="flex items-center gap-0.5 shrink-0" aria-label={t('reviews.restaurantStars', '{{n}} van 5 voor het restaurant', { n: review.rating })}>
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
@@ -101,8 +179,30 @@ export function ReviewList({ reviews, loading, isOwner = false, onRefetch, hideE
                   }`}
                 />
               ))}
-            </div>
+            </div>}
           </div>
+
+          {/* Stars per dish */}
+          {(review.dishRatings?.length ?? 0) > 0 && (
+            <div className="mb-2 flex flex-wrap gap-2">
+              {review.dishRatings!.map(d => (
+                <span key={d.dishId} className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-2.5 py-1 text-sm">
+                  {formatDishName(d.dishName)}
+                  <span className="text-rating" aria-label={t('reviews.dishStars', '{{n}} van 5', { n: d.rating })}>{'★'.repeat(d.rating)}<span className="text-muted-foreground/40">{'★'.repeat(5 - d.rating)}</span></span>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Part scores */}
+          {review.about_restaurant !== false && (review.service_rating || review.atmosphere_rating || review.value_rating) ? (
+            <div className="mb-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
+              {([['Service', review.service_rating], ['Sfeer', review.atmosphere_rating], ['Prijs en kwaliteit', review.value_rating]] as const)
+                .filter(([, v]) => v).map(([label, v]) => (
+                  <span key={label}>{label} <span className="text-rating" aria-label={`${v} van 5`}>{'★'.repeat(v!)}</span></span>
+                ))}
+            </div>
+          ) : null}
 
           {/* Content */}
           {review.title && (

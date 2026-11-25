@@ -6,11 +6,19 @@
 export const FOUNDING_WINDOW_END = new Date('2027-01-05T23:59:59+01:00');
 export const foundingWindowOpen = () => new Date() <= FOUNDING_WINDOW_END;
 
+/** Terms an owner picks before paying for Uitgelicht or Groei; same list as create-package-checkout. */
+export const TERM_MONTHS = [1, 3, 6, 12] as const;
+export type TermMonths = (typeof TERM_MONTHS)[number];
+/** The Founding Partner price and status need a term of at least this many months. */
+export const FOUNDING_MIN_MONTHS = 6;
+
 export const PRICES = {
   uitgelicht: { from: 9900, founding: 5900, foundingYear: 59000 },
   topplek: { from: 19900 },
   groei: { surcharge: 2000, founding: 7900 },
   dominant: { surcharge: 5000 },
+  /** A place in a collection: per city or across the Netherlands (pp_list_price / collection_founding_price). */
+  collectie: { city: 4900, national: 14900, foundingCity: 2900, foundingNational: 8900 },
   spotlightWeek: 3900,
   newsletterPer1000: 3000,
   newsletterMin: 2000,
