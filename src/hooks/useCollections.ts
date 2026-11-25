@@ -29,9 +29,13 @@ export interface Collection {
   match_concepts?: string[] | null;
   /** Photo of the number 1, used when there is no cover_image. */
   auto_cover?: string | null;
+  /** How many restaurants a self-filling collection lists (20261125130000_collection_listed_count.sql). */
+  listed_count?: number | null;
   city?: { name: string; slug: string } | null;
   dish?: { name: string; slug: string } | null;
 }
+
+const MIN_LISTED = 3;
 
 export function useCollections() {
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -57,7 +61,12 @@ export function useCollections() {
     if (error) {
       console.error('Error fetching collections:', error);
     } else {
-      setCollections((data || []) as unknown as Collection[]);
+      // A self-filling collection with fewer than 3 restaurants stays out of the overview until it fills up.
+      setCollections(((data || []) as unknown as Collection[])
+        .filter(c => isAutoCollection(c)
+          ? c.listed_count == null || c.listed_count >= MIN_LISTED
+          // An editorial collection (such as Getest door Dishloopr) shows once it has a restaurant.
+          : ((c as unknown as { collection_restaurants?: { count: number }[] }).collection_restaurants?.[0]?.count ?? 1) > 0));
     }
     setLoading(false);
   };
