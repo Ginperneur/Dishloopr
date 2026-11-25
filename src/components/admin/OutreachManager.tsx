@@ -196,7 +196,7 @@ function MailSettings({ settings, onChange, onSave, saving, targets }: {
         <CardHeader className="pb-2"><CardTitle className="text-base">Agent instellingen</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between gap-4">
-            <div><Label htmlFor="o-enabled">Automatisch versturen</Label><p className="text-xs text-muted-foreground">Werkdagen elk uur tussen 9 en 17 uur een batch, tot de daglimiet.</p></div>
+            <div><Label htmlFor="o-enabled">Automatisch versturen</Label><p className="text-xs text-muted-foreground">Werkdagen elke 20 minuten tussen 9 en 17 uur een batch, tot de daglimiet.</p></div>
             <Switch id="o-enabled" checked={settings.enabled} onCheckedChange={v => onChange({ ...settings, enabled: v })} />
           </div>
           <div className="grid grid-cols-3 gap-3">
