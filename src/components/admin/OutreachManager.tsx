@@ -25,13 +25,22 @@ const SEGMENTS = [
   { id: 'uitgesloten', label: 'Uitgesloten' },
 ] as const;
 
+// The full target list (16k+ rows, 1000 per request) is only needed for counts, search and the CSV.
+// Pages are fetched 6 at a time instead of one by one.
+const PAGE = 1000;
+const PARALLEL = 6;
 async function loadAllTargets(): Promise<OutreachTarget[]> {
   const out: OutreachTarget[] = [];
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await db.from('outreach_targets').select('*').order('restaurant_id').range(from, from + 999);
-    if (error) throw error;
-    out.push(...((data ?? []) as OutreachTarget[]));
-    if (!data || data.length < 1000) return out;
+  for (let start = 0; ; start += PAGE * PARALLEL) {
+    const pages = await Promise.all(Array.from({ length: PARALLEL }, (_, i) => {
+      const from = start + i * PAGE;
+      return db.from('outreach_targets').select('*').order('restaurant_id').range(from, from + PAGE - 1);
+    }));
+    for (const { data, error } of pages) {
+      if (error) throw error;
+      out.push(...((data ?? []) as OutreachTarget[]));
+    }
+    if (pages.some(p => (p.data?.length ?? 0) < PAGE)) return out;
   }
 }
 
@@ -41,29 +50,48 @@ export function OutreachManager() {
   const [replies, setReplies] = useState<OutreachReply[]>([]);
   const [sentToday, setSentToday] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [targetsLoading, setTargetsLoading] = useState(true);
+  const [replyNames, setReplyNames] = useState<Map<string, string>>(new Map());
   const [busy, setBusy] = useState<string | null>(null);
 
-  const refresh = useCallback(async () => {
+  // Inbox, settings and today's count load first; they are small and are what the admin works with.
+  const refreshInbox = useCallback(async () => {
     setLoading(true);
     try {
       const day = new Date(); day.setUTCHours(0, 0, 0, 0);
-      const [t, s, r, c] = await Promise.all([
-        loadAllTargets(),
+      const [s, r, c] = await Promise.all([
         db.from('outreach_settings').select('*').eq('id', true).single(),
         db.from('outreach_replies').select('*').order('received_at', { ascending: false }).limit(200),
         db.from('outreach_messages').select('id', { count: 'exact', head: true }).gte('created_at', day.toISOString()).neq('status', 'failed'),
       ]);
-      setTargets(t);
+      const rows = (r.data ?? []) as OutreachReply[];
       setSettings(s.data as OutreachSettings);
-      setReplies((r.data ?? []) as OutreachReply[]);
+      setReplies(rows);
       setSentToday(c.count ?? 0);
+      const ids = [...new Set(rows.map(x => x.restaurant_id).filter((x): x is string => !!x))];
+      if (ids.length) {
+        const { data } = await db.from('restaurants').select('id, name, cities(name)').in('id', ids);
+        type Row = { id: string; name: string; cities: { name: string } | { name: string }[] | null };
+        setReplyNames(new Map(((data ?? []) as unknown as Row[]).map(x => {
+          const city = Array.isArray(x.cities) ? x.cities[0]?.name : x.cities?.name;
+          return [x.id, `${x.name}${city ? `, ${city}` : ''}`] as [string, string];
+        })));
+      }
     } catch (e) {
       toast.error(`Laden mislukt: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setLoading(false);
     }
   }, []);
-  useEffect(() => { void refresh(); }, [refresh]);
+  // The full list follows in the background, for the counts, the segments, search and the CSV.
+  const refreshTargets = useCallback(async () => {
+    setTargetsLoading(true);
+    try { setTargets(await loadAllTargets()); }
+    catch (e) { toast.error(`Restaurants laden mislukt: ${e instanceof Error ? e.message : String(e)}`); }
+    finally { setTargetsLoading(false); }
+  }, []);
+  const refresh = useCallback(async () => { await Promise.all([refreshInbox(), refreshTargets()]); }, [refreshInbox, refreshTargets]);
+  useEffect(() => { void refreshInbox(); void refreshTargets(); }, [refreshInbox, refreshTargets]);
 
   const matrix = useMemo(() => segmentMatrix(targets), [targets]);
   const pending = settings ? pendingForWave(targets, settings.wave) : 0;
@@ -104,14 +132,14 @@ export function OutreachManager() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-2">
-        <Button variant="outline" onClick={refresh} disabled={loading}>
-          {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}Vernieuwen
+        <Button variant="outline" onClick={refresh} disabled={loading || targetsLoading}>
+          {loading || targetsLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}Vernieuwen
         </Button>
-        <Button variant="outline" onClick={exportCsv} disabled={!targets.length}><Download className="mr-2 h-4 w-4" />Database downloaden (CSV, {targets.length})</Button>
-        <Button onClick={runBatch} disabled={!settings || busy === 'run' || pending === 0}>
+        <Button variant="outline" onClick={exportCsv} disabled={targetsLoading || !targets.length}><Download className="mr-2 h-4 w-4" />Database downloaden (CSV, {targetsLoading ? '…' : targets.length})</Button>
+        <Button onClick={runBatch} disabled={!settings || busy === 'run' || targetsLoading || pending === 0}>
           {busy === 'run' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}Volgende batch nu versturen
         </Button>
-        <span className="text-sm text-muted-foreground">Nog {pending} te mailen in golf {settings?.wave ?? '…'} · vandaag {sentToday}/{settings?.daily_cap ?? '…'}</span>
+        <span className="text-sm text-muted-foreground">Nog {targetsLoading ? '…' : pending} te mailen in golf {settings?.wave ?? '…'} · vandaag {sentToday}/{settings?.daily_cap ?? '…'}</span>
       </div>
 
       {settings?.flyer_warning && (
@@ -153,7 +181,7 @@ export function OutreachManager() {
 
         <TabsContent value="mail">{settings && <MailSettings settings={settings} onChange={setSettings} onSave={saveSettings} saving={busy === 'settings'} targets={targets} />}</TabsContent>
 
-        <TabsContent value="inbox"><Inbox replies={replies} targets={targets} onChanged={refresh} /></TabsContent>
+        <TabsContent value="inbox"><Inbox replies={replies} targets={targets} replyNames={replyNames} onChanged={refreshInbox} /></TabsContent>
 
         <TabsContent value="opvolging"><ClaimFollowupPanel /></TabsContent>
       </Tabs>
@@ -289,9 +317,9 @@ function FlyerSettings({ mode, onMode }: { mode: OutreachSettings['flyer_mode'];
   );
 }
 
-function Inbox({ replies, targets, onChanged }: { replies: OutreachReply[]; targets: OutreachTarget[]; onChanged: () => void }) {
+function Inbox({ replies, targets, replyNames, onChanged }: { replies: OutreachReply[]; targets: OutreachTarget[]; replyNames: Map<string, string>; onChanged: () => void }) {
   const [filter, setFilter] = useState('te_beoordelen');
-  const names = useMemo(() => new Map(targets.map(t => [t.restaurant_id, `${t.name}${t.stad ? `, ${t.stad}` : ''}`])), [targets]);
+  const names = useMemo(() => new Map([...replyNames, ...targets.map(t => [t.restaurant_id, `${t.name}${t.stad ? `, ${t.stad}` : ''}`] as [string, string])]), [targets, replyNames]);
   const list = replies
     .filter(r => filter === 'alle' || r.status === filter)
     .sort((a, b) => (filter === 'te_beoordelen' ? (b.deal_kans ?? 0) - (a.deal_kans ?? 0) : 0) || b.received_at.localeCompare(a.received_at));
