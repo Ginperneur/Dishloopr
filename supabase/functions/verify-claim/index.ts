@@ -7,6 +7,7 @@ import { screenClaimDocuments } from "../_shared/claimScreening.ts";
 // Supabase edge runtime: keep work running after the response is sent.
 declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined;
 import { deliverDomainCode } from "./domainDelivery.ts";
+import { notifyAdminOfClaim } from "./adminNotify.ts";
 import {
   extractDomain, domainMatches, codeExpiry, isExpired, attemptsExhausted, canSendAnotherCode, canStartClaim,
   OPEN_CLAIM_STATUSES, resendWaitSeconds,
@@ -273,16 +274,24 @@ Deno.serve(async (req) => {
 
       // AI pre-check after the response: attach the summary for the admin queue.
       // It never approves a claim; an admin always decides.
+      // Then mail the admin right away (with the AI advice when it is ready), so the owner is not left waiting.
       const screen = async () => {
+        let ai: { verdict?: string; reasons?: string[]; doc_type?: string } | null = null;
         try {
           const screening = await screenClaimDocuments(admin, files, { name: restaurant.name, address: restaurant.address }, fullName);
-          if (!screening) return;
-          await admin.from("restaurant_claims").update({ verification_proof: { ...proof, ai_screening: screening } }).eq("id", claimId);
-          await log(restaurant.id, claimId, "AI_SCREENED", { verdict: screening.verdict, reasons: screening.reasons, doc_type: screening.doc_type }, "system");
+          if (screening) {
+            ai = screening;
+            await admin.from("restaurant_claims").update({ verification_proof: { ...proof, ai_screening: screening } }).eq("id", claimId);
+            await log(restaurant.id, claimId, "AI_SCREENED", { verdict: screening.verdict, reasons: screening.reasons, doc_type: screening.doc_type }, "system");
+          }
           // The AI verdict is advice only: the claim always stays pending for an admin to approve.
         } catch (e) {
           console.error("[verify-claim] AI screening failed", e);
         }
+        await notifyAdminOfClaim(admin, {
+          restaurantName: restaurant.name, restaurantSlug: restaurant.slug ?? null, method: "manual_proof",
+          ownerName: fullName, jobTitle, ai,
+        });
       };
       if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(screen());
       else await screen();
@@ -445,6 +454,10 @@ Deno.serve(async (req) => {
         action_category: "verification",
         after_data: { method: "google_business" },
       });
+
+      const alert = notifyAdminOfClaim(admin, { restaurantName: restaurant.name, restaurantSlug: restaurant.slug ?? null, method: "google_business" });
+      if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(alert);
+      else await alert;
 
       return json({ success: true, status: "pending_admin_review" });
     }
