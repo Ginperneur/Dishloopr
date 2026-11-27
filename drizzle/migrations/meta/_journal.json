@@ -575,6 +575,13 @@
       "when": 1795606794692,
       "tag": "0084_collection_listed_count",
       "breakpoints": true
+    },
+    {
+      "idx": 85,
+      "version": "7",
+      "when": 1795761002097,
+      "tag": "0085_remove_restaurant_on_request",
+      "breakpoints": true
     }
   ]
 }

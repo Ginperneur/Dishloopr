@@ -5847,6 +5847,7 @@ export type Database = {
           email: string
           id: string
           naam_aanvrager: string | null
+          outreach_reply_id: string | null
           restaurant_id: string | null
           restaurant_naam: string
           soort: string
@@ -5861,6 +5862,7 @@ export type Database = {
           email: string
           id?: string
           naam_aanvrager?: string | null
+          outreach_reply_id?: string | null
           restaurant_id?: string | null
           restaurant_naam: string
           soort: string
@@ -5875,6 +5877,7 @@ export type Database = {
           email?: string
           id?: string
           naam_aanvrager?: string | null
+          outreach_reply_id?: string | null
           restaurant_id?: string | null
           restaurant_naam?: string
           soort?: string
@@ -5883,6 +5886,13 @@ export type Database = {
           website?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "restaurant_optout_requests_outreach_reply_id_fkey"
+            columns: ["outreach_reply_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_replies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "restaurant_optout_requests_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -8783,6 +8793,10 @@ export type Database = {
           open_count: number
           section: string
         }[]
+      }
+      admin_remove_restaurant_on_request: {
+        Args: { p_request_id: string; p_restaurant_id?: string }
+        Returns: string
       }
       admin_set_restaurant_owner_pro: {
         Args: { p_enabled: boolean; p_restaurant_id: string }
