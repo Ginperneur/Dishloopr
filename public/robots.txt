@@ -18,6 +18,7 @@ Disallow: /insights
 Disallow: /favorites
 Disallow: /claim
 Disallow: /add-restaurant
+Disallow: /search?
 
 User-agent: Bingbot
 Allow: /
@@ -36,6 +37,7 @@ Disallow: /insights
 Disallow: /favorites
 Disallow: /claim
 Disallow: /add-restaurant
+Disallow: /search?
 Crawl-delay: 2
 
 User-agent: Twitterbot
@@ -61,6 +63,7 @@ Disallow: /insights
 Disallow: /favorites
 Disallow: /claim
 Disallow: /add-restaurant
+Disallow: /search?
 Crawl-delay: 2
 
 # Sitemap location
