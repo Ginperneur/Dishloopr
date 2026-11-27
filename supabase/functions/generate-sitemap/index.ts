@@ -144,7 +144,6 @@ serve(async (req) => {
 
     // Static pages
     addUrl(SITE_URL, now, 'daily', '1.0');
-    addUrl(`${SITE_URL}/search`, now, 'hourly', '0.9');
     addUrl(`${SITE_URL}/eten`, now, 'daily', '0.9');
     addUrl(`${SITE_URL}/steden`, now, 'daily', '0.9');
     addUrl(`${SITE_URL}/collections`, now, 'weekly', '0.8');

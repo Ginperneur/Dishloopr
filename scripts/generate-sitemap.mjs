@@ -152,7 +152,6 @@ async function main() {
   };
 
   add(SITE_URL, null, 'daily', '1.0');
-  add(`${SITE_URL}/search`, null, 'hourly', '0.9');
   add(`${SITE_URL}/eten`, null, 'daily', '0.9');
   add(`${SITE_URL}/steden`, null, 'daily', '0.9');
   add(`${SITE_URL}/collections`, null, 'weekly', '0.8');

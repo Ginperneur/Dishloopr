@@ -22,7 +22,7 @@ export default function DishCityIndexPage() {
   const [pages, setPages] = useState<SeoPagePreview[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [cities, setCities] = useState<{ id: string; name: string }[]>([]);
+  const [cities, setCities] = useState<{ id: string; name: string; slug: string }[]>([]);
   const [uniqueDishes, setUniqueDishes] = useState<{ name: string; slug: string }[]>([]);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
 
@@ -31,7 +31,7 @@ export default function DishCityIndexPage() {
       // Fetch cities
       const { data: citiesData } = await supabase
         .from('cities')
-        .select('id, name')
+        .select('id, name, slug')
         .eq('is_active', true)
         .order('name');
 
@@ -256,7 +256,7 @@ export default function DishCityIndexPage() {
           {cities.map(city => (
             <Link
               key={city.id}
-              to={`/steden/${city.name.toLowerCase()}`}
+              to={`/steden/${city.slug}`}
               className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-full border border-border hover:bg-primary/10 transition-colors"
             >
               {city.name}
