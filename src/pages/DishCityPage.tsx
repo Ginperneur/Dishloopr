@@ -41,7 +41,7 @@ export default function DishCityPage() {
   const location = useLocation();
   const { t, i18n } = useTranslation();
   const isNl = isDutchLocale(i18n.language);
-  const { page, restaurants, placements, loading, resultsLoading, navigationLoading, error, redirectTo, isHub, groupMembers, parentHub, synthesized } = useSeoLandingPage(slug);
+  const { page, restaurants, placements, loading, resultsLoading, navigationLoading, error, redirectTo, isHub, groupMembers, parentHub } = useSeoLandingPage(slug);
 
   const activeFacet = getFacet(facetSlug);
   const isFacetRoute = !!facetSlug;
@@ -93,9 +93,10 @@ export default function DishCityPage() {
   // Facet pages need >=3 matching restaurants to be indexable.
   // Below threshold OR any querystring → noindex + canonical to base slug.
   const belowIndexThreshold = isFacetRoute && visibleRestaurants.length < 3;
-  // Synthesized (on-the-fly) base pages inherit the same ≥3 rule.
-  const synthesizedBelowThreshold = !isFacetRoute && synthesized && restaurants.length < 3;
-  const noindex = resultsLoading || !!error || unknownFacet || belowIndexThreshold || synthesizedBelowThreshold || (isFacetRoute && hasQueryParams);
+  // Base pages, landing (seo_landing_pages) or synthesized on the fly, follow the same ≥3 rule;
+  // scripts/generate-sitemap.mjs leaves these pages out too.
+  const baseBelowThreshold = !isFacetRoute && restaurants.length < 3;
+  const noindex = resultsLoading || !!error || unknownFacet || belowIndexThreshold || baseBelowThreshold || (isFacetRoute && hasQueryParams);
 
   if (redirectTo) {
     return <Navigate to={redirectTo} replace />;
