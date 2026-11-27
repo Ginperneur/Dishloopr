@@ -1,4 +1,4 @@
-// Outreach admin: inbox first (PR #79), send-and-remove and admin BCC (PR #81).
+// Outreach admin: inbox first (PR #79), send-and-remove and admin BCC (PR #81), alerts and follow-up actions (PR #82).
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { AlertTriangle, Download, FileUp, Loader2, Mail, Paperclip, RefreshCw, Send } from 'lucide-react';
