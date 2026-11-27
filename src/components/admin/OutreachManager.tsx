@@ -321,6 +321,16 @@ function FlyerSettings({ mode, onMode }: { mode: OutreachSettings['flyer_mode'];
 function Inbox({ replies, targets, replyNames, onChanged }: { replies: OutreachReply[]; targets: OutreachTarget[]; replyNames: Map<string, string>; onChanged: () => void }) {
   const [filter, setFilter] = useState('te_beoordelen');
   const names = useMemo(() => new Map([...replyNames, ...targets.map(t => [t.restaurant_id, `${t.name}${t.stad ? `, ${t.stad}` : ''}`] as [string, string])]), [targets, replyNames]);
+  // Opt-out requests linked to replies: they decide which follow-up action is still open on a card.
+  const [requests, setRequests] = useState<Map<string, LinkedRequest>>(new Map());
+  const loadRequests = useCallback(async () => {
+    const ids = replies.map(r => r.id);
+    if (!ids.length) { setRequests(new Map()); return; }
+    const { data } = await db.from('restaurant_optout_requests').select('id, restaurant_id, status, soort, outreach_reply_id').in('outreach_reply_id', ids);
+    setRequests(new Map(((data ?? []) as LinkedRequest[]).map(r => [r.outreach_reply_id, r])));
+  }, [replies]);
+  useEffect(() => { void loadRequests(); }, [loadRequests]);
+  const changed = () => { onChanged(); void loadRequests(); };
   const list = replies
     .filter(r => filter === 'alle' || r.status === filter)
     .sort((a, b) => (filter === 'te_beoordelen' ? (b.deal_kans ?? 0) - (a.deal_kans ?? 0) : 0) || b.received_at.localeCompare(a.received_at));
@@ -335,12 +345,14 @@ function Inbox({ replies, targets, replyNames, onChanged }: { replies: OutreachR
         ))}
       </div>
       {list.length === 0 && <p className="text-sm text-muted-foreground">Geen antwoorden in deze lijst.</p>}
-      {list.map(r => <ReplyCard key={r.id} reply={r} restaurant={r.restaurant_id ? names.get(r.restaurant_id) : undefined} onChanged={onChanged} />)}
+      {list.map(r => <ReplyCard key={r.id} reply={r} restaurant={r.restaurant_id ? names.get(r.restaurant_id) : undefined} request={requests.get(r.id)} onChanged={changed} />)}
     </div>
   );
 }
 
-function ReplyCard({ reply, restaurant, onChanged }: { reply: OutreachReply; restaurant?: string; onChanged: () => void }) {
+type LinkedRequest = { id: string; restaurant_id: string | null; status: string | null; soort: string; outreach_reply_id: string };
+
+function ReplyCard({ reply, restaurant, request, onChanged }: { reply: OutreachReply; restaurant?: string; request?: LinkedRequest; onChanged: () => void }) {
   const [text, setText] = useState(reply.concept_antwoord ?? '');
   const [busy, setBusy] = useState(false);
   const [files, setFiles] = useState<{ filename: string; url: string }[] | null>(null);
@@ -354,6 +366,35 @@ function ReplyCard({ reply, restaurant, onChanged }: { reply: OutreachReply; res
     if (error || data?.error) toast.error(data?.error ?? error?.message); else { toast.success('Verstuurd'); onChanged(); }
   };
   // Removal request: remove the restaurant (Afmeldingen request linked to this reply), then send the confirmation.
+  const requestOpen = !!request && request.soort === 'verwijderen' && request.status !== 'afgehandeld' && request.status !== 'afgewezen';
+  // Removal for a reply that was already answered (or answered elsewhere): remove only.
+  const removeOnly = async () => {
+    if (!request?.restaurant_id) { toast.error('Geen restaurant gekoppeld. Verwijder het via Wachtrijen, Afmeldingen.'); return; }
+    if (!window.confirm(`${restaurant ?? 'Dit restaurant'} verwijderen?\n\nDe pagina gaat offline en blijft offline, de contactgegevens worden gewist en het restaurant wordt nooit meer gemaild.`)) return;
+    setBusy(true);
+    const { error } = await db.rpc('admin_remove_restaurant_on_request', { p_request_id: request.id, p_restaurant_id: request.restaurant_id });
+    setBusy(false);
+    if (error) toast.error(error.message); else { toast.success('Restaurant verwijderd'); onChanged(); }
+  };
+  // Wrong person: stop mailing this address for this restaurant and remember it, so it is never mailed again.
+  const unlinkEmail = async () => {
+    if (!reply.restaurant_id) { toast.error('Geen restaurant gekoppeld aan dit antwoord'); return; }
+    if (!window.confirm(`${reply.from_email} loskoppelen van ${restaurant ?? 'dit restaurant'}?\n\nDit adres wordt nooit meer gemaild. Het restaurant kan later een ander adres krijgen.`)) return;
+    setBusy(true);
+    const { data: contact } = await db.from('restaurant_contacts').select('email').eq('restaurant_id', reply.restaurant_id).maybeSingle();
+    if (contact?.email && contact.email.toLowerCase() === reply.from_email.toLowerCase()) {
+      const { error } = await db.from('restaurant_contacts').update({ email: null, email_kwaliteit: null, updated_at: new Date().toISOString() }).eq('restaurant_id', reply.restaurant_id);
+      if (error) { setBusy(false); toast.error(error.message); return; }
+    }
+    const { error } = await db.from('restaurant_optout_requests').insert({
+      email: reply.from_email, naam_aanvrager: reply.from_name, restaurant_id: reply.restaurant_id,
+      restaurant_naam: (restaurant ?? reply.subject ?? 'Onbekend restaurant').split(',')[0], soort: 'geen_mail',
+      toelichting: 'Verkeerde persoon: adres losgekoppeld vanuit Outreach', status: 'afgehandeld',
+      afgehandeld_op: new Date().toISOString(), outreach_reply_id: reply.id,
+    });
+    setBusy(false);
+    if (error) toast.error(error.message); else { toast.success('E-mailadres losgekoppeld'); onChanged(); }
+  };
   const sendAndRemove = async () => {
     const { data: req } = await db.from('restaurant_optout_requests').select('id, restaurant_id, status').eq('outreach_reply_id', reply.id).maybeSingle();
     if (!req) { toast.error('Geen verwijderverzoek gevonden bij dit antwoord. Handel het af via Wachtrijen, Afmeldingen.'); return; }
@@ -401,6 +442,8 @@ function ReplyCard({ reply, restaurant, onChanged }: { reply: OutreachReply; res
             {files?.map(f => <a key={f.url} href={f.url} target="_blank" rel="noreferrer" className="ml-3 text-primary underline">{f.filename}</a>)}
           </div>
         )}
+        <ReplyActions reply={reply} requestOpen={requestOpen} unlinked={!!request && request.soort === 'geen_mail'} busy={busy}
+          answered={reply.status === 'beantwoord'} onRemove={removeOnly} onUnlink={unlinkEmail} />
         {reply.status === 'beantwoord' ? (
           <pre className="whitespace-pre-wrap rounded border p-3 font-sans text-sm"><b>Jouw antwoord{reply.answered_at ? ` (${new Date(reply.answered_at).toLocaleString('nl-NL')})` : ''}:</b>{'\n'}{reply.answer_text}</pre>
         ) : (
@@ -419,4 +462,27 @@ function ReplyCard({ reply, restaurant, onChanged }: { reply: OutreachReply; res
       </CardContent>
     </Card>
   );
+}
+
+/** Follow-up actions by category, also on replies that were answered already. */
+function ReplyActions({ reply, requestOpen, unlinked, busy, answered, onRemove, onUnlink }: {
+  reply: OutreachReply; requestOpen: boolean; unlinked: boolean; busy: boolean; answered: boolean;
+  onRemove: () => void; onUnlink: () => void;
+}) {
+  const buttons: JSX.Element[] = [];
+  // Before answering, a removal goes through "Verstuur en verwijder restaurant" below.
+  if (reply.categorie === 'verwijderen' && requestOpen && answered) {
+    buttons.push(<Button key="rm" size="sm" variant="destructive" disabled={busy} onClick={onRemove}>Verwijder restaurant</Button>);
+  }
+  if (reply.categorie === 'verkeerde_persoon' && !unlinked) {
+    buttons.push(<Button key="unlink" size="sm" variant="outline" disabled={busy} onClick={onUnlink}>Ontkoppel e-mailadres</Button>);
+  }
+  if (reply.categorie === 'menu_aangeleverd') {
+    buttons.push(<Button key="menu" size="sm" variant="outline" asChild><a href="/admin?section=manual-menu">Menu invoeren</a></Button>);
+  }
+  if (reply.categorie === 'wil_claimen') {
+    buttons.push(<Button key="claims" size="sm" variant="outline" asChild><a href="/admin?section=claims">Open claims</a></Button>);
+  }
+  if (!buttons.length) return null;
+  return <div className="flex flex-wrap items-center gap-2 rounded-md bg-muted/50 p-2"><span className="text-xs text-muted-foreground">Actie:</span>{buttons}</div>;
 }

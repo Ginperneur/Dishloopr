@@ -10,6 +10,7 @@ import { serviceClient, timingSafeEqual } from "../_shared/auth.ts";
 const escapeLike = (v: string) => v.replace(/[\\%_]/g, (c) => "\\" + c);
 
 const RESEND = "https://api.resend.com";
+const ADMIN_OUTREACH_URL = "https://dishloopr.com/admin?section=outreach";
 const CATEGORIES = [
   "wil_claimen", "interesse_uitgelicht", "interesse_pro", "menu_aangeleverd", "vraag", "terugbellen",
   "niet_geinteresseerd", "afmelden", "gegevens_onjuist", "verwijderen", "verkeerde_persoon",
@@ -99,9 +100,15 @@ Geef ALLEEN geldige JSON, zonder uitleg:
   };
 }
 
-async function notify(subject: string, text: string) {
-  const to = Deno.env.get("OUTREACH_NOTIFY_EMAIL"), key = Deno.env.get("RESEND_API_KEY");
-  if (!to || !key) return;
+// Alert for every reply that waits for the admin. Goes to OUTREACH_NOTIFY_EMAIL, else app_settings.admin_email.
+async function notify(db: ReturnType<typeof serviceClient>, subject: string, text: string) {
+  const key = Deno.env.get("RESEND_API_KEY");
+  let to = Deno.env.get("OUTREACH_NOTIFY_EMAIL") ?? "";
+  if (!to) {
+    const { data } = await db.from("app_settings").select("value").eq("key", "admin_email").maybeSingle();
+    to = typeof data?.value === "string" ? data.value : "";
+  }
+  if (!to.includes("@") || !key) return;
   await fetch(`${RESEND}/emails`, {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
@@ -190,12 +197,16 @@ serve(async (req) => {
       });
       if (optErr) console.error("outreach-inbound removal request", optErr.message);
     }
-    if (t.prioriteit === "hoog" && status === "te_beoordelen") {
-      await notify(`Hete lead: ${target?.name ?? from.email} (${t.categorie}, ${t.deal_kans}%)`,
-        `${t.samenvatting}\n\nActie: ${t.aanbevolen_actie}\n\nOpen Admin > Outreach om te antwoorden.`);
+    if (status === "te_beoordelen") {
+      const who = target?.name ?? from.name ?? from.email;
+      await notify(db,
+        t.prioriteit === "hoog" ? `Hete lead: ${who} (${t.categorie}, ${t.deal_kans}%)` : `Nieuw antwoord: ${who} (${t.categorie})`,
+        `${t.samenvatting}\n\nActie: ${t.aanbevolen_actie}\n\nAntwoorden: ${ADMIN_OUTREACH_URL}`);
     }
   } catch (e) {
     await db.from("outreach_replies").update({ classify_error: e instanceof Error ? e.message : String(e) }).eq("id", row.id);
+    await notify(db, `Nieuw antwoord (niet ingedeeld): ${from.name ?? from.email}`,
+      `${String(d.subject ?? "")}\n\nDe AI kon dit antwoord niet indelen. Bekijk het hier: ${ADMIN_OUTREACH_URL}`);
   }
   return new Response("ok");
 });
