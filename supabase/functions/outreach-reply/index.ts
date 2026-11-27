@@ -1,5 +1,5 @@
 // Admin actions on outreach replies:
-//   send         { reply_id, text }   sends the (edited) answer in the same thread, marks it answered
+//   send         { reply_id, text }   sends the (edited) answer in the same thread (blind copy to the admin), marks it answered
 //   attachments  { reply_id }         fresh download links for the reply's attachments (menus etc.)
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { getCaller, isAdmin, serviceClient } from "../_shared/auth.ts";
@@ -43,10 +43,13 @@ serve(async (req) => {
     const replyTo = REPLY_DOMAIN && reply.restaurant_id ? `antwoord+${reply.restaurant_id}@${REPLY_DOMAIN}` : REPLY_TO || undefined;
     const headers: Record<string, string> = {};
     if (reply.message_id) { headers["In-Reply-To"] = reply.message_id; headers["References"] = reply.message_id; }
+    // A blind copy to the admin address, so every answer is also in the admin's own mailbox.
+    const { data: adminSetting } = await db.from("app_settings").select("value").eq("key", "admin_email").maybeSingle();
+    const bcc = typeof adminSetting?.value === "string" && adminSetting.value.includes("@") ? [adminSetting.value] : undefined;
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: FROM, to: [reply.from_email], reply_to: replyTo, subject, text, headers }),
+      body: JSON.stringify({ from: FROM, to: [reply.from_email], bcc, reply_to: replyTo, subject, text, headers }),
     });
     if (!res.ok) return json({ error: `Versturen mislukt (${res.status})` }, 502);
     await db.from("outreach_replies").update({ status: "beantwoord", answer_text: text, answered_at: new Date().toISOString() }).eq("id", reply.id);

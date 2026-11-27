@@ -352,6 +352,22 @@ function ReplyCard({ reply, restaurant, onChanged }: { reply: OutreachReply; res
     setBusy(false);
     if (error || data?.error) toast.error(data?.error ?? error?.message); else { toast.success('Verstuurd'); onChanged(); }
   };
+  // Removal request: remove the restaurant (Afmeldingen request linked to this reply), then send the confirmation.
+  const sendAndRemove = async () => {
+    const { data: req } = await db.from('restaurant_optout_requests').select('id, restaurant_id, status').eq('outreach_reply_id', reply.id).maybeSingle();
+    if (!req) { toast.error('Geen verwijderverzoek gevonden bij dit antwoord. Handel het af via Wachtrijen, Afmeldingen.'); return; }
+    if (!req.restaurant_id) { toast.error('Geen restaurant gekoppeld. Verwijder het via Wachtrijen, Afmeldingen.'); return; }
+    if (!window.confirm(`${restaurant ?? 'Dit restaurant'} verwijderen en het antwoord versturen naar ${reply.from_email}?\n\nDe pagina gaat offline en blijft offline, de contactgegevens worden gewist en het restaurant wordt nooit meer gemaild.`)) return;
+    setBusy(true);
+    if (req.status !== 'afgehandeld') {
+      const { error: rmErr } = await db.rpc('admin_remove_restaurant_on_request', { p_request_id: req.id, p_restaurant_id: req.restaurant_id });
+      if (rmErr) { setBusy(false); toast.error(rmErr.message); return; }
+    }
+    const { data, error } = await supabase.functions.invoke('outreach-reply', { body: { mode: 'send', reply_id: reply.id, text } });
+    setBusy(false);
+    if (error || data?.error) toast.error(`Restaurant verwijderd, maar versturen mislukt: ${data?.error ?? error?.message}`);
+    else { toast.success('Restaurant verwijderd en bevestiging verstuurd'); onChanged(); }
+  };
   const close = async () => {
     const { error } = await db.from('outreach_replies').update({ status: 'afgehandeld' }).eq('id', reply.id);
     if (error) toast.error(error.message); else onChanged();
@@ -385,12 +401,16 @@ function ReplyCard({ reply, restaurant, onChanged }: { reply: OutreachReply; res
           </div>
         )}
         {reply.status === 'beantwoord' ? (
-          <pre className="whitespace-pre-wrap rounded border p-3 font-sans text-sm"><b>Jouw antwoord:</b>{'\n'}{reply.answer_text}</pre>
+          <pre className="whitespace-pre-wrap rounded border p-3 font-sans text-sm"><b>Jouw antwoord{reply.answered_at ? ` (${new Date(reply.answered_at).toLocaleString('nl-NL')})` : ''}:</b>{'\n'}{reply.answer_text}</pre>
         ) : (
           <>
             <Textarea value={text} onChange={e => setText(e.target.value)} rows={7} aria-label="Antwoord" />
             <div className="flex gap-2">
-              <Button onClick={send} disabled={busy || text.trim().length < 5}>{busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}Verstuur antwoord</Button>
+              {reply.categorie === 'verwijderen' ? (
+                <Button variant="destructive" onClick={sendAndRemove} disabled={busy || text.trim().length < 5}>{busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}Verstuur en verwijder restaurant</Button>
+              ) : (
+                <Button onClick={send} disabled={busy || text.trim().length < 5}>{busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}Verstuur antwoord</Button>
+              )}
               {reply.status !== 'afgehandeld' && <Button variant="outline" onClick={close}>Afgehandeld zonder antwoord</Button>}
             </div>
           </>

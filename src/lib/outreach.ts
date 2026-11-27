@@ -62,7 +62,7 @@ export interface OutreachReply {
   subject: string | null; body_text: string | null; attachments: { filename: string; content_type: string }[];
   received_at: string; categorie: string | null; prioriteit: 'hoog' | 'normaal' | 'laag' | null;
   deal_kans: number | null; samenvatting: string | null; aanbevolen_actie: string | null;
-  concept_antwoord: string | null; classify_error: string | null; status: string; answer_text: string | null;
+  concept_antwoord: string | null; classify_error: string | null; status: string; answer_text: string | null; answered_at?: string | null;
 }
 
 export const MAIL_STATUS_LABEL: Record<string, string> = {
