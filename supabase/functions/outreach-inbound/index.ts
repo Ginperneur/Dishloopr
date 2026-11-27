@@ -180,6 +180,16 @@ serve(async (req) => {
       status = "automatisch";
     }
     await db.from("outreach_replies").update({ ...t, status, classified_at: new Date().toISOString() }).eq("id", row.id);
+    // A removal request waits in Admin > Afmeldingen, where one action hides the restaurant and wipes its
+    // contact details. The reply itself stays in the inbox so the owner still gets a confirmation.
+    if (t.categorie === "verwijderen") {
+      const { error: optErr } = await db.from("restaurant_optout_requests").insert({
+        email: from.email, naam_aanvrager: from.name ?? null, restaurant_id: restaurantId,
+        restaurant_naam: target?.name ?? String(d.subject ?? "Onbekend restaurant"), soort: "verwijderen",
+        toelichting: t.samenvatting ?? null, outreach_reply_id: row.id,
+      });
+      if (optErr) console.error("outreach-inbound removal request", optErr.message);
+    }
     if (t.prioriteit === "hoog" && status === "te_beoordelen") {
       await notify(`Hete lead: ${target?.name ?? from.email} (${t.categorie}, ${t.deal_kans}%)`,
         `${t.samenvatting}\n\nActie: ${t.aanbevolen_actie}\n\nOpen Admin > Outreach om te antwoorden.`);

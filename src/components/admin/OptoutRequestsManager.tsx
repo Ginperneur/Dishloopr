@@ -3,12 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
 type Req = {
   id: string; restaurant_naam: string | null; website: string | null; email: string | null;
   naam_aanvrager: string | null; soort: string | null; toelichting: string | null;
   status: string | null; admin_notitie: string | null; created_at: string;
+  restaurant_id: string | null; outreach_reply_id: string | null;
 };
 const SOORT: Record<string, string> = { geen_mail: 'Geen mail', verwijderen: 'Verwijderen', gegevens_aanpassen: 'Aanpassen' };
 const STATUSES = ['nieuw', 'in_behandeling', 'afgehandeld', 'afgewezen'];
@@ -31,6 +33,29 @@ export function OptoutRequestsManager() {
     if (error) toast.error('Opslaan mislukt'); else { toast.success('Opgeslagen'); load(); }
   };
 
+  // One action for a removal request: hide the restaurant for good, wipe its contact details and close
+  // the request (admin_remove_restaurant_on_request). Without a linked restaurant, paste its slug or URL.
+  const [slugs, setSlugs] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState<string | null>(null);
+  const removeRestaurant = async (r: Req) => {
+    let restaurantId = r.restaurant_id;
+    let name = r.restaurant_naam ?? 'dit restaurant';
+    if (!restaurantId) {
+      const slug = (slugs[r.id] ?? '').trim().replace(/^.*\/restaurant\//, '').replace(/[/?#].*$/, '');
+      if (!slug) { toast.error('Plak eerst de slug of de URL van de restaurantpagina'); return; }
+      const { data } = await db.from('restaurants').select('id, name').eq('slug', slug).maybeSingle();
+      if (!data) { toast.error(`Geen restaurant gevonden met slug ${slug}`); return; }
+      restaurantId = data.id; name = data.name;
+    }
+    if (!window.confirm(`${name} verwijderen op verzoek?\n\nDe pagina gaat offline en blijft offline, de contactgegevens worden gewist en dit restaurant wordt nooit meer gemaild. Het verzoek wordt afgehandeld.`)) return;
+    setBusy(r.id);
+    const { error } = await (supabase.rpc as unknown as (f: string, a: object) => Promise<{ error: { message: string } | null }>)(
+      'admin_remove_restaurant_on_request', { p_request_id: r.id, p_restaurant_id: restaurantId },
+    );
+    setBusy(null);
+    if (error) toast.error(error.message); else { toast.success(`${name} is verwijderd. Stuur de aanvrager nog een bevestiging.`); load(); }
+  };
+
   if (loading) return <p className="text-muted-foreground">Laden…</p>;
   if (!rows.length) return <p className="text-muted-foreground">Nog geen afmeldingen.</p>;
   return (
@@ -48,6 +73,19 @@ export function OptoutRequestsManager() {
             </Select>
           </div>
           {r.toelichting && <p className="text-sm">{r.toelichting}</p>}
+          {r.outreach_reply_id && <p className="text-xs text-muted-foreground">Binnengekomen als antwoord in Outreach; stuur daar de bevestiging.</p>}
+          {r.soort === 'verwijderen' && r.status !== 'afgehandeld' && r.status !== 'afgewezen' && (
+            <div className="flex flex-wrap items-center gap-2 rounded-md bg-muted/50 p-2">
+              {!r.restaurant_id && (
+                <Input className="h-9 w-72" placeholder="Slug of URL van de restaurantpagina" value={slugs[r.id] ?? ''}
+                  onChange={(e) => setSlugs({ ...slugs, [r.id]: e.target.value })} />
+              )}
+              <Button variant="destructive" size="sm" disabled={busy === r.id} onClick={() => removeRestaurant(r)}>
+                {busy === r.id ? 'Bezig…' : 'Verwijderen op verzoek'}
+              </Button>
+              <span className="text-xs text-muted-foreground">Pagina offline, contactgegevens gewist, nooit meer mailen.</span>
+            </div>
+          )}
           <div className="flex gap-2">
             <Textarea rows={2} placeholder="Admin-notitie" value={notes[r.id] ?? r.admin_notitie ?? ''} onChange={(e) => setNotes({ ...notes, [r.id]: e.target.value })} />
             <Button variant="outline" onClick={() => update(r.id, { admin_notitie: notes[r.id] ?? r.admin_notitie })}>Opslaan</Button>
